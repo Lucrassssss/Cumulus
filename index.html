@@ -26,6 +26,7 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5enJ2Z2JkbmV2bGx3dnhxY2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NDM0NTAsImV4cCI6MjA5NzQxOTQ1MH0.jfSmMobPUV1tTg2cmyAvTGuRmAyd9C5r-pooMVpSV6E';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -45,7 +46,7 @@
     --gold:#C0961F;--gold-tint:rgba(192,150,31,0.14);--blot-color:#F0EDE8;--scrim:rgba(8,6,5,0.82);
   }
   :root{
-    --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
     /* Safe-area-aware heights so content is never hidden under the notch or home indicator */
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bot: env(safe-area-inset-bottom, 0px);
@@ -1211,12 +1212,26 @@
   .pstat-num { font-size: 22px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; line-height: 1; }
   .pstat-lbl { font-size: 9.5px; font-weight: 700; color: var(--text-muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.4px; }
 
+  .prof-achievements-card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px; padding: 16px; margin-bottom: 4px;
+    cursor: pointer; transition: background 0.12s ease;
+  }
+  .prof-achievements-card:active { background: var(--surface-2); }
+  .prof-ach-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .prof-ach-title { font-size: 13px; font-weight: 700; color: var(--text); }
+  .prof-ach-level { font-size: 12px; font-weight: 700; }
+  .prof-ach-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+  .prof-ach-progress { height: 5px; background: var(--line); border-radius: 99px; overflow: hidden; margin-bottom: 10px; }
+  .prof-ach-fill { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
+  .prof-ach-cta { font-size: 12px; font-weight: 600; color: var(--accent); text-align: right; }
+
   .prof-action-list {
     background: var(--surface); border: 1px solid var(--line);
     border-radius: 16px; overflow: hidden; margin-bottom: 4px;
   }
   .prof-action-row {
-    width: 100%; display: flex; align-items: center; gap: 12px;
+    width: 100%; display: flex; align-items: center; gap: 8px;
     padding: 14px 16px; background: transparent;
     border: none; border-bottom: 1px solid var(--line);
     font-family: var(--font-sans); font-size: 14.5px; font-weight: 600;
@@ -1287,7 +1302,7 @@
     height: min(88dvh, 760px);
     border-radius: 28px;
     position: relative; overflow: hidden;
-    font-family: 'Space Grotesk', var(--font-sans, sans-serif);
+    font-family: var(--font-sans);
     transform: scale(0.94) translateY(24px);
     transition: transform 0.32s cubic-bezier(0.22,1,0.36,1);
     cursor: default;
@@ -1791,7 +1806,7 @@
   .lp-feat-icon {
     width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
     background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
-    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.8);
   }
   .lp-feat-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 3px; }
   .lp-feat-desc { font-size: 12.5px; color: rgba(255,255,255,0.55); line-height: 1.55; }
@@ -2121,7 +2136,7 @@
     background: color-mix(in srgb, var(--accent) 12%, var(--surface));
     border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
     display: flex; align-items: center; justify-content: center;
-    font-size: 24px; flex-shrink: 0;
+    color: var(--accent); flex-shrink: 0;
   }
   .lp-feat-card-title { font-size: 17px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
   .lp-feat-card-desc { font-size: 13.5px; color: var(--text-muted); line-height: 1.7; }
@@ -2196,7 +2211,7 @@
     box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06);
     transform: scale(0.88) translateY(20px);
     transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-    font-family: 'Space Grotesk', var(--font-sans, sans-serif);
+    font-family: var(--font-sans);
   }
   .card-xl-overlay.open .card-xl { transform: scale(1) translateY(0); }
   .card-xl-top {
@@ -3169,7 +3184,7 @@ async function geocodeAddress(address){
 }
 function geocodeBannerHtml(){
   if(!geocodingInProgress) return '';
-  return `<div class="map-caption" style="bottom:auto;top:calc(var(--top-h) + 10px);right:12px;left:auto;transform:none;font-size:10.5px;">📍 ${geocodeProgress.done}/${geocodeProgress.total}</div>`;
+  return `<div class="map-caption" style="bottom:auto;top:calc(var(--top-h) + 10px);right:12px;left:auto;transform:none;font-size:10.5px;">${geocodeProgress.done}/${geocodeProgress.total} placed</div>`;
 }
 function updateGeocodeBanner(){ const el=document.getElementById('geocode-banner'); if(el) el.innerHTML=geocodeBannerHtml(); }
 function geocodeBannerWrap(){ return `<div id="geocode-banner">${geocodeBannerHtml()}</div>`; }
@@ -3384,10 +3399,10 @@ function renderGate(prefillName,prefillEmail){
           <button class="btn btn-outline lp-hero-btn-secondary" onclick="document.getElementById('lp-features-anchor').scrollIntoView({behavior:'smooth'})">See how it works ↓</button>
         </div>
         <div class="lp-trust-strip">
-          <span>🎟 Digital pass</span>
-          <span>👥 Find your crowd</span>
-          <span>💬 Pre-event chats</span>
-          <span>⭐ Friend tracking</span>
+          <span>Digital pass</span>
+          <span>Find your crowd</span>
+          <span>Pre-event chats</span>
+          <span>Friend tracking</span>
         </div>
       </div>
       <div class="lp-hero-scroll-hint" onclick="document.getElementById('lp-features-anchor').scrollIntoView({behavior:'smooth'})">
@@ -3404,17 +3419,17 @@ function renderGate(prefillName,prefillEmail){
       </div>
       <div class="lp-features-grid">
         <div class="lp-feat-card">
-          <div class="lp-feat-card-icon">🗺️</div>
+          <div class="lp-feat-card-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg></div>
           <div class="lp-feat-card-title">Discover locally</div>
           <div class="lp-feat-card-desc">Browse events happening in your neighbourhood — from jazz nights and gallery openings to supper clubs and community walks.</div>
         </div>
         <div class="lp-feat-card">
-          <div class="lp-feat-card-icon">🃏</div>
+          <div class="lp-feat-card-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg></div>
           <div class="lp-feat-card-title">Your digital pass</div>
           <div class="lp-feat-card-desc">A personalised card you carry to every event. Share your QR code to connect instantly with people you meet in person.</div>
         </div>
         <div class="lp-feat-card">
-          <div class="lp-feat-card-icon">👥</div>
+          <div class="lp-feat-card-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
           <div class="lp-feat-card-title">Real connections</div>
           <div class="lp-feat-card-desc">See who's going before you arrive. Meet people who share your interests. Build friendships that last beyond the event.</div>
         </div>
@@ -3429,10 +3444,10 @@ function renderGate(prefillName,prefillEmail){
           <h2 class="lp-section-title" style="color:#fff;">Your event.<br>Our audience.</h2>
           <p style="color:rgba(255,255,255,0.72);font-size:15px;line-height:1.75;max-width:480px;">List your venue on Cumulus and reach thousands of active Londoners who are already looking for their next night out. We handle discovery, ticketing, pre-event buzz, and real-time attendee connection — you focus on the event.</p>
           <div class="lp-venue-features">
-            <div class="lp-venue-feat"><div class="lp-feat-icon">📍</div><div><div class="lp-feat-title">Map-first discovery</div><div class="lp-feat-desc">Your venue pinned and filterable across London's live event map.</div></div></div>
-            <div class="lp-venue-feat"><div class="lp-feat-icon">🎟</div><div><div class="lp-feat-title">Integrated ticketing</div><div class="lp-feat-desc">Multiple ticket tiers, early bird, VIP — all under one flow.</div></div></div>
-            <div class="lp-venue-feat"><div class="lp-feat-icon">💬</div><div><div class="lp-feat-title">Pre-event community</div><div class="lp-feat-desc">Attendees connect before they arrive — higher show rates, better energy.</div></div></div>
-            <div class="lp-venue-feat"><div class="lp-feat-icon">⭐</div><div><div class="lp-feat-title">Featured placement</div><div class="lp-feat-desc">Major events get priority placement across the Cumulus platform.</div></div></div>
+            <div class="lp-venue-feat"><div class="lp-feat-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div><div><div class="lp-feat-title">Map-first discovery</div><div class="lp-feat-desc">Your venue pinned and filterable across London's live event map.</div></div></div>
+            <div class="lp-venue-feat"><div class="lp-feat-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20 12c0-1.1.9-2 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v4c1.1 0 2 .9 2 2s-.9 2-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2zm-6 3.5h-4v-2h4v2zm0-5h-4v-2h4v2z"/></svg></div><div><div class="lp-feat-title">Integrated ticketing</div><div class="lp-feat-desc">Multiple ticket tiers, early bird, VIP — all under one flow.</div></div></div>
+            <div class="lp-venue-feat"><div class="lp-feat-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg></div><div><div class="lp-feat-title">Pre-event community</div><div class="lp-feat-desc">Attendees connect before they arrive — higher show rates, better energy.</div></div></div>
+            <div class="lp-venue-feat"><div class="lp-feat-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div><div><div class="lp-feat-title">Featured placement</div><div class="lp-feat-desc">Major events get priority placement across the Cumulus platform.</div></div></div>
           </div>
           <button class="btn lp-venues-cta" onclick="showLpSignup()">Get started — it's free →</button>
         </div>
@@ -3553,11 +3568,11 @@ function renderGate(prefillName,prefillEmail){
         </button>
 
         <div class="lp-form-trust">
-          <span>🔒 No spam, ever</span>
+          <span>No spam, ever</span>
           <span>·</span>
-          <span>✓ Free forever</span>
+          <span>Free forever</span>
           <span>·</span>
-          <span>🗑 Delete anytime</span>
+          <span>Delete anytime</span>
         </div>
       </div>
     </div>
@@ -3698,7 +3713,7 @@ function removeCardPhoto(){
   try{ localStorage.removeItem('card_photo:'+state.profileName); }catch(e){}
   const zone=document.getElementById('ce-photo-zone');
   if(zone) zone.innerHTML=`<input type="file" id="ce-photo-input" accept="image/*" onchange="handleCardPhoto(this)"/>
-    <div style="font-size:28px;margin-bottom:8px;">📷</div>
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" style="margin-bottom:8px;opacity:0.45;"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
     <div class="ce-photo-label">Add a photo to your card</div>
     <div class="ce-photo-sub">Shows on your expanded card when shared in person</div>`;
 }
@@ -3971,7 +3986,7 @@ function renderCardEditor(){
                 ?`<img src="${cardDraft.photo}" class="ce-photo-preview" id="ce-photo-img" alt="Card photo"/>
                   <div class="ce-photo-label">Tap to change photo</div>
                   <button class="ce-photo-remove" onclick="event.stopPropagation();removeCardPhoto()">Remove photo</button>`
-                :`<div style="font-size:26px;margin-bottom:6px;">📷</div>
+                :`<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" style="margin-bottom:6px;opacity:0.45;"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
                   <div class="ce-photo-label">Add a photo</div>
                   <div class="ce-photo-sub">Appears on your expanded pass card</div>`}
             </div>
@@ -4137,7 +4152,7 @@ async function addFriend(friendName,friendUserId){
 }
 
 function renderNav(){
-  const activeTab = ['tickets','my-tickets','book','checkout','confirmed'].includes(state.view)?'tickets'
+  const activeTab = ['tickets','my-tickets','book','checkout','confirmed'].includes(state.view)?'profile'
     :['social'].includes(state.view)?'social'
     :['calendar','calendar-day'].includes(state.view)?'calendar'
     :['achievements','friends'].includes(state.view)?'profile'
@@ -4157,7 +4172,6 @@ function renderNav(){
     };
     const NAV_TABS=[
       {label:'Explore', v:'browse',   action:'goBrowse()'},
-      {label:'Tickets', v:'tickets',  action:'navStack=[];openTicketsTab()'},
       {label:'Social',  v:'social',   action:'navStack=[];openSocialTab()'},
       {label:'Calendar',v:'calendar', action:'navStack=[];openCalendar()'},
       {label:'Create',  v:'host',     action:'navStack=[];openHost()'},
@@ -4850,7 +4864,7 @@ function renderConnect(id){
     <div class="section-title">Who else is going (${others.length})</div><div class="intro-grid">${othersHtml}</div>
     <div class="section-title" style="justify-content:space-between;"><span style="display:flex;align-items:center;gap:8px;">Group Chat</span><button class="btn btn-outline btn-small" onclick="refreshConnect(${id})">Refresh</button></div>
     ${chatIsOpen(ev)?`<div class="panel chat-box">
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;padding:0 2px;">👥 ${attendees.length} member${attendees.length!==1?'s':''} · Chat active weekly before the event</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;padding:0 2px;">${attendees.length} member${attendees.length!==1?'s':''} · Chat active weekly before the event</div>
       <div class="chat-messages" id="chat-messages">${chat.length?chat.map(m=>{
         const isOwn=m.name===state.profileName;
         const _oa=ownTheme?ownTheme.accent:c.color;
@@ -4861,10 +4875,9 @@ function renderConnect(id){
             <div class="msg-bubble ${isOwn?'own':'other'}" style="${isOwn?`background:${ownTheme?ownTheme.bg:'var(--accent)'};color:${ownTheme?ownTheme.text:'#fff'};`:''}border-radius:14px;">${escapeHtml(m.text)}</div>
           </div>
         </div>`;
-      }).join(''):`<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:22px;">No messages yet — say hi to the group! 👋</div>`}</div>
+      }).join(''):`<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:22px;">No messages yet — be the first to say something.</div>`}</div>
       <div class="chat-input-row"><input id="chat-input" class="chat-input" placeholder="Say something to the group…" onkeydown="handleChatKey(event,${id})"/><button class="btn" style="background:${c.color};color:#fff;" onclick="sendChat(${id})">Send</button></div>
     </div>`:`<div class="panel" style="--corner:var(--line);padding:20px;text-align:center;">
-      <div style="font-size:32px;margin-bottom:10px;">💬</div>
       ${eventStatus(ev)==='past'?
         `<div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:6px;">Chat closed</div>
          <div style="font-size:13px;color:var(--text-muted);line-height:1.6;">The event has ended, so this chat is now closed. We hope you made some great real-world connections!</div>`
@@ -5046,9 +5059,10 @@ function closeExpandedCard(){
   setTimeout(()=>{ if(ov.parentNode) ov.remove(); }, 320);
 }
 
-function medallionHtml(glyph,color,earned){ const ring=earned?color:'var(--line)'; const fill=earned?hexToRgba(color,0.14):'transparent'; const gc=earned?color:'var(--text-muted)'; const lock=earned?'':`<span class="lock">🔒</span>`; return `<div class="medallion" style="border-color:${ring};background:${fill};color:${gc};">${glyph}${lock}</div>`; }
+const LOCK_SVG=`<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>`;
+function medallionHtml(glyph,color,earned){ const ring=earned?color:'var(--line)'; const fill=earned?hexToRgba(color,0.14):'transparent'; const gc=earned?color:'var(--text-muted)'; const lock=earned?'':`<span class="lock">${LOCK_SVG}</span>`; return `<div class="medallion" style="border-color:${ring};background:${fill};color:${gc};">${glyph}${lock}</div>`; }
 function badgeCellHtml(name,desc,glyph,color,earned,progressText){ return `<div class="panel badge-cell ${earned?'earned':'locked'}" style="--corner:${earned?color:'var(--line)'};">${medallionHtml(glyph,color,earned)}<div class="badge-name">${name}</div><div class="badge-desc">${desc}</div>${(!earned&&progressText)?`<div class="badge-progress">${progressText}</div>`:''}</div>`; }
-function trophyHtml(glyph,metal,glow,earned){ if(!earned) return `<div class="trophy-wrap"><div class="trophy-coin locked"><span>${glyph}</span><span class="trophy-lock">🔒</span></div><div class="trophy-stand locked"></div></div>`; return `<div class="trophy-wrap"><div class="trophy-coin" style="background:radial-gradient(circle at 32% 28%,rgba(255,255,255,0.65),rgba(255,255,255,0) 40%),${metal};box-shadow:0 8px 18px rgba(0,0,0,0.3),0 0 14px ${hexToRgba(glow,0.4)},inset 0 -5px 8px rgba(0,0,0,0.2),inset 0 3px 6px rgba(255,255,255,0.35);"><span class="trophy-shine"></span><span style="position:relative;color:#1B1D21;">${glyph}</span></div><div class="trophy-stand" style="background:${glow};filter:brightness(0.65);"></div></div>`; }
+function trophyHtml(glyph,metal,glow,earned){ if(!earned) return `<div class="trophy-wrap"><div class="trophy-coin locked"><span>${glyph}</span><span class="trophy-lock">${LOCK_SVG}</span></div><div class="trophy-stand locked"></div></div>`; return `<div class="trophy-wrap"><div class="trophy-coin" style="background:radial-gradient(circle at 32% 28%,rgba(255,255,255,0.65),rgba(255,255,255,0) 40%),${metal};box-shadow:0 8px 18px rgba(0,0,0,0.3),0 0 14px ${hexToRgba(glow,0.4)},inset 0 -5px 8px rgba(0,0,0,0.2),inset 0 3px 6px rgba(255,255,255,0.35);"><span class="trophy-shine"></span><span style="position:relative;color:#1B1D21;">${glyph}</span></div><div class="trophy-stand" style="background:${glow};filter:brightness(0.65);"></div></div>`; }
 function trophyCellHtml(name,desc,glyph,metal,glow,tier,earned,progressText){ return `<div class="panel badge-cell ${earned?'earned':'locked'}" style="--corner:${earned?glow:'var(--line)'};">${trophyHtml(glyph,metal,glow,earned)}${tier?`<div class="trophy-tier" style="color:${earned?glow:'var(--text-muted)'};">${tier}</div>`:''}<div class="badge-name">${name}</div><div class="badge-desc">${desc}</div>${(!earned&&progressText)?`<div class="badge-progress">${progressText}</div>`:''}</div>`; }
 
 function renderProfile(){
@@ -5117,17 +5131,15 @@ function renderProfile(){
 
   // Recent events — last 4 only (not 12)
   const recentEvents=myEvents.slice(-4).reverse();
-  const CAT_ICONS={'Creative':'🎨','Gaming':'🎮','Movie Nights':'🎬','Board Games':'♟️','Meetups':'👥','Food & Drink':'🍽️','Live Music':'🎵','Wellness & Outdoors':'🌿','Tech & Talks':'💡'};
   const MUTED_CATS={'Creative':'rgba(139,92,246,0.13)','Gaming':'rgba(16,185,129,0.12)','Movie Nights':'rgba(249,115,22,0.12)','Board Games':'rgba(6,182,212,0.12)','Meetups':'rgba(236,72,153,0.11)','Food & Drink':'rgba(239,68,68,0.11)','Live Music':'rgba(99,102,241,0.13)','Wellness & Outdoors':'rgba(132,204,22,0.12)','Tech & Talks':'rgba(59,130,246,0.12)'};
   const recentEvHtml=recentEvents.map(ev=>{
-    const c2=CATS[ev.category]||{color:'#60A5FA'}; const icon=CAT_ICONS[ev.category]||'📅';
+    const c2=CATS[ev.category]||{color:'#60A5FA'};
     const mutedBg=MUTED_CATS[ev.category]||'rgba(96,165,250,0.1)';
     const shortTitle=ev.title.length>28?ev.title.substring(0,26)+'…':ev.title;
     const evDate=ev.startsAt?new Date(ev.startsAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
     const status=eventStatus(ev);
     const statusDot=status==='live'?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-right:4px;box-shadow:0 0 5px #22c55e88;"></span>`:status==='upcoming'?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c2.color};margin-right:4px;opacity:0.7;"></span>`:'';
     return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:${mutedBg};border:1px solid ${c2.color}28;" title="${escapeHtml(ev.title)}">
-      <div style="font-size:20px;margin-bottom:6px;line-height:1;">${icon}</div>
       <div style="font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;">${escapeHtml(shortTitle)}</div>
       <div style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;">${statusDot}${escapeHtml(ev.category)}</div>
       ${evDate?`<div style="font-size:10px;color:${c2.color};font-weight:600;margin-top:4px;">${evDate}</div>`:''}
@@ -5165,30 +5177,32 @@ function renderProfile(){
       <div class="pstat"><div class="pstat-num">${earnedCount}</div><div class="pstat-lbl">Badges</div></div>
     </div>
 
-    <!-- iOS-style action list -->
+    <!-- Achievements card -->
+    <div class="prof-achievements-card" onclick="openAchievements()">
+      <div class="prof-ach-header">
+        <span class="prof-ach-title">Achievements</span>
+        <span class="prof-ach-level" style="color:${lv.color};">${lv.title}</span>
+      </div>
+      <div class="prof-ach-sub">${earnedCount} badge${earnedCount!==1?'s':''} earned${nextLv?` · ${nextLv.min-earnedCount} more to reach ${nextLv.title}`:' · Max rank'}</div>
+      <div class="prof-ach-progress"><div class="prof-ach-fill" style="width:${nextLv?Math.min(100,Math.round(((earnedCount-lv.min)/(nextLv.min-lv.min))*100)):100}%;background:${lv.color};"></div></div>
+      <div class="prof-ach-cta">View badges &amp; history →</div>
+    </div>
+
+    <!-- Action list -->
     <div class="prof-action-list">
       <button class="prof-action-row" onclick="openMyTickets()">
-        <span class="prof-action-icon">🎟</span>
         <span class="prof-action-label">My Tickets</span>
         <span class="prof-action-right">${myTickets.length>0?myTickets.length+' ':''}›</span>
       </button>
       <button class="prof-action-row" onclick="openFriends()">
-        <span class="prof-action-icon">👥</span>
         <span class="prof-action-label">Friends</span>
         <span class="prof-action-right">${state.friends.length>0?state.friends.length+' ':''}›</span>
       </button>
-      <button class="prof-action-row" onclick="openAchievements()">
-        <span class="prof-action-icon">🏆</span>
-        <span class="prof-action-label">Achievements</span>
-        <span class="prof-action-right" style="font-size:11px;max-width:120px;text-align:right;line-height:1.3;">${badgeHint} ›</span>
-      </button>
       <button class="prof-action-row" onclick="editProfile()">
-        <span class="prof-action-icon">✏️</span>
         <span class="prof-action-label">Edit name &amp; email</span>
         <span class="prof-action-right">›</span>
       </button>
       <button class="prof-action-row prof-action-signout" onclick="resetProfile()">
-        <span class="prof-action-icon"></span>
         <span class="prof-action-label">Sign out</span>
         <span class="prof-action-right">›</span>
       </button>
@@ -5255,17 +5269,15 @@ function renderAchievements(){
 
   // Full event history (all events)
   const allEvents=myEvents.slice().reverse();
-  const CAT_ICONS={'Creative':'🎨','Gaming':'🎮','Movie Nights':'🎬','Board Games':'♟️','Meetups':'👥','Food & Drink':'🍽️','Live Music':'🎵','Wellness & Outdoors':'🌿','Tech & Talks':'💡'};
-  const MUTED_CATS={'Creative':'rgba(139,92,246,0.13)','Gaming':'rgba(16,185,129,0.12)','Movie Nights':'rgba(249,115,22,0.12)','Board Games':'rgba(6,182,212,0.12)','Meetups':'rgba(236,72,153,0.11)','Food & Drink':'rgba(239,68,68,0.11)','Live Music':'rgba(99,102,241,0.13)','Wellness & Outdoors':'rgba(132,204,22,0.12)','Tech & Talks':'rgba(59,130,246,0.12)'};
+  const MUTED_CATS_A={'Creative':'rgba(139,92,246,0.13)','Gaming':'rgba(16,185,129,0.12)','Movie Nights':'rgba(249,115,22,0.12)','Board Games':'rgba(6,182,212,0.12)','Meetups':'rgba(236,72,153,0.11)','Food & Drink':'rgba(239,68,68,0.11)','Live Music':'rgba(99,102,241,0.13)','Wellness & Outdoors':'rgba(132,204,22,0.12)','Tech & Talks':'rgba(59,130,246,0.12)'};
   const evTilesHtml=allEvents.length
     ? allEvents.map(ev=>{
-        const c2=CATS[ev.category]||{color:'#60A5FA'}; const icon=CAT_ICONS[ev.category]||'📅';
+        const c2=CATS[ev.category]||{color:'#60A5FA'};
         const shortTitle=ev.title.length>28?ev.title.substring(0,26)+'…':ev.title;
         const evDate=ev.startsAt?new Date(ev.startsAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
         const status=eventStatus(ev);
         const statusDot=status==='live'?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-right:4px;box-shadow:0 0 5px #22c55e88;"></span>`:status==='upcoming'?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c2.color};margin-right:4px;opacity:0.7;"></span>`:'';
-        return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:${MUTED_CATS[ev.category]||'rgba(96,165,250,0.1)'};border:1px solid ${c2.color}28;">
-          <div style="font-size:20px;margin-bottom:6px;line-height:1;">${icon}</div>
+        return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:${MUTED_CATS_A[ev.category]||'rgba(96,165,250,0.1)'};border:1px solid ${c2.color}28;">
           <div style="font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;">${escapeHtml(shortTitle)}</div>
           <div style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;">${statusDot}${escapeHtml(ev.category)}</div>
           ${evDate?`<div style="font-size:10px;color:${c2.color};font-weight:600;margin-top:4px;">${evDate}</div>`:''}
@@ -5277,7 +5289,7 @@ function renderAchievements(){
 
     <!-- Level hero -->
     <div class="achieve-hero">
-      <div class="achieve-badge-big" style="background:${lv.color}22;border-color:${lv.color};color:${lv.color};">${{Newcomer:'☁',Explorer:'🧭',Regular:'🎯',Enthusiast:'🔥','Community Pillar':'💎',Legend:'👑'}[lv.title]||'★'}</div>
+      <div class="achieve-badge-big" style="background:${lv.color}22;border-color:${lv.color};color:${lv.color};">${lv.title.substring(0,2).toUpperCase()}</div>
       <div class="achieve-hero-text">
         <div class="achieve-hero-level" style="color:${lv.color};">${lv.title}</div>
         <div class="achieve-hero-sub">${earnedCount} badge${earnedCount!==1?'s':''} earned${nextLv?` · ${nextLv.min-earnedCount} more to reach ${nextLv.title}`:' · Max rank!'}</div>
@@ -5560,7 +5572,7 @@ function renderCheckout(){
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="connect-header"><h2>Payment</h2><p>${escapeHtml(ev.title)} · ${sel.label} × ${bookingDraft.qty}</p></div>
     <div style="background:var(--gold-tint);border:1px solid var(--gold);border-radius:14px;padding:13px 16px;margin-bottom:20px;font-size:13px;color:var(--text-soft);line-height:1.6;">
-      <strong style="color:var(--text);">🧪 Test mode</strong> — use card <strong>4242 4242 4242 4242</strong>, any future expiry (e.g. 12/28), any 3-digit CVV.
+      <strong style="color:var(--text);">Test mode</strong> — use card <strong>4242 4242 4242 4242</strong>, any future expiry (e.g. 12/28), any 3-digit CVV.
     </div>
     <div class="panel intro-form" style="--corner:${c.color};">
       <label class="intro-field-label">Name on card</label>
@@ -5573,7 +5585,7 @@ function renderCheckout(){
       </div>
     </div>
     <button id="pay-btn" class="btn" style="width:100%;background:${c.color};padding:14px;font-size:15px;margin-top:4px;" onclick="processPayment()">Pay £${total} →</button>
-    <div style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:10px;">🔒 Secure test payment — no real charge will occur.</div>`;
+    <div style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:10px;">Secure test payment — no real charge will occur.</div>`;
 }
 
 // ─── Render: Ticket confirmation ─────────────────────────────────────────
@@ -5590,8 +5602,8 @@ function renderConfirmed(){
         ${tickets.length>1?`<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${c.color};margin-bottom:6px;">Ticket ${t.seatNum} of ${t.totalSeats}</div>`:''}
         <span class="event-badge" style="background:${c.color};margin-bottom:6px;">${ev.category}</span>
         <div style="font-size:17px;font-weight:800;margin:6px 0 4px;line-height:1.2;color:var(--text);">${escapeHtml(ev.title)}</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:1px;">📅 ${ev.date} &nbsp;⏱ ${ev.time}</div>
-        <div style="font-size:12px;color:var(--text-muted);">📍 ${escapeHtml(ev.venue)}, ${escapeHtml(ev.area)}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:1px;">${ev.date} · ${ev.time}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${escapeHtml(ev.venue)}, ${escapeHtml(ev.area)}</div>
         <div style="margin-top:12px;display:flex;gap:8px;font-size:12px;">
           <div style="background:var(--surface-2);border-radius:9px;padding:7px 10px;flex:1;"><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">Type</div><div style="font-weight:700;color:var(--text);margin-top:1px;">${t.typeLabel}</div></div>
           <div style="background:var(--surface-2);border-radius:9px;padding:7px 10px;flex:1;"><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">Paid</div><div style="font-weight:700;color:${c.color};margin-top:1px;">${t.total?`£${t.total.toFixed(2)}`:'Free'}</div></div>
@@ -5611,7 +5623,7 @@ function renderConfirmed(){
     ${ticketCards}
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;">
       <button class="btn" style="background:${c.color};" onclick="downloadICS(${ev.id})">+ Add to Calendar</button>
-      <button class="btn btn-outline" onclick="openSocialForEvent(${ev.id})">💬 Join Group Chat</button>
+      <button class="btn btn-outline" onclick="openSocialForEvent(${ev.id})">Join Group Chat</button>
       <button class="btn btn-text" onclick="openTicketsTab()">View all my tickets →</button>
     </div>`;
 }
@@ -5683,8 +5695,8 @@ function renderCalendarDay(){
             ${status==='live'?`<span class="live-chip" style="margin-left:0;"><span class="dot"></span>Live now</span>`:`<span class="upcoming-chip" style="margin-left:0;">Upcoming</span>`}
           </div>
           <div style="font-size:16px;font-weight:800;line-height:1.2;margin-bottom:5px;color:var(--text);">${escapeHtml(ev.title)}</div>
-          <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:2px;">⏱ ${ev.time}</div>
-          <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:6px;">📍 ${escapeHtml(ev.venue)}, ${escapeHtml(ev.area)}</div>
+          <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:2px;">${ev.time}</div>
+          <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:6px;">${escapeHtml(ev.venue)}, ${escapeHtml(ev.area)}</div>
           <div style="font-size:12px;color:var(--text-soft);">${att.length} going${spacesLeft!==null?` · ${spacesLeft} spaces left`:''} · ${price?`From £${price}`:'Free'}</div>
         </div>
       </div>
@@ -5766,7 +5778,7 @@ function renderTicketsTab(){
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:5px;">
               <span class="event-badge" style="background:${c.color};margin-bottom:0;">${ev.category}</span>
               ${status==='live'?`<span class="live-chip" style="margin-left:0;"><span class="dot"></span>Live</span>`:''}
-              ${chatOpen&&status!=='past'?`<span style="font-size:9.5px;font-weight:700;color:var(--accent);background:rgba(62,124,184,0.12);padding:2px 7px;border-radius:999px;border:1px solid var(--accent);">💬 Chat open</span>`:''}
+              ${chatOpen&&status!=='past'?`<span style="font-size:9.5px;font-weight:700;color:var(--accent);background:rgba(62,124,184,0.12);padding:2px 7px;border-radius:999px;border:1px solid var(--accent);">Chat open</span>`:''}
             </div>
             <div style="font-size:15px;font-weight:700;line-height:1.2;margin-bottom:4px;">${escapeHtml(ev.title)}</div>
             <div style="font-size:12px;color:var(--text-muted);">${ev.date} · ${ev.time}</div>
@@ -5779,7 +5791,7 @@ function renderTicketsTab(){
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn btn-small" style="background:${c.color};" onclick="openViewTicket(${evId})">View Ticket${tickets.length>1?'s':''}</button>
-          ${chatOpen&&status!=='past'?`<button class="btn btn-outline btn-small" onclick="openSocialForEvent(${evId})">💬 Join Chat</button>`:''}
+          ${chatOpen&&status!=='past'?`<button class="btn btn-outline btn-small" onclick="openSocialForEvent(${evId})">Join Chat</button>`:''}
           <button class="btn btn-text btn-small" onclick="downloadICS(${evId})">+ Cal</button>
         </div>
       </div>`;
@@ -5831,7 +5843,7 @@ function renderSocialTab(){
               : `<div style="font-size:12px;color:var(--text-muted);font-style:italic;">No messages yet — be the first to say hi</div>`
             : status==='past'
               ? `<div style="font-size:12px;color:var(--text-muted);">Event ended — chat closed</div>`
-              : `<div style="font-size:12px;color:var(--text-muted);">💬 Chat opens a week before the event</div>`
+              : `<div style="font-size:12px;color:var(--text-muted);">Chat opens a week before the event</div>`
           }
         </div>
         <div style="flex-shrink:0;color:var(--text-muted);font-size:18px;align-self:center;">›</div>
@@ -5858,7 +5870,6 @@ function renderSocialTab(){
     <div class="section-title" style="margin-top:0;">Your card</div>
     ${myCardBanner}
     <div class="empty-state" style="margin-top:16px;">
-      <div style="font-size:28px;margin-bottom:8px;">🎭</div>
       <div style="font-weight:700;margin-bottom:6px;">No events yet</div>
       <div style="font-size:13px;color:var(--text-muted);margin-bottom:18px;">RSVP to events to join their group chats and meet other attendees.</div>
       <button class="btn" onclick="goBrowse()">Browse events</button>
