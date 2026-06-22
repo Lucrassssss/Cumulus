@@ -1186,7 +1186,7 @@
   [data-theme="dark"] .interest-pill.active { color: #fff; }
 
   /* ── Profile section label ── */
-  .profile-section { margin-top: 22px; }
+  .profile-section { margin-top: 20px; }
   .profile-section-label {
     font-size: 10.5px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase;
     color: var(--text-muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
@@ -1194,6 +1194,63 @@
   .profile-section-label::after {
     content: ''; flex: 1; height: 1px; background: var(--line);
   }
+
+  /* ── Streamlined profile layout ── */
+  .prof-card-section { padding: 0 0 14px; }
+  .prof-card-btns { display: flex; gap: 8px; margin-top: 10px; }
+  .prof-card-btns .btn { flex: 1; }
+
+  .prof-stats-row {
+    display: grid; grid-template-columns: repeat(4,1fr);
+    gap: 8px; margin-bottom: 4px;
+  }
+  .pstat {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 14px; padding: 14px 6px; text-align: center;
+  }
+  .pstat-num { font-size: 22px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; line-height: 1; }
+  .pstat-lbl { font-size: 9.5px; font-weight: 700; color: var(--text-muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.4px; }
+
+  .prof-action-list {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px; overflow: hidden; margin-bottom: 4px;
+  }
+  .prof-action-row {
+    width: 100%; display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; background: transparent;
+    border: none; border-bottom: 1px solid var(--line);
+    font-family: var(--font-sans); font-size: 14.5px; font-weight: 600;
+    color: var(--text); cursor: pointer; text-align: left;
+    transition: background 0.12s ease;
+  }
+  .prof-action-row:last-child { border-bottom: none; }
+  .prof-action-row:active { background: var(--surface-2); }
+  .prof-action-icon { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
+  .prof-action-label { flex: 1; }
+  .prof-action-right { font-size: 13px; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 4px; }
+  .prof-action-signout { color: #E23B3B !important; }
+
+  .prof-about-section { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px 16px; }
+  .prof-about-label { font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+  .prof-divider { height: 1px; background: var(--line); margin: 14px 0; }
+
+  /* ── Achievements screen ── */
+  .achieve-hero {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 18px; padding: 20px;
+    display: flex; align-items: center; gap: 16px; margin-bottom: 20px;
+  }
+  .achieve-badge-big {
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; flex-shrink: 0;
+    border: 2px solid; position: relative;
+  }
+  .achieve-hero-text { flex: 1; min-width: 0; }
+  .achieve-hero-level { font-size: 15px; font-weight: 800; color: var(--text); }
+  .achieve-hero-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.5; }
+  .achieve-progress-bar { height: 4px; background: var(--line); border-radius: 99px; margin-top: 10px; overflow: hidden; }
+  .achieve-progress-fill { height: 100%; border-radius: 99px; transition: width 0.6s cubic-bezier(0.22,1,0.36,1); }
 
   /* ── Area picker in card editor ── */
   .ce-area-grid { display: flex; flex-wrap: wrap; gap: 7px; }
@@ -4083,6 +4140,7 @@ function renderNav(){
   const activeTab = ['tickets','my-tickets','book','checkout','confirmed'].includes(state.view)?'tickets'
     :['social'].includes(state.view)?'social'
     :['calendar','calendar-day'].includes(state.view)?'calendar'
+    :['achievements','friends'].includes(state.view)?'profile'
     :state.view;
   const unread = getUnreadSocialCount();
   const navContainer = document.getElementById('nav-container');
@@ -4098,12 +4156,12 @@ function renderNav(){
       profile:`<svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`
     };
     const NAV_TABS=[
-      {label:'Map',    v:'browse',   action:'goBrowse()'},
-      {label:'Tickets',v:'tickets',  action:'navStack=[];openTicketsTab()'},
-      {label:'Social', v:'social',   action:'navStack=[];openSocialTab()'},
-      {label:'Calendar',v:'calendar',action:'navStack=[];openCalendar()'},
-      {label:'Host',   v:'host',     action:'navStack=[];openHost()'},
-      {label:'Profile',v:'profile',  action:'navStack=[];openProfile()'},
+      {label:'Explore', v:'browse',   action:'goBrowse()'},
+      {label:'Tickets', v:'tickets',  action:'navStack=[];openTicketsTab()'},
+      {label:'Social',  v:'social',   action:'navStack=[];openSocialTab()'},
+      {label:'Calendar',v:'calendar', action:'navStack=[];openCalendar()'},
+      {label:'Create',  v:'host',     action:'navStack=[];openHost()'},
+      {label:'Profile', v:'profile',  action:'navStack=[];openProfile()'},
     ];
     navContainer.innerHTML=`
       <div class="top-bar">
@@ -4606,7 +4664,7 @@ async function submitHostEvent(){
 function renderHost(){
   if(mapboxConfigured()) setTimeout(initHostMap,0);
   return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>Host an Event</h2><p>CREATE AND PIN YOUR EVENT TO THE MAP</p></div>
+    <div class="connect-header"><h2>Create an Event</h2><p>Pin it to the map for your community</p></div>
     <div class="panel intro-form" style="--corner:var(--accent);overflow:visible;">
       <label class="intro-field-label">Event Title</label>
       <input id="host-title" class="gate-input" placeholder="e.g., Summer Park Picnic"/>
@@ -4660,6 +4718,7 @@ function renderView(){
   if(state.view==='detail') container.innerHTML=renderDetail(state.selectedEventId);
   else if(state.view==='connect') container.innerHTML=renderConnect(state.selectedEventId);
   else if(state.view==='profile') container.innerHTML=renderProfile();
+  else if(state.view==='achievements') container.innerHTML=renderAchievements();
   else if(state.view==='friends'){ container.innerHTML=renderFriends(); buildFriendQR(); }
   else if(state.view==='calendar') container.innerHTML=renderCalendar();
   else if(state.view==='host') container.innerHTML=renderHost();
@@ -4786,7 +4845,7 @@ function renderConnect(id){
   }).join(''):`<div style="color:var(--text-muted);font-size:13px;">No one else has RSVP'd yet.</div>`;
   const ownTheme=_myT;
   return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><span class="event-badge" style="background:${c.color};">${ev.category}</span><h2>${ev.title}<br>Connect Space</h2><p>${attendees.length} MEMBER${attendees.length!==1?'S':''} · ${chatIsOpen(ev)?'CHAT OPEN':(eventStatus(ev)==='past'?'CHAT CLOSED':'CHAT OPENS A WEEK BEFORE')}</p></div>
+    <div class="connect-header"><span class="event-badge" style="background:${c.color};">${ev.category}</span><h2>${ev.title}</h2><p>${attendees.length} going · ${chatIsOpen(ev)?'Chat open':(eventStatus(ev)==='past'?'Chat closed':'Chat opens a week before')}</p></div>
     <div class="section-title">Your card</div>${yourCardHtml}
     <div class="section-title">Who else is going (${others.length})</div><div class="intro-grid">${othersHtml}</div>
     <div class="section-title" style="justify-content:space-between;"><span style="display:flex;align-items:center;gap:8px;">Group Chat</span><button class="btn btn-outline btn-small" onclick="refreshConnect(${id})">Refresh</button></div>
@@ -4822,7 +4881,7 @@ function renderFriends(){
   const friendCards=state.friends.length?state.friends.map(n=>{ const p=personByName(n); const evs=p?p.events.map(id=>EVENTS.find(e=>e.id===id)).filter(Boolean):[]; return `<div class="panel friend-card" style="--corner:var(--gold);"><div class="fname"><span class="star">★</span> ${escapeHtml(n)}</div>${p?`<div class="fblurb">${escapeHtml(p.blurb)}</div>`:''}<div class="fgoing">${evs.length?`Going to: ${evs.map(e=>escapeHtml(e.title)).join(', ')}`:'No events listed'}</div><button class="btn btn-outline btn-small" style="width:100%" onclick="removeFriend('${escapeHtml(n).replace(/'/g,"\\'")}')">Remove</button></div>`; }).join(''):`<div style="color:var(--text-muted);font-size:13px;">No friends yet. Add a suggested person below to see starred friends on the map.</div>`;
   const suggestedCards=suggested.map(p=>`<div class="panel friend-card" style="--corner:var(--accent);"><div class="fname">${escapeHtml(p.name)}</div><div class="fblurb">${escapeHtml(p.blurb)}</div><div class="fgoing">${p.events.length} event${p.events.length>1?'s':''} coming up</div><button class="btn btn-small" style="width:100%" onclick="addFriend('${escapeHtml(p.name).replace(/'/g,"\\'")}')">Add friend</button></div>`).join('');
   return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>Friends</h2><p>MEET IN PERSON · SHARE YOUR PASS · NO INBOX NEEDED</p></div>
+    <div class="connect-header"><h2>Friends</h2><p>Meet in person, connect on Cumulus</p></div>
     <div class="section-title">Your friend pass</div>
     <div class="panel intro-card" style="--corner:var(--accent);">
       <div style="display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center;">
@@ -4997,31 +5056,28 @@ function renderProfile(){
   const card=state.myCard;
 
   // Extended card fields
-  let cardExt={motto:'',pattern:'lightning',areas:[],accentColor:'#60A5FA',bgStyle:'midnight'};
+  let cardExt={motto:'',pattern:'lightning',areas:[],accentColor:'#60A5FA',bgStyle:'midnight',patternOpacity:0.18};
   try{ const r=localStorage.getItem('card_ext:'+state.profileName); if(r) cardExt={...cardExt,...JSON.parse(r)}; }catch(e){}
   let profilePhoto='';
   try{ profilePhoto=localStorage.getItem('card_photo:'+state.profileName)||''; }catch(e){}
-
-  // Profile-level about + interests (separate from card bio)
   let profileAbout='';
   try{ profileAbout=localStorage.getItem('profile_about:'+state.profileName)||''; }catch(e){}
   let profileInterests=[];
   try{ const pi=localStorage.getItem('profile_interests:'+state.profileName); if(pi) profileInterests=JSON.parse(pi); }catch(e){}
 
-  // Badge count → level
+  // Level + badges
   let earnedCount=0;
   MILESTONE_BADGES.forEach(b=>{ if(count>=b.need) earnedCount++; });
   CATEGORY_BADGES.forEach(b=>{ if(myCats.has(b.cat)) earnedCount++; });
   if(myCats.size>=TOTAL_CATEGORIES) earnedCount++;
   earnedCount+=state.specialBadges.length;
   const lv=getLevel(earnedCount);
+  const nextLvIdx=LEVELS.findIndex(l=>l===lv)+1;
+  const nextLv=LEVELS[nextLvIdx];
 
-  // Top 3 areas — manually selected by user on their card
   const topAreas=cardExt.areas||[];
 
-  // Category icon map for event tiles
-  const CAT_ICONS={'Creative':'🎨','Gaming':'🎮','Movie Nights':'🎬','Board Games':'♟️','Meetups':'👥','Food & Drink':'🍽️','Live Music':'🎵','Wellness & Outdoors':'🌿','Tech & Talks':'💡'};
-
+  // Card HTML (inline profile card)
   function profileCardHtml(c,ext){
     const cols=resolveCardColors(ext.bgStyle||c?.theme||'midnight', ext.accentColor||c?.accentColor||'#60A5FA');
     const {bg,accent,text:textCol,textSoft}=cols;
@@ -5031,12 +5087,12 @@ function renderProfile(){
     const tags=c&&c.interests?c.interests.split(',').slice(0,5).map(s=>`<span class="id-card-tag" style="background:${tagBg};border:1px solid ${tagBorder};color:${textCol};">${escapeHtml(s.trim())}</span>`).join(''):'';
     const borderStyle=lv.ring;
     const shadowStyle=`0 8px 28px rgba(0,0,0,0.22),0 0 0 1px rgba(0,0,0,0.08),0 0 18px ${lv.glow}`;
-    const initials=(c?.name||state.profileName).split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const initStr=(c?.name||state.profileName).split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
     const photoSticker=profilePhoto
       ?`<div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid ${accent};flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><img src="${profilePhoto}" style="width:100%;height:100%;object-fit:cover;display:block;"/></div>`
-      :`<div style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${accent}22;border:2px solid ${accent}55;flex-shrink:0;font-size:18px;font-weight:800;color:${accent};">${initials}</div>`;
-    return `<div class="id-card profile-id-card" onclick="openExpandedCard()" title="Tap to expand your card" style="background:${bg};border:${borderStyle};box-shadow:${shadowStyle};">
-      <div style="position:absolute;inset:0;pointer-events:none;color:${accent};opacity:${cardExt.patternOpacity||0.18};">${pat}</div>
+      :`<div style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${accent}22;border:2px solid ${accent}55;flex-shrink:0;font-size:18px;font-weight:800;color:${accent};">${initStr}</div>`;
+    return `<div class="id-card profile-id-card" onclick="openExpandedCard()" title="Tap to see your full card" style="background:${bg};border:${borderStyle};box-shadow:${shadowStyle};">
+      <div style="position:absolute;inset:0;pointer-events:none;color:${accent};opacity:${ext.patternOpacity||0.18};">${pat}</div>
       <div class="ce-card-shine"></div>
       <div style="position:relative;z-index:2;display:flex;flex-direction:column;height:100%;">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;">
@@ -5059,38 +5115,24 @@ function renderProfile(){
     </div>`;
   }
 
-  const cardDisplay=card
-    ?`${profileCardHtml(card,cardExt)}<div style="margin-top:10px;"><button class="btn btn-outline btn-small" style="width:100%" onclick="openCardEditor(null)">Edit card</button></div>`
-    :`${profileCardHtml(null,cardExt)}<div style="margin-top:10px;"><button class="btn btn-small" style="width:100%" onclick="openCardEditor(null)">Create your card</button></div>`;
-
-  // Event history plate cards (most recent first, max 12)
-  const recentEvents=myEvents.slice(-12).reverse();
-  const MUTED_CATS={
-    'Creative':'rgba(139,92,246,0.13)','Gaming':'rgba(16,185,129,0.12)','Movie Nights':'rgba(249,115,22,0.12)',
-    'Board Games':'rgba(6,182,212,0.12)','Meetups':'rgba(236,72,153,0.11)','Food & Drink':'rgba(239,68,68,0.11)',
-    'Live Music':'rgba(99,102,241,0.13)','Wellness & Outdoors':'rgba(132,204,22,0.12)','Tech & Talks':'rgba(59,130,246,0.12)'
-  };
-  const evTilesHtml=recentEvents.length
-    ? recentEvents.map(ev=>{
-        const c2=CATS[ev.category]||{color:'#60A5FA'}; const icon=CAT_ICONS[ev.category]||'📅';
-        const mutedBg=MUTED_CATS[ev.category]||'rgba(96,165,250,0.1)';
-        const shortTitle=ev.title.length>28?ev.title.substring(0,26)+'…':ev.title;
-        const evDate=ev.startsAt?new Date(ev.startsAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
-        const status=eventStatus(ev);
-        const statusDot=status==='live'?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-right:4px;box-shadow:0 0 5px #22c55e88;"></span>`:status==='upcoming'?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c2.color};margin-right:4px;opacity:0.7;"></span>`:'';
-        return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:${mutedBg};border:1px solid ${c2.color}28;" title="${escapeHtml(ev.title)}">
-          <div style="font-size:20px;margin-bottom:6px;line-height:1;">${icon}</div>
-          <div style="font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;">${escapeHtml(shortTitle)}</div>
-          <div style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;">${statusDot}${escapeHtml(ev.category)}</div>
-          ${evDate?`<div style="font-size:10px;color:${c2.color};font-weight:600;margin-top:4px;">${evDate}</div>`:''}
-        </div>`;
-      }).join('')
-    : `<div style="color:var(--text-muted);font-size:13px;padding:6px 0;">No events yet — browse and RSVP to get started.</div>`;
-
-  // My London spots — manually selected
-  const areasHtml=topAreas.length
-    ? topAreas.map(area=>`<div class="area-chip"><span>${escapeHtml(area)}</span></div>`).join('')
-    : `<span style="font-size:13px;color:var(--text-muted);">Edit your card to pick up to 3 London spots</span>`;
+  // Recent events — last 4 only (not 12)
+  const recentEvents=myEvents.slice(-4).reverse();
+  const CAT_ICONS={'Creative':'🎨','Gaming':'🎮','Movie Nights':'🎬','Board Games':'♟️','Meetups':'👥','Food & Drink':'🍽️','Live Music':'🎵','Wellness & Outdoors':'🌿','Tech & Talks':'💡'};
+  const MUTED_CATS={'Creative':'rgba(139,92,246,0.13)','Gaming':'rgba(16,185,129,0.12)','Movie Nights':'rgba(249,115,22,0.12)','Board Games':'rgba(6,182,212,0.12)','Meetups':'rgba(236,72,153,0.11)','Food & Drink':'rgba(239,68,68,0.11)','Live Music':'rgba(99,102,241,0.13)','Wellness & Outdoors':'rgba(132,204,22,0.12)','Tech & Talks':'rgba(59,130,246,0.12)'};
+  const recentEvHtml=recentEvents.map(ev=>{
+    const c2=CATS[ev.category]||{color:'#60A5FA'}; const icon=CAT_ICONS[ev.category]||'📅';
+    const mutedBg=MUTED_CATS[ev.category]||'rgba(96,165,250,0.1)';
+    const shortTitle=ev.title.length>28?ev.title.substring(0,26)+'…':ev.title;
+    const evDate=ev.startsAt?new Date(ev.startsAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
+    const status=eventStatus(ev);
+    const statusDot=status==='live'?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-right:4px;box-shadow:0 0 5px #22c55e88;"></span>`:status==='upcoming'?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c2.color};margin-right:4px;opacity:0.7;"></span>`:'';
+    return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:${mutedBg};border:1px solid ${c2.color}28;" title="${escapeHtml(ev.title)}">
+      <div style="font-size:20px;margin-bottom:6px;line-height:1;">${icon}</div>
+      <div style="font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;">${escapeHtml(shortTitle)}</div>
+      <div style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;">${statusDot}${escapeHtml(ev.category)}</div>
+      ${evDate?`<div style="font-size:10px;color:${c2.color};font-weight:600;margin-top:4px;">${evDate}</div>`:''}
+    </div>`;
+  }).join('');
 
   // Interests pills
   const interestPillsHtml=INTEREST_PRESETS.map(tag=>{
@@ -5098,101 +5140,182 @@ function renderProfile(){
     return `<button class="interest-pill${active?' active':''}" onclick="toggleProfileInterest('${escapeHtml(tag)}')">${escapeHtml(tag)}</button>`;
   }).join('');
 
-  // Badges
-  const milestoneCells=MILESTONE_BADGES.map(b=>{ const earned=count>=b.need; return trophyCellHtml(b.name,b.desc,b.glyph,b.metal,b.metal,b.tier,earned,earned?'':`${count} / ${b.need} events`); }).join('');
-  const allRounderEarned=myCats.size>=TOTAL_CATEGORIES;
-  const allRounderCell=trophyCellHtml(ALLROUNDER_BADGE.name,ALLROUNDER_BADGE.desc,ALLROUNDER_BADGE.glyph,ALLROUNDER_BADGE.metal,ALLROUNDER_BADGE.glow,ALLROUNDER_BADGE.tier,allRounderEarned,allRounderEarned?'':`${myCats.size} / ${TOTAL_CATEGORIES} categories`);
-  const categoryCells=CATEGORY_BADGES.map(b=>{ const earned=myCats.has(b.cat); return badgeCellHtml(b.name,b.desc,b.glyph,CATS[b.cat].color,earned,''); }).join('');
-  const specialEarnedCells=SPECIAL_BADGES.filter(b=>state.specialBadges.includes(b.id)).map(b=>badgeCellHtml(b.name,b.desc,b.glyph,'var(--gold)',true,'')).join('');
-  const specialSection=specialEarnedCells?`<div class="section-title">Special &amp; community badges</div><div class="badge-grid">${specialEarnedCells}</div>`:'';
-
-  // Next level progress
-  const nextLvIdx=LEVELS.findIndex(l=>l===lv)+1;
-  const nextLv=LEVELS[nextLvIdx];
-  const progressHtml=nextLv
-    ? `<div style="margin-top:6px;font-size:11.5px;color:var(--text-muted);">
-        <span style="color:${lv.color};font-weight:700;">${earnedCount} badge${earnedCount!==1?'s':''}</span> earned ·
-        <span style="font-weight:700;">${nextLv.min - earnedCount} more</span> to reach
-        <span style="color:${nextLv.color};font-weight:700;">${nextLv.title}</span>
-      </div>`
-    : `<div style="margin-top:6px;font-size:11.5px;color:${lv.color};font-weight:700;">✦ Maximum rank achieved</div>`;
+  const badgeHint=nextLv
+    ? `${earnedCount} badge${earnedCount!==1?'s':''} earned · ${nextLv.min-earnedCount} more to reach ${nextLv.title}`
+    : '✦ Max rank achieved';
 
   return `<button class="back-btn" onclick="goBack()">←</button>
 
-    <!-- Card + quick stats -->
-    <div class="profile-top">
-      <div>${cardDisplay}</div>
-      <div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-          <span class="level-badge" style="color:${lv.color};border-color:${lv.color};font-size:11px;padding:4px 12px 4px 9px;">
-            <span class="level-dot"></span>${lv.title}
-          </span>
-          <span style="font-size:12px;color:var(--text-muted);">${escapeHtml(state.profileEmail)}</span>
-        </div>
-        ${progressHtml}
-        <div class="profile-stats" style="margin-top:12px;">
-          <div class="panel stat-box"><div class="stat-num">${count}</div><div class="stat-label">RSVPs</div></div>
-          <div class="panel stat-box"><div class="stat-num">${earnedCount}</div><div class="stat-label">Badges</div></div>
-          <div class="panel stat-box"><div class="stat-num">${myTickets.length}</div><div class="stat-label">Tickets</div></div>
-          <div class="panel stat-box"><div class="stat-num">${state.friends.length}</div><div class="stat-label">Friends</div></div>
-        </div>
-        <div class="profile-actions" style="flex-direction:column;margin-top:12px;">
-          <button class="btn btn-outline btn-small" onclick="editProfile()">Edit name &amp; email</button>
-          <button class="btn btn-outline btn-small" onclick="openMyTickets()">My Tickets (${myTickets.length})</button>
-          <button class="btn btn-outline btn-small" onclick="openFriends()">Manage friends</button>
-          <button class="btn btn-text btn-small" style="color:#E23B3B;" onclick="resetProfile()">Sign out</button>
-        </div>
+    <!-- Card -->
+    <div class="prof-card-section">
+      ${profileCardHtml(card,cardExt)}
+      <div class="prof-card-btns">
+        ${card
+          ?`<button class="btn btn-small" onclick="openCardEditor(null)">Edit card</button>
+             <button class="btn btn-outline btn-small" onclick="openExpandedCard()">View + QR</button>`
+          :`<button class="btn btn-small" style="flex:1;" onclick="openCardEditor(null)">Create your card</button>`}
       </div>
     </div>
 
-    <!-- About me -->
-    <div class="profile-section">
-      <div class="profile-section-label">About me</div>
+    <!-- Stats row -->
+    <div class="prof-stats-row">
+      <div class="pstat"><div class="pstat-num">${count}</div><div class="pstat-lbl">Events</div></div>
+      <div class="pstat"><div class="pstat-num">${state.friends.length}</div><div class="pstat-lbl">Friends</div></div>
+      <div class="pstat"><div class="pstat-num">${myTickets.length}</div><div class="pstat-lbl">Tickets</div></div>
+      <div class="pstat"><div class="pstat-num">${earnedCount}</div><div class="pstat-lbl">Badges</div></div>
+    </div>
+
+    <!-- iOS-style action list -->
+    <div class="prof-action-list">
+      <button class="prof-action-row" onclick="openMyTickets()">
+        <span class="prof-action-icon">🎟</span>
+        <span class="prof-action-label">My Tickets</span>
+        <span class="prof-action-right">${myTickets.length>0?myTickets.length+' ':''}›</span>
+      </button>
+      <button class="prof-action-row" onclick="openFriends()">
+        <span class="prof-action-icon">👥</span>
+        <span class="prof-action-label">Friends</span>
+        <span class="prof-action-right">${state.friends.length>0?state.friends.length+' ':''}›</span>
+      </button>
+      <button class="prof-action-row" onclick="openAchievements()">
+        <span class="prof-action-icon">🏆</span>
+        <span class="prof-action-label">Achievements</span>
+        <span class="prof-action-right" style="font-size:11px;max-width:120px;text-align:right;line-height:1.3;">${badgeHint} ›</span>
+      </button>
+      <button class="prof-action-row" onclick="editProfile()">
+        <span class="prof-action-icon">✏️</span>
+        <span class="prof-action-label">Edit name &amp; email</span>
+        <span class="prof-action-right">›</span>
+      </button>
+      <button class="prof-action-row prof-action-signout" onclick="resetProfile()">
+        <span class="prof-action-icon"></span>
+        <span class="prof-action-label">Sign out</span>
+        <span class="prof-action-right">›</span>
+      </button>
+    </div>
+
+    <!-- About me + interests + spots (all in one card) -->
+    <div class="prof-about-section">
+      <div class="prof-about-label">About me</div>
       <div class="profile-about-wrap">
         <textarea class="profile-about-input" id="profile-about-input" maxlength="150"
-          placeholder="Who are you in 150 characters or less…"
+          placeholder="Tell people a little about you…"
           oninput="updateAboutCounter(this)"
           onblur="saveProfileAbout(this.value)"
         >${escapeHtml(profileAbout)}</textarea>
         <div class="profile-about-counter" id="about-counter">${profileAbout.length}/150</div>
       </div>
-    </div>
 
-    <!-- Interests -->
-    <div class="profile-section">
-      <div class="profile-section-label">My interests</div>
+      <div class="prof-divider"></div>
+      <div class="prof-about-label">Interests</div>
       <div class="interests-grid" id="interests-grid">${interestPillsHtml}</div>
+
+      ${topAreas.length?`
+      <div class="prof-divider"></div>
+      <div class="prof-about-label">My London spots</div>
+      <div class="area-chips">${topAreas.map(a=>`<div class="area-chip"><span>${escapeHtml(a)}</span></div>`).join('')}
+        <button class="btn btn-text btn-small" style="font-size:11px;" onclick="openCardEditor(null)">Edit in card →</button>
+      </div>`:
+      `<div class="prof-divider"></div>
+      <button class="btn btn-text btn-small" style="font-size:12px;padding:0;" onclick="openCardEditor(null)">+ Add your London spots in your card</button>`}
     </div>
 
-    <!-- My areas of London -->
+    <!-- Recent events (only shown if user has any) -->
+    ${recentEvents.length?`
     <div class="profile-section">
-      <div class="profile-section-label">My London spots</div>
-      <div class="area-chips">${areasHtml}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <span class="profile-section-label" style="margin-bottom:0;flex:0 0 auto;">Recent events</span>
+        ${myEvents.length>4?`<button class="btn btn-text btn-small" onclick="openAchievements()" style="font-size:11px;">See all ${myEvents.length} →</button>`:''}
+      </div>
+      <div class="ev-plate-grid">${recentEvHtml}</div>
+    </div>`:''}
+  `;
+}
+
+function openAchievements(){ pushNav(); state.view='achievements'; renderNav(); renderView(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+function renderAchievements(){
+  const myEvents=getMyEvents(); const myCats=getMyCategories(); const count=myEvents.length;
+  let earnedCount=0;
+  MILESTONE_BADGES.forEach(b=>{ if(count>=b.need) earnedCount++; });
+  CATEGORY_BADGES.forEach(b=>{ if(myCats.has(b.cat)) earnedCount++; });
+  if(myCats.size>=TOTAL_CATEGORIES) earnedCount++;
+  earnedCount+=state.specialBadges.length;
+  const lv=getLevel(earnedCount);
+  const nextLvIdx=LEVELS.findIndex(l=>l===lv)+1;
+  const nextLv=LEVELS[nextLvIdx];
+  const progressPct=nextLv?Math.min(100,Math.round(((earnedCount-lv.min)/(nextLv.min-lv.min))*100)):100;
+
+  const milestoneCells=MILESTONE_BADGES.map(b=>{ const earned=count>=b.need; return trophyCellHtml(b.name,b.desc,b.glyph,b.metal,b.metal,b.tier,earned,earned?'':`${count} / ${b.need} events`); }).join('');
+  const allRounderEarned=myCats.size>=TOTAL_CATEGORIES;
+  const allRounderCell=trophyCellHtml(ALLROUNDER_BADGE.name,ALLROUNDER_BADGE.desc,ALLROUNDER_BADGE.glyph,ALLROUNDER_BADGE.metal,ALLROUNDER_BADGE.glow,ALLROUNDER_BADGE.tier,allRounderEarned,allRounderEarned?'':`${myCats.size} / ${TOTAL_CATEGORIES} categories`);
+  const categoryCells=CATEGORY_BADGES.map(b=>{ const earned=myCats.has(b.cat); return badgeCellHtml(b.name,b.desc,b.glyph,CATS[b.cat].color,earned,''); }).join('');
+  const specialEarned=SPECIAL_BADGES.filter(b=>state.specialBadges.includes(b.id));
+  const specialCells=specialEarned.map(b=>badgeCellHtml(b.name,b.desc,b.glyph,'var(--gold)',true,'')).join('');
+
+  // Full event history (all events)
+  const allEvents=myEvents.slice().reverse();
+  const CAT_ICONS={'Creative':'🎨','Gaming':'🎮','Movie Nights':'🎬','Board Games':'♟️','Meetups':'👥','Food & Drink':'🍽️','Live Music':'🎵','Wellness & Outdoors':'🌿','Tech & Talks':'💡'};
+  const MUTED_CATS={'Creative':'rgba(139,92,246,0.13)','Gaming':'rgba(16,185,129,0.12)','Movie Nights':'rgba(249,115,22,0.12)','Board Games':'rgba(6,182,212,0.12)','Meetups':'rgba(236,72,153,0.11)','Food & Drink':'rgba(239,68,68,0.11)','Live Music':'rgba(99,102,241,0.13)','Wellness & Outdoors':'rgba(132,204,22,0.12)','Tech & Talks':'rgba(59,130,246,0.12)'};
+  const evTilesHtml=allEvents.length
+    ? allEvents.map(ev=>{
+        const c2=CATS[ev.category]||{color:'#60A5FA'}; const icon=CAT_ICONS[ev.category]||'📅';
+        const shortTitle=ev.title.length>28?ev.title.substring(0,26)+'…':ev.title;
+        const evDate=ev.startsAt?new Date(ev.startsAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
+        const status=eventStatus(ev);
+        const statusDot=status==='live'?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-right:4px;box-shadow:0 0 5px #22c55e88;"></span>`:status==='upcoming'?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c2.color};margin-right:4px;opacity:0.7;"></span>`:'';
+        return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:${MUTED_CATS[ev.category]||'rgba(96,165,250,0.1)'};border:1px solid ${c2.color}28;">
+          <div style="font-size:20px;margin-bottom:6px;line-height:1;">${icon}</div>
+          <div style="font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;">${escapeHtml(shortTitle)}</div>
+          <div style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;">${statusDot}${escapeHtml(ev.category)}</div>
+          ${evDate?`<div style="font-size:10px;color:${c2.color};font-weight:600;margin-top:4px;">${evDate}</div>`:''}
+        </div>`;
+      }).join('')
+    : `<div style="color:var(--text-muted);font-size:13px;padding:4px 0;">No events yet — browse and RSVP to get started.</div>`;
+
+  return `<button class="back-btn" onclick="goBack()">←</button>
+
+    <!-- Level hero -->
+    <div class="achieve-hero">
+      <div class="achieve-badge-big" style="background:${lv.color}22;border-color:${lv.color};color:${lv.color};">${{Newcomer:'☁',Explorer:'🧭',Regular:'🎯',Enthusiast:'🔥','Community Pillar':'💎',Legend:'👑'}[lv.title]||'★'}</div>
+      <div class="achieve-hero-text">
+        <div class="achieve-hero-level" style="color:${lv.color};">${lv.title}</div>
+        <div class="achieve-hero-sub">${earnedCount} badge${earnedCount!==1?'s':''} earned${nextLv?` · ${nextLv.min-earnedCount} more to reach ${nextLv.title}`:' · Max rank!'}</div>
+        <div class="achieve-progress-bar"><div class="achieve-progress-fill" style="width:${progressPct}%;background:${lv.color};"></div></div>
+      </div>
     </div>
 
-    <!-- Event history -->
-    <div class="profile-section">
-      <div class="profile-section-label">Event history</div>
-      <div class="ev-plate-grid">${evTilesHtml}</div>
-    </div>
-
-    <!-- Badges & Milestones -->
+    <!-- Milestones -->
     <div class="profile-section">
       <div class="profile-section-label">Milestones</div>
       <div class="badge-grid">${milestoneCells}${allRounderCell}</div>
     </div>
+
+    <!-- Categories explored -->
     <div class="profile-section">
       <div class="profile-section-label">Categories explored</div>
       <div class="badge-grid">${categoryCells}</div>
     </div>
-    ${specialSection?`<div class="profile-section">${specialSection}</div>`:''}
+
+    ${specialCells?`
+    <div class="profile-section">
+      <div class="profile-section-label">Special &amp; community badges</div>
+      <div class="badge-grid">${specialCells}</div>
+    </div>`:''}
+
+    <!-- Event history (all) -->
+    ${allEvents.length?`
+    <div class="profile-section">
+      <div class="profile-section-label">All events (${allEvents.length})</div>
+      <div class="ev-plate-grid">${evTilesHtml}</div>
+    </div>`:''}
 
     <!-- Redeem -->
     <div class="profile-section">
       <div class="profile-section-label">Badge codes</div>
       <div class="panel redeem-box" style="--corner:var(--gold);">
-        <h4>Redeem a special badge</h4>
-        <p>Promoters can issue collectible badges. Got a code? Enter it here.</p>
+        <h4>Redeem a badge code</h4>
+        <p>Promoters can issue collectible badges. Got a code from an event? Enter it here.</p>
         <div class="redeem-row"><input id="redeem-input" class="redeem-input" placeholder="ENTER CODE" onkeydown="if(event.key==='Enter')redeemBadge()"/><button class="btn" style="background:var(--gold);color:#1a1400;" onclick="redeemBadge()">Redeem</button></div>
         <div class="promoter-note">Running an event and want your own badge? Contact the Cumulus team.</div>
       </div>
@@ -5246,7 +5369,7 @@ function renderCalendar(){
     return `<div class="calendar-cell ${isToday?'today':''} ${dayEvents.length?'has-events':''} pointer" onclick="openCalendarDay(${day})" style="cursor:pointer;"><div class="calendar-day-num">${day}</div>${chips}${more}</div>`;
   }).join('')).join('');
   return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>${MONTH_NAMES[CALENDAR_MONTH]} ${CALENDAR_YEAR}</h2><p>EVERYTHING HAPPENING THIS MONTH</p></div>
+    <div class="connect-header"><h2>${MONTH_NAMES[CALENDAR_MONTH]} ${CALENDAR_YEAR}</h2><p>What's on this month</p></div>
     <div class="calendar-scroll"><div class="calendar-inner">
       <div class="calendar-header-row">${WEEKDAY_LABELS.map(d=>`<div class="calendar-weekday">${d}</div>`).join('')}</div>
       <div class="calendar-grid">${cellsHtml}</div>
@@ -5496,7 +5619,7 @@ function renderConfirmed(){
 // ─── Render: My Tickets list ──────────────────────────────────────────────
 function renderMyTickets(){
   if(!myTickets.length) return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>My Tickets</h2><p>YOUR BOOKING HISTORY</p></div>
+    <div class="connect-header"><h2>My Tickets</h2><p>All your event bookings</p></div>
     <div class="empty-state">No tickets yet — browse events and book your first one.</div>`;
   const cards=[...myTickets].reverse().map(t=>{
     const ev=EVENTS.find(e=>e.id===t.eventId); if(!ev) return '';
@@ -5526,7 +5649,7 @@ function renderMyTickets(){
     </div>`;
   }).join('');
   return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>My Tickets</h2><p>${myTickets.length} BOOKING${myTickets.length!==1?'S':''}</p></div>
+    <div class="connect-header"><h2>My Tickets</h2><p>${myTickets.length} booking${myTickets.length!==1?'s':''}</p></div>
     ${cards}`;
 }
 
@@ -5546,7 +5669,7 @@ function renderCalendarDay(){
   EVENTS.forEach(ev=>{ const d=getEventDay(ev); if(d){ if(!eventsByDay[d]) eventsByDay[d]=[]; eventsByDay[d].push(ev); } });
   const dayEvents=(eventsByDay[day]||[]).sort((a,b)=>a.startsAt-b.startsAt);
   if(!dayEvents.length) return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>${dayLabel}</h2><p>NO EVENTS SCHEDULED</p></div>
+    <div class="connect-header"><h2>${dayLabel}</h2><p>Nothing scheduled today</p></div>
     <div class="empty-state">Nothing on this day. <button class="btn-text" onclick="openHost()">Host one?</button></div>`;
   const cards=dayEvents.map(ev=>{
     const c=CATS[ev.category]; const status=eventStatus(ev);
@@ -5575,7 +5698,7 @@ function renderCalendarDay(){
     </div>`;
   }).join('');
   return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>${dateObj.toLocaleDateString('en-GB',{weekday:'long'})}, ${dateObj.toLocaleDateString('en-GB',{day:'numeric',month:'long'})}</h2><p>${dayEvents.length} EVENT${dayEvents.length!==1?'S':''} · ${CALENDAR_YEAR}</p></div>
+    <div class="connect-header"><h2>${dateObj.toLocaleDateString('en-GB',{weekday:'long'})}, ${dateObj.toLocaleDateString('en-GB',{day:'numeric',month:'long'})}</h2><p>${dayEvents.length} event${dayEvents.length!==1?'s':''}</p></div>
     ${cards}`;
 }
 
@@ -5665,10 +5788,10 @@ function renderTicketsTab(){
   };
 
   if(!myTickets.length) return `
-    <div class="connect-header" style="padding-top:16px;"><h2>My Tickets</h2><p>YOUR UPCOMING EVENT BOOKINGS</p></div>
+    <div class="connect-header" style="padding-top:16px;"><h2>My Tickets</h2><p>Your event bookings</p></div>
     <div class="empty-state">No tickets yet — browse events and book your first one.<br><br><button class="btn" onclick="goBrowse()">Browse Events</button></div>`;
   return `
-    <div class="connect-header" style="padding-top:16px;"><h2>My Tickets</h2><p>${upcoming.length} UPCOMING · ${past.length} PAST</p></div>
+    <div class="connect-header" style="padding-top:16px;"><h2>My Tickets</h2><p>${upcoming.length} upcoming · ${past.length} past</p></div>
     ${renderGroup(upcoming,'Upcoming')}
     ${renderGroup(past,'Past')}`;
 }
@@ -5731,13 +5854,18 @@ function renderSocialTab(){
       </div>`;
 
   if(!evList.length) return `
-    <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>YOUR EVENT GROUPS</p></div>
-    <div class="section-title">Your card</div>
+    <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Connect with people at events</p></div>
+    <div class="section-title" style="margin-top:0;">Your card</div>
     ${myCardBanner}
-    <div class="empty-state" style="margin-top:16px;">Book or RSVP to events to join their group chats.<br><br><button class="btn" onclick="goBrowse()">Browse Events</button></div>`;
+    <div class="empty-state" style="margin-top:16px;">
+      <div style="font-size:28px;margin-bottom:8px;">🎭</div>
+      <div style="font-weight:700;margin-bottom:6px;">No events yet</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:18px;">RSVP to events to join their group chats and meet other attendees.</div>
+      <button class="btn" onclick="goBrowse()">Browse events</button>
+    </div>`;
   return `
-    <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>YOUR EVENT GROUPS · ${upcoming.length} ACTIVE</p></div>
-    <div class="section-title">Your card</div>
+    <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>${upcoming.length} upcoming · ${past.length} past</p></div>
+    <div class="section-title" style="margin-top:0;">Your card</div>
     ${myCardBanner}
     ${upcoming.length?`<div class="section-title">Upcoming</div>${upcoming.map(renderEvCard).join('')}`:''}
     ${past.length?`<div class="section-title">Past</div>${past.map(renderEvCard).join('')}`:''}`;
