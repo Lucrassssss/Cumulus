@@ -31,18 +31,18 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   [data-theme="light"]{
-    --bg:#F2F3F5;--bg-2:#E4E6EA;--surface:#FFFFFF;--surface-2:#EDEFF2;
-    --text:#1B1D21;--text-soft:#454952;--text-muted:#868C96;
-    --line: rgba(20,24,30,0.12);--line-soft: rgba(20,24,30,0.06);
-    --accent:#3E7CB8;--accent-deep:#2A5680;--shadow: rgba(30,40,55,0.14);
-    --gold:#D9A52E;--gold-tint: rgba(217,165,46,0.15);--blot-color:#C7D3DE;--scrim: rgba(230,232,236,0.78);
+    --bg:#EDEAE5;--bg-2:#E0DDD7;--surface:#F9F8F6;--surface-2:#ECEAE6;
+    --text:#1C1917;--text-soft:#44403C;--text-muted:#8A857E;
+    --line:rgba(28,25,23,0.09);--line-soft:rgba(28,25,23,0.045);
+    --accent:#3B6E94;--accent-deep:#2B5270;--shadow:rgba(18,14,10,0.09);
+    --gold:#A8781A;--gold-tint:rgba(168,120,26,0.11);--blot-color:#B2C2CE;--scrim:rgba(236,233,228,0.86);
   }
   [data-theme="dark"]{
-    --bg:#090A0C;--bg-2:#050506;--surface:#15161A;--surface-2:#1E1F24;
-    --text:#F1F1EF;--text-soft:#C5C6CB;--text-muted:#76787F;
-    --line: rgba(255,255,255,0.12);--line-soft: rgba(255,255,255,0.06);
-    --accent:#5B9FD9;--accent-deep:#3A6E9C;--shadow: rgba(0,0,0,0.55);
-    --gold:#E0B23C;--gold-tint: rgba(224,178,60,0.16);--blot-color:#FFFFFF;--scrim: rgba(5,5,6,0.72);
+    --bg:#0F0D0C;--bg-2:#090807;--surface:#181512;--surface-2:#211E1B;
+    --text:#F0EDE8;--text-soft:#B5AFA9;--text-muted:#6B6560;
+    --line:rgba(240,237,232,0.09);--line-soft:rgba(240,237,232,0.045);
+    --accent:#5A8FAD;--accent-deep:#3A6A88;--shadow:rgba(0,0,0,0.64);
+    --gold:#C0961F;--gold-tint:rgba(192,150,31,0.14);--blot-color:#F0EDE8;--scrim:rgba(8,6,5,0.82);
   }
   :root{
     --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
@@ -933,161 +933,179 @@
   }
   @keyframes ceOverlayIn { from{opacity:0;} to{opacity:1;} }
 
-  .ce-shell {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    width: 100%; min-height: 100dvh;
-    max-width: 1100px; margin: 0 auto;
-    animation: ceShellIn 0.38s cubic-bezier(0.22,1,0.36,1) both;
-  }
-  @keyframes ceShellIn { from{transform:translateY(24px);opacity:0;} to{transform:translateY(0);opacity:1;} }
-
-  /* Left — preview */
-  .ce-left {
+  /* ══ CARD EDITOR — tabbed layout ══ */
+  .ce-overlay {
+    position: fixed; inset: 0; z-index: 9000;
     background: var(--bg);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .ce-topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 20px;
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(54px + env(safe-area-inset-top, 0px));
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .ce-topbar-back {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--surface-2); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 17px; color: var(--text);
+    flex-shrink: 0; font-family: var(--font-sans);
+    transition: background .15s;
+  }
+  .ce-topbar-back:hover { background: var(--bg-2); }
+  .ce-topbar-title {
+    flex: 1; font-size: 15px; font-weight: 700; color: var(--text);
+    line-height: 1.3;
+  }
+  .ce-topbar-sub { font-size: 11px; color: var(--text-muted); font-weight: 400; }
+  .ce-topbar-save {
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 10px;
+    padding: 9px 22px; font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: var(--font-sans);
+    transition: opacity .15s;
+  }
+  .ce-topbar-save:active { opacity: .78; }
+  .ce-topbar-skip {
+    background: transparent; color: var(--text-muted);
+    border: none; font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: var(--font-sans); padding: 9px 8px;
+  }
+
+  /* split: preview | tabs */
+  .ce-shell {
+    display: grid; grid-template-columns: 360px 1fr;
+    flex: 1; overflow: hidden;
+    animation: ceShellIn 0.32s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @keyframes ceShellIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+
+  .ce-left {
+    background: color-mix(in srgb, var(--bg-2) 70%, var(--bg) 30%);
     border-right: 1px solid var(--line);
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    padding: 48px 40px; gap: 28px;
-    position: sticky; top: 0; height: 100dvh;
+    padding: 32px 28px; gap: 18px; overflow: hidden;
   }
   .ce-left-label {
-    font-size: 10px; font-weight: 800; letter-spacing: 2px;
+    font-size: 10px; font-weight: 700; letter-spacing: 1.8px;
     text-transform: uppercase; color: var(--text-muted);
-    align-self: flex-start;
+    align-self: flex-start; opacity: .7;
   }
-  .ce-card-wrap { width: 100%; max-width: 340px; }
+  .ce-card-wrap { width: 100%; max-width: 288px; }
   .ce-live-card {
-    border-radius: 22px;
-    border: 1px solid;
-    padding: 26px 24px;
-    min-height: 210px;
+    border-radius: 18px; border: 1px solid;
+    padding: 22px 20px; min-height: 190px;
     position: relative; overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.22), 0 4px 16px rgba(0,0,0,0.12);
+    box-shadow: 0 16px 44px rgba(0,0,0,0.24), 0 3px 10px rgba(0,0,0,0.10);
     transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s ease;
-    will-change: transform;
-    cursor: default;
+    will-change: transform; cursor: default;
   }
   .ce-pattern { position: absolute; inset: 0; pointer-events: none; }
-  .card-pattern-svg {
-    width: 100%; height: 100%;
-    position: absolute; inset: 0;
-  }
+  .card-pattern-svg { width: 100%; height: 100%; position: absolute; inset: 0; }
   .ce-card-shine {
     position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-    background: linear-gradient(140deg, rgba(255,255,255,0.14) 0%, transparent 50%, rgba(0,0,0,0.08) 100%);
+    background: linear-gradient(140deg, rgba(255,255,255,0.11) 0%, transparent 50%, rgba(0,0,0,0.05) 100%);
   }
   .ce-card-shine::after {
-    content: '';
-    position: absolute; top: 0; left: -80%;
+    content: ''; position: absolute; top: 0; left: -80%;
     width: 45%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.09), transparent);
     transform: skewX(-18deg);
     animation: passShimmer 5s ease-in-out infinite;
   }
-  .ce-card-body {
-    position: relative; z-index: 2;
-    display: flex; flex-direction: column; gap: 7px;
-    height: 100%;
-  }
-  .ce-card-top-row {
-    display: flex; align-items: flex-start; justify-content: space-between;
-    margin-bottom: 4px;
-  }
+  @keyframes passShimmer { 0%{left:-80%;} 60%,100%{left:160%;} }
+  .ce-card-body { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 6px; height: 100%; }
+  .ce-card-top-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 3px; }
   .ce-preview-label { font-size: 9px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; opacity: 0.8; }
-  .ce-preview-accent { width: 28px; height: 2px; border-radius: 99px; margin-top: 5px; }
-  .ce-preview-emoji { font-size: 28px; line-height: 1; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3)); }
-  .ce-preview-name { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.15; }
-  .ce-preview-motto { font-size: 11px; font-weight: 700; font-style: italic; min-height: 14px; letter-spacing: 0.2px; }
-  .ce-preview-bio { font-size: 12px; line-height: 1.55; flex: 1; }
-  .ce-preview-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-  .ce-preview-tag {
-    border: 1px solid; border-radius: 999px;
-    padding: 2px 9px; font-size: 10px; font-weight: 700;
-  }
-  .ce-preview-detail { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; margin-top: auto; padding-top: 10px; }
+  .ce-preview-accent { width: 24px; height: 2px; border-radius: 99px; margin-top: 5px; }
+  .ce-preview-name { font-size: 19px; font-weight: 800; letter-spacing: -0.4px; line-height: 1.18; }
+  .ce-preview-motto { font-size: 10.5px; font-weight: 700; font-style: italic; min-height: 13px; }
+  .ce-preview-bio { font-size: 11.5px; line-height: 1.5; flex: 1; }
+  .ce-preview-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .ce-preview-tag { border: 1px solid; border-radius: 999px; padding: 2px 8px; font-size: 9.5px; font-weight: 700; }
+  .ce-preview-detail { font-size: 9.5px; font-weight: 600; letter-spacing: 0.4px; margin-top: auto; padding-top: 8px; }
   .ce-preview-wm {
     position: absolute; right: -8px; bottom: -20px;
-    font-size: 88px; font-weight: 900; opacity: 0.08;
-    line-height: 1; pointer-events: none; user-select: none;
-    z-index: 1;
+    font-size: 82px; font-weight: 900; opacity: 0.07;
+    line-height: 1; pointer-events: none; user-select: none; z-index: 1;
   }
   .ce-card-hint {
-    text-align: center; font-size: 11px; font-weight: 600;
-    color: var(--text-muted); margin-top: 14px; letter-spacing: 0.2px;
+    font-size: 11px; font-weight: 500; color: var(--text-muted);
+    text-align: center; margin-top: 12px; line-height: 1.55; letter-spacing: 0.1px;
   }
-  .ce-left-actions {
-    display: flex; gap: 10px; width: 100%; max-width: 340px;
-  }
+  .ce-left-actions { display: flex; gap: 9px; width: 100%; max-width: 288px; }
 
-  /* Right — controls */
-  .ce-right {
-    background: var(--surface);
-    padding: 40px 36px 60px;
-    overflow-y: auto;
-    display: flex; flex-direction: column; gap: 0;
+  /* Right panel — tabs + content */
+  .ce-right { display: flex; flex-direction: column; overflow: hidden; background: var(--surface); }
+  .ce-tabs-bar {
+    display: flex; padding: 0 24px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0; background: var(--surface); gap: 2px;
   }
-  .ce-right-header { margin-bottom: 28px; }
-  .ce-right-title { font-size: 24px; font-weight: 900; letter-spacing: -0.6px; color: var(--text); margin-bottom: 5px; }
-  .ce-right-sub { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+  .ce-tab-btn {
+    padding: 14px 20px 13px; font-size: 13px; font-weight: 600;
+    font-family: var(--font-sans); color: var(--text-muted);
+    background: transparent; border: none;
+    border-bottom: 2px solid transparent; cursor: pointer;
+    margin-bottom: -1px; letter-spacing: 0.1px;
+    transition: color .14s ease, border-color .14s ease;
+  }
+  .ce-tab-btn:hover { color: var(--text); }
+  .ce-tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+  .ce-tab-panel {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 26px 24px calc(48px + env(safe-area-inset-bottom, 0px));
+    display: none;
+  }
+  .ce-tab-panel.active { display: block; }
 
-  .ce-section { margin-bottom: 28px; }
+  /* Within-tab sections */
+  .ce-section { margin-bottom: 30px; }
+  .ce-section:last-child { margin-bottom: 0; }
   .ce-section-label {
-    font-size: 10.5px; font-weight: 800; letter-spacing: 1.4px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: 1px;
     text-transform: uppercase; color: var(--text-muted);
     margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
   }
-  .ce-optional { font-weight: 600; letter-spacing: 0.5px; text-transform: none; font-size: 10px; }
-
-  /* Theme grid */
-  .ce-themes-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-  }
-  .ce-theme-btn {
-    border: 2px solid transparent; border-radius: 14px;
-    padding: 0; cursor: pointer; overflow: hidden;
-    transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
-    background: none;
-  }
-  .ce-theme-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--shadow); }
-  .ce-theme-btn.active { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
-  .ce-theme-preview {
-    height: 58px; position: relative; border-radius: 12px; overflow: hidden;
-  }
-
-  /* Emoji grid */
-  .ce-emoji-grid {
-    display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px;
-  }
-  .ce-emoji-btn {
-    background: var(--surface-2); border: 2px solid transparent;
-    border-radius: 10px; font-size: 18px; line-height: 1;
-    padding: 7px 4px; cursor: pointer;
-    transition: border-color .15s ease, transform .15s ease, background .15s ease;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .ce-emoji-btn:hover { transform: scale(1.18); background: var(--bg-2); }
-  .ce-emoji-btn.active {
-    border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  .ce-optional { font-size: 10px; font-weight: 500; opacity: .65; text-transform: none; letter-spacing: 0; }
+  .ce-save-row {
+    display: flex; gap: 9px; margin-top: 28px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   /* Inputs */
   .ce-input {
     width: 100%; background: var(--surface-2);
-    border: 1.5px solid var(--line); border-radius: 12px;
+    border: 1.5px solid var(--line); border-radius: 11px;
     padding: 11px 14px; font-family: var(--font-sans);
-    font-size: 14px; color: var(--text); outline: none;
-    transition: border-color .18s ease, box-shadow .18s ease;
-    resize: none;
+    font-size: 15px; color: var(--text); outline: none;
+    transition: border-color .15s ease, background .15s ease;
+    resize: none; -webkit-appearance: none;
   }
-  .ce-input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+  .ce-input:focus { border-color: var(--accent); background: var(--surface); }
+  .ce-textarea { resize: vertical; min-height: 80px; }
+  .ce-char-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 7px; line-height: 1.4; }
+
+  /* Themes / emoji grids — kept for compat */
+  .ce-themes-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+  .ce-emoji-grid { display: grid; grid-template-columns: repeat(10,1fr); gap: 6px; }
+  .ce-emoji-btn {
+    background: var(--surface-2); border: 2px solid transparent;
+    border-radius: 10px; font-size: 18px; padding: 7px 4px;
+    cursor: pointer; transition: border-color .14s, transform .14s;
+    display: flex; align-items: center; justify-content: center;
   }
-  .ce-textarea { resize: vertical; min-height: 72px; }
-  .ce-char-hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+  .ce-emoji-btn:hover { transform: scale(1.15); }
+  .ce-emoji-btn.active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+
+  /* Mobile save (legacy) */
+  .ce-mobile-actions { display: none; flex-direction: column; gap: 10px; margin-top: 20px; }
 
   /* ── Level badge ── */
   .level-badge {
@@ -1178,18 +1196,20 @@
   }
 
   /* ── Area picker in card editor ── */
-  .ce-area-grid {
-    display: flex; flex-wrap: wrap; gap: 6px;
-  }
+  .ce-area-grid { display: flex; flex-wrap: wrap; gap: 7px; }
   .ce-area-pill {
-    padding: 4px 11px; border-radius: 3px; font-size: 11px; font-weight: 600;
-    border: 1px solid var(--line); background: var(--surface-2); color: var(--text-muted);
-    cursor: pointer; transition: all .14s; letter-spacing: 0.02em;
+    padding: 7px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+    border: 1.5px solid var(--line); background: transparent; color: var(--text-soft);
+    cursor: pointer; font-family: var(--font-sans);
+    transition: border-color .14s, background .14s, color .14s;
   }
+  .ce-area-pill:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
   .ce-area-pill.active {
-    background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700;
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 13%, transparent);
+    color: var(--text); font-weight: 700;
   }
-  .ce-area-pill:disabled { opacity: 0.3; cursor: default; }
+  .ce-area-pill:disabled { opacity: 0.28; cursor: not-allowed; }
 
   /* ── Expanded card v2 ── */
   .card-xl-overlay {
@@ -1409,19 +1429,22 @@
     display: none; flex-direction: column; gap: 10px; margin-top: 20px;
   }
 
-  /* Responsive */
+  /* Card editor — mobile */
   @media (max-width: 780px) {
-    .ce-shell { grid-template-columns: 1fr; }
+    .ce-shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
     .ce-left {
-      position: static; height: auto;
-      padding: 32px 20px 24px;
-      border-right: none; border-bottom: 1px solid var(--line);
+      flex-direction: row; gap: 14px;
+      justify-content: flex-start; align-items: center;
+      padding: 12px 16px; border-right: none;
+      border-bottom: 1px solid var(--line); overflow: hidden;
     }
-    .ce-right { padding: 28px 20px 40px; }
-    .ce-themes-grid { grid-template-columns: repeat(4, 1fr); }
-    .ce-emoji-grid { grid-template-columns: repeat(5, 1fr); }
+    .ce-left-label { display: none; }
+    .ce-card-wrap { width: 120px; flex-shrink: 0; }
+    .ce-card-hint { display: none; }
     .ce-left-actions { display: none !important; }
-    .ce-mobile-actions { display: flex !important; }
+    .ce-tabs-bar { padding: 0 16px; }
+    .ce-tab-btn { padding: 12px 14px 11px; font-size: 12.5px; }
+    .ce-tab-panel { padding: 18px 16px calc(40px + env(safe-area-inset-bottom, 0px)); }
   }
 
   /* ══════════════════════════════════════════
@@ -2201,93 +2224,73 @@
   }
   .profile-id-card:hover::after { opacity: 0.45; }
 
-  /* ══════════════════════════════════════════
-     EXPANDED CUSTOMISATION — COLORS & STYLES
-     ══════════════════════════════════════════ */
-
-  /* Color swatch grid */
-  .cc-color-grid {
-    display: grid;
-    grid-template-columns: repeat(10, 1fr);
-    gap: 7px;
+  /* ══ Colour & style pickers (no nested scroll) ══ */
+  .cc-family-label {
+    font-size: 9.5px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--text-muted);
+    margin: 16px 0 8px; opacity: .75;
   }
+  .cc-family-label:first-child { margin-top: 0; }
+  .cc-color-grid { display: grid; grid-template-columns: repeat(10,1fr); gap: 6px; }
   .cc-swatch {
-    width: 100%; aspect-ratio: 1;
-    border-radius: 50%; border: 2.5px solid transparent;
-    cursor: pointer; padding: 0; outline: none;
-    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-    position: relative;
+    width: 100%; aspect-ratio: 1; border-radius: 50%;
+    border: 2.5px solid transparent; cursor: pointer;
+    padding: 0; outline: none; position: relative;
+    transition: transform .14s ease, box-shadow .14s ease;
   }
-  .cc-swatch:hover { transform: scale(1.22); z-index: 2; }
+  .cc-swatch:hover { transform: scale(1.18); z-index: 2; }
   .cc-swatch.active {
     border-color: var(--text) !important;
     box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text);
-    transform: scale(1.18);
+    transform: scale(1.2);
   }
   .cc-swatch-label {
-    position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
-    font-size: 8px; font-weight: 700; white-space: nowrap;
-    color: var(--text-muted); opacity: 0; pointer-events: none;
-    transition: opacity .15s;
+    position: absolute; bottom: calc(100% + 5px); left: 50%;
+    transform: translateX(-50%);
+    background: var(--text); color: var(--bg);
+    font-size: 8.5px; font-weight: 700; white-space: nowrap;
+    padding: 2px 6px; border-radius: 5px;
+    opacity: 0; pointer-events: none; transition: opacity .14s;
+    z-index: 10;
   }
   .cc-swatch:hover .cc-swatch-label { opacity: 1; }
 
-  /* Background style grid */
-  .cc-style-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-  }
+  .cc-style-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
   .cc-style-btn {
-    border: 2px solid transparent; border-radius: 12px;
+    border: 1.5px solid var(--line); border-radius: 11px;
     padding: 0; cursor: pointer; overflow: hidden;
-    transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
-    background: none; position: relative;
+    background: none; outline: none;
+    transition: border-color .14s, transform .14s, box-shadow .14s;
   }
-  .cc-style-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--shadow); }
+  .cc-style-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px var(--shadow); }
   .cc-style-btn.active {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb,var(--accent) 28%,transparent);
+    transform: scale(1.03);
   }
   .cc-style-preview {
-    height: 52px; position: relative; border-radius: 10px; overflow: hidden;
-    display: flex; align-items: flex-end; justify-content: center; padding-bottom: 5px;
+    height: 60px; display: flex; align-items: flex-end; padding: 6px 7px;
+    position: relative; overflow: hidden;
   }
   .cc-style-name {
-    font-size: 9px; font-weight: 800; letter-spacing: 0.3px;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.5); text-align: center; z-index: 1;
+    font-size: 9px; font-weight: 800; letter-spacing: 0.2px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.55); z-index: 1; line-height: 1.2;
   }
-
-  /* Pattern buttons */
-  .cc-pattern-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-  }
+  .cc-pattern-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
   .cc-pattern-btn {
-    border: 2px solid var(--line); border-radius: 10px;
-    padding: 0; cursor: pointer; overflow: hidden;
-    background: var(--surface-2);
-    transition: border-color .18s ease, transform .18s ease;
-    height: 48px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: 700; color: var(--text-muted);
-    letter-spacing: 0.3px;
+    border: 1.5px solid var(--line); border-radius: 10px;
+    padding: 11px 6px; cursor: pointer; background: var(--surface-2);
+    font-size: 11px; font-weight: 600; color: var(--text-soft);
+    font-family: var(--font-sans); text-align: center;
+    transition: border-color .14s, background .14s, color .14s;
+    outline: none;
   }
-  .cc-pattern-btn:hover { transform: translateY(-1px); border-color: var(--accent); }
+  .cc-pattern-btn:hover { border-color: var(--accent); color: var(--text); }
   .cc-pattern-btn.active {
     border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    color: var(--accent);
+    background: color-mix(in srgb,var(--accent) 11%,transparent);
+    color: var(--text); font-weight: 700;
   }
-
-  /* Color family labels */
-  .cc-family-label {
-    font-size: 9.5px; font-weight: 800; letter-spacing: 1.2px;
-    text-transform: uppercase; color: var(--text-muted);
-    margin: 12px 0 6px;
-  }
-  .cc-family-label:first-child { margin-top: 0; }
 
   /* Event plate cards on profile */
   .ev-plate-grid {
@@ -2455,10 +2458,157 @@
 
   /* Standalone / added-to-home-screen mode — no address bar */
   @media (display-mode: standalone) {
-    /* Extra bottom padding so content clears the home indicator */
     #app { padding-bottom: calc(var(--bot-h) + 20px + env(safe-area-inset-bottom, 0px)); }
-    /* Hide the theme toggle since system handles it */
     .top-bar { border-bottom-color: transparent; box-shadow: 0 1px 0 var(--line); }
+  }
+
+  /* ══════════════════════════════════════════
+     GLOBAL POLISH — override & refine
+     ══════════════════════════════════════════ */
+
+  /* Panels: softer border, warmer shadow, tighter top-accent */
+  .panel {
+    border-radius: 17px;
+    border: 1px solid var(--line);
+    box-shadow: 0 1px 3px var(--shadow), 0 4px 14px rgba(0,0,0,0.04);
+  }
+  .panel::after { height: 2px; border-radius: 17px 17px 0 0; }
+
+  /* Buttons: more refined shape */
+  .btn {
+    border-radius: 11px;
+    font-size: 13.5px; letter-spacing: 0.05px;
+    padding: 10px 22px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.08);
+    transition: opacity .12s ease, transform .12s ease;
+  }
+  .btn:active { opacity: .84; transform: scale(.98); }
+  .btn-outline {
+    border: 1.5px solid var(--line);
+    box-shadow: none;
+  }
+  .btn-small { padding: 7px 15px; font-size: 12.5px; border-radius: 9px; }
+
+  /* Back button */
+  .back-btn {
+    width: 38px; height: 38px; border-radius: 10px;
+    box-shadow: 0 1px 3px var(--shadow);
+    font-size: 17px;
+  }
+
+  /* Top bar: glassy, refined */
+  .top-bar {
+    backdrop-filter: blur(22px) saturate(1.6);
+    -webkit-backdrop-filter: blur(22px) saturate(1.6);
+    border-bottom: 1px solid var(--line-soft);
+    box-shadow: 0 1px 0 var(--line-soft), 0 4px 16px rgba(0,0,0,0.03);
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+  }
+  /* Bottom nav: same glass */
+  .bottom-nav {
+    backdrop-filter: blur(22px) saturate(1.6);
+    -webkit-backdrop-filter: blur(22px) saturate(1.6);
+    border-top: 1px solid var(--line-soft);
+    box-shadow: 0 -1px 0 var(--line-soft);
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+  }
+  .nav-link { border-radius: 12px; }
+  .nav-link.active-cloud-tab { background: color-mix(in srgb,var(--accent) 10%,transparent); }
+
+  /* Section titles: cleaner, less ALL CAPS weight */
+  .section-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.7px;
+    color: var(--text-muted); margin: 24px 0 11px;
+  }
+  .section-title::before { width: 5px; height: 5px; }
+
+  /* Profile card: smoother hover */
+  .profile-id-card:hover {
+    transform: perspective(1000px) rotateX(-1.5deg) rotateY(2.5deg) scale(1.01) !important;
+    box-shadow: 0 20px 44px rgba(0,0,0,0.2) !important;
+  }
+
+  /* Stat boxes: less aggressive colour on numbers */
+  .stat-num { font-size: 26px; font-weight: 700; color: var(--text); }
+  .stat-box { padding: 14px 16px; border-radius: 14px; }
+
+  /* Event plate cards: softer borders */
+  .ev-plate { border-radius: 13px; border-color: transparent !important; }
+  .ev-plate:hover { box-shadow: 0 8px 22px rgba(0,0,0,0.14); }
+
+  /* Gate (auth) cards */
+  .gate-card { border-radius: 22px; }
+  .gate-input { border-radius: 11px; font-size: 15px; }
+
+  /* Chat bubbles: warmer */
+  .msg-bubble { border-radius: 16px; }
+  .msg-bubble.own { background: var(--accent); }
+
+  /* Interest pills: softer */
+  .interest-pill { border-radius: 99px; font-size: 12px; padding: 5px 13px; }
+  .interest-pill.active { background: color-mix(in srgb,var(--accent) 85%,transparent); border-color: var(--accent); color: #fff; }
+
+  /* Profile section label: line becomes softer */
+  .profile-section { margin-top: 26px; }
+  .profile-section-label { font-size: 10px; letter-spacing: 1px; color: var(--text-muted); opacity: .8; }
+  .profile-section-label::after { background: var(--line-soft); }
+
+  /* Level badge: softer */
+  .level-badge { border-radius: 99px; border-width: 1px; font-size: 10px; }
+
+  /* Badge cells: softer lock */
+  .badge-cell.locked { opacity: .35; }
+  .badge-cell { border-radius: 14px; }
+
+  /* Event detail card */
+  .detail-card { border-radius: 20px; }
+  .detail-title { font-size: 22px; letter-spacing: -0.3px; }
+
+  /* ID card in profile: rounder */
+  .id-card { border-radius: 18px; }
+  .id-card-name { font-size: 22px; font-weight: 800; letter-spacing: -0.3px; }
+
+  /* Profile photo / avatar */
+  .profile-about-input { border-radius: 12px; font-size: 14px; }
+
+  /* QR box: cleaner */
+  .qr-box { border-radius: 14px; }
+
+  /* Calendar cells: refined */
+  .calendar-cell { border-radius: 11px; }
+
+  /* Attendee chips: softer */
+  .attendee-chip { border-radius: 99px; font-size: 12px; }
+
+  /* Friends grid: tighter */
+  .friend-card { border-radius: 16px; }
+
+  /* Connect header */
+  .connect-header h2 { font-size: 21px; letter-spacing: -0.2px; }
+
+  /* Intro cards */
+  .intro-card { border-radius: 16px; padding: 16px; }
+  .intro-name { font-size: 14.5px; }
+
+  /* Ticket / redeem box */
+  .redeem-box { border-radius: 14px; }
+
+  /* Map caption bar */
+  #map-caption-bar { border-radius: 0; font-size: 11px; }
+
+  /* Phone photo upload zone */
+  .ce-photo-zone { border-radius: 13px; }
+  .ce-photo-preview { border-radius: 9px; width: 56px; height: 56px; border: none; }
+
+  /* Responsive grid fixes at 600px */
+  @media (max-width: 600px) {
+    .cc-style-grid { grid-template-columns: repeat(3,1fr); }
+    .cc-pattern-grid { grid-template-columns: repeat(3,1fr); }
+    .ev-plate-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .panel { border-radius: 14px; }
+    .gate-card { border-radius: 20px; }
+    .detail-card { border-radius: 16px; padding: 16px 14px; }
+    .id-card { border-radius: 16px; }
   }
 </style>
 </head>
@@ -3584,119 +3734,160 @@ function renderCardEditor(){
     return `<button class="ce-area-pill${sel?' active':''}" data-area="${escapeHtml(a)}" onclick="toggleCardArea('${escapeHtml(a)}')" ${disabled?'disabled':''}>${escapeHtml(a)}</button>`;
   }).join('');
 
+  const liveCardHtml=`<div class="ce-live-card" id="ce-live-card" style="background:${t.bg};border-color:${t.border};">
+    <div class="ce-pattern" id="ce-pattern" style="color:${t.accent};">${CARD_PATTERNS[cardDraft.pattern]||''}</div>
+    ${cardDraft.photo?`<img src="${cardDraft.photo}" id="ce-preview-photo" style="position:absolute;top:0;right:0;width:56px;height:56px;object-fit:cover;border-radius:0 6px 0 10px;border-left:1.5px solid ${t.accent};border-bottom:1.5px solid ${t.accent};z-index:3;" alt=""/>`:
+      `<div id="ce-preview-photo"></div>`}
+    <div class="ce-card-shine"></div>
+    <div class="ce-card-body">
+      <div class="ce-card-top-row">
+        <div>
+          <div class="ce-preview-label" id="ce-preview-label" style="color:${t.textSoft};">// Cumulus Pass</div>
+          <div class="ce-preview-accent" id="ce-preview-accent" style="background:${t.accent};"></div>
+        </div>
+      </div>
+      <div class="ce-preview-name" id="ce-preview-name" style="color:${t.text};">${escapeHtml(state.profileName||'Your Name')}</div>
+      <div class="ce-preview-motto" id="ce-preview-motto" style="color:${t.accent};">${cardDraft.motto?`"${escapeHtml(cardDraft.motto)}"`:''}</div>
+      <div class="ce-preview-bio" id="ce-preview-bio" style="color:${t.textSoft};">${cardDraft.bio||'Tell your story…'}</div>
+      <div class="ce-preview-tags" id="ce-preview-tags">
+        ${(cardDraft.interests||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,5).map(s=>`<span class="ce-preview-tag" style="border-color:${t.accent};color:${t.text};">${escapeHtml(s)}</span>`).join('')}
+      </div>
+      <div class="ce-preview-detail" id="ce-preview-detail" style="color:${t.textSoft};">${cardDraft.areas.length?cardDraft.areas.join(' · '):'London Community Member'}</div>
+    </div>
+    <div class="ce-preview-wm" id="ce-preview-wm" style="color:${t.accent};">CU</div>
+  </div>`;
+
+  const mobilePreviewMeta=`<div style="flex:1;min-width:0;">
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;">${escapeHtml(state.profileName||'Your card')}</div>
+    <div style="font-size:11px;color:var(--text-muted);line-height:1.4;">50+ colours · 50+ backgrounds<br>mix and match freely</div>
+  </div>`;
+
   document.getElementById('card-editor-root').innerHTML=`
   <div class="ce-overlay">
+
+    <!-- Top bar -->
+    <div class="ce-topbar">
+      <button class="ce-topbar-back" onclick="closeCardEditor()">←</button>
+      <div class="ce-topbar-title">Card builder</div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        ${allowSkip?`<button class="ce-topbar-skip" onclick="skipCard()">Skip</button>`:''}
+        <button class="ce-topbar-save" onclick="saveCard()">Save</button>
+      </div>
+    </div>
+
+    <!-- Split: preview | controls -->
     <div class="ce-shell">
 
-      <!-- ── LEFT: live preview ── -->
+      <!-- LEFT — live preview -->
       <div class="ce-left">
-        <div class="ce-left-label">Live Preview</div>
+        <div class="ce-left-label">Live preview</div>
         <div class="ce-card-wrap">
-          <div class="ce-live-card" id="ce-live-card" style="background:${t.bg};border-color:${t.border};">
-            <div class="ce-pattern" id="ce-pattern" style="color:${t.accent};">${CARD_PATTERNS[cardDraft.pattern]||''}</div>
-            ${cardDraft.photo?`<img src="${cardDraft.photo}" id="ce-preview-photo" style="position:absolute;top:0;right:0;width:64px;height:64px;object-fit:cover;border-radius:0 6px 0 10px;border-left:2px solid ${t.accent};border-bottom:2px solid ${t.accent};z-index:3;" alt=""/>`:
-              `<div id="ce-preview-photo"></div>`}
-            <div class="ce-card-shine"></div>
-            <div class="ce-card-body">
-              <div class="ce-card-top-row">
-                <div>
-                  <div class="ce-preview-label" id="ce-preview-label" style="color:${t.textSoft};">// Cumulus Pass</div>
-                  <div class="ce-preview-accent" id="ce-preview-accent" style="background:${t.accent};"></div>
-                </div>
-              </div>
-              <div class="ce-preview-name" id="ce-preview-name" style="color:${t.text};">${escapeHtml(state.profileName||'Your Name')}</div>
-              <div class="ce-preview-motto" id="ce-preview-motto" style="color:${t.accent};">${cardDraft.motto?`"${escapeHtml(cardDraft.motto)}"`:''}</div>
-              <div class="ce-preview-bio" id="ce-preview-bio" style="color:${t.textSoft};">${cardDraft.bio||'Tell your story…'}</div>
-              <div class="ce-preview-tags" id="ce-preview-tags">
-                ${(cardDraft.interests||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,5).map(s=>`<span class="ce-preview-tag" style="border-color:${t.accent};color:${t.text};">${escapeHtml(s)}</span>`).join('')}
-              </div>
-              <div class="ce-preview-detail" id="ce-preview-detail" style="color:${t.textSoft};">${cardDraft.areas.length?cardDraft.areas.join(' · '):'London Community Member'}</div>
-            </div>
-            <div class="ce-preview-wm" id="ce-preview-wm" style="color:${t.accent};">CU</div>
-          </div>
-          <div class="ce-card-hint">Mix any colour with any background — fully yours</div>
+          ${liveCardHtml}
+          <div class="ce-card-hint">Any colour × any background — they mix freely</div>
         </div>
-        <div class="ce-left-actions hide-mobile">
-          <button class="btn" style="flex:1;padding:13px;font-size:14px;" onclick="saveCard()">Save card</button>
-          ${allowSkip?`<button class="btn btn-outline" onclick="skipCard()">Skip for now</button>`:`<button class="btn btn-outline" onclick="closeCardEditor()">Cancel</button>`}
+        <div class="ce-left-actions">
+          <button class="btn" style="flex:1;" onclick="saveCard()">Save card</button>
+          ${allowSkip
+            ?`<button class="btn btn-outline" onclick="skipCard()">Skip</button>`
+            :`<button class="btn btn-outline" onclick="closeCardEditor()">Cancel</button>`}
         </div>
+        ${mobilePreviewMeta}
       </div>
 
-      <!-- ── RIGHT: controls ── -->
+      <!-- RIGHT — tabbed controls -->
       <div class="ce-right">
-        <div class="ce-right-header">
-          <div class="ce-right-title">Build your card ✦</div>
-          <div class="ce-right-sub">50+ colours · 50+ styles · mix and match freely. This card travels with you to every event.</div>
+
+        <!-- Tab bar -->
+        <div class="ce-tabs-bar">
+          <button class="ce-tab-btn active" data-tab="look"    onclick="switchCeTab('look')">Look</button>
+          <button class="ce-tab-btn"         data-tab="story"  onclick="switchCeTab('story')">Story</button>
+          <button class="ce-tab-btn"         data-tab="places" onclick="switchCeTab('places')">Places</button>
         </div>
 
-        <div class="ce-section">
-          <div class="ce-section-label">Card photo <span class="ce-optional">optional</span></div>
-          <div class="ce-photo-zone" id="ce-photo-zone" onclick="document.getElementById('ce-photo-input').click()">
-            <input type="file" id="ce-photo-input" accept="image/*" style="display:none" onchange="handleCardPhoto(this)"/>
-            ${cardDraft.photo
-              ? `<img src="${cardDraft.photo}" class="ce-photo-preview" id="ce-photo-img" alt="Card photo"/>
-                 <div class="ce-photo-label">Photo set — tap to change</div>
-                 <button class="ce-photo-remove" onclick="event.stopPropagation();removeCardPhoto()">Remove photo</button>`
-              : `<div style="font-size:28px;margin-bottom:8px;">📷</div>
-                 <div class="ce-photo-label">Add a photo to your card</div>
-                 <div class="ce-photo-sub">Full bleed top-half on expanded card · small sticker on pass</div>`}
-          </div>
-        </div>
+        <!-- ─ LOOK TAB ─ (colours, backgrounds, pattern) -->
+        <div class="ce-tab-panel active" data-tab="look">
 
-        <div class="ce-section">
-          <div class="ce-section-label">Accent colour <span class="ce-optional">52 colours</span></div>
-          <div style="max-height:220px;overflow-y:auto;padding-right:4px;">
+          <div class="ce-section">
+            <div class="ce-section-label">Accent colour <span class="ce-optional">52 options</span></div>
             ${colorSwatchesHtml}
           </div>
-        </div>
 
-        <div class="ce-section">
-          <div class="ce-section-label">Background style <span class="ce-optional">52 styles</span></div>
-          <div style="max-height:260px;overflow-y:auto;padding-right:4px;">
+          <div class="ce-section">
+            <div class="ce-section-label">Background <span class="ce-optional">52 styles</span></div>
             ${styleGridHtml}
           </div>
+
+          <div class="ce-section">
+            <div class="ce-section-label">Pattern overlay <span class="ce-optional">9 options</span></div>
+            ${patternGridHtml}
+          </div>
+
         </div>
 
-        <div class="ce-section">
-          <div class="ce-section-label">Pattern overlay <span class="ce-optional">9 options</span></div>
-          ${patternGridHtml}
+        <!-- ─ STORY TAB ─ (photo, text fields) -->
+        <div class="ce-tab-panel" data-tab="story">
+
+          <div class="ce-section">
+            <div class="ce-section-label">Card photo <span class="ce-optional">optional</span></div>
+            <div class="ce-photo-zone" id="ce-photo-zone" onclick="document.getElementById('ce-photo-input').click()">
+              <input type="file" id="ce-photo-input" accept="image/*" style="display:none" onchange="handleCardPhoto(this)"/>
+              ${cardDraft.photo
+                ?`<img src="${cardDraft.photo}" class="ce-photo-preview" id="ce-photo-img" alt="Card photo"/>
+                  <div class="ce-photo-label">Tap to change photo</div>
+                  <button class="ce-photo-remove" onclick="event.stopPropagation();removeCardPhoto()">Remove photo</button>`
+                :`<div style="font-size:26px;margin-bottom:6px;">📷</div>
+                  <div class="ce-photo-label">Add a photo</div>
+                  <div class="ce-photo-sub">Appears on your expanded pass card</div>`}
+            </div>
+          </div>
+
+          <div class="ce-section">
+            <div class="ce-section-label">Your motto <span class="ce-optional">optional · 60 chars</span></div>
+            <input id="card-motto" class="ce-input" placeholder="e.g. Always up for something new" value="${escapeHtml(cardDraft.motto)}" oninput="updateCardPreview()" autocomplete="off" maxlength="60"/>
+            <div class="ce-char-hint">Shown in italic under your name on the pass</div>
+          </div>
+
+          <div class="ce-section">
+            <div class="ce-section-label">About you <span class="ce-optional">optional</span></div>
+            <textarea id="card-bio" class="ce-input ce-textarea" rows="3" placeholder="What brings you to events like these?" oninput="updateCardPreview()">${escapeHtml(cardDraft.bio)}</textarea>
+          </div>
+
+          <div class="ce-section">
+            <div class="ce-section-label">Interests <span class="ce-optional">comma separated</span></div>
+            <input id="card-interests" class="ce-input" placeholder="e.g. live music, board games, hiking" value="${escapeHtml(cardDraft.interests)}" oninput="updateCardPreview()" autocomplete="off"/>
+            <div class="ce-char-hint">Shown as tags on your expanded card</div>
+          </div>
+
+          <div class="ce-section">
+            <div class="ce-section-label">Fun fact <span class="ce-optional">optional</span></div>
+            <input id="card-fact" class="ce-input" placeholder="e.g. once got lost in IKEA for 3 hours" value="${escapeHtml(cardDraft.fact)}" oninput="updateCardPreview()" autocomplete="off"/>
+          </div>
+
+          <div class="ce-save-row">
+            <button class="btn" style="flex:1;" onclick="saveCard()">Save card</button>
+            ${allowSkip?`<button class="btn btn-outline" onclick="skipCard()">Skip</button>`:`<button class="btn btn-outline" onclick="closeCardEditor()">Cancel</button>`}
+          </div>
+
         </div>
 
-        <div class="ce-section">
-          <div class="ce-section-label">Your areas <span class="ce-optional">pick up to 3</span></div>
-          <div class="ce-area-grid" id="ce-area-grid">${areaPillsHtml}</div>
-          <div class="ce-char-hint" id="ce-area-hint">${cardDraft.areas.length}/3 selected${cardDraft.areas.length===3?' · tap to deselect':''}</div>
+        <!-- ─ PLACES TAB ─ (London areas) -->
+        <div class="ce-tab-panel" data-tab="places">
+
+          <div class="ce-section">
+            <div class="ce-section-label">Your London spots <span class="ce-optional">pick up to 3</span></div>
+            <div class="ce-char-hint" id="ce-area-hint" style="margin-bottom:14px;">${cardDraft.areas.length}/3 selected${cardDraft.areas.length===3?' — tap any to deselect':''}</div>
+            <div class="ce-area-grid" id="ce-area-grid">${areaPillsHtml}</div>
+          </div>
+
+          <div class="ce-save-row">
+            <button class="btn" style="flex:1;" onclick="saveCard()">Save card</button>
+            ${allowSkip?`<button class="btn btn-outline" onclick="skipCard()">Skip</button>`:`<button class="btn btn-outline" onclick="closeCardEditor()">Cancel</button>`}
+          </div>
+
         </div>
 
-        <div class="ce-section">
-          <div class="ce-section-label">Your motto <span class="ce-optional">optional</span></div>
-          <input id="card-motto" class="ce-input" placeholder="e.g. Always up for something new" value="${escapeHtml(cardDraft.motto)}" oninput="updateCardPreview()" autocomplete="off" maxlength="60"/>
-          <div class="ce-char-hint">Shows under your name in italic</div>
-        </div>
-
-        <div class="ce-section">
-          <div class="ce-section-label">About you <span class="ce-optional">optional</span></div>
-          <textarea id="card-bio" class="ce-input ce-textarea" rows="2" placeholder="What brings you to events like these?" oninput="updateCardPreview()">${escapeHtml(cardDraft.bio)}</textarea>
-        </div>
-
-        <div class="ce-section">
-          <div class="ce-section-label">Interests <span class="ce-optional">comma separated</span></div>
-          <input id="card-interests" class="ce-input" placeholder="e.g. live music, board games, hiking" value="${escapeHtml(cardDraft.interests)}" oninput="updateCardPreview()" autocomplete="off"/>
-          <div class="ce-char-hint">Shown as tags on your expanded card</div>
-        </div>
-
-        <div class="ce-section">
-          <div class="ce-section-label">Fun fact <span class="ce-optional">optional</span></div>
-          <input id="card-fact" class="ce-input" placeholder="e.g. once got lost in IKEA for 3 hours" value="${escapeHtml(cardDraft.fact)}" oninput="updateCardPreview()" autocomplete="off"/>
-        </div>
-
-        <div class="ce-mobile-actions">
-          <button class="btn" style="flex:1;padding:14px;font-size:15px;" onclick="saveCard()">Save card</button>
-          ${allowSkip?`<button class="btn btn-outline" onclick="skipCard()">Skip</button>`:`<button class="btn btn-outline" onclick="closeCardEditor()">Cancel</button>`}
-        </div>
-      </div>
-
-    </div>
+      </div><!-- /ce-right -->
+    </div><!-- /ce-shell -->
   </div>`;
   const liveCard=document.getElementById('ce-live-card');
   liveCard.addEventListener('mousemove', e=>{
@@ -3708,6 +3899,15 @@ function renderCardEditor(){
   liveCard.addEventListener('mouseleave', e=>{
     e.currentTarget.style.transform='perspective(900px) rotateX(0deg) rotateY(0deg)';
   });
+}
+function switchCeTab(tab){
+  captureDraftFields();
+  document.querySelectorAll('.ce-tab-btn').forEach(b=>
+    b.classList.toggle('active', b.dataset.tab===tab)
+  );
+  document.querySelectorAll('.ce-tab-panel').forEach(p=>
+    p.classList.toggle('active', p.dataset.tab===tab)
+  );
 }
 async function saveCard(){
   captureDraftFields();
