@@ -266,6 +266,12 @@
   .promoter-note{font-size:11px;color:var(--text-muted);margin-top:12px;line-height:1.55;}
 
   .social-seg{display:flex;gap:4px;background:var(--surface-2);border-radius:12px;padding:4px;margin-bottom:18px;}
+  .host-type-seg{display:flex;gap:4px;background:var(--surface-2);border-radius:12px;padding:4px;margin-bottom:16px;}
+  .host-type-btn{flex:1;border:none;background:transparent;border-radius:9px;font-size:13px;font-weight:600;padding:8px 4px;color:var(--text-muted);cursor:pointer;transition:all 0.15s ease;font-family:var(--font-sans);}
+  .host-type-btn.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px var(--shadow);}
+  .host-section{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 16px;margin-bottom:10px;}
+  .host-section-title{font-size:10.5px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;}
+  .host-notice{background:var(--gold-tint);border:1px solid var(--gold);border-radius:12px;padding:12px 14px;font-size:12.5px;color:var(--text-soft);line-height:1.6;margin-bottom:14px;}
   .social-seg-btn{flex:1;border:none;background:transparent;border-radius:9px;font-size:13px;font-weight:600;padding:8px 4px;color:var(--text-muted);cursor:pointer;transition:all 0.15s ease;font-family:var(--font-sans);}
   .social-seg-btn.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px var(--shadow);}
 
@@ -1460,9 +1466,9 @@
   .card-xl-outer { width:100%; max-width:420px; position:relative; height:min(88dvh,760px); }
   .card-xl-close {
     position:absolute;
-    top:-14px; right:-14px;
+    top:12px; right:12px;
     width:36px; height:36px; border-radius:50%;
-    background:rgba(255,255,255,0.15); backdrop-filter:blur(12px);
+    background:rgba(0,0,0,0.45); backdrop-filter:blur(12px);
     border:1.5px solid rgba(255,255,255,0.28);
     color:#fff; font-size:16px; font-weight:700; cursor:pointer;
     display:flex; align-items:center; justify-content:center; z-index:100;
@@ -2341,9 +2347,9 @@
     background: var(--card-accent, #60a5fa);
   }
   .card-xl-close {
-    position: absolute; top: -14px; right: -14px;
+    position: absolute; top: 12px; right: 12px;
     width: 32px; height: 32px; border-radius: 50%;
-    background: var(--surface-2, #222); border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(0,0,0,0.45); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2);
     color: #fff; font-size: 16px; line-height: 1; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 10;
@@ -4157,7 +4163,7 @@ async function addFriend(friendName,friendUserId){
 
 function renderNav(){
   const activeTab = ['tickets','my-tickets','book','checkout','confirmed'].includes(state.view)?'profile'
-    :['social','friends'].includes(state.view)?'social'
+    :['social','friends','host'].includes(state.view)?'social'
     :['calendar','calendar-day'].includes(state.view)?'calendar'
     :['achievements'].includes(state.view)?'profile'
     :state.view;
@@ -4178,7 +4184,6 @@ function renderNav(){
       {label:'Explore', v:'browse',   action:'goBrowse()'},
       {label:'Social',  v:'social',   action:'navStack=[];openSocialTab()'},
       {label:'Calendar',v:'calendar', action:'navStack=[];openCalendar()'},
-      {label:'Create',  v:'host',     action:'navStack=[];openHost()'},
       {label:'Profile', v:'profile',  action:'navStack=[];openProfile()'},
     ];
     navContainer.innerHTML=`
@@ -4260,7 +4265,7 @@ function openEvent(id){ pushNav(); state.view='detail'; state.selectedEventId=id
 function openProfile(){ pushNav(); state.editingProfile=false; state.view='profile'; renderNav(); renderView(); window.scrollTo({top:0,behavior:'smooth'}); }
 function openFriends(){ state.view='friends'; renderNav(); renderView(); window.scrollTo({top:0,behavior:'smooth'}); }
 function openCalendar(){ pushNav(); state.editingProfile=false; state.view='calendar'; renderNav(); renderView(); window.scrollTo({top:0,behavior:'smooth'}); }
-function openHost(){ pushNav(); state.editingProfile=false; state.view='host'; renderNav(); renderView(); window.scrollTo({top:0,behavior:'smooth'}); }
+function openHost(){ state.view='host'; renderNav(); renderView(); window.scrollTo({top:0,behavior:'smooth'}); }
 function openConnect(id){ pushNav(); state.view='connect'; state.selectedEventId=id; loadConnectData(id).then(()=>{ renderNav(); renderView(); }); }
 
 const chatSubscriptions={};
@@ -4643,7 +4648,8 @@ async function submitHostEvent(){
   const venue=(document.getElementById('host-venue')?.value||'').trim();
   const capStr=document.getElementById('host-capacity')?.value;
   const desc=(document.getElementById('host-desc')?.value||'').trim();
-  if(!title||!startVal||!endVal||!venue||!capStr){ alert("Please fill in all required fields."); return; }
+  if(!title||!startVal||!endVal||!venue||!capStr){ alert("Please fill in title, start/end times, venue, and capacity."); return; }
+  if(_hostType==='public'){ alert("Your event has been submitted for review. The Cumulus team will be in touch within 24 hours."); return; }
   const stDate=new Date(startVal),enDate=new Date(endVal);
   if(stDate>=enDate){ alert("End must be after start."); return; }
   const address=document.getElementById('host-address-search')?.value||'';
@@ -4739,7 +4745,7 @@ function renderView(){
   else if(state.view==='achievements') container.innerHTML=renderAchievements();
   else if(state.view==='friends'){ container.innerHTML=renderSocialTab(); buildFriendQR(); }
   else if(state.view==='calendar') container.innerHTML=renderCalendar();
-  else if(state.view==='host') container.innerHTML=renderHost();
+  else if(state.view==='host'){ container.innerHTML=renderSocialTab(); if(mapboxConfigured()) setTimeout(initHostMap,0); }
   else if(state.view==='book') container.innerHTML=renderBook();
   else if(state.view==='checkout') container.innerHTML=renderCheckout();
   else if(state.view==='confirmed'){ container.innerHTML=renderConfirmed(); setTimeout(afterRenderConfirmed,60); }
@@ -5809,17 +5815,82 @@ function renderTicketsTab(){
 }
 
 // ── Social tab ────────────────────────────────────────────────────────────
-function renderSocialTab(){
-  const isFriends = state.view === 'friends';
+let _hostType='private';
+function setHostType(t){
+  _hostType=t;
+  document.querySelectorAll('.host-type-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===t));
+  const notice=document.getElementById('host-type-notice');
+  if(notice) notice.textContent=t==='private'
+    ?'Visible to your friends only — no approval needed.'
+    :'Your event will go live after a short verification review.';
+  const btn=document.getElementById('host-submit-btn');
+  if(btn) btn.textContent=t==='private'?'Create private event →':'Submit for review →';
+}
 
-  const segCtrl=`<div class="social-seg">
-    <button class="social-seg-btn${!isFriends?' active':''}" onclick="openSocialTab()">Events</button>
-    <button class="social-seg-btn${isFriends?' active':''}" onclick="openFriends()">Friends${state.friends.length?` (${state.friends.length})`:''}</button>
+function renderSocialTab(){
+  const view=state.view;
+
+  const seg=`<div class="social-seg">
+    <button class="social-seg-btn${view==='social'?' active':''}" onclick="openSocialTab()">Events</button>
+    <button class="social-seg-btn${view==='friends'?' active':''}" onclick="openFriends()">Friends${state.friends.length?` (${state.friends.length})`:''}</button>
+    <button class="social-seg-btn${view==='host'?' active':''}" onclick="openHost()">Host</button>
   </div>`;
 
+  // ── HOST content ──────────────────────────────────────────────────────
+  if(view==='host'){
+    return `
+      <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Host an event for your community</p></div>
+      ${seg}
+      <div class="host-type-seg">
+        <button class="host-type-btn${_hostType==='private'?' active':''}" data-type="private" onclick="setHostType('private')">Private</button>
+        <button class="host-type-btn${_hostType==='public'?' active':''}" data-type="public" onclick="setHostType('public')">Public</button>
+      </div>
+      <div id="host-type-notice" class="host-notice">${_hostType==='private'?'Visible to your friends only — no approval needed.':'Your event will go live after a short verification review.'}</div>
+
+      <div class="host-section">
+        <div class="host-section-title">Event basics</div>
+        <label class="intro-field-label">Title</label>
+        <input id="host-title" class="gate-input" placeholder="e.g., Summer Park Picnic"/>
+        <label class="intro-field-label">Category</label>
+        <select id="host-cat" class="gate-input">${Object.keys(CATS).map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
+        <label class="intro-field-label">Description</label>
+        <textarea id="host-desc" class="gate-input" rows="3" placeholder="What's the vibe? What should people expect?"></textarea>
+      </div>
+
+      <div class="host-section">
+        <div class="host-section-title">Date &amp; time</div>
+        <label class="intro-field-label">Start</label>
+        <input id="host-start" type="datetime-local" class="gate-input" style="width:100%;"/>
+        <label class="intro-field-label">End</label>
+        <input id="host-end" type="datetime-local" class="gate-input" style="width:100%;"/>
+      </div>
+
+      <div class="host-section" style="overflow:visible;">
+        <div class="host-section-title">Location</div>
+        <label class="intro-field-label">Search address</label>
+        <div style="position:relative;margin-bottom:10px;">
+          <input id="host-address-search" class="gate-input" placeholder="Street name or postcode..." oninput="handleAddressAutocomplete()" autocomplete="off"/>
+          <div id="autocomplete-results" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;max-height:200px;overflow-y:auto;z-index:2000;display:none;box-shadow:0 8px 20px var(--shadow);"></div>
+        </div>
+        <div id="host-map-picker"></div>
+        <div id="host-lat-lon-text" style="font-size:11px;color:var(--text-muted);margin:6px 0 10px;font-weight:600;">Default: Central London — search above or tap map to pin exact location</div>
+        <label class="intro-field-label">Venue name</label>
+        <input id="host-venue" class="gate-input" placeholder="e.g., The Rooftop, Community Hall"/>
+        <label class="intro-field-label">Area (optional)</label>
+        <input id="host-area" class="gate-input" placeholder="e.g., Shoreditch"/>
+      </div>
+
+      <div class="host-section">
+        <div class="host-section-title">Capacity</div>
+        <label class="intro-field-label">Max attendees</label>
+        <input id="host-capacity" type="number" min="1" class="gate-input" placeholder="e.g., 20"/>
+      </div>
+
+      <button id="host-submit-btn" class="btn" style="width:100%;margin-bottom:24px;font-size:15px;" onclick="submitHostEvent()">${_hostType==='private'?'Create private event →':'Submit for review →'}</button>`;
+  }
+
   // ── FRIENDS content ───────────────────────────────────────────────────
-  if(isFriends){
-    const suggested=DEMO_PEOPLE.filter(p=>!state.friends.includes(p.name));
+  if(view==='friends'){
     const friendCards=state.friends.length
       ? state.friends.map(n=>{
           const p=personByName(n);
@@ -5828,42 +5899,27 @@ function renderSocialTab(){
             <div class="fname"><span class="star">★</span> ${escapeHtml(n)}</div>
             ${p?`<div class="fblurb">${escapeHtml(p.blurb)}</div>`:''}
             <div class="fgoing">${evs.length?`Going to: ${evs.map(e=>escapeHtml(e.title)).join(', ')}`:'No events listed'}</div>
-            <button class="btn btn-outline btn-small" style="width:100%" onclick="removeFriend('${escapeHtml(n).replace(/'/g,"\\'")}')">Remove</button>
+            <button class="btn btn-outline btn-small" style="width:100%;margin-top:4px;" onclick="removeFriend('${escapeHtml(n).replace(/'/g,"\\'")}')">Remove</button>
           </div>`;
         }).join('')
-      : `<div style="color:var(--text-muted);font-size:13px;">No friends yet. Add someone from the list below.</div>`;
-    const suggestedCards=suggested.map(p=>`<div class="panel friend-card" style="--corner:var(--accent);">
-      <div class="fname">${escapeHtml(p.name)}</div>
-      <div class="fblurb">${escapeHtml(p.blurb)}</div>
-      <div class="fgoing">${p.events.length} event${p.events.length>1?'s':''} coming up</div>
-      <button class="btn btn-small" style="width:100%" onclick="addFriend('${escapeHtml(p.name).replace(/'/g,"\\'")}')">Add friend</button>
-    </div>`).join('');
+      : `<div class="panel" style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;line-height:1.6;">No friends yet.<br>Scan someone's QR code at an event to add them.</div>`;
+
     return `
       <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Your friends &amp; connections</p></div>
-      ${segCtrl}
-      <div class="section-title" style="margin-top:0;">Your friend pass</div>
+      ${seg}
+      <div class="section-title" style="margin-top:0;">Your QR code</div>
       <div class="panel intro-card" style="--corner:var(--accent);">
         <div style="display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center;">
           <div id="friend-qr" class="qr-box"></div>
           <div style="width:100%;">
-            <div style="font-weight:700;color:var(--text);margin-bottom:5px;">Show this to someone you meet</div>
-            <div style="font-size:12.5px;color:var(--text-muted);line-height:1.6;">When they scan your QR, you'll connect as friends — then you'll see each other starred on shared events.</div>
+            <div style="font-weight:700;color:var(--text);margin-bottom:5px;">Show this to add you as a friend</div>
+            <div style="font-size:12.5px;color:var(--text-muted);line-height:1.6;">Let someone scan this at an event to connect — you'll both see each other starred on shared events.</div>
             <div class="friend-code">${escapeHtml(myFriendCode())}</div>
           </div>
         </div>
       </div>
-      <div class="section-title">Add a friend by code</div>
-      <div class="panel intro-form" style="--corner:var(--accent);">
-        <div style="display:flex;gap:8px;flex-direction:column;">
-          <input id="friend-code-input" class="gate-input" placeholder="Paste a CUMULUS-FRIEND:: code" autocomplete="off"/>
-          <button class="btn" style="width:100%;" onclick="addFriendByCode()">Add Friend</button>
-        </div>
-        <div style="font-size:11.5px;color:var(--text-muted);margin-top:10px;text-align:center;">Tip: try a code from the people below to see starring in action.</div>
-      </div>
       <div class="section-title">Your friends (${state.friends.length})</div>
-      <div class="friends-grid">${friendCards}</div>
-      <div class="section-title">People you might know</div>
-      <div class="friends-grid">${suggestedCards||`<div style="color:var(--text-muted);font-size:13px;">You've added everyone!</div>`}</div>`;
+      <div class="friends-grid">${friendCards}</div>`;
   }
 
   // ── EVENTS content ────────────────────────────────────────────────────
@@ -5924,7 +5980,7 @@ function renderSocialTab(){
 
   if(!evList.length) return `
     <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Connect with people at events</p></div>
-    ${segCtrl}
+    ${seg}
     <div class="section-title" style="margin-top:0;">Your card</div>
     ${myCardBanner}
     <div class="empty-state" style="margin-top:16px;">
@@ -5935,7 +5991,7 @@ function renderSocialTab(){
 
   return `
     <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>${upcoming.length} upcoming · ${past.length} past</p></div>
-    ${segCtrl}
+    ${seg}
     <div class="section-title" style="margin-top:0;">Your card</div>
     ${myCardBanner}
     ${upcoming.length?`<div class="section-title">Upcoming</div>${upcoming.map(renderEvCard).join('')}`:''}
