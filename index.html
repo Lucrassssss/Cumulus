@@ -1222,11 +1222,11 @@
   }
   .card-xl-overlay.open { opacity: 1; pointer-events: all; }
 
-  /* v2 card — 320×500, sharp corners, dark always */
+  /* v2 card — taller to fit QR section, dark always */
   .card-xl-v2 {
-    width: 320px; max-width: calc(100vw - 32px);
-    height: min(500px, calc(100vh - 60px));
-    border-radius: 6px;
+    width: 340px; max-width: calc(100vw - 32px);
+    height: min(580px, calc(100dvh - 80px));
+    border-radius: 10px;
     position: relative; overflow: hidden;
     box-shadow:
       0 0 0 1px rgba(255,255,255,0.10),
@@ -1250,10 +1250,10 @@
     position: absolute; bottom:0; left:0; right:0; height:2px; z-index:20;
   }
 
-  /* Photo — full bleed top 54% */
+  /* Photo — full bleed top 42% to give body more room */
   .cv2-photo {
     position: absolute; top:0; left:0; right:0;
-    height: 54%; overflow: hidden;
+    height: 42%; overflow: hidden;
   }
   .cv2-photo img {
     width:100%; height:100%; object-fit:cover; object-position:center 30%; display:block;
@@ -1268,7 +1268,7 @@
   }
   /* No-photo placeholder: gradient from accent at top */
   .cv2-photo-placeholder {
-    position: absolute; top:0; left:0; right:0; height:54%;
+    position: absolute; top:0; left:0; right:0; height:42%;
     background: var(--cv2-bg,#0A0A0B);
   }
   .cv2-photo-placeholder::after {
@@ -1301,9 +1301,9 @@
   /* Card body — bottom 52% */
   .cv2-body {
     position:absolute; bottom:0; left:0; right:0;
-    height:52%; padding:0 20px 18px;
+    height:62%; padding:0 20px 16px;
     display:flex; flex-direction:column; justify-content:flex-end; gap:0;
-    z-index:5;
+    z-index:5; overflow:hidden;
   }
   .cv2-name {
     font-size:24px; font-weight:700; color:#fff;
@@ -1429,22 +1429,20 @@
     display: none; flex-direction: column; gap: 10px; margin-top: 20px;
   }
 
-  /* Card editor — mobile */
+  /* Card editor — mobile: card fills top, tabs below */
   @media (max-width: 780px) {
     .ce-shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
     .ce-left {
-      flex-direction: row; gap: 16px;
+      flex-direction: column; gap: 10px;
       justify-content: center; align-items: center;
-      padding: 16px 20px; border-right: none;
+      padding: 18px 20px 14px; border-right: none;
       border-bottom: 1px solid var(--line);
-      min-height: 170px; flex-shrink: 0;
+      flex-shrink: 0;
     }
     .ce-left-label { display: none; }
-    .ce-card-wrap { width: 148px; flex-shrink: 0; }
-    .ce-card-hint {
-      font-size: 10.5px; max-width: 160px; text-align: left;
-      line-height: 1.5; color: var(--text-muted);
-    }
+    /* Card fills 90% of screen width up to 300px */
+    .ce-card-wrap { width: min(90vw, 300px); flex-shrink: 0; }
+    .ce-card-hint { font-size: 10.5px; color: var(--text-muted); text-align: center; }
     .ce-left-actions { display: none !important; }
     .ce-tabs-bar { padding: 0 12px; overflow-x: auto; gap: 0; flex-shrink: 0; }
     .ce-tab-btn { padding: 11px 12px 10px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
@@ -4895,40 +4893,24 @@ function openExpandedCard(){
         <!-- Body -->
         <div class="cv2-body">
           <div class="cv2-name">${escapeHtml(card?card.name:state.profileName)}</div>
-          ${motto?`<div class="cv2-bio">${motto}</div>`:'<div class="cv2-bio" style="margin-bottom:12px;"></div>'}
+          ${motto?`<div class="cv2-bio">${motto}</div>`:``}
           <div class="cv2-divider"></div>
           <div class="cv2-stats">
-            <div class="cv2-stat">
-              <span class="cv2-stat-num">${myEvents.length}</span>
-              <span class="cv2-stat-label">Events</span>
-            </div>
-            <div class="cv2-stat">
-              <span class="cv2-stat-num">${state.friends.length}</span>
-              <span class="cv2-stat-label">Friends</span>
-            </div>
-            <div class="cv2-stat">
-              <span class="cv2-stat-num">${earnedCount}</span>
-              <span class="cv2-stat-label">Badges</span>
-            </div>
+            <div class="cv2-stat"><span class="cv2-stat-num">${myEvents.length}</span><span class="cv2-stat-label">Events</span></div>
+            <div class="cv2-stat"><span class="cv2-stat-num">${state.friends.length}</span><span class="cv2-stat-label">Friends</span></div>
+            <div class="cv2-stat"><span class="cv2-stat-num">${earnedCount}</span><span class="cv2-stat-label">Badges</span></div>
           </div>
           ${tagsHtml?`<div class="cv2-tags" style="--cv2-accent-text:${accent};">${tagsHtml}</div>`:''}
-          <div class="cv2-footer">
-            <div class="cv2-footer-left">
-              <span class="cv2-uid">${uid}</span>
-              ${areas?`<span class="cv2-areas">${escapeHtml(areas)}</span>`:''}
-            </div>
-            <button class="cv2-qr-btn" onclick="toggleCardQR()" style="background:${accentAlpha(accent,0.12)};border:1px solid ${accentAlpha(accent,0.25)};">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="${accent}"><path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm13 1h2v2h-2zm0 4h2v2h-2zm-2-2h2v2h-2zm4-2h2v2h-2zm0 4h2v2h-2z"/></svg>
-              <span style="font-size:7.5px;font-weight:700;letter-spacing:0.08em;color:${accent};text-transform:uppercase;margin-top:1px;">QR</span>
-            </button>
-          </div>
-        </div>
 
-        <!-- QR reveal -->
-        <div class="cv2-qr-overlay" id="card-xl-qr-wrap">
-          <div class="qr-box" id="card-xl-qr-el"></div>
-          <p>Friends scan this to add you on Cumulus</p>
-          <button class="cv2-qr-close" onclick="toggleCardQR()">Close</button>
+          <!-- QR section — always visible on the card -->
+          <div class="cv2-qr-section" style="border-top:1px solid rgba(255,255,255,0.08);margin-top:12px;padding-top:14px;display:flex;align-items:center;gap:16px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:9px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase;color:${accentAlpha(accent,0.7)};margin-bottom:4px;">Add me on Cumulus</div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.5;">Scan to connect as friends — see each other on shared events</div>
+              <div style="font-size:8.5px;font-weight:700;letter-spacing:0.5px;color:rgba(255,255,255,0.3);margin-top:6px;">${uid}${areas?`<br><span style="font-weight:500;">${escapeHtml(areas)}</span>`:''}</div>
+            </div>
+            <div id="card-xl-qr-el" style="flex-shrink:0;background:#fff;border-radius:8px;padding:6px;width:100px;height:100px;display:flex;align-items:center;justify-content:center;"></div>
+          </div>
         </div>
 
         <div class="cv2-edge" style="background:${edgeGrad};"></div>
@@ -4939,7 +4921,15 @@ function openExpandedCard(){
   document.body.insertAdjacentHTML('beforeend', html);
   requestAnimationFrame(()=>{
     const ov=document.getElementById('card-xl-overlay');
-    if(ov) requestAnimationFrame(()=>ov.classList.add('open'));
+    if(ov) requestAnimationFrame(()=>{
+      ov.classList.add('open');
+      // Generate QR inline on the card
+      const qrEl=document.getElementById('card-xl-qr-el');
+      if(qrEl){
+        try{ new QRCode(qrEl,{text:myFriendCode(),width:88,height:88,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M}); }
+        catch(e){ qrEl.innerHTML=`<div style="font-size:7px;padding:4px;word-break:break-all;color:#000;">${myFriendCode()}</div>`; }
+      }
+    });
   });
 }
 
@@ -4948,18 +4938,6 @@ function closeExpandedCard(){
   if(!ov) return;
   ov.classList.remove('open');
   setTimeout(()=>{ if(ov.parentNode) ov.remove(); }, 280);
-}
-
-function toggleCardQR(){
-  const wrap=document.getElementById('card-xl-qr-wrap'); if(!wrap) return;
-  if(wrap.classList.contains('visible')){ wrap.classList.remove('visible'); return; }
-  const el=document.getElementById('card-xl-qr-el');
-  if(el&&!el.querySelector('canvas,img')){
-    el.innerHTML='';
-    try{ new QRCode(el,{text:myFriendCode(),width:148,height:148,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M}); }
-    catch(e){ el.innerHTML=`<div style="font-size:10px;padding:8px;word-break:break-all;">${myFriendCode()}</div>`; }
-  }
-  wrap.classList.add('visible');
 }
 
 function medallionHtml(glyph,color,earned){ const ring=earned?color:'var(--line)'; const fill=earned?hexToRgba(color,0.14):'transparent'; const gc=earned?color:'var(--text-muted)'; const lock=earned?'':`<span class="lock">🔒</span>`; return `<div class="medallion" style="border-color:${ring};background:${fill};color:${gc};">${glyph}${lock}</div>`; }
@@ -5691,11 +5669,29 @@ function renderSocialTab(){
     </div>`;
   };
 
+  const myCardBanner=state.myCard
+    ?`<div class="panel" style="--corner:var(--accent);display:flex;align-items:center;gap:14px;padding:14px 16px;margin-bottom:4px;cursor:pointer;" onclick="openExpandedCard()">
+        <div style="width:46px;height:46px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;font-weight:900;color:#fff;letter-spacing:-1px;">CU</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:700;color:var(--text);">My Card &amp; QR Code</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:1px;">Show this to connect with people at events</div>
+        </div>
+        <div style="font-size:20px;color:var(--text-muted);">›</div>
+      </div>`
+    :`<div class="panel" style="--corner:var(--accent);padding:14px 16px;margin-bottom:4px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Set up your card to share at events</div>
+        <button class="btn btn-small" style="width:100%;" onclick="openCardEditor(null)">Create my card</button>
+      </div>`;
+
   if(!evList.length) return `
     <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>YOUR EVENT GROUPS</p></div>
-    <div class="empty-state">Book or RSVP to events to join their group chats.<br><br><button class="btn" onclick="goBrowse()">Browse Events</button></div>`;
+    <div class="section-title">Your card</div>
+    ${myCardBanner}
+    <div class="empty-state" style="margin-top:16px;">Book or RSVP to events to join their group chats.<br><br><button class="btn" onclick="goBrowse()">Browse Events</button></div>`;
   return `
     <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>YOUR EVENT GROUPS · ${upcoming.length} ACTIVE</p></div>
+    <div class="section-title">Your card</div>
+    ${myCardBanner}
     ${upcoming.length?`<div class="section-title">Upcoming</div>${upcoming.map(renderEvCard).join('')}`:''}
     ${past.length?`<div class="section-title">Past</div>${past.map(renderEvCard).join('')}`:''}`;
 }
