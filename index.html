@@ -1214,25 +1214,29 @@
   /* ── Expanded card v2 ── */
   .card-xl-overlay {
     position: fixed; inset: 0; z-index: 9999;
-    background: #000;
-    display: flex; align-items: stretch; justify-content: center;
+    background: rgba(0,0,0,0.72);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
     opacity: 0; pointer-events: none;
     transition: opacity 0.28s ease;
   }
   .card-xl-overlay.open { opacity: 1; pointer-events: all; }
 
-  /* v2 card — fills the full screen */
+  /* v2 card — rounded, floating, leaves space around edges */
   .card-xl-v2 {
-    width: 100%; max-width: 480px;
-    height: 100dvh; height: 100vh; /* fallback */
-    border-radius: 0;
+    width: 100%; max-width: 420px;
+    height: min(88dvh, 760px);
+    border-radius: 28px;
     position: relative; overflow: hidden;
     font-family: 'Space Grotesk', var(--font-sans, sans-serif);
-    transform: translateY(32px);
+    transform: scale(0.94) translateY(24px);
     transition: transform 0.32s cubic-bezier(0.22,1,0.36,1);
     cursor: default;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.55), 0 8px 24px rgba(0,0,0,0.3);
   }
-  .card-xl-overlay.open .card-xl-v2 { transform: translateY(0); }
+  .card-xl-overlay.open .card-xl-v2 { transform: scale(1) translateY(0); }
 
   /* top-edge hairline */
   .cv2-top-edge {
@@ -1376,20 +1380,20 @@
     cursor:pointer; letter-spacing:0.06em;
   }
 
-  /* Close X — absolute inside card, top-right with safe area */
-  .card-xl-outer { width:100%; max-width:480px; height:100dvh; height:100vh; position:relative; }
+  /* Close X — outside the card, top-right corner of the overlay's content area */
+  .card-xl-outer { width:100%; max-width:420px; position:relative; height:min(88dvh,760px); }
   .card-xl-close {
     position:absolute;
-    top:calc(env(safe-area-inset-top,0px) + 14px);
-    right:16px;
-    width:34px; height:34px; border-radius:50%;
-    background:rgba(0,0,0,0.45); backdrop-filter:blur(8px);
-    border:1px solid rgba(255,255,255,0.18);
-    color:#fff; font-size:15px; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; z-index:50;
+    top:-14px; right:-14px;
+    width:36px; height:36px; border-radius:50%;
+    background:rgba(255,255,255,0.15); backdrop-filter:blur(12px);
+    border:1.5px solid rgba(255,255,255,0.28);
+    color:#fff; font-size:16px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; z-index:100;
     transition:transform .15s, background .15s;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
   }
-  .card-xl-close:hover { transform:scale(1.1) rotate(90deg); background:rgba(255,255,255,0.18); }
+  .card-xl-close:hover { transform:scale(1.12) rotate(90deg); background:rgba(255,255,255,0.28); }
 
   /* Photo upload zone */
   .ce-photo-zone {
@@ -2037,23 +2041,83 @@
     background: var(--bg);
   }
 
+  /* ── Feature Cards ── */
+  .lp-features {
+    padding: 80px 24px;
+    background: var(--bg);
+    position: relative; z-index: 1;
+  }
+  .lp-features-grid {
+    max-width: 960px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 20px;
+  }
+  .lp-feat-card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 22px; padding: 32px 26px;
+    display: flex; flex-direction: column; gap: 14px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    cursor: default;
+  }
+  .lp-feat-card:hover { transform: translateY(-4px); box-shadow: 0 16px 48px var(--shadow); border-color: var(--line-soft); }
+  .lp-feat-card-icon {
+    width: 52px; height: 52px; border-radius: 16px;
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; flex-shrink: 0;
+  }
+  .lp-feat-card-title { font-size: 17px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
+  .lp-feat-card-desc { font-size: 13.5px; color: var(--text-muted); line-height: 1.7; }
+
+  /* ── Sign-up Overlay Modal ── */
+  .lp-signup-overlay {
+    position: fixed; inset: 0; z-index: 5000;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .lp-signup-overlay.open { opacity: 1; pointer-events: all; }
+  .lp-signup-modal {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 28px; width: 100%; max-width: 420px;
+    max-height: 90dvh; overflow-y: auto;
+    padding: 36px 32px 32px;
+    position: relative;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+    transform: scale(0.94) translateY(16px);
+    transition: transform 0.28s cubic-bezier(0.22,1,0.36,1);
+  }
+  .lp-signup-overlay.open .lp-signup-modal { transform: scale(1) translateY(0); }
+  .lp-signup-close {
+    position: absolute; top: 16px; right: 16px;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--surface-2); border: 1px solid var(--line);
+    color: var(--text-muted); font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .lp-signup-close:hover { background: var(--line); transform: rotate(90deg); }
+
   /* ── Responsive ── */
   @media (max-width: 900px) {
-    .lp-events-grid { grid-template-columns: 1fr 1fr; }
-    .lp-event-card:nth-child(1) { grid-column: span 2; }
-    .lp-event-card:nth-child(4) { grid-column: span 2; }
     .lp-venues-inner { grid-template-columns: 1fr; gap: 40px; }
     .lp-venues-stats { grid-template-columns: repeat(4,1fr); }
   }
+  @media (max-width: 700px) {
+    .lp-features-grid { grid-template-columns: 1fr; }
+  }
   @media (max-width: 600px) {
-    .lp-events-grid { grid-template-columns: 1fr; }
-    .lp-event-card:nth-child(1),
-    .lp-event-card:nth-child(4) { grid-column: span 1; }
     .lp-hero-title { letter-spacing: -1.5px; }
-    .lp-signup-card { padding: 32px 20px; }
     .lp-venues-stats { grid-template-columns: 1fr 1fr; }
     .lp-hero-actions { flex-direction: column; align-items: center; }
     .lp-hero-btn-primary, .lp-hero-btn-secondary { width: 100%; max-width: 320px; text-align: center; }
+    .lp-signup-modal { padding: 28px 20px 24px; }
+    .lp-features { padding: 56px 20px; }
+    .lp-features-grid { grid-template-columns: 1fr; }
   }
 
   /* ── Expanded Card Overlay ── */
@@ -3227,35 +3291,6 @@ const FEATURED_EVENTS = [
 ];
 
 function renderGate(prefillName,prefillEmail){
-  const featuredHtml = FEATURED_EVENTS.map((ev,i)=>{
-    const pct = Math.round((ev.attending/ev.capacity)*100);
-    return `
-    <div class="lp-event-card" style="animation-delay:${0.08+i*0.12}s;background:${ev.gradient};" onmouseenter="lpCardTilt(this,event)" onmouseleave="lpCardUnTilt(this)">
-      <div class="lp-card-shine"></div>
-      <div class="lp-card-inner">
-        <div class="lp-card-top">
-          <span class="lp-badge" style="background:${ev.badgeColor};">${ev.badge}</span>
-          <span class="lp-cat-chip" style="background:rgba(255,255,255,0.14);color:${ev.accentColor};">${ev.category}</span>
-        </div>
-        <div class="lp-icon">${ev.icon}</div>
-        <div class="lp-event-title">${ev.title}</div>
-        <div class="lp-event-desc">${ev.desc}</div>
-        <div class="lp-event-meta">
-          <span>📍 ${ev.venue}</span>
-          <span>🗓 ${ev.date} · ${ev.time}</span>
-        </div>
-        <div class="lp-capacity-row">
-          <div class="lp-capacity-bar"><div class="lp-capacity-fill" style="width:${pct}%;background:${ev.accentColor};"></div></div>
-          <span class="lp-capacity-label" style="color:${ev.accentColor};">${ev.attending.toLocaleString()} / ${ev.capacity.toLocaleString()} going</span>
-        </div>
-        <div class="lp-card-footer">
-          <span class="lp-price" style="color:${ev.accentColor};">${ev.price}</span>
-          <button class="lp-cta-btn" onclick="document.getElementById('lp-signup-anchor').scrollIntoView({behavior:'smooth'})">Get Tickets →</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-
   document.getElementById('gate-root').innerHTML=`
   <div class="lp-root">
 
@@ -3264,11 +3299,11 @@ function renderGate(prefillName,prefillEmail){
       <div class="lp-nav-inner">
         <div class="lp-nav-logo">${BLOT_SVG}<span>Cumulus</span></div>
         <div class="lp-nav-links hide-mobile">
-          <a href="#" onclick="document.getElementById('lp-events-anchor').scrollIntoView({behavior:'smooth'});return false;">Events</a>
+          <a href="#" onclick="document.getElementById('lp-features-anchor').scrollIntoView({behavior:'smooth'});return false;">Features</a>
           <a href="#" onclick="document.getElementById('lp-venues-anchor').scrollIntoView({behavior:'smooth'});return false;">For Venues</a>
-          <a href="#" onclick="document.getElementById('lp-signup-anchor').scrollIntoView({behavior:'smooth'});return false;">Sign Up</a>
+          <a href="#" onclick="showLpSignup();return false;">Sign Up</a>
         </div>
-        <button class="btn lp-nav-btn" onclick="document.getElementById('lp-signup-anchor').scrollIntoView({behavior:'smooth'})">Get Access →</button>
+        <button class="btn lp-nav-btn" onclick="showLpSignup()">Get Access →</button>
       </div>
     </nav>
 
@@ -3283,36 +3318,49 @@ function renderGate(prefillName,prefillEmail){
       <div class="lp-hero-content">
         <div class="lp-hero-kicker">
           <span class="lp-live-dot"></span>
-          100+ events live across London right now
+          London's community events platform
         </div>
         <h1 class="lp-hero-title">Find your people.<br><span class="lp-hero-gradient">Know your city.</span></h1>
         <p class="lp-hero-sub">Cumulus is where Londoners discover what's happening in their neighbourhood, meet their people in person, and build real connections — one shared evening at a time.</p>
         <div class="lp-hero-actions">
-          <button class="btn lp-hero-btn-primary" onclick="document.getElementById('lp-signup-anchor').scrollIntoView({behavior:'smooth'})">Get your free pass →</button>
-          <button class="btn btn-outline lp-hero-btn-secondary" onclick="document.getElementById('lp-events-anchor').scrollIntoView({behavior:'smooth'})">Browse major events ↓</button>
+          <button class="btn lp-hero-btn-primary" onclick="showLpSignup()">Get your free pass →</button>
+          <button class="btn btn-outline lp-hero-btn-secondary" onclick="document.getElementById('lp-features-anchor').scrollIntoView({behavior:'smooth'})">See how it works ↓</button>
         </div>
         <div class="lp-trust-strip">
-          <span>🎟 Digital tickets</span>
+          <span>🎟 Digital pass</span>
           <span>👥 Find your crowd</span>
           <span>💬 Pre-event chats</span>
           <span>⭐ Friend tracking</span>
         </div>
       </div>
-      <div class="lp-hero-scroll-hint" onclick="document.getElementById('lp-events-anchor').scrollIntoView({behavior:'smooth'})">
+      <div class="lp-hero-scroll-hint" onclick="document.getElementById('lp-features-anchor').scrollIntoView({behavior:'smooth'})">
         <span>Scroll to explore</span>
         <div class="lp-scroll-arrow"></div>
       </div>
     </section>
 
-    <!-- ── FEATURED EVENTS ── -->
-    <section class="lp-events-section" id="lp-events-anchor">
-      <div class="lp-section-header">
-        <div class="lp-section-kicker">Major Events</div>
-        <h2 class="lp-section-title">This week's <span class="lp-accent-text">biggest nights</span></h2>
-        <p class="lp-section-sub">London's landmark venues. Curated experiences. Your pass gets you in.</p>
+    <!-- ── FEATURES ── -->
+    <section class="lp-features" id="lp-features-anchor">
+      <div style="text-align:center;margin-bottom:52px;">
+        <div class="lp-section-kicker">Everything you need</div>
+        <h2 class="lp-section-title">One pass. Your whole city.</h2>
       </div>
-      <div class="lp-events-grid">
-        ${featuredHtml}
+      <div class="lp-features-grid">
+        <div class="lp-feat-card">
+          <div class="lp-feat-card-icon">🗺️</div>
+          <div class="lp-feat-card-title">Discover locally</div>
+          <div class="lp-feat-card-desc">Browse events happening in your neighbourhood — from jazz nights and gallery openings to supper clubs and community walks.</div>
+        </div>
+        <div class="lp-feat-card">
+          <div class="lp-feat-card-icon">🃏</div>
+          <div class="lp-feat-card-title">Your digital pass</div>
+          <div class="lp-feat-card-desc">A personalised card you carry to every event. Share your QR code to connect instantly with people you meet in person.</div>
+        </div>
+        <div class="lp-feat-card">
+          <div class="lp-feat-card-icon">👥</div>
+          <div class="lp-feat-card-title">Real connections</div>
+          <div class="lp-feat-card-desc">See who's going before you arrive. Meet people who share your interests. Build friendships that last beyond the event.</div>
+        </div>
       </div>
     </section>
 
@@ -3327,9 +3375,9 @@ function renderGate(prefillName,prefillEmail){
             <div class="lp-venue-feat"><div class="lp-feat-icon">📍</div><div><div class="lp-feat-title">Map-first discovery</div><div class="lp-feat-desc">Your venue pinned and filterable across London's live event map.</div></div></div>
             <div class="lp-venue-feat"><div class="lp-feat-icon">🎟</div><div><div class="lp-feat-title">Integrated ticketing</div><div class="lp-feat-desc">Multiple ticket tiers, early bird, VIP — all under one flow.</div></div></div>
             <div class="lp-venue-feat"><div class="lp-feat-icon">💬</div><div><div class="lp-feat-title">Pre-event community</div><div class="lp-feat-desc">Attendees connect before they arrive — higher show rates, better energy.</div></div></div>
-            <div class="lp-venue-feat"><div class="lp-feat-icon">⭐</div><div><div class="lp-feat-title">Featured placement</div><div class="lp-feat-desc">Major events get hero placement on the Cumulus landing page.</div></div></div>
+            <div class="lp-venue-feat"><div class="lp-feat-icon">⭐</div><div><div class="lp-feat-title">Featured placement</div><div class="lp-feat-desc">Major events get priority placement across the Cumulus platform.</div></div></div>
           </div>
-          <button class="btn lp-venues-cta" onclick="document.getElementById('lp-signup-anchor').scrollIntoView({behavior:'smooth'})">List your venue — it's free →</button>
+          <button class="btn lp-venues-cta" onclick="showLpSignup()">Get started — it's free →</button>
         </div>
         <div class="lp-venues-stats">
           <div class="lp-vstat"><div class="lp-vstat-num">100+</div><div class="lp-vstat-label">Active events</div></div>
@@ -3340,60 +3388,14 @@ function renderGate(prefillName,prefillEmail){
       </div>
     </section>
 
-    <!-- ── JOIN ── -->
-    <section class="lp-join-section" id="lp-signup-anchor">
-      <div class="lp-join-bg"></div>
-
-      <div class="lp-join-grid">
-
-        <!-- LEFT: community story -->
-        <div class="lp-join-left">
+    <!-- ── COMMUNITY PROOF ── -->
+    <section style="padding:80px 24px;background:var(--bg);position:relative;overflow:hidden;">
+      <div style="max-width:860px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:52px;align-items:center;">
+        <div>
           <div class="lp-join-eyebrow">Your community pass</div>
           <h2 class="lp-join-headline">This isn't about events.<br>It's about <em>your people.</em></h2>
-          <p class="lp-join-body">Cumulus was built on one belief — that the best things happen when people who live near each other actually meet. Not online. In the same room, at the same table, under the same open sky.</p>
-          <p class="lp-join-body">Your pass connects you to the creative nights, music sessions, supper clubs, and community walks happening within a few stops of your door — and to the people already going to them.</p>
-
-          <!-- floating community cards -->
-          <div class="lp-community-stack">
-            <div class="lp-comm-card lp-comm-c1">
-              <div class="lp-comm-avatars">
-                <div class="lp-comm-av" style="background:#6366F1;">AR</div>
-                <div class="lp-comm-av" style="background:#10B981;">PS</div>
-                <div class="lp-comm-av" style="background:#F97316;">TB</div>
-              </div>
-              <div class="lp-comm-text">
-                <div class="lp-comm-title">Jazz in the Park</div>
-                <div class="lp-comm-sub">Herne Hill · 40 going</div>
-              </div>
-              <div class="lp-comm-dot" style="background:#10B981;"></div>
-            </div>
-            <div class="lp-comm-card lp-comm-c2">
-              <div class="lp-comm-avatars">
-                <div class="lp-comm-av" style="background:#EC4899;">ML</div>
-                <div class="lp-comm-av" style="background:#8B5CF6;">JC</div>
-              </div>
-              <div class="lp-comm-text">
-                <div class="lp-comm-title">Ceramics & Chill</div>
-                <div class="lp-comm-sub">Bermondsey · 25 going</div>
-              </div>
-              <div class="lp-comm-dot" style="background:#8B5CF6;"></div>
-            </div>
-            <div class="lp-comm-card lp-comm-c3">
-              <div class="lp-comm-avatars">
-                <div class="lp-comm-av" style="background:#EF4444;">SO</div>
-                <div class="lp-comm-av" style="background:#D9A52E;">OW</div>
-                <div class="lp-comm-av" style="background:#3B82F6;">CD</div>
-                <div class="lp-comm-av lp-comm-av-more">+12</div>
-              </div>
-              <div class="lp-comm-text">
-                <div class="lp-comm-title">Supper Club — Fulham</div>
-                <div class="lp-comm-sub">Fulham · 26 going</div>
-              </div>
-              <div class="lp-comm-dot" style="background:#EF4444;"></div>
-            </div>
-          </div>
-
-          <div class="lp-join-proof">
+          <p class="lp-join-body">Cumulus was built on one belief — the best things happen when people who live near each other actually meet. Not online. In the same room, at the same table, under the same open sky.</p>
+          <div class="lp-join-proof" style="margin-top:24px;">
             <div class="lp-proof-avs">
               <div class="lp-proof-av" style="background:#6366F1;">A</div>
               <div class="lp-proof-av" style="background:#10B981;">P</div>
@@ -3401,61 +3403,48 @@ function renderGate(prefillName,prefillEmail){
               <div class="lp-proof-av" style="background:#EC4899;">M</div>
               <div class="lp-proof-av" style="background:#8B5CF6;">J</div>
             </div>
-            <span class="lp-proof-text">Londoners already building their community through Cumulus</span>
+            <span class="lp-proof-text">Londoners already building their community on Cumulus</span>
+          </div>
+          <button class="btn lp-hero-btn-primary" style="margin-top:28px;" onclick="showLpSignup()">Join them →</button>
+        </div>
+        <div class="lp-community-stack">
+          <div class="lp-comm-card lp-comm-c1">
+            <div class="lp-comm-avatars">
+              <div class="lp-comm-av" style="background:#6366F1;">AR</div>
+              <div class="lp-comm-av" style="background:#10B981;">PS</div>
+              <div class="lp-comm-av" style="background:#F97316;">TB</div>
+            </div>
+            <div class="lp-comm-text">
+              <div class="lp-comm-title">Jazz in the Park</div>
+              <div class="lp-comm-sub">Herne Hill · 40 going</div>
+            </div>
+            <div class="lp-comm-dot" style="background:#10B981;"></div>
+          </div>
+          <div class="lp-comm-card lp-comm-c2">
+            <div class="lp-comm-avatars">
+              <div class="lp-comm-av" style="background:#EC4899;">ML</div>
+              <div class="lp-comm-av" style="background:#8B5CF6;">JC</div>
+            </div>
+            <div class="lp-comm-text">
+              <div class="lp-comm-title">Ceramics &amp; Chill</div>
+              <div class="lp-comm-sub">Bermondsey · 25 going</div>
+            </div>
+            <div class="lp-comm-dot" style="background:#8B5CF6;"></div>
+          </div>
+          <div class="lp-comm-card lp-comm-c3">
+            <div class="lp-comm-avatars">
+              <div class="lp-comm-av" style="background:#EF4444;">SO</div>
+              <div class="lp-comm-av" style="background:#D9A52E;">OW</div>
+              <div class="lp-comm-av" style="background:#3B82F6;">CD</div>
+              <div class="lp-comm-av lp-comm-av-more">+12</div>
+            </div>
+            <div class="lp-comm-text">
+              <div class="lp-comm-title">Supper Club — Fulham</div>
+              <div class="lp-comm-sub">Fulham · 26 going</div>
+            </div>
+            <div class="lp-comm-dot" style="background:#EF4444;"></div>
           </div>
         </div>
-
-        <!-- RIGHT: form -->
-        <div class="lp-join-right">
-          <div class="lp-pass-preview">
-            <div class="lp-pass-card" id="lp-pass-preview-card" style="background:linear-gradient(140deg,#3E7CB8,#2A5680);">
-              <div class="lp-pass-shine"></div>
-              <div class="lp-pass-label">// Cumulus Pass</div>
-              <div class="lp-pass-name" id="lp-pass-name-preview">Your name here</div>
-              <div class="lp-pass-detail">London Community Member</div>
-              <div class="lp-pass-tags">
-                <span class="lp-pass-tag">Live Music</span>
-                <span class="lp-pass-tag">Food & Drink</span>
-                <span class="lp-pass-tag">Meetups</span>
-              </div>
-              <div class="lp-pass-watermark">CU</div>
-            </div>
-            <div class="lp-pass-caption">This is what you'll carry to every event.</div>
-          </div>
-
-          <div class="lp-form-panel">
-            <div class="lp-form-header">
-              <div class="lp-form-eyebrow">Free · Takes 20 seconds</div>
-              <h3 class="lp-form-title">Claim your pass</h3>
-              <p class="lp-form-sub">One profile. Every event in London. Your community, waiting.</p>
-            </div>
-
-            <div class="lp-float-field">
-              <input id="gate-name" class="lp-float-input" placeholder=" " value="${escapeHtml(prefillName||'')}" autocomplete="name" oninput="lpUpdatePassName(this.value)"/>
-              <label class="lp-float-label">Your full name</label>
-              <div class="lp-float-line"></div>
-            </div>
-            <div class="lp-float-field">
-              <input id="gate-email" class="lp-float-input" type="email" placeholder=" " value="${escapeHtml(prefillEmail||'')}" autocomplete="email"/>
-              <label class="lp-float-label">Email address</label>
-              <div class="lp-float-line"></div>
-            </div>
-
-            <button class="lp-claim-btn" onclick="submitGate()">
-              <span class="lp-claim-btn-text">Join the community →</span>
-              <div class="lp-claim-shimmer"></div>
-            </button>
-
-            <div class="lp-form-trust">
-              <span>🔒 No spam, ever</span>
-              <span>·</span>
-              <span>✓ Free forever</span>
-              <span>·</span>
-              <span>🗑 Delete anytime</span>
-            </div>
-          </div>
-        </div>
-
       </div>
     </section>
 
@@ -3465,19 +3454,66 @@ function renderGate(prefillName,prefillEmail){
       <p style="font-size:12px;color:var(--text-muted);margin:0;">London Community Events · ${new Date().getFullYear()}</p>
     </footer>
 
+    <!-- ── SIGN-UP MODAL ── -->
+    <div class="lp-signup-overlay" id="lp-signup-overlay" onclick="if(event.target===this)closeLpSignup()">
+      <div class="lp-signup-modal">
+        <button class="lp-signup-close" onclick="closeLpSignup()">✕</button>
+
+        <div class="lp-pass-preview" style="margin-bottom:24px;">
+          <div class="lp-pass-card" id="lp-pass-preview-card" style="background:linear-gradient(140deg,#3E7CB8,#2A5680);">
+            <div class="lp-pass-shine"></div>
+            <div class="lp-pass-label">// Cumulus Pass</div>
+            <div class="lp-pass-name" id="lp-pass-name-preview">Your name here</div>
+            <div class="lp-pass-detail">London Community Member</div>
+            <div class="lp-pass-tags">
+              <span class="lp-pass-tag">Live Music</span>
+              <span class="lp-pass-tag">Food &amp; Drink</span>
+              <span class="lp-pass-tag">Meetups</span>
+            </div>
+            <div class="lp-pass-watermark">CU</div>
+          </div>
+          <div class="lp-pass-caption">This is what you'll carry to every event.</div>
+        </div>
+
+        <div class="lp-form-eyebrow">Free · Takes 20 seconds</div>
+        <h3 class="lp-form-title">Claim your pass</h3>
+        <p class="lp-form-sub">One profile. Every event in London. Your community, waiting.</p>
+
+        <div class="lp-float-field">
+          <input id="gate-name" class="lp-float-input" placeholder=" " value="${escapeHtml(prefillName||'')}" autocomplete="name" oninput="lpUpdatePassName(this.value)"/>
+          <label class="lp-float-label">Your full name</label>
+          <div class="lp-float-line"></div>
+        </div>
+        <div class="lp-float-field">
+          <input id="gate-email" class="lp-float-input" type="email" placeholder=" " value="${escapeHtml(prefillEmail||'')}" autocomplete="email"/>
+          <label class="lp-float-label">Email address</label>
+          <div class="lp-float-line"></div>
+        </div>
+
+        <button class="lp-claim-btn" onclick="submitGate()">
+          <span class="lp-claim-btn-text">Join the community →</span>
+          <div class="lp-claim-shimmer"></div>
+        </button>
+
+        <div class="lp-form-trust">
+          <span>🔒 No spam, ever</span>
+          <span>·</span>
+          <span>✓ Free forever</span>
+          <span>·</span>
+          <span>🗑 Delete anytime</span>
+        </div>
+      </div>
+    </div>
+
   </div>`;
+
+  // Auto-open modal if prefill data was provided (returning user flow)
+  if(prefillName||prefillEmail) showLpSignup();
 
   document.getElementById('gate-name').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('gate-email').focus(); });
   document.getElementById('gate-email').addEventListener('keydown',e=>{ if(e.key==='Enter') submitGate(); });
-  // Trigger scroll-reveal on featured cards
+
   requestAnimationFrame(()=>{
-    document.querySelectorAll('.lp-event-card').forEach((el,i)=>{
-      el.style.opacity='0';el.style.transform='translateY(30px)';
-      const obs=new IntersectionObserver(entries=>{
-        entries.forEach(e=>{ if(e.isIntersecting){ e.target.style.transition=`opacity 0.5s ease ${i*0.1}s, transform 0.5s cubic-bezier(0.22,1,0.36,1) ${i*0.1}s`; e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; obs.unobserve(e.target); } });
-      },{threshold:0.12});
-      obs.observe(el);
-    });
     document.querySelectorAll('.lp-venue-feat').forEach((el,i)=>{
       el.style.opacity='0'; el.style.transform='translateX(-12px)';
       const obs=new IntersectionObserver(entries=>{
@@ -3485,21 +3521,27 @@ function renderGate(prefillName,prefillEmail){
       },{threshold:0.2});
       obs.observe(el);
     });
+    document.querySelectorAll('.lp-feat-card').forEach((el,i)=>{
+      el.style.opacity='0'; el.style.transform='translateY(20px)';
+      const obs=new IntersectionObserver(entries=>{
+        entries.forEach(e=>{ if(e.isIntersecting){ e.target.style.transition=`opacity 0.45s ease ${i*0.1}s, transform 0.45s cubic-bezier(0.22,1,0.36,1) ${i*0.1}s`; e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; obs.unobserve(e.target); } });
+      },{threshold:0.15});
+      obs.observe(el);
+    });
   });
 }
 
+function showLpSignup(){
+  const ov=document.getElementById('lp-signup-overlay');
+  if(ov){ ov.classList.add('open'); document.body.style.overflow='hidden'; }
+}
+function closeLpSignup(){
+  const ov=document.getElementById('lp-signup-overlay');
+  if(ov){ ov.classList.remove('open'); document.body.style.overflow=''; }
+}
 function lpUpdatePassName(val){
   const el=document.getElementById('lp-pass-name-preview');
   if(el) el.textContent=val.trim()||'Your name here';
-}
-function lpCardTilt(el,e){
-  const r=el.getBoundingClientRect();
-  const x=((e.clientX-r.left)/r.width-0.5)*14;
-  const y=((e.clientY-r.top)/r.height-0.5)*-10;
-  el.style.transform=`perspective(900px) rotateX(${y}deg) rotateY(${x}deg) scale(1.03)`;
-}
-function lpCardUnTilt(el){
-  el.style.transform='perspective(900px) rotateX(0deg) rotateY(0deg) scale(1)';
 }
 async function submitGate(){
   const name=(document.getElementById('gate-name').value||'').trim();
@@ -3508,8 +3550,8 @@ async function submitGate(){
   if(!EMAIL_PATTERN.test(email)){ alert('Please add a valid email address.'); return; }
 
   // Show loading state
-  const btn=document.querySelector('#gate-root .btn');
-  if(btn){ btn.disabled=true; btn.textContent='Setting up…'; }
+  const btn=document.querySelector('.lp-claim-btn');
+  if(btn){ btn.disabled=true; btn.querySelector('.lp-claim-btn-text').textContent='Setting up…'; }
 
   // Check if user already exists in Supabase
   const {data:existing}=await sb.from('users').select('*').eq('email',email).single();
@@ -3542,6 +3584,7 @@ async function submitGate(){
   await localSet('cumulus_email',email);
   await localSet('prefs',JSON.stringify({theme:state.theme}));
 
+  document.body.style.overflow='';
   document.getElementById('gate-root').innerHTML='';
   enterApp();
 }
