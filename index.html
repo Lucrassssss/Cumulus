@@ -2,8 +2,20 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Cumulus — London Community Events</title>
+
+<!-- ══ iOS / PWA ══ -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cumulus">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#090A0C" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#3E7CB8">
+<meta name="description" content="Cumulus — London community events. Your city, your people.">
+<link id="pwa-apple-icon" rel="apple-touch-icon" href="">
+<link id="pwa-apple-icon-precomposed" rel="apple-touch-icon-precomposed" href="">
+<link id="pwa-manifest-link" rel="manifest" href="">
 <!-- ═══════════════════════════════════════════════════════════════
      SUPABASE — replace YOUR_PROJECT_URL and YOUR_ANON_KEY below
      with the values from Supabase → Settings → API
@@ -34,8 +46,13 @@
   }
   :root{
     --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-    --top-h: 56px;
-    --bot-h: 62px;
+    /* Safe-area-aware heights so content is never hidden under the notch or home indicator */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bot: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --top-h: calc(56px + env(safe-area-inset-top, 0px));
+    --bot-h: calc(62px + env(safe-area-inset-bottom, 0px));
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 
@@ -65,7 +82,7 @@
   @keyframes drift2{0%{transform:translate(0,0);}100%{transform:translate(-30px,-18px);}}
 
   /* ====== LAYOUT ====== */
-  #app { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; padding: calc(var(--top-h) + 12px) 20px calc(var(--bot-h) + 16px + env(safe-area-inset-bottom)); }
+  #app { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; padding: calc(var(--top-h) + 12px) 20px calc(var(--bot-h) + 16px); }
   #app.map-home { padding: 0; max-width: none; }
 
   /* ====== TOP BAR ====== */
@@ -2333,6 +2350,115 @@
   @media (max-width: 400px) {
     .cc-color-grid { grid-template-columns: repeat(6, 1fr); }
     .cc-style-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  /* ══════════════════════════════════════════
+     iOS / IPHONE-FIRST MOBILE POLISH
+     ══════════════════════════════════════════ */
+
+  /* Respect safe-areas on left/right for landscape */
+  #app {
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
+  }
+
+  /* Momentum scrolling on all scrollable areas */
+  .ce-right,
+  .gate-wrap,
+  #view-container,
+  .chat-box {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Bigger, friendlier tap targets on mobile */
+  @media (max-width: 600px) {
+    .btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    .nav-link { min-height: 48px; }
+    .back-btn { width: 44px; height: 44px; }
+    .theme-toggle { width: 44px; height: 44px; }
+
+    /* App layout */
+    #app { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+    /* Profile card: full width, no side clipping */
+    .profile-id-card { width: 100% !important; max-width: 100% !important; }
+
+    /* Event plate grid: 2 columns on iPhone */
+    .ev-plate-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .ev-plate { padding: 12px 10px; border-radius: 12px; }
+
+    /* Expanded card: fill most of screen */
+    .card-xl { width: calc(100vw - 40px); max-width: 340px; }
+    .card-xl-overlay { padding: 12px; align-items: flex-end; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+    .card-xl-overlay.open .card-xl { transform: scale(1) translateY(0); }
+
+    /* Gate / auth modals: full bottom-sheet style */
+    .gate-wrap { align-items: flex-end; padding: 0; }
+    .gate-card {
+      border-radius: 24px 24px 0 0;
+      padding: 28px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+      max-width: 100%; width: 100%; margin: 0;
+    }
+
+    /* Stat boxes: 2×2 on small screens */
+    .profile-stats { flex-wrap: wrap; }
+    .profile-stats .stat-box { flex: 1 1 calc(50% - 8px); min-width: calc(50% - 8px); padding: 12px 10px; }
+
+    /* Section titles: smaller on phone */
+    .section-title { font-size: 11px; margin: 20px 0 10px; }
+
+    /* Detail card: tighter padding */
+    .detail-card { padding: 18px 16px; }
+    .detail-title { font-size: 20px; }
+    .detail-meta-row { font-size: 12px; gap: 8px; }
+
+    /* Connect view: tighter */
+    .connect-header h2 { font-size: 19px; }
+
+    /* Badge grid: 3 columns on phone */
+    .badge-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 8px !important; }
+    .badge-cell { padding: 12px 8px !important; }
+    .badge-name { font-size: 10px !important; }
+
+    /* ID card in editor: smaller preview */
+    .ce-live-card { min-height: 180px; }
+    .ce-preview-name { font-size: 18px; }
+
+    /* Card editor right panel: tighter */
+    .ce-right { padding: 20px 16px 40px; }
+    .ce-right-title { font-size: 20px; }
+    .ce-section { margin-bottom: 22px; }
+
+    /* Landing page */
+    .lp-hero { padding: 90px 16px 56px; }
+    .lp-hero-title { font-size: clamp(32px, 10vw, 52px) !important; letter-spacing: -1.5px; }
+    .lp-hero-sub { font-size: 15px !important; }
+
+    /* Interest pills: tighter spacing on mobile */
+    .interest-pill { padding: 6px 12px; font-size: 12px; }
+
+    /* Chat input area */
+    .chat-input-row { padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+
+    /* Ticket modal */
+    .ticket-body { padding: 20px 16px !important; }
+  }
+
+  /* Extra-small (iPhone SE etc) */
+  @media (max-width: 375px) {
+    .ev-plate-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .cc-color-grid { grid-template-columns: repeat(6, 1fr); gap: 6px; }
+    .cc-style-grid { grid-template-columns: repeat(3, 1fr); }
+    .badge-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .detail-title { font-size: 18px; }
+  }
+
+  /* Standalone / added-to-home-screen mode — no address bar */
+  @media (display-mode: standalone) {
+    /* Extra bottom padding so content clears the home indicator */
+    #app { padding-bottom: calc(var(--bot-h) + 20px + env(safe-area-inset-bottom, 0px)); }
+    /* Hide the theme toggle since system handles it */
+    .top-bar { border-bottom-color: transparent; box-shadow: 0 1px 0 var(--line); }
   }
 </style>
 </head>
@@ -5438,6 +5564,136 @@ renderCardEditor = function() {
 window.addEventListener('load', () => {
   setTimeout(() => setupReveal(document.getElementById('view-container')), 300);
 });
+
+// ══════════════════════════════════════════
+// PWA SETUP — iOS Home Screen App
+// ══════════════════════════════════════════
+(function setupPWA() {
+  // 1. Generate the 180×180 Apple Touch Icon via canvas
+  function buildAppIcon() {
+    try {
+      const size = 180;
+      const c = document.createElement('canvas');
+      c.width = c.height = size;
+      const ctx = c.getContext('2d');
+
+      // Background — dark blue/slate gradient
+      const bg = ctx.createLinearGradient(0, 0, size, size);
+      bg.addColorStop(0, '#0c1a2e');
+      bg.addColorStop(0.55, '#0f2744');
+      bg.addColorStop(1, '#1a3a5e');
+      ctx.fillStyle = bg;
+      // Rounded rect (iOS clips to squircle, but we add a mild radius)
+      const r = 36;
+      ctx.beginPath();
+      ctx.moveTo(r, 0); ctx.lineTo(size - r, 0);
+      ctx.quadraticCurveTo(size, 0, size, r);
+      ctx.lineTo(size, size - r);
+      ctx.quadraticCurveTo(size, size, size - r, size);
+      ctx.lineTo(r, size); ctx.quadraticCurveTo(0, size, 0, size - r);
+      ctx.lineTo(0, r); ctx.quadraticCurveTo(0, 0, r, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Soft glow in top-left
+      const glow = ctx.createRadialGradient(30, 30, 0, 60, 55, 120);
+      glow.addColorStop(0, 'rgba(96,165,250,0.28)');
+      glow.addColorStop(1, 'rgba(96,165,250,0)');
+      ctx.fillStyle = glow;
+      ctx.fill();
+
+      // Cloud shape (main) — white, centered slightly above middle
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)';
+      const cx = size / 2, cy = size / 2 - 6;
+      // Body
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 16, 46, 26, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Left bump
+      ctx.beginPath();
+      ctx.ellipse(cx - 26, cy + 8, 24, 20, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Right bump
+      ctx.beginPath();
+      ctx.ellipse(cx + 22, cy + 6, 26, 22, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Top centre bump
+      ctx.beginPath();
+      ctx.ellipse(cx, cy - 8, 28, 24, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Accent dot — sky blue
+      ctx.save();
+      ctx.fillStyle = '#38BDF8';
+      ctx.beginPath();
+      ctx.arc(cx + 22, cy + 6, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // "CU" wordmark at the bottom
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.font = '700 18px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('CUMULUS', size / 2, size - 20);
+      ctx.restore();
+
+      return c.toDataURL('image/png');
+    } catch (e) { return ''; }
+  }
+
+  const iconDataURL = buildAppIcon();
+  if (iconDataURL) {
+    document.getElementById('pwa-apple-icon').href = iconDataURL;
+    document.getElementById('pwa-apple-icon-precomposed').href = iconDataURL;
+  }
+
+  // 2. Inject a Web App Manifest (works for Android/Chrome; iOS uses meta tags above)
+  try {
+    const manifest = {
+      name: 'Cumulus',
+      short_name: 'Cumulus',
+      description: 'London community events — your city, your people.',
+      start_url: './',
+      display: 'standalone',
+      orientation: 'portrait',
+      background_color: '#090A0C',
+      theme_color: '#3E7CB8',
+      icons: iconDataURL ? [
+        { src: iconDataURL, sizes: '180x180', type: 'image/png', purpose: 'any maskable' }
+      ] : []
+    };
+    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+    document.getElementById('pwa-manifest-link').href = URL.createObjectURL(blob);
+  } catch (e) {}
+
+  // 3. Register service worker for offline caching (only works when served over HTTPS)
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    const swCode = `
+const CACHE = 'cumulus-v1';
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.add(self.location.pathname.replace(/\\/sw\\.js$/,'/') || '/'))
+  );
+  self.skipWaiting();
+});
+self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  e.respondWith(
+    fetch(e.request).catch(() => caches.match(e.request))
+  );
+});`;
+    try {
+      const swBlob = new Blob([swCode], { type: 'text/javascript' });
+      // Note: blob: URL service workers are rejected by iOS Safari.
+      // For full offline support, host sw.js alongside index.html on your server.
+      navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+    } catch (e) {}
+  }
+})();
 
 </script>
 </body>
