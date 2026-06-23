@@ -373,74 +373,25 @@
   .tip-hint{margin-top:7px;font-size:10px;color:var(--text-muted);}
 
 
-  /* ══ MAP PIN MARKERS ══ */
-  .evpin-wrap { background:transparent; border:none; cursor:pointer; position:relative; }
-  .evpin-wrap:hover { z-index:900 !important; }
-
-  .evpin-pin {
-    position:relative; display:flex; flex-direction:column; align-items:center; width:30px;
+  /* Event pins and clusters */
+  .evpin-wrap{background:transparent;border:none;cursor:pointer;}
+  .evpin{position:relative;width:20px;height:20px;}
+  .evpin .pin{
+    position:absolute;inset:0;border-radius:50%;background:var(--c);
+    border:2.5px solid #fff;
+    box-shadow:0 0 0 1.5px rgba(20,24,30,0.45), 0 2px 7px rgba(0,0,0,0.35), 0 0 10px -3px var(--c);
+    display:flex;align-items:center;justify-content:center;z-index:2;
+    transition:transform .12s ease;
   }
-
-  /* The circular head of the pin */
-  .pin-head {
-    width:22px; height:22px; border-radius:50%;
-    background:var(--c);
-    border:2.5px solid rgba(255,255,255,0.88);
-    box-shadow:0 2px 8px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.18);
-    position:relative; z-index:2;
-    transition:transform .15s ease, box-shadow .15s ease;
-  }
-  .evpin-pin:hover .pin-head, .evpin-pin.open .pin-head {
-    transform:scale(1.22);
-    box-shadow:0 4px 16px rgba(0,0,0,0.55), 0 0 0 3px var(--c), 0 0 0 5px rgba(255,255,255,0.65);
-  }
-
-  /* Teardrop tail — clip-path gives real height so the bottom of this
-     element IS the pin tip, meaning anchor:'bottom' lands exactly there */
-  .pin-tail {
-    width:12px; height:10px;
-    background:var(--c);
-    clip-path:polygon(0 0,100% 0,50% 100%);
-    margin-top:-2px;
-    position:relative; z-index:2;
-  }
-
-  /* Radiating rings — only visible on live events */
-  .pin-ring {
-    display:none; pointer-events:none;
-    position:absolute; top:0; left:50%;
-    width:22px; height:22px;
-    transform:translate(-50%,0);
-    border-radius:50%;
-    border:2px solid var(--c);
-    z-index:1;
-  }
-  .evpin-pin.live .pin-ring { display:block; animation:pinRipple 2s ease-out infinite; }
-  .evpin-pin.live .pin-ring-2 { animation-delay:1s; }
-
-  /* Friend star badge */
-  .pin-star {
-    position:absolute; top:-4px; right:-4px;
-    background:var(--gold,#F59E0B); color:#1a1400;
-    font-size:7px; font-weight:900;
-    width:13px; height:13px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    border:1.5px solid #fff; z-index:5;
-  }
-
-  /* Chat-open indicator dot */
-  .pin-chat-dot {
-    position:absolute; top:-4px; left:-4px;
-    width:12px; height:12px; border-radius:50%;
-    background:var(--accent); border:1.5px solid #fff;
-    display:flex; align-items:center; justify-content:center; z-index:5;
-  }
-  .pin-chat-dot svg { display:block; }
-
-  @keyframes pinRipple {
-    0%   { transform:translate(-50%,0) scale(1);   opacity:0.75; }
-    100% { transform:translate(-50%,0) scale(3.8); opacity:0;    }
-  }
+  .evpin:hover .pin,.evpin.open .pin{transform:scale(1.25);box-shadow:0 0 0 1.5px rgba(20,24,30,0.5), 0 3px 10px rgba(0,0,0,0.4), 0 0 14px -2px var(--c);}
+  .evpin .pin-dot{width:5px;height:5px;border-radius:50%;background:#fff;}
+  .evpin .pulse-ring{position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--c);z-index:1;animation:pulse 2s ease-out infinite;}
+  .evpin .pulse-ring.r2{animation-delay:1s;}
+  @keyframes pulse{0%{transform:scale(1);opacity:.82;}100%{transform:scale(2.7);opacity:0;}}
+  .evpin.live .pin{box-shadow:0 0 0 1.5px rgba(20,24,30,0.5), 0 0 0 3px var(--c), 0 3px 8px rgba(0,0,0,0.4), 0 0 14px var(--c);}
+  .evpin .pin-star{position:absolute;top:-6px;right:-6px;background:var(--gold);color:#1a1400;font-size:8px;font-weight:800;width:13px;height:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.35);z-index:3;}
+  .evpin .pin-chat{position:absolute;top:-5px;right:-5px;width:13px;height:13px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;border:1.5px solid #fff;z-index:3;box-shadow:0 1px 4px rgba(0,0,0,0.35);}
+  .evpin .pin-chat svg{display:block;}
 
   /* HTML Clusters */
   .cluster-pin {
@@ -3085,13 +3036,12 @@ const EVENTS = EVENT_SEED.map(seed => ({
 }));
 
 const CATS = {
-  "Creative":{color:"#7B5EA7"}, "Gaming":{color:"#3D8A6E"}, "Movie Nights":{color:"#C06830"},
-  "Board Games":{color:"#3A8096"}, "Meetups":{color:"#A84070"}, "Food & Drink":{color:"#A04040"},
-  "Live Music":{color:"#5558A0"}, "Wellness & Outdoors":{color:"#5E8030"}, "Tech & Talks":{color:"#3A68C0"}
+  "Creative":{color:"#8B5CF6"}, "Gaming":{color:"#10B981"}, "Movie Nights":{color:"#F97316"},
+  "Board Games":{color:"#06B6D4"}, "Meetups":{color:"#EC4899"}, "Food & Drink":{color:"#EF4444"},
+  "Live Music":{color:"#6366F1"}, "Wellness & Outdoors":{color:"#84CC16"}, "Tech & Talks":{color:"#3B82F6"}
 };
 
 function eventStatus(ev){ const now=Date.now(); if(now>=ev.startsAt&&now<=ev.endsAt) return 'live'; if(now<ev.startsAt) return 'upcoming'; return 'past'; }
-function isHotEvent(ev){ const st=eventStatus(ev); if(st==='past') return false; if(st==='live') return true; return attendeesFor(ev.id).length>=2; }
 function generateUniqueId(){ return Math.floor(Math.random()*1000000).toString().padStart(6,'0'); }
 function codeFor(name,id){ const c=name.toUpperCase().replace(/\s+/g,'-').replace(/[^A-Z0-9-]/g,''); return `CUMULUS-FRIEND::${c}-${id}`; }
 
@@ -3407,7 +3357,7 @@ async function resolveEventLocations(){
     while(idx<pending.length){
       const ev=pending[idx++];
       try{ const c=await geocodeAddress(ev.address); ev.lat=c.lat; ev.lon=c.lon; }
-      catch(e){ /* leave lat/lon null — marker hidden until address resolves */ }
+      catch(e){ const f=AREA_FALLBACK_CENTER; ev.lat=f.lat+(Math.random()-0.5)*0.06; ev.lon=f.lon+(Math.random()-0.5)*0.10; }
       geocodeProgress.done++;
       updateGeocodeBanner();
       if(state.view==='browse') refreshMarkers();
@@ -4662,7 +4612,7 @@ function buildEventsGeoJSON(){
 let activePopup=null, activePopupEventId=null;
 function closeActivePopup(){
   if(activePopup){ try{ activePopup.remove(); }catch(e){} activePopup=null; activePopupEventId=null; }
-  document.querySelectorAll('.evpin-pin.open').forEach(el=>el.classList.remove('open'));
+  document.querySelectorAll('.evpin.open').forEach(el=>el.classList.remove('open'));
 }
 
 let htmlMarkerRefs = {};
@@ -4756,26 +4706,22 @@ function refreshMarkers(){
   src.setData(geo);
 
   getFilteredEvents().forEach(ev=>{
-    if(!ev.lat||!ev.lon) return; // skip until geocoded to a real address
-    const color=(CATS[ev.category]||CATS['Meetups']).color;
+    const color=CATS[ev.category].color;
     const status=eventStatus(ev);
     const att=attendeesFor(ev.id);
     const friendGoing=att.some(isFriend);
 
     const el=document.createElement('div');
     el.className='evpin-wrap';
-    const chatOpen=chatIsOpen(ev)&&status!=='past';
-    el.innerHTML=`<div class="evpin-pin ${status}" style="--c:${color}">
-      <div class="pin-ring"></div>
-      <div class="pin-ring pin-ring-2"></div>
-      <div class="pin-head">
-        ${friendGoing?'<span class="pin-star">★</span>':''}
-        ${chatOpen?'<span class="pin-chat-dot"><svg viewBox="0 0 20 20" width="6" height="6" fill="#fff"><path d="M18 2H2C.9 2 0 2.9 0 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></span>':''}
-      </div>
-      <div class="pin-tail"></div>
+    const chatBadge=chatIsOpen(ev)&&status!=='past'?'<span class="pin-chat"><svg viewBox="0 0 20 20" width="7" height="7" fill="#fff"><path d="M18 2H2C.9 2 0 2.9 0 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></span>':'';
+    el.innerHTML=`<div class="evpin ${status}" style="--c:${color}">
+      ${status==='live'?'<span class="pulse-ring"></span><span class="pulse-ring r2"></span>':''}
+      <div class="pin"><span class="pin-dot"></span></div>
+      ${friendGoing?'<span class="pin-star">★</span>':''}
+      ${chatBadge}
     </div>`;
 
-    const marker=new mapboxgl.Marker({element:el,anchor:'bottom'}).setLngLat([ev.lon,ev.lat]);
+    const marker=new mapboxgl.Marker({element:el,anchor:'center'}).setLngLat([ev.lon,ev.lat]);
 
     let closeTimer=null;
 
@@ -4783,11 +4729,11 @@ function refreshMarkers(){
       if(activePopupEventId===ev.id) return;
       closeActivePopup();
       const popup=new mapboxgl.Popup({
-        offset:{top:[0,8],'top-left':[0,8],'top-right':[0,8],bottom:[0,-34],left:[16,0],'bottom-left':[16,0],right:[-16,0],'bottom-right':[-16,0]},
+        offset:{top:[0,8],bottom:[0,-14],left:[14,0],right:[-14,0]},
         closeButton:false, closeOnClick:false, className:'evtip-popup', anchor:'bottom', maxWidth:'240px'
       }).setLngLat([ev.lon,ev.lat]).setHTML(pinTooltipHtml(ev)).addTo(lmap);
       activePopup=popup; activePopupEventId=ev.id;
-      el.querySelector('.evpin-pin')?.classList.add('open');
+      el.querySelector('.evpin')?.classList.add('open');
       const popupEl=popup.getElement();
       if(popupEl){
         popupEl.addEventListener('mouseenter',()=>{ clearTimeout(closeTimer); closeTimer=null; });
@@ -4798,7 +4744,7 @@ function refreshMarkers(){
     };
 
     const dismissPopup=()=>{
-      if(activePopupEventId===ev.id){ closeActivePopup(); el.querySelector('.evpin-pin')?.classList.remove('open'); }
+      if(activePopupEventId===ev.id){ closeActivePopup(); el.querySelector('.evpin')?.classList.remove('open'); }
     };
 
     el.addEventListener('mouseenter',()=>{ clearTimeout(closeTimer); closeTimer=null; openPopup(); });
