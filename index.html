@@ -395,15 +395,14 @@
     box-shadow:0 4px 16px rgba(0,0,0,0.55), 0 0 0 3px var(--c), 0 0 0 5px rgba(255,255,255,0.65);
   }
 
-  /* Teardrop tail — tip sits at the coordinate */
+  /* Teardrop tail — clip-path gives real height so the bottom of this
+     element IS the pin tip, meaning anchor:'bottom' lands exactly there */
   .pin-tail {
-    width:0; height:0;
-    border-left:6px solid transparent;
-    border-right:6px solid transparent;
-    border-top:10px solid var(--c);
+    width:12px; height:10px;
+    background:var(--c);
+    clip-path:polygon(0 0,100% 0,50% 100%);
     margin-top:-2px;
     position:relative; z-index:2;
-    filter:drop-shadow(0 3px 3px rgba(0,0,0,0.22));
   }
 
   /* Radiating rings — only visible on live events */
@@ -3405,7 +3404,7 @@ async function resolveEventLocations(){
     while(idx<pending.length){
       const ev=pending[idx++];
       try{ const c=await geocodeAddress(ev.address); ev.lat=c.lat; ev.lon=c.lon; }
-      catch(e){ const f=AREA_FALLBACK_CENTER; ev.lat=f.lat+(Math.random()-0.5)*0.06; ev.lon=f.lon+(Math.random()-0.5)*0.10; }
+      catch(e){ /* leave lat/lon null — marker hidden until address resolves */ }
       geocodeProgress.done++;
       updateGeocodeBanner();
       if(state.view==='browse') refreshMarkers();
@@ -4754,7 +4753,8 @@ function refreshMarkers(){
   src.setData(geo);
 
   getFilteredEvents().forEach(ev=>{
-    const color=CATS[ev.category].color;
+    if(!ev.lat||!ev.lon) return; // skip until geocoded to a real address
+    const color=(CATS[ev.category]||CATS['Meetups']).color;
     const status=eventStatus(ev);
     const att=attendeesFor(ev.id);
     const friendGoing=att.some(isFriend);
@@ -4780,7 +4780,7 @@ function refreshMarkers(){
       if(activePopupEventId===ev.id) return;
       closeActivePopup();
       const popup=new mapboxgl.Popup({
-        offset:{top:[0,8],bottom:[0,-38],left:[14,0],right:[-14,0]},
+        offset:{top:[0,8],'top-left':[0,8],'top-right':[0,8],bottom:[0,-34],left:[16,0],'bottom-left':[16,0],right:[-16,0],'bottom-right':[-16,0]},
         closeButton:false, closeOnClick:false, className:'evtip-popup', anchor:'bottom', maxWidth:'240px'
       }).setLngLat([ev.lon,ev.lat]).setHTML(pinTooltipHtml(ev)).addTo(lmap);
       activePopup=popup; activePopupEventId=ev.id;
