@@ -216,6 +216,8 @@
   .chat-input{flex:1;min-width:0;box-sizing:border-box;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:10px 16px;font-family:var(--font-sans);font-size:16px;color:var(--text);outline:none;}
   .chat-input:focus{border-color:var(--accent);}
   .chat-input-row .btn{flex-shrink:0;white-space:nowrap;}
+  @keyframes msgSlideIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .msg-row-new{animation:msgSlideIn 0.18s cubic-bezier(0.22,1,0.36,1) both;}
   /* Night Shot */
   .night-shot-panel{background:linear-gradient(145deg,#181000 0%,#2a1c00 100%);border:1px solid #8B691466;border-radius:20px;padding:22px 18px;overflow:hidden;position:relative;}
   .night-shot-glow{position:absolute;top:-40px;right:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,#FCD34D22 0%,transparent 70%);pointer-events:none;}
@@ -4502,8 +4504,10 @@ function _appendChatMsg(msg){
   const empty=cm.querySelector('.chat-empty-state'); if(empty) empty.remove();
   const wrap=document.createElement('div');
   wrap.innerHTML=_buildChatMsgHtml(msg);
-  cm.appendChild(wrap.firstElementChild);
-  cm.scrollTop=cm.scrollHeight;
+  const node=wrap.firstElementChild;
+  node.classList.add('msg-row-new');
+  cm.appendChild(node);
+  cm.scrollTo({top:cm.scrollHeight,behavior:'smooth'});
 }
 
 async function sendChat(id){
@@ -4513,8 +4517,7 @@ async function sendChat(id){
   const msg={name:state.profileName,text,ts:Date.now(),_opt:true};
   if(!state.chats[id]) state.chats[id]=[];
   state.chats[id].push(msg);
-  _appendChatMsg(msg);                   // surgical DOM append — no full re-render
-  document.getElementById('chat-input')?.focus();
+  _appendChatMsg(msg);
   await sb.from('chat_messages').insert({event_id:id,user_id:state.userId,user_name:state.profileName,text});
 }
 function handleChatKey(e,id){ if(e.key==='Enter') sendChat(id); }
