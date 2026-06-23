@@ -928,6 +928,67 @@
   }
 
   /* ══════════════════════════════════════════
+     INK SPLAT NODES — Splatoon-style accents
+     ══════════════════════════════════════════ */
+
+  /* Section kicker → 24-point ink splat */
+  .section-title::before {
+    width: 14px !important; height: 14px !important;
+    border-radius: 0 !important;
+    clip-path: polygon(50% 2%, 62% 14%, 78% 6%, 75% 24%, 92% 30%, 78% 40%, 94% 52%, 76% 56%, 85% 72%, 66% 68%, 65% 88%, 52% 72%, 48% 92%, 35% 72%, 32% 88%, 22% 68%, 14% 78%, 20% 56%, 6% 52%, 20% 40%, 8% 30%, 24% 24%, 22% 6%, 38% 14%) !important;
+    box-shadow: none !important;
+    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--accent) 45%, transparent));
+    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), filter 0.25s ease !important;
+    animation: splatIdle 5s ease-in-out infinite !important;
+    will-change: transform;
+  }
+  .section-title:hover::before {
+    animation: none !important;
+    transform: rotate(22deg) scale(1.55) !important;
+    filter: drop-shadow(0 0 8px var(--accent)) !important;
+  }
+
+  /* Category chip dot → 5-point star */
+  .mdot {
+    width: 9px !important; height: 9px !important;
+    border-radius: 0 !important;
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%) !important;
+    box-shadow: none !important;
+    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1) !important;
+  }
+  .mchip:hover .mdot { transform: rotate(144deg) scale(1.4) !important; }
+  .mchip.active .mdot { transform: rotate(72deg) scale(1.15) !important; }
+
+  /* Nav active tab indicator → ink drip bar */
+  .nav-link.active-cloud-tab::before {
+    width: 26px !important; height: 6px !important;
+    border-radius: 0 !important;
+    clip-path: polygon(0% 45%, 10% 0%, 22% 80%, 38% 15%, 50% 100%, 62% 15%, 78% 80%, 90% 0%, 100% 45%, 94% 100%, 72% 65%, 50% 100%, 28% 65%, 6% 100%) !important;
+    background: var(--accent) !important;
+    box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 65%, transparent) !important;
+    animation: inkDrip 0.45s cubic-bezier(.34,1.56,.64,1) both !important;
+  }
+
+  @keyframes splatIdle {
+    0%,100% { transform: rotate(-4deg) scale(1.00); }
+    30%     { transform: rotate(7deg)  scale(1.10); }
+    60%     { transform: rotate(-1deg) scale(0.94); }
+    80%     { transform: rotate(9deg)  scale(1.06); }
+  }
+  @keyframes inkDrip {
+    from { opacity:0; transform:translateX(-50%) scaleX(0.15) scaleY(0.3); }
+    to   { opacity:1; transform:translateX(-50%) scaleX(1)    scaleY(1);   }
+  }
+
+  /* Chat countdown display */
+  .chat-countdown-wrap { display:flex; justify-content:center; align-items:flex-start; gap:10px; margin:14px 0 12px; }
+  .chat-cd-seg { display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .chat-cd-num { font-size:28px; font-weight:900; color:var(--accent); font-variant-numeric:tabular-nums; line-height:1; min-width:2ch; text-align:center; letter-spacing:-1px; }
+  .chat-cd-sep { font-size:24px; font-weight:900; color:var(--text-muted); margin-top:2px; }
+  .chat-cd-unit { font-size:9px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.9px; }
+  .chat-cd-date { margin-top:14px; padding:10px 14px; background:var(--surface-2); border-radius:12px; font-size:13px; font-weight:700; color:var(--accent); }
+
+  /* ══════════════════════════════════════════
      CARD EDITOR — FULL SCREEN STUDIO
      ══════════════════════════════════════════ */
 
@@ -4916,7 +4977,7 @@ function renderView(){
   showMapLayer(false);
   app.classList.remove('map-home'); document.body.classList.remove('no-scroll');
   if(state.view==='detail') container.innerHTML=renderDetail(state.selectedEventId);
-  else if(state.view==='connect') container.innerHTML=renderConnect(state.selectedEventId);
+  else if(state.view==='connect'){container.innerHTML=renderConnect(state.selectedEventId);const _cdEv=EVENTS.find(e=>e.id===state.selectedEventId);if(_cdEv&&!chatIsOpen(_cdEv)&&eventStatus(_cdEv)!=='past')setTimeout(()=>startChatCountdown(_cdEv.id,chatUnlockTime(_cdEv)),0);}
   else if(state.view==='profile') container.innerHTML=renderProfile();
   else if(state.view==='achievements') container.innerHTML=renderAchievements();
   else if(state.view==='friends'){ container.innerHTML=renderSocialTab(); }
@@ -5126,10 +5187,19 @@ function renderConnect(id){
          <div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:5px;">Chat archived</div>
          <div style="font-size:12.5px;color:var(--text-muted);line-height:1.6;">This event has ended and the chat is now read-only.</div>`
       :
-        `<div style="font-size:28px;margin-bottom:10px;">🔒</div>
-         <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:6px;">Chat opens in ${daysUntil>0?`${daysUntil} day${daysUntil!==1?'s':''}`:'less than a day'}</div>
+        `<div style="font-size:28px;margin-bottom:8px;">🔒</div>
+         <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:4px;">Chat opens in</div>
+         <div class="chat-countdown-wrap">
+           <div class="chat-cd-seg"><span class="chat-cd-num" id="chat-cd-d-${id}">--</span><span class="chat-cd-unit">days</span></div>
+           <span class="chat-cd-sep">:</span>
+           <div class="chat-cd-seg"><span class="chat-cd-num" id="chat-cd-h-${id}">--</span><span class="chat-cd-unit">hrs</span></div>
+           <span class="chat-cd-sep">:</span>
+           <div class="chat-cd-seg"><span class="chat-cd-num" id="chat-cd-m-${id}">--</span><span class="chat-cd-unit">min</span></div>
+           <span class="chat-cd-sep">:</span>
+           <div class="chat-cd-seg"><span class="chat-cd-num" id="chat-cd-s-${id}">--</span><span class="chat-cd-unit">sec</span></div>
+         </div>
          <div style="font-size:13px;color:var(--text-muted);line-height:1.6;">The group chat unlocks 7 days before the event so you can meet your fellow attendees beforehand.</div>
-         <div style="margin-top:16px;padding:10px 14px;background:var(--surface-2);border-radius:12px;font-size:13px;font-weight:700;color:var(--accent);">${ev.date} · ${ev.time}</div>`
+         <div class="chat-cd-date">${ev.date} · ${ev.time}</div>`
       }
     </div>`}
   `;
@@ -5986,6 +6056,32 @@ function chatIsOpen(ev){
   if(st==='past') return false; // Close when ended
   if(st==='live') return true;
   return Date.now()>=chatUnlockTime(ev);
+}
+
+// ════════════════════════════════════════════════
+// CHAT COUNTDOWN TIMERS
+// ════════════════════════════════════════════════
+const _chatTimers={};
+function pad2(n){return String(n).padStart(2,'0');}
+function startChatCountdown(evId,unlockTs){
+  if(_chatTimers[evId]){clearInterval(_chatTimers[evId]);delete _chatTimers[evId];}
+  function tick(){
+    const dEl=document.getElementById('chat-cd-d-'+evId);
+    if(!dEl){clearInterval(_chatTimers[evId]);delete _chatTimers[evId];return;}
+    const rem=unlockTs-Date.now();
+    if(rem<=0){clearInterval(_chatTimers[evId]);delete _chatTimers[evId];renderView();return;}
+    const ts=Math.floor(rem/1000);
+    const d=Math.floor(ts/86400);
+    const h=Math.floor((ts%86400)/3600);
+    const m=Math.floor((ts%3600)/60);
+    const s=ts%60;
+    dEl.textContent=d;
+    document.getElementById('chat-cd-h-'+evId).textContent=pad2(h);
+    document.getElementById('chat-cd-m-'+evId).textContent=pad2(m);
+    document.getElementById('chat-cd-s-'+evId).textContent=pad2(s);
+  }
+  tick();
+  _chatTimers[evId]=setInterval(tick,1000);
 }
 
 let _socialSeenCount={};
