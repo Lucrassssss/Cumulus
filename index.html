@@ -374,7 +374,7 @@
 
 
   /* Event pins and clusters */
-  .evpin-wrap{background:transparent;border:none;cursor:pointer;}
+  .evpin-wrap{background:transparent;border:none;cursor:pointer;position:relative;}
   .evpin{position:relative;width:20px;height:20px;}
   .evpin .pin{
     position:absolute;inset:0;border-radius:50%;background:var(--c);
@@ -397,6 +397,22 @@
   .evpin.hot .pin{box-shadow:0 0 0 2.5px var(--c),0 0 0 4.5px rgba(255,255,255,0.75),0 2px 8px rgba(0,0,0,0.4),0 0 12px -1px var(--c);}
   .evpin.hot:hover .pin,.evpin.hot.open .pin{box-shadow:0 0 0 2.5px var(--c),0 0 0 4.5px rgba(255,255,255,0.9),0 3px 12px rgba(0,0,0,0.5),0 0 20px var(--c);}
   @keyframes hotPulse{0%,100%{box-shadow:0 0 0 2.5px var(--c),0 0 0 4.5px rgba(255,255,255,0.75),0 2px 8px rgba(0,0,0,0.4),0 0 10px var(--c);}50%{box-shadow:0 0 0 2.5px var(--c),0 0 0 4.5px rgba(255,255,255,0.95),0 2px 8px rgba(0,0,0,0.4),0 0 22px var(--c);}}
+  /* Floating label bubble above pin for live / hot / upcoming-soon events */
+  .pin-bubble{
+    position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+    background:rgba(12,15,22,0.9);color:#fff;
+    font-size:9px;font-weight:700;font-family:var(--font-sans,sans-serif);
+    padding:2px 7px;border-radius:6px;white-space:nowrap;
+    border:1px solid rgba(255,255,255,0.14);box-shadow:0 2px 8px rgba(0,0,0,0.5);
+    letter-spacing:0.4px;pointer-events:none;z-index:10;
+  }
+  .pin-bubble::after{
+    content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+    border-left:4px solid transparent;border-right:4px solid transparent;
+    border-top:4px solid rgba(12,15,22,0.9);
+  }
+  .pin-bubble.bubble-live{background:var(--c);border-color:rgba(255,255,255,0.28);}
+  .pin-bubble.bubble-live::after{border-top-color:var(--c);}
 
   /* HTML Clusters */
   .cluster-pin {
@@ -4720,8 +4736,14 @@ function refreshMarkers(){
     const el=document.createElement('div');
     el.className='evpin-wrap';
     const hot=isHotEvent(ev);
+    const soon=status==='upcoming'&&(ev.startsAt-Date.now())<=7*24*60*60*1000;
     const chatBadge=chatIsOpen(ev)&&status!=='past'?'<span class="pin-chat"><svg viewBox="0 0 20 20" width="7" height="7" fill="#fff"><path d="M18 2H2C.9 2 0 2.9 0 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></span>':'';
-    el.innerHTML=`<div class="evpin ${status}${hot?' hot':''}" style="--c:${color}">
+    const shortTitle=ev.title.length>14?ev.title.slice(0,13)+'…':ev.title;
+    const bubbleHtml=status==='live'
+      ?`<span class="pin-bubble bubble-live" style="--c:${color}">● LIVE</span>`
+      :(hot||soon)?`<span class="pin-bubble">${escapeHtml(shortTitle)}</span>`
+      :'';
+    el.innerHTML=`${bubbleHtml}<div class="evpin ${status}${hot?' hot':''}" style="--c:${color}">
       ${status==='live'?'<span class="pulse-ring"></span><span class="pulse-ring r2"></span>':''}
       <div class="pin"><span class="pin-dot"></span></div>
       ${friendGoing?'<span class="pin-star">★</span>':''}
