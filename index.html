@@ -216,6 +216,21 @@
   .chat-input{flex:1;min-width:0;box-sizing:border-box;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:10px 16px;font-family:var(--font-sans);font-size:16px;color:var(--text);outline:none;}
   .chat-input:focus{border-color:var(--accent);}
   .chat-input-row .btn{flex-shrink:0;white-space:nowrap;}
+  /* Night Shot */
+  .night-shot-panel{background:linear-gradient(145deg,#181000 0%,#2a1c00 100%);border:1px solid #8B691466;border-radius:20px;padding:22px 18px;overflow:hidden;position:relative;}
+  .night-shot-glow{position:absolute;top:-40px;right:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,#FCD34D22 0%,transparent 70%);pointer-events:none;}
+  .night-shot-hd{font-size:16px;font-weight:800;color:#FCD34D;letter-spacing:-0.3px;margin-bottom:3px;}
+  .night-shot-desc{font-size:12px;color:#D4A843;line-height:1.5;opacity:0.88;}
+  .night-shot-upload-zone{margin-top:14px;position:relative;border:2px dashed #8B691488;border-radius:14px;padding:26px 20px;text-align:center;cursor:pointer;transition:border-color .18s;}
+  .night-shot-upload-zone:hover,.night-shot-upload-zone:focus-within{border-color:#FCD34D;}
+  .night-shot-upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+  .night-shot-img-frame{margin-top:14px;border-radius:16px;overflow:hidden;position:relative;}
+  .night-shot-img{width:100%;display:block;border-radius:16px;}
+  .night-shot-watermark{position:absolute;bottom:10px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-end;}
+  .night-shot-watermark-badge{background:rgba(0,0,0,0.62);backdrop-filter:blur(6px);border-radius:8px;padding:5px 10px;font-size:10.5px;font-weight:700;color:#FCD34D;letter-spacing:0.4px;}
+  .ns-tile{border-radius:16px;overflow:hidden;position:relative;cursor:pointer;aspect-ratio:1/1;}
+  .ns-tile img{width:100%;height:100%;object-fit:cover;display:block;}
+  .ns-tile-label{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,0.72) 0%,transparent 100%);padding:10px 8px 6px;font-size:10px;font-weight:700;color:#FCD34D;letter-spacing:0.4px;}
 
   .profile-top{display:grid;grid-template-columns:320px 1fr;gap:22px;align-items:start;}
   @media(max-width:720px){.profile-top{grid-template-columns:1fr;gap:16px;}}
@@ -991,9 +1006,9 @@
     cursor: pointer; font-family: var(--font-sans); padding: 9px 8px;
   }
 
-  /* split: preview | tabs */
+  /* always stacked: preview on top, tabs below */
   .ce-shell {
-    display: grid; grid-template-columns: 360px 1fr;
+    display: grid; grid-template-columns: 1fr; grid-template-rows: auto 1fr;
     flex: 1; overflow: hidden;
     animation: ceShellIn 0.32s cubic-bezier(0.22,1,0.36,1) both;
   }
@@ -1001,17 +1016,30 @@
 
   .ce-left {
     background: color-mix(in srgb, var(--bg-2) 70%, var(--bg) 30%);
-    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
     display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 32px 28px; gap: 18px; overflow: hidden;
+    align-items: center;
+    padding: 18px 24px 14px; gap: 10px; flex-shrink: 0; overflow: visible;
   }
   .ce-left-label {
     font-size: 10px; font-weight: 700; letter-spacing: 1.8px;
     text-transform: uppercase; color: var(--text-muted);
     align-self: flex-start; opacity: .7;
   }
-  .ce-card-wrap { width: 100%; max-width: 288px; }
+  .ce-preview-row { display: flex; gap: 16px; align-items: flex-start; justify-content: center; }
+  .ce-card-wrap { width: min(280px, 60vw); flex-shrink: 0; }
+  .ce-photo-inline {
+    width: 82px; flex-shrink: 0;
+    border: 2px dashed var(--line); border-radius: 12px;
+    padding: 10px 6px; text-align: center; cursor: pointer;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    transition: border-color .18s; min-height: 100px; justify-content: center;
+  }
+  .ce-photo-inline:hover { border-color: var(--accent); }
+  .ce-photo-inline input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .ce-photo-inline-img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+  .ce-photo-inline-lbl { font-size: 10px; font-weight: 600; color: var(--text-muted); line-height: 1.3; }
   .ce-live-card {
     border-radius: 18px; border: 1px solid;
     padding: 22px 20px; min-height: 190px;
@@ -1514,24 +1542,19 @@
     display: none; flex-direction: column; gap: 10px; margin-top: 20px;
   }
 
-  /* Card editor — mobile: card fills top, tabs below */
+  /* Card editor — mobile adjustments */
   @media (max-width: 780px) {
-    .ce-shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-    .ce-left {
-      flex-direction: column; gap: 10px;
-      justify-content: center; align-items: center;
-      padding: 18px 20px 14px; border-right: none;
-      border-bottom: 1px solid var(--line);
-      flex-shrink: 0;
-    }
+    .ce-card-wrap { width: min(56vw, 260px); }
     .ce-left-label { display: none; }
-    /* Card fills 90% of screen width up to 300px */
-    .ce-card-wrap { width: min(90vw, 300px); flex-shrink: 0; }
-    .ce-card-hint { font-size: 10.5px; color: var(--text-muted); text-align: center; }
     .ce-left-actions { display: none !important; }
     .ce-tabs-bar { padding: 0 12px; overflow-x: auto; gap: 0; flex-shrink: 0; }
     .ce-tab-btn { padding: 11px 12px 10px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
     .ce-tab-panel { padding: 18px 16px calc(40px + env(safe-area-inset-bottom, 0px)); }
+  }
+  @media (max-width: 420px) {
+    .ce-preview-row { flex-direction: column; align-items: center; }
+    .ce-card-wrap { width: min(88vw, 300px); }
+    .ce-photo-inline { width: 100%; flex-direction: row; justify-content: center; min-height: auto; padding: 10px 14px; gap: 10px; }
   }
 
   /* ══════════════════════════════════════════
@@ -3808,9 +3831,9 @@ function handleCardPhoto(input){
       // Update zone UI without full re-render
       const zone=document.getElementById('ce-photo-zone');
       if(zone) zone.innerHTML=`<input type="file" id="ce-photo-input" accept="image/*" onchange="handleCardPhoto(this)"/>
-        <img src="${cardDraft.photo}" class="ce-photo-preview" id="ce-photo-img" alt="Card photo"/>
-        <div class="ce-photo-label">Photo set — tap to change</div>
-        <button class="ce-photo-remove" onclick="event.stopPropagation();removeCardPhoto()">Remove photo</button>`;
+        <img src="${cardDraft.photo}" class="ce-photo-inline-img" id="ce-photo-img" alt=""/>
+        <div class="ce-photo-inline-lbl">Tap to change</div>
+        <button class="ce-photo-remove" style="font-size:10px;" onclick="event.stopPropagation();removeCardPhoto()">Remove</button>`;
     };
     img.src=e.target.result;
   };
@@ -3821,9 +3844,8 @@ function removeCardPhoto(){
   try{ localStorage.removeItem('card_photo:'+state.profileName); }catch(e){}
   const zone=document.getElementById('ce-photo-zone');
   if(zone) zone.innerHTML=`<input type="file" id="ce-photo-input" accept="image/*" onchange="handleCardPhoto(this)"/>
-    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" style="margin-bottom:8px;opacity:0.45;"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
-    <div class="ce-photo-label">Add a photo to your card</div>
-    <div class="ce-photo-sub">Shows on your expanded card when shared in person</div>`;
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="opacity:0.4;"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+    <div class="ce-photo-inline-lbl">Add photo</div>`;
 }
 function selectCardTheme(id){
   captureDraftFields();
@@ -4032,11 +4054,21 @@ function renderCardEditor(){
     <!-- Split: preview | controls -->
     <div class="ce-shell">
 
-      <!-- LEFT — live preview (desktop: sidebar; mobile: sticky top panel) -->
+      <!-- TOP — live preview + photo uploader side by side -->
       <div class="ce-left">
-        <div class="ce-left-label">Live preview</div>
-        <div class="ce-card-wrap">
-          ${liveCardHtml}
+        <div class="ce-preview-row">
+          <div class="ce-card-wrap">
+            ${liveCardHtml}
+          </div>
+          <div class="ce-photo-inline" id="ce-photo-zone">
+            <input type="file" id="ce-photo-input" accept="image/*" onchange="handleCardPhoto(this)"/>
+            ${cardDraft.photo
+              ?`<img src="${cardDraft.photo}" class="ce-photo-inline-img" id="ce-photo-img" alt=""/>
+                <div class="ce-photo-inline-lbl">Tap to change</div>
+                <button class="ce-photo-remove" style="font-size:10px;" onclick="event.stopPropagation();removeCardPhoto()">Remove</button>`
+              :`<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="opacity:0.4;"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                <div class="ce-photo-inline-lbl">Add photo</div>`}
+          </div>
         </div>
         <div class="ce-card-hint">Colour × background × pattern mix freely</div>
         <div class="ce-left-actions">
@@ -4085,20 +4117,6 @@ function renderCardEditor(){
 
         <!-- ─ STORY TAB ─ -->
         <div class="ce-tab-panel" data-tab="story">
-
-          <div class="ce-section">
-            <div class="ce-section-label">Card photo <span class="ce-optional">optional</span></div>
-            <div class="ce-photo-zone" id="ce-photo-zone">
-              <input type="file" id="ce-photo-input" accept="image/*" onchange="handleCardPhoto(this)"/>
-              ${cardDraft.photo
-                ?`<img src="${cardDraft.photo}" class="ce-photo-preview" id="ce-photo-img" alt="Card photo"/>
-                  <div class="ce-photo-label">Tap to change photo</div>
-                  <button class="ce-photo-remove" onclick="event.stopPropagation();removeCardPhoto()">Remove photo</button>`
-                :`<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" style="margin-bottom:6px;opacity:0.45;"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
-                  <div class="ce-photo-label">Add a photo</div>
-                  <div class="ce-photo-sub">Appears on your expanded pass card</div>`}
-            </div>
-          </div>
 
           <div class="ce-section">
             <div class="ce-section-label">Your motto <span class="ce-optional">optional · 60 chars</span></div>
@@ -4395,13 +4413,16 @@ async function loadConnectData(id){
         if(!state.chats[id]) state.chats[id]=[];
         // Remove matching optimistic copy (our own send echoed back by realtime)
         const optIdx=state.chats[id].findIndex(m=>m._opt&&m.name===msg.name&&m.text===msg.text);
-        if(optIdx!==-1) state.chats[id].splice(optIdx,1);
-        state.chats[id].push(msg);
-        if(state.view==='connect'&&state.selectedEventId===id){
-          renderView();
-          setTimeout(()=>{ const cm=document.getElementById('chat-messages'); if(cm) cm.scrollTop=cm.scrollHeight; },30);
+        if(optIdx!==-1){
+          state.chats[id][optIdx]=msg; // silently replace optimistic with confirmed — no re-render needed
+        } else {
+          state.chats[id].push(msg);
+          if(state.view==='connect'&&state.selectedEventId===id){
+            renderView();
+            setTimeout(()=>{ const cm=document.getElementById('chat-messages'); if(cm) cm.scrollTop=cm.scrollHeight; },30);
+          }
+          renderNav();
         }
-        renderNav();
       })
       .subscribe();
   }
@@ -4458,6 +4479,28 @@ function toggleGoingSection(id){
   state.goingOpen[id]=!state.goingOpen[id];
   renderView();
 }
+
+async function uploadNightShot(evId,input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async function(e){
+    const raw=e.target.result;
+    const img=new Image(); img.src=raw;
+    await new Promise(r=>{ img.onload=r; });
+    const canvas=document.createElement('canvas');
+    const maxW=900; const scale=Math.min(1,maxW/img.naturalWidth);
+    canvas.width=Math.round(img.naturalWidth*scale);
+    canvas.height=Math.round(img.naturalHeight*scale);
+    canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+    const compressed=canvas.toDataURL('image/jpeg',0.82);
+    localStorage.setItem('night_shot:'+evId,compressed);
+    try{ await sb.from('events').update({night_shot_url:compressed}).eq('id',evId); }catch(_){}
+    const ev=EVENTS.find(e=>e.id===evId); if(ev) ev.nightShotUrl=compressed;
+    renderView();
+  };
+  reader.readAsDataURL(file);
+}
+
 async function toggleRsvp(id){
   const list=state.rsvps[id]||[];
   const alreadyRsvpd=list.includes(state.profileName);
@@ -5039,6 +5082,33 @@ function renderConnect(id){
     </div>`;
   }).join(''):`<div style="color:var(--text-muted);font-size:13px;padding:12px 0;text-align:center;grid-column:1/-1;">No one else has RSVP'd yet.</div>`;
   const ownTheme=_myCols;
+  // Night Shot
+  const _nsUrl=ev.nightShotUrl||localStorage.getItem('night_shot:'+id);
+  const _isAttendee=attendees.includes(state.profileName);
+  const nightShotSection=(eventStatus(ev)==='past'&&_isAttendee)?`
+    <div class="section-title" style="color:#FCD34D;">The Night Shot</div>
+    <div class="night-shot-panel">
+      <div class="night-shot-glow"></div>
+      ${_nsUrl
+        ?`<div class="night-shot-hd">The memory's in.</div>
+           <div class="night-shot-desc">${escapeHtml(ev.title)} · ${ev.date}</div>
+           <div class="night-shot-img-frame">
+             <img src="${_nsUrl}" class="night-shot-img" alt="Night Shot"/>
+             <div class="night-shot-watermark">
+               <div class="night-shot-watermark-badge">📸 ${escapeHtml(ev.title)}</div>
+               <div class="night-shot-watermark-badge">${ev.date}</div>
+             </div>
+           </div>`
+        :`<div class="night-shot-hd">Drop the Night Shot.</div>
+           <div class="night-shot-desc">One photo from the night. The memory lives here — and on every attendee's profile.</div>
+           <label class="night-shot-upload-zone">
+             <input type="file" accept="image/*" onchange="uploadNightShot(${id},this)"/>
+             <div style="font-size:30px;margin-bottom:8px;">📸</div>
+             <div style="font-size:14px;font-weight:700;color:#FCD34D;">Upload the Night Shot</div>
+             <div style="font-size:11.5px;color:#D4A843;margin-top:5px;opacity:0.85;">One upload, full stop.</div>
+           </label>`
+      }
+    </div>`:'';
   // Chat open countdown
   const daysUntil=Math.ceil((chatUnlockTime(ev)-Date.now())/(24*60*60*1000));
   return `<button class="back-btn" onclick="goBack()">←</button>
@@ -5058,6 +5128,7 @@ function renderConnect(id){
       <span style="font-size:13px;font-weight:600;color:var(--accent);">${goingOpen?'Hide ↑':'View all ↓'}</span>
     </div>
     ${goingOpen?`<div class="going-grid">${goingGridHtml}</div>`:''}
+    ${nightShotSection}
     <div class="section-title">Group Chat</div>
     ${chatIsOpen(ev)?`<div class="panel chat-box">
       <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;padding:0 2px;">${attendees.length} member${attendees.length!==1?'s':''} · Chat active for this event</div>
@@ -5072,9 +5143,9 @@ function renderConnect(id){
       <div class="chat-input-row"><input id="chat-input" class="chat-input" placeholder="Say something to the group…" onkeydown="handleChatKey(event,${id})"/><button class="btn" style="background:${c.color};color:#fff;" onclick="sendChat(${id})">Send</button></div>
     </div>`:`<div class="panel" style="padding:22px 20px;text-align:center;">
       ${eventStatus(ev)==='past'?
-        `<div style="font-size:28px;margin-bottom:10px;">💬</div>
-         <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:6px;">Chat closed</div>
-         <div style="font-size:13px;color:var(--text-muted);line-height:1.6;">This event has ended. We hope you made some great connections!</div>`
+        `<div style="font-size:22px;margin-bottom:8px;">🔒</div>
+         <div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:5px;">Chat archived</div>
+         <div style="font-size:12.5px;color:var(--text-muted);line-height:1.6;">This event has ended and the chat is now read-only.</div>`
       :
         `<div style="font-size:28px;margin-bottom:10px;">🔒</div>
          <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:6px;">Chat opens in ${daysUntil>0?`${daysUntil} day${daysUntil!==1?'s':''}`:'less than a day'}</div>
@@ -5301,7 +5372,7 @@ function renderProfile(){
     const photoSticker=profilePhoto
       ?`<div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid ${accent};flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><img src="${profilePhoto}" style="width:100%;height:100%;object-fit:cover;display:block;"/></div>`
       :`<div style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${accent}22;border:2px solid ${accent}55;flex-shrink:0;font-size:18px;font-weight:800;color:${accent};">${initStr}</div>`;
-    return `<div class="id-card profile-id-card" onclick="openExpandedCard()" title="Tap to see your full card" style="background:${bg};border:${borderStyle};box-shadow:${shadowStyle};">
+    return `<div class="id-card profile-id-card" style="background:${bg};border:${borderStyle};box-shadow:${shadowStyle};">
       <div style="position:absolute;inset:0;pointer-events:none;color:${accent};opacity:${ext.patternOpacity||0.18};">${pat}</div>
       <div class="ce-card-shine"></div>
       <div style="position:relative;z-index:2;display:flex;flex-direction:column;height:100%;">
@@ -5318,12 +5389,23 @@ function renderProfile(){
         <div class="id-card-tags" style="margin-top:auto;">${tags}</div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
           <div style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${textSoft};">London Member</div>
-          <span class="level-badge" style="color:${lv.color};border-color:${lv.color};font-size:8.5px;"><span class="level-dot"></span>${lv.title}</span>
+          <span class="level-badge" style="color:${textCol};border-color:${lv.color};background:${lv.color}33;font-size:8.5px;"><span class="level-dot" style="background:${lv.color};"></span>${lv.title}</span>
         </div>
       </div>
       <div class="id-card-watermark" style="color:${accent};">CU</div>
     </div>`;
   }
+
+  // Night Shot memories — past events with a saved shot
+  const memories=myEvents.filter(ev=>eventStatus(ev)==='past'&&(ev.nightShotUrl||localStorage.getItem('night_shot:'+ev.id)));
+  const memoriesHtml=memories.slice(0,6).map(ev=>{
+    const shotUrl=ev.nightShotUrl||localStorage.getItem('night_shot:'+ev.id);
+    const shortTitle=ev.title.length>22?ev.title.substring(0,20)+'…':ev.title;
+    return `<div class="ns-tile" onclick="openEvent(${ev.id})">
+      <img src="${shotUrl}" alt="${escapeHtml(ev.title)}"/>
+      <div class="ns-tile-label">${escapeHtml(shortTitle)}</div>
+    </div>`;
+  }).join('');
 
   // Recent events — last 4 only (not 12)
   const recentEvents=myEvents.slice(-4).reverse();
@@ -5425,6 +5507,15 @@ function renderProfile(){
       `<div class="prof-divider"></div>
       <button class="btn btn-text btn-small" style="font-size:12px;padding:0;" onclick="openCardEditor(null)">+ Add your London spots in your card</button>`}
     </div>
+
+    <!-- Night Shot memories -->
+    ${memories.length?`
+    <div class="profile-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <span class="profile-section-label" style="margin-bottom:0;color:#FCD34D;">📸 Memories</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">${memoriesHtml}</div>
+    </div>`:''}
 
     <!-- Recent events (only shown if user has any) -->
     ${recentEvents.length?`
