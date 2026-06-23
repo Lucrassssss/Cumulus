@@ -3146,25 +3146,22 @@ const CARD_THEMES = CARD_BG_STYLES.map(s => {
 });
 
 const CARD_PATTERNS={
-  lightning:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><polygon points="60,10 45,80 70,80 40,140 55,140 20,200 90,200 75,130 100,130 85,65 110,65"/><polygon points="140,0 125,70 150,70 120,130 135,130 100,190 170,190 155,120 180,120 165,55 190,55" opacity="0.5"/></g></svg>`,
-  clouds:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><ellipse cx="50" cy="160" rx="38" ry="22"/><ellipse cx="30" cy="155" rx="22" ry="18"/><ellipse cx="72" cy="158" rx="24" ry="16"/><ellipse cx="150" cy="40" rx="34" ry="20"/><ellipse cx="130" cy="36" rx="20" ry="16"/><ellipse cx="170" cy="38" rx="22" ry="15"/><ellipse cx="100" cy="110" rx="28" ry="17"/><ellipse cx="82" cy="106" rx="18" ry="14"/><ellipse cx="118" cy="108" rx="20" ry="14"/></g></svg>`,
-  dots:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor">${Array.from({length:64},(_,i)=>`<circle cx="${(i%8)*26+12}" cy="${Math.floor(i/8)*26+12}" r="3"/>`).join('')}</g></svg>`,
-  waves:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M0,30 Q50,5 100,30 Q150,55 200,30"/><path d="M0,60 Q50,35 100,60 Q150,85 200,60"/><path d="M0,90 Q50,65 100,90 Q150,115 200,90"/><path d="M0,120 Q50,95 100,120 Q150,145 200,120"/><path d="M0,150 Q50,125 100,150 Q150,175 200,150"/><path d="M0,180 Q50,155 100,180 Q150,205 200,180"/></g></svg>`,
-  grid:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="1" fill="none">${Array.from({length:8},(_,i)=>`<line x1="${i*28+14}" y1="0" x2="${i*28+14}" y2="200"/><line x1="0" y1="${i*28+14}" x2="200" y2="${i*28+14}"/>`).join('')}</g></svg>`,
-  hexagons:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="1.5" fill="none"><polygon points="50,10 80,26 80,58 50,74 20,58 20,26"/><polygon points="110,10 140,26 140,58 110,74 80,58 80,26"/><polygon points="170,10 200,26 200,58 170,74 140,58 140,26"/><polygon points="20,74 50,90 50,122 20,138 -10,122 -10,90"/><polygon points="80,74 110,90 110,122 80,138 50,122 50,90"/><polygon points="140,74 170,90 170,122 140,138 110,122 110,90"/><polygon points="50,138 80,154 80,186 50,202 20,186 20,154"/><polygon points="110,138 140,154 140,186 110,202 80,186 80,154"/><polygon points="170,138 200,154 200,186 170,202 140,186 140,154"/></g></svg>`,
-  circuit:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="1.5" fill="currentColor"><line x1="0" y1="40" x2="60" y2="40"/><line x1="60" y1="40" x2="60" y2="80"/><circle cx="60" cy="80" r="4"/><line x1="60" y1="80" x2="120" y2="80"/><line x1="120" y1="80" x2="120" y2="40"/><line x1="120" y1="40" x2="200" y2="40"/><line x1="0" y1="130" x2="40" y2="130"/><circle cx="40" cy="130" r="4"/><line x1="40" y1="130" x2="40" y2="160"/><line x1="40" y1="160" x2="100" y2="160"/><line x1="100" y1="160" x2="100" y2="120"/><circle cx="100" cy="120" r="4"/><line x1="100" y1="120" x2="160" y2="120"/><line x1="160" y1="120" x2="160" y2="160"/><line x1="160" y1="160" x2="200" y2="160"/><circle cx="170" cy="40" r="3" fill="none"/><circle cx="40" cy="80" r="3" fill="none"/></g></svg>`,
-  stars:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor">${Array.from({length:24},(_,i)=>{const x=(i*37+13)%200,y=(i*53+17)%200,s=(i%3)+2;return `<polygon points="${x},${y-s*2} ${x+s*.6},${y-s*.6} ${x+s*2},${y} ${x+s*.6},${y+s*.6} ${x},${y+s*2} ${x-s*.6},${y+s*.6} ${x-s*2},${y} ${x-s*.6},${y-s*.6}"/>`;}).join('')}</g></svg>`,
-  triangles:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><polygon points="20,10 38,42 2,42"/><polygon points="75,0 100,44 50,44"/><polygon points="148,8 172,50 124,50"/><polygon points="195,5 215,38 175,38"/><polygon points="0,75 28,120 -28,120"/><polygon points="58,68 90,120 26,120"/><polygon points="128,62 162,115 94,115"/><polygon points="190,72 220,118 160,118"/><polygon points="10,148 38,195 -18,195"/><polygon points="95,145 128,198 62,198"/><polygon points="172,150 202,198 142,198"/></g></svg>`,
-  diamonds:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="currentColor" stroke-width="1.5">${Array.from({length:20},(_,i)=>{const col=i%4,row=Math.floor(i/4),cx=col*50+25+(row%2?25:0),cy=row*42+20;return `<polygon points="${cx},${cy-18} ${cx+12},${cy} ${cx},${cy+18} ${cx-12},${cy}"/>`;}).join('')}</g></svg>`,
-  chevrons:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="0,15 100,50 200,15"/><polyline points="0,45 100,80 200,45"/><polyline points="0,75 100,110 200,75"/><polyline points="0,105 100,140 200,105"/><polyline points="0,135 100,170 200,135"/><polyline points="0,165 100,200 200,165"/></g></svg>`,
-  scales:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="currentColor" stroke-width="1.5">${Array.from({length:30},(_,i)=>{const col=i%5,row=Math.floor(i/5),cx=col*40+(row%2?20:0)+20,cy=row*28+14;return `<path d="M${cx-20},${cy} A20,20 0 0,1 ${cx+20},${cy}"/>`;}).join('')}</g></svg>`,
-  topography:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="currentColor" stroke-width="1.2"><path d="M0,35 Q40,10 80,35 Q120,60 160,35 Q180,22 200,35"/><path d="M0,65 Q30,45 70,70 Q110,95 150,65 Q175,48 200,65"/><path d="M0,95 Q50,70 90,100 Q130,130 170,95 Q185,82 200,95"/><path d="M0,125 Q45,100 85,130 Q125,160 165,125 Q182,112 200,125"/><path d="M0,155 Q55,128 95,158 Q135,188 175,155 Q188,142 200,155"/><path d="M0,180 Q40,162 80,182 Q120,202 160,180 Q180,168 200,180"/></g></svg>`,
-  crosses:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="2" stroke-linecap="round">${Array.from({length:25},(_,i)=>{const col=i%5,row=Math.floor(i/5),cx=col*40+20,cy=row*40+20;return `<line x1="${cx-9}" y1="${cy}" x2="${cx+9}" y2="${cy}"/><line x1="${cx}" y1="${cy-9}" x2="${cx}" y2="${cy+9}"/>`;}).join('')}</g></svg>`,
-  leaves:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><path d="M25,10 Q55,10 55,40 Q55,70 25,70 Q25,40 25,10Z"/><path d="M25,10 Q-5,10 -5,40 Q-5,70 25,70" fill="none" stroke="currentColor" stroke-width="0.8"/><path d="M100,50 Q130,50 130,80 Q130,110 100,110 Q100,80 100,50Z"/><path d="M100,50 Q70,50 70,80 Q70,110 100,110" fill="none" stroke="currentColor" stroke-width="0.8"/><path d="M170,5 Q200,5 200,35 Q200,65 170,65 Q170,35 170,5Z"/><path d="M170,5 Q140,5 140,35 Q140,65 170,65" fill="none" stroke="currentColor" stroke-width="0.8"/><path d="M50,130 Q80,130 80,160 Q80,190 50,190 Q50,160 50,130Z"/><path d="M50,130 Q20,130 20,160 Q20,190 50,190" fill="none" stroke="currentColor" stroke-width="0.8"/><path d="M150,120 Q180,120 180,150 Q180,180 150,180 Q150,150 150,120Z"/><path d="M150,120 Q120,120 120,150 Q120,180 150,180" fill="none" stroke="currentColor" stroke-width="0.8"/></g></svg>`,
-  bubbles:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="30" cy="30" r="18"/><circle cx="80" cy="15" r="10"/><circle cx="140" cy="25" r="22"/><circle cx="185" cy="50" r="12"/><circle cx="15" cy="85" r="14"/><circle cx="65" cy="75" r="24"/><circle cx="130" cy="80" r="14"/><circle cx="175" cy="95" r="18"/><circle cx="40" cy="145" r="20"/><circle cx="100" cy="135" r="12"/><circle cx="160" cy="150" r="16"/><circle cx="10" cy="170" r="10"/><circle cx="90" cy="180" r="18"/><circle cx="170" cy="185" r="10"/></g></svg>`,
-  aztec:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="1" fill="none"><rect x="10" y="10" width="40" height="40"/><rect x="18" y="18" width="24" height="24"/><circle cx="30" cy="30" r="6"/><rect x="70" y="10" width="40" height="40"/><rect x="78" y="18" width="24" height="24"/><circle cx="90" cy="30" r="6"/><rect x="130" y="10" width="40" height="40"/><rect x="138" y="18" width="24" height="24"/><circle cx="150" cy="30" r="6"/><rect x="10" y="70" width="40" height="40"/><rect x="18" y="78" width="24" height="24"/><circle cx="30" cy="90" r="6"/><rect x="70" y="70" width="40" height="40"/><rect x="78" y="78" width="24" height="24"/><circle cx="90" cy="90" r="6"/><rect x="130" y="70" width="40" height="40"/><rect x="138" y="78" width="24" height="24"/><circle cx="150" cy="90" r="6"/><rect x="10" y="130" width="40" height="40"/><rect x="18" y="138" width="24" height="24"/><circle cx="30" cy="150" r="6"/><rect x="70" y="130" width="40" height="40"/><rect x="78" y="138" width="24" height="24"/><circle cx="90" cy="150" r="6"/><rect x="130" y="130" width="40" height="40"/><rect x="138" y="138" width="24" height="24"/><circle cx="150" cy="150" r="6"/></g></svg>`,
-  lines:`<svg class="card-pattern-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="1.2">${Array.from({length:14},(_,i)=>`<line x1="${i*30-10}" y1="0" x2="${i*30+190}" y2="200"/>`).join('')}</g></svg>`,
-  clear:''
+  none:``,
+  lines:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="0.75">${Array.from({length:76},(_,i)=>{const o=i*8-220;return `<line x1="${o}" y1="0" x2="${o+310}" y2="250"/>`;}).join('')}</g></svg>`,
+  mesh:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="0.5">${Array.from({length:76},(_,i)=>{const o=i*8-220;return `<line x1="${o}" y1="0" x2="${o+310}" y2="250"/>`;}).join('')}${Array.from({length:76},(_,i)=>{const o=i*8-220;return `<line x1="${400-o}" y1="0" x2="${90-o}" y2="250"/>`;}).join('')}</g></svg>`,
+  halftone:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor">${Array.from({length:352},(_,i)=>{const col=i%22,row=Math.floor(i/22),x=col*19+(row%2?9.5:0)+4,y=row*14+7;return `<circle cx="${x}" cy="${y}" r="2.2"/>`;}).join('')}</g></svg>`,
+  hexgrid:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="1.1" fill="none">${(()=>{const R=22,rows=9,cols=13,out=[];for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){const cx=c*R*1.732+(r%2?R*0.866:0),cy=r*R*1.5+R;out.push(`<polygon points="${[0,1,2,3,4,5].map(k=>{const a=(k*60+30)*Math.PI/180;return `${(cx+R*Math.cos(a)).toFixed(1)},${(cy+R*Math.sin(a)).toFixed(1)}`;}).join(' ')}"/>`);}}return out.join('');})()}</g></svg>`,
+  topo:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="currentColor" stroke-width="1.1"><path d="M-20,28 C52,6 118,54 198,26 C278,2 348,48 430,20"/><path d="M-20,56 C48,33 115,82 195,54 C275,26 345,74 430,48"/><path d="M-20,86 C58,62 122,112 202,82 C282,54 352,102 430,77"/><path d="M-20,116 C55,90 128,140 208,110 C288,80 355,130 430,106"/><path d="M-20,146 C62,120 130,170 210,140 C290,110 358,160 430,135"/><path d="M-20,176 C66,150 135,200 215,170 C295,140 362,188 430,164"/><path d="M-20,206 C60,180 132,228 212,198 C292,168 360,216 430,192"/><path d="M-20,236 C58,210 130,256 210,228 C290,198 358,244 430,220"/></g></svg>`,
+  constellation:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${(()=>{const p=[{x:25,y:28},{x:88,y:15},{x:154,y:44},{x:210,y:20},{x:272,y:38},{x:332,y:14},{x:386,y:52},{x:50,y:92},{x:118,y:116},{x:182,y:80},{x:244,y:106},{x:305,y:72},{x:368,y:98},{x:28,y:162},{x:84,y:188},{x:148,y:153},{x:216,y:180},{x:276,y:146},{x:344,y:172},{x:396,y:145},{x:60,y:226},{x:128,y:238},{x:198,y:216},{x:268,y:233},{x:338,y:218}],e=[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[0,7],[1,8],[2,9],[3,9],[4,10],[5,11],[6,12],[7,8],[8,9],[9,10],[10,11],[11,12],[7,13],[8,14],[9,15],[10,16],[11,17],[12,18],[13,14],[14,15],[15,16],[16,17],[17,18],[13,20],[14,21],[15,22],[16,22],[17,23],[18,24],[20,21],[21,22],[22,23],[23,24]];return `<g stroke="currentColor" stroke-width="0.6" opacity="0.5">${e.map(([a,b])=>`<line x1="${p[a].x}" y1="${p[a].y}" x2="${p[b].x}" y2="${p[b].y}"/>`).join('')}</g><g fill="currentColor">${p.map((pt,i)=>`<circle cx="${pt.x}" cy="${pt.y}" r="${1.6+Math.sin(i*1.7)*0.6}"/>`).join('')}</g>`;})()}</svg>`,
+  blueprint:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" fill="none">${Array.from({length:21},(_,i)=>`<line x1="${i*20}" y1="0" x2="${i*20}" y2="250" stroke-width="${i%5===0?1.1:0.28}"/>`).join('')}${Array.from({length:13},(_,i)=>`<line x1="0" y1="${i*20}" x2="400" y2="${i*20}" stroke-width="${i%5===0?1.1:0.28}"/>`).join('')}</g></svg>`,
+  waves:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="currentColor" stroke-width="1.3">${Array.from({length:16},(_,i)=>{const y=i*18-12;return `<path d="M-30,${y} C70,${y-19} 170,${y+19} 270,${y} C370,${y-19} 430,${y+19} 500,${y}"/>`;}).join('')}</g></svg>`,
+  marble:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="currentColor" stroke-linecap="round"><path d="M-15,42 C56,16 112,90 196,46 C280,6 326,84 430,36" stroke-width="2.8"/><path d="M-15,42 C56,16 112,90 196,46 C280,6 326,84 430,36" stroke-width="0.7" opacity="0.38" transform="translate(3,5)"/><path d="M-15,148 C64,118 126,190 212,150 C298,110 346,178 430,140" stroke-width="2.3"/><path d="M-15,148 C64,118 126,190 212,150 C298,110 346,178 430,140" stroke-width="0.6" opacity="0.32" transform="translate(-2,5)"/><path d="M62,-15 C96,52 46,118 132,170 C218,222 228,106 298,180 C368,254 352,136 430,190" stroke-width="1.9"/><path d="M272,-15 C300,40 336,90 358,152 C380,214 370,112 430,166" stroke-width="1.5" opacity="0.72"/><path d="M-15,215 C78,192 148,240 228,212 C308,184 372,228 430,208" stroke-width="1.4" opacity="0.6"/></g></svg>`,
+  sparkle:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor">${(()=>{const s=[[26,22,3.4],[86,14,2.7],[156,40,4],[212,18,3.1],[274,34,4.4],[336,12,3],[388,50,2.4],[16,78,2.1],[70,104,3.7],[136,70,2.7],[196,90,4.1],[256,74,2.9],[326,94,2.4],[374,120,3.4],[44,140,3.9],[110,160,2.7],[172,134,3.4],[238,154,4.4],[306,140,2.7],[360,164,3.1],[390,140,2],[16,197,2.9],[76,214,3.9],[146,190,3.1],[216,210,2.7],[280,196,3.9],[346,218,3.4],[393,202,2.4]];return s.map(([x,y,r])=>`<path d="M${x},${y-r*2.1} L${x+r*0.44},${y-r*0.44} L${x+r*2.1},${y} L${x+r*0.44},${y+r*0.44} L${x},${y+r*2.1} L${x-r*0.44},${y+r*0.44} L${x-r*2.1},${y} L${x-r*0.44},${y-r*0.44}Z"/>`).join('');})()}</g></svg>`,
+  circuits:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="currentColor"><line x1="0" y1="40" x2="76" y2="40"/><line x1="76" y1="40" x2="76" y2="16"/><line x1="76" y1="16" x2="156" y2="16"/><circle cx="76" cy="40" r="3.5" fill="none" stroke-width="1.7"/><circle cx="156" cy="16" r="3.5"/><line x1="156" y1="16" x2="216" y2="16"/><line x1="216" y1="16" x2="216" y2="76"/><line x1="216" y1="76" x2="306" y2="76"/><circle cx="216" cy="76" r="3.5" fill="none" stroke-width="1.7"/><line x1="306" y1="76" x2="306" y2="36"/><line x1="306" y1="36" x2="400" y2="36"/><circle cx="306" cy="36" r="3.5"/><line x1="0" y1="130" x2="46" y2="130"/><line x1="46" y1="130" x2="46" y2="96"/><circle cx="46" cy="96" r="3.5" fill="none" stroke-width="1.7"/><line x1="46" y1="96" x2="126" y2="96"/><line x1="126" y1="96" x2="126" y2="156"/><line x1="126" y1="156" x2="196" y2="156"/><circle cx="126" cy="156" r="3.5"/><line x1="196" y1="156" x2="196" y2="116"/><line x1="196" y1="116" x2="276" y2="116"/><circle cx="196" cy="116" r="3.5" fill="none" stroke-width="1.7"/><line x1="276" y1="116" x2="276" y2="166"/><line x1="276" y1="166" x2="366" y2="166"/><circle cx="276" cy="166" r="3.5"/><line x1="366" y1="166" x2="366" y2="126"/><line x1="366" y1="126" x2="400" y2="126"/><line x1="0" y1="216" x2="56" y2="216"/><line x1="56" y1="216" x2="56" y2="190"/><circle cx="56" cy="190" r="3.5" fill="none" stroke-width="1.7"/><line x1="56" y1="190" x2="146" y2="190"/><line x1="146" y1="190" x2="146" y2="230"/><line x1="146" y1="230" x2="236" y2="230"/><circle cx="146" cy="230" r="3.5"/><line x1="236" y1="230" x2="236" y2="196"/><line x1="236" y1="196" x2="316" y2="196"/><circle cx="236" cy="196" r="3.5" fill="none" stroke-width="1.7"/><line x1="316" y1="196" x2="316" y2="238"/><line x1="316" y1="238" x2="400" y2="238"/></g></svg>`,
+  plus:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round">${Array.from({length:176},(_,i)=>{const col=i%16,row=Math.floor(i/16),x=col*26+13,y=row*26+13;return `<line x1="${x-7}" y1="${y}" x2="${x+7}" y2="${y}"/><line x1="${x}" y1="${y-7}" x2="${x}" y2="${y+7}"/>`;}).join('')}</g></svg>`,
+  rings:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="1" fill="none">${Array.from({length:13},(_,i)=>`<ellipse cx="200" cy="125" rx="${(i+1)*30}" ry="${(i+1)*19}"/>`).join('')}</g></svg>`,
+  sunburst:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="0.9" fill="none">${Array.from({length:44},(_,i)=>{const a=(i/44)*Math.PI*0.92-Math.PI*0.02;return `<line x1="0" y1="250" x2="${(Math.cos(a)*620).toFixed(1)}" y2="${(250+Math.sin(a)*620).toFixed(1)}"/>`;}).join('')}</g></svg>`,
+  linen:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" fill="none">${Array.from({length:51},(_,i)=>`<line x1="${i*8}" y1="0" x2="${i*8}" y2="250" stroke-width="${i%2===0?0.9:0.32}"/>`).join('')}${Array.from({length:32},(_,i)=>`<line x1="0" y1="${i*8}" x2="400" y2="${i*8}" stroke-width="${i%2===0?0.32:0.9}"/>`).join('')}</g></svg>`,
 };
 
 const LONDON_AREAS=['Shoreditch','Dalston','Hackney','Peckham','Brixton','Clapham','Soho','Fitzrovia','Islington','Bethnal Green','Bermondsey','Borough','Vauxhall','Battersea','Chelsea','Fulham','Hammersmith','Notting Hill','Kensington','Camden','Kentish Town','Holloway','Crouch End','Stoke Newington','Wood Green','Tottenham','Stratford','Bow','Canary Wharf','Greenwich','Lewisham','New Cross','Crystal Palace','Dulwich','Herne Hill','Tooting','Wimbledon','Richmond','Kingston','Putney','Wandsworth','Balham','Elephant & Castle','Southwark','Wapping','Mayfair','Marylebone','King\'s Cross','Angel','Farringdon','Barbican','Clerkenwell','Whitechapel','Bethnal Green','Stepney','Mile End','Walthamstow','Leyton'];
@@ -3204,7 +3201,7 @@ let state={view:'browse',selectedEventId:null,selectedCategory:'all',calendarDay
   userId:null,          // Supabase UUID — set after upsert on login
   profileName:'',profileEmail:'',profileId:null,specialBadges:[],theme:'light',
   editingProfile:false,myCard:null,rsvps:{},attendeeCards:{},chats:{},friends:[],friendsOnly:false,goingOpen:{}};
-let cardDraft={theme:'midnight',bgStyle:'midnight',accentColor:'#60A5FA',pattern:'lightning',patternOpacity:0.18,bio:'',interests:'',fact:'',motto:'',photo:'',areas:[]};
+let cardDraft={theme:'midnight',bgStyle:'midnight',accentColor:'#60A5FA',pattern:'lines',patternOpacity:0.18,bio:'',interests:'',fact:'',motto:'',photo:'',areas:[]};
 let cardEditorEventId=null;
 let lmap=null,lmapFitted=false;
 let hostMap=null,hostMarker=null;
@@ -3781,7 +3778,7 @@ function openCardEditor(eventId){
   const savedOpacity=ext.patternOpacity!=null?ext.patternOpacity:0.18;
   cardDraft=ex
     ?{theme:savedBg,bgStyle:savedBg,accentColor:savedAccent,pattern:ext.pattern||'lightning',patternOpacity:savedOpacity,bio:ex.bio||'',interests:ex.interests||'',fact:ex.fact||'',motto:ext.motto||'',photo:savedPhoto,areas:ext.areas||[]}
-    :{theme:'midnight',bgStyle:'midnight',accentColor:'#60A5FA',pattern:'lightning',patternOpacity:0.18,bio:'',interests:'',fact:'',motto:'',photo:savedPhoto,areas:ext.areas||[]};
+    :{theme:'midnight',bgStyle:'midnight',accentColor:'#60A5FA',pattern:'lines',patternOpacity:0.18,bio:'',interests:'',fact:'',motto:'',photo:savedPhoto,areas:ext.areas||[]};
   renderCardEditor();
 }
 function captureDraftFields(){
@@ -3950,25 +3947,22 @@ function renderCardEditor(){
 
   // Pattern grid — vibrant (opacity controlled by slider)
   const patternOptions=[
-    {id:'lightning', label:'⚡ Lightning'},
-    {id:'clouds',    label:'☁ Clouds'},
-    {id:'dots',      label:'· Dots'},
-    {id:'waves',     label:'∿ Waves'},
-    {id:'grid',      label:'⊞ Grid'},
-    {id:'hexagons',  label:'⬡ Hex'},
-    {id:'circuit',   label:'⌁ Circuit'},
-    {id:'stars',     label:'✦ Stars'},
-    {id:'triangles', label:'▲ Triangles'},
-    {id:'diamonds',  label:'◆ Diamonds'},
-    {id:'chevrons',  label:'❯ Chevrons'},
-    {id:'scales',    label:'◠ Scales'},
-    {id:'topography',label:'〰 Topo'},
-    {id:'crosses',   label:'✚ Crosses'},
-    {id:'leaves',    label:'❧ Leaves'},
-    {id:'bubbles',   label:'○ Bubbles'},
-    {id:'aztec',     label:'▣ Aztec'},
-    {id:'lines',     label:'/ Lines'},
-    {id:'clear',     label:'◯ None'},
+    {id:'none',          label:'✕  None'},
+    {id:'lines',         label:'// Lines'},
+    {id:'mesh',          label:'⊞ Mesh'},
+    {id:'halftone',      label:'⠿ Halftone'},
+    {id:'hexgrid',       label:'⬡ Hex'},
+    {id:'topo',          label:'⌇ Topo'},
+    {id:'constellation', label:'✦ Stars'},
+    {id:'blueprint',     label:'⊕ Blueprint'},
+    {id:'waves',         label:'∿ Waves'},
+    {id:'marble',        label:'⌁ Marble'},
+    {id:'sparkle',       label:'✴ Sparkle'},
+    {id:'circuits',      label:'⊛ Circuit'},
+    {id:'plus',          label:'+ Plus'},
+    {id:'rings',         label:'◎ Rings'},
+    {id:'sunburst',      label:'☀ Rays'},
+    {id:'linen',         label:'▦ Weave'},
   ];
   const opacityPct=Math.round((cardDraft.patternOpacity||0.18)*100);
   const patternTabHtml=`<div class="cc-pattern-grid">
@@ -5034,7 +5028,7 @@ function renderConnect(id){
   const ev=EVENTS.find(e=>e.id===id);
   if(!ev) return `<div class="empty-state">Event not found.</div>`;
   const c=CATS[ev.category]; const attendees=attendeesFor(id); const cardsMap=state.attendeeCards[id]||{}; const chat=state.chats[id]||[]; const myCard=state.myCard;
-  let _myExt={motto:'',pattern:'lightning',areas:[],accentColor:'#60A5FA',bgStyle:'midnight'};
+  let _myExt={motto:'',pattern:'lines',areas:[],accentColor:'#60A5FA',bgStyle:'midnight'};
   try{ const _r=localStorage.getItem('card_ext:'+state.profileName); if(_r) _myExt={..._myExt,...JSON.parse(_r)}; }catch(e){}
   const _myCols=resolveCardColors(_myExt.bgStyle||myCard?.theme||'midnight',_myExt.accentColor||myCard?.accentColor||'#60A5FA');
   const _myAccent=_myCols.accent;
@@ -5200,7 +5194,7 @@ function buildFriendQR(){
 function openExpandedCard(){
   const old=document.getElementById('card-xl-overlay'); if(old) old.remove();
   const card=state.myCard;
-  let cardExt={motto:'',pattern:'lightning',areas:[],accentColor:'#60A5FA',bgStyle:'midnight'};
+  let cardExt={motto:'',pattern:'lines',areas:[],accentColor:'#60A5FA',bgStyle:'midnight'};
   try{ const r=localStorage.getItem('card_ext:'+state.profileName); if(r) cardExt={...cardExt,...JSON.parse(r)}; }catch(e){}
   let cardPhoto='';
   try{ cardPhoto=localStorage.getItem('card_photo:'+state.profileName)||''; }catch(e){}
@@ -5331,7 +5325,7 @@ function renderProfile(){
   const card=state.myCard;
 
   // Extended card fields
-  let cardExt={motto:'',pattern:'lightning',areas:[],accentColor:'#60A5FA',bgStyle:'midnight',patternOpacity:0.18};
+  let cardExt={motto:'',pattern:'lines',areas:[],accentColor:'#60A5FA',bgStyle:'midnight',patternOpacity:0.18};
   try{ const r=localStorage.getItem('card_ext:'+state.profileName); if(r) cardExt={...cardExt,...JSON.parse(r)}; }catch(e){}
   let profilePhoto='';
   try{ profilePhoto=localStorage.getItem('card_photo:'+state.profileName)||''; }catch(e){}
