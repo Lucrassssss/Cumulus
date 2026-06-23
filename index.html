@@ -236,15 +236,8 @@
   @media(max-width:720px){.profile-top{grid-template-columns:1fr;gap:16px;}}
   .id-card{padding:24px;position:relative;color:#fff;min-height:190px;display:flex;flex-direction:column;box-shadow:0 12px 30px var(--shadow);}
   .id-card-watermark{position:absolute;right:-16px;bottom:-36px;font-size:120px;opacity:0.1;font-weight:800;line-height:1;}
-  /* Profile card — uses new theme bg/accent */
-  .profile-id-card {
-    position:relative; overflow:hidden;
-    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s ease !important;
-  }
-  .profile-id-card:hover {
-    transform: perspective(900px) rotateX(-2deg) rotateY(3deg) scale(1.01) !important;
-    box-shadow: 0 24px 52px rgba(0,0,0,0.25) !important;
-  }
+  /* Profile card — display only; View + QR buttons handle expand */
+  .profile-id-card { position:relative; overflow:hidden; cursor:default; }
   .id-card-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;opacity:0.9;font-weight:700;position:relative;}
   .id-card-name{font-size:24px;font-weight:700;margin:4px 0 10px;line-height:1.2;position:relative;}
   .id-card-bio{font-size:12.5px;line-height:1.6;opacity:0.96;position:relative;}
@@ -951,23 +944,14 @@
      CARD EDITOR — FULL SCREEN STUDIO
      ══════════════════════════════════════════ */
 
-  .ce-overlay {
-    position: fixed; inset: 0; z-index: 5500;
-    background: var(--scrim);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    display: flex; align-items: stretch;
-    overflow-y: auto;
-    animation: ceOverlayIn 0.3s ease both;
-  }
+  /* ══ CARD EDITOR — full-screen studio ══ */
   @keyframes ceOverlayIn { from{opacity:0;} to{opacity:1;} }
-
-  /* ══ CARD EDITOR — tabbed layout ══ */
   .ce-overlay {
     position: fixed; inset: 0; z-index: 9000;
     background: var(--bg);
     display: flex; flex-direction: column;
     overflow: hidden;
+    animation: ceOverlayIn 0.22s ease both;
   }
   .ce-topbar {
     display: flex; align-items: center; gap: 12px;
@@ -1008,18 +992,18 @@
 
   /* always stacked: preview on top, tabs below */
   .ce-shell {
-    display: grid; grid-template-columns: 1fr; grid-template-rows: auto 1fr;
+    display: flex; flex-direction: column;
     flex: 1; overflow: hidden;
-    animation: ceShellIn 0.32s cubic-bezier(0.22,1,0.36,1) both;
+    animation: ceShellIn 0.28s cubic-bezier(0.22,1,0.36,1) both;
   }
-  @keyframes ceShellIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+  @keyframes ceShellIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
 
   .ce-left {
     background: color-mix(in srgb, var(--bg-2) 70%, var(--bg) 30%);
     border-bottom: 1px solid var(--line);
     display: flex; flex-direction: column;
     align-items: center;
-    padding: 18px 24px 14px; gap: 10px; flex-shrink: 0; overflow: visible;
+    padding: 18px 24px 14px; gap: 10px; flex-shrink: 0; overflow-y: auto;
   }
   .ce-left-label {
     font-size: 10px; font-weight: 700; letter-spacing: 1.8px;
@@ -1084,7 +1068,7 @@
   .ce-left-actions { display: flex; gap: 9px; width: 100%; max-width: 288px; }
 
   /* Right panel — tabs + content */
-  .ce-right { display: flex; flex-direction: column; overflow: hidden; background: var(--surface); }
+  .ce-right { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--surface); }
   .ce-tabs-bar {
     display: flex; padding: 0 24px;
     border-bottom: 1px solid var(--line);
@@ -2383,16 +2367,8 @@
   }
   .card-xl-close:hover { transform: scale(1.1) rotate(90deg); }
   .card-xl-outer { position: relative; }
-  /* Make compact card tappable */
-  .profile-id-card { cursor: pointer; }
-  .profile-id-card::after {
-    content: 'Tap to expand ↗';
-    position: absolute; bottom: 8px; right: 10px;
-    font-size: 9px; font-weight: 700; letter-spacing: 1px;
-    text-transform: uppercase; opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .profile-id-card:hover::after { opacity: 0.45; }
+  /* Profile card — no click behavior, View + QR buttons handle expansion */
+  .profile-id-card { cursor: default; }
 
   /* ══ Colour & style pickers (no nested scroll) ══ */
   .cc-family-label {
@@ -2710,11 +2686,8 @@
   }
   .section-title::before { width: 5px; height: 5px; }
 
-  /* Profile card: smoother hover */
-  .profile-id-card:hover {
-    transform: perspective(1000px) rotateX(-1.5deg) rotateY(2.5deg) scale(1.01) !important;
-    box-shadow: 0 20px 44px rgba(0,0,0,0.2) !important;
-  }
+  /* Profile card: static, no hover lift (View + QR buttons handle it) */
+  .profile-id-card:hover { transform: none !important; box-shadow: inherit !important; }
 
   /* Stat boxes: less aggressive colour on numbers */
   .stat-num { font-size: 26px; font-weight: 700; color: var(--text); }
@@ -4418,8 +4391,7 @@ async function loadConnectData(id){
         } else {
           state.chats[id].push(msg);
           if(state.view==='connect'&&state.selectedEventId===id){
-            renderView();
-            setTimeout(()=>{ const cm=document.getElementById('chat-messages'); if(cm) cm.scrollTop=cm.scrollHeight; },30);
+            _appendChatMsg(msg);           // surgical append — no full re-render flicker
           }
           renderNav();
         }
@@ -4513,17 +4485,36 @@ async function toggleRsvp(id){
   }
   renderView();
 }
+function _buildChatMsgHtml(msg){
+  const myCard=state.myCard;
+  let _myExt={bgStyle:'midnight',accentColor:'#60A5FA'};
+  try{ const r=localStorage.getItem('card_ext:'+state.profileName); if(r) _myExt={..._myExt,...JSON.parse(r)}; }catch(e){}
+  const _myCols=resolveCardColors(_myExt.bgStyle||myCard?.theme||'midnight',_myExt.accentColor||myCard?.accentColor||'#60A5FA');
+  const isOwn=msg.name===state.profileName;
+  const nameCol=isOwn?_myCols.accent:'var(--text-muted)';
+  return `<div class="msg-row ${isOwn?'own':''}"><div class="msg-col ${isOwn?'own':''}">
+    <div class="msg-sender" style="color:${nameCol};">${escapeHtml(msg.name.split(' ')[0])}</div>
+    <div class="msg-bubble ${isOwn?'own':'other'}" style="${isOwn?`background:${_myCols.bg};color:${_myCols.text};`:''}">${escapeHtml(msg.text)}</div>
+  </div></div>`;
+}
+function _appendChatMsg(msg){
+  const cm=document.getElementById('chat-messages'); if(!cm) return;
+  const empty=cm.querySelector('.chat-empty-state'); if(empty) empty.remove();
+  const wrap=document.createElement('div');
+  wrap.innerHTML=_buildChatMsgHtml(msg);
+  cm.appendChild(wrap.firstElementChild);
+  cm.scrollTop=cm.scrollHeight;
+}
+
 async function sendChat(id){
   const input=document.getElementById('chat-input'); const text=input.value.trim();
   if(!text) return;
   input.value='';
-  // Optimistically append so sender sees their message immediately
   const msg={name:state.profileName,text,ts:Date.now(),_opt:true};
   if(!state.chats[id]) state.chats[id]=[];
   state.chats[id].push(msg);
-  renderView();
-  setTimeout(()=>{ const cm=document.getElementById('chat-messages'); if(cm) cm.scrollTop=cm.scrollHeight; document.getElementById('chat-input')?.focus(); },30);
-  // Write to Supabase — realtime will echo it back to other subscribers
+  _appendChatMsg(msg);                   // surgical DOM append — no full re-render
+  document.getElementById('chat-input')?.focus();
   await sb.from('chat_messages').insert({event_id:id,user_id:state.userId,user_name:state.profileName,text});
 }
 function handleChatKey(e,id){ if(e.key==='Enter') sendChat(id); }
@@ -5139,7 +5130,7 @@ function renderConnect(id){
           <div class="msg-sender" style="color:${nameCol};">${escapeHtml(m.name.split(' ')[0])}</div>
           <div class="msg-bubble ${isOwn?'own':'other'}" style="${isOwn?`background:${ownTheme.bg};color:${ownTheme.text};`:''}">${escapeHtml(m.text)}</div>
         </div></div>`;
-      }).join(''):`<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:28px 16px;">No messages yet — be the first to say something.</div>`}</div>
+      }).join(''):`<div class="chat-empty-state" style="color:var(--text-muted);font-size:13px;text-align:center;padding:28px 16px;">No messages yet — be the first to say something.</div>`}</div>
       <div class="chat-input-row"><input id="chat-input" class="chat-input" placeholder="Say something to the group…" onkeydown="handleChatKey(event,${id})"/><button class="btn" style="background:${c.color};color:#fff;" onclick="sendChat(${id})">Send</button></div>
     </div>`:`<div class="panel" style="padding:22px 20px;text-align:center;">
       ${eventStatus(ev)==='past'?
