@@ -203,13 +203,15 @@
   .interest-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
   .interest-tag{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:11px;font-weight:600;color:var(--text-soft);}
   .chat-box{padding:18px 18px 20px;margin-top:8px;}
-  .chat-messages{max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px;-webkit-overflow-scrolling:touch;}
-  .msg-row{display:flex;}
+  .chat-messages{max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:4px 2px;-webkit-overflow-scrolling:touch;}
+  .msg-row{display:flex;width:100%;}
   .msg-row.own{justify-content:flex-end;}
-  .msg-bubble{max-width:85%;padding:10px 14px;font-size:13px;line-height:1.5;border-radius:16px;word-break:break-word;}
-  .msg-bubble.other{background:var(--surface-2);border:1px solid var(--line-soft);color:var(--text-soft);border-bottom-left-radius:5px;}
-  .msg-bubble.own{color:#fff;border-bottom-right-radius:5px;}
-  .msg-name{font-size:10px;font-weight:700;color:var(--text-muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:0.4px;}
+  .msg-col{display:flex;flex-direction:column;max-width:76%;}
+  .msg-col.own{align-items:flex-end;}
+  .msg-sender{font-size:10.5px;font-weight:700;margin-bottom:3px;letter-spacing:0.3px;}
+  .msg-bubble{padding:10px 14px;font-size:14px;line-height:1.5;border-radius:18px;word-break:break-word;}
+  .msg-bubble.other{background:var(--surface-2);border:1px solid var(--line-soft);color:var(--text);border-radius:4px 18px 18px 18px;}
+  .msg-bubble.own{border-radius:18px 4px 18px 18px;}
   .chat-input-row{display:flex;gap:8px;margin-top:14px;align-items:center;}
   .chat-input{flex:1;min-width:0;box-sizing:border-box;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:10px 16px;font-family:var(--font-sans);font-size:16px;color:var(--text);outline:none;}
   .chat-input:focus{border-color:var(--accent);}
@@ -2774,6 +2776,21 @@
     .id-card { border-radius: 16px; }
   }
 
+  /* ── Who's Going expandable grid ──────────────────────────── */
+  .going-section-hdr { display:flex; align-items:center; justify-content:space-between; padding:13px 16px; background:var(--surface); border:1px solid var(--line); border-radius:16px; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:background .12s; }
+  .going-section-hdr:active { background:var(--surface-2); }
+  .going-previews { display:flex; align-items:center; }
+  .going-preview-ava { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:#fff; border:2px solid var(--surface); margin-left:-8px; flex-shrink:0; }
+  .going-preview-ava:first-child { margin-left:0; }
+  .going-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; margin-bottom:6px; }
+  .going-card { padding:16px 14px; border-radius:18px; border:1px solid; cursor:pointer; transition:transform .12s ease; -webkit-tap-highlight-color:transparent; }
+  .going-card:active { transform:scale(0.97); }
+  .going-card-ava { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; color:#fff; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,0.22); }
+  .going-card-name { font-size:13px; font-weight:700; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .going-card-bio { font-size:11px; line-height:1.45; opacity:0.72; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .going-card-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
+  .going-card-tag { font-size:10px; font-weight:600; border-radius:999px; padding:2px 8px; border-width:1px; border-style:solid; }
+
   /* ── Attendee list & peek sheet ───────────────────────────── */
   .attendees-list { display:flex; flex-direction:column; gap:6px; margin-bottom:4px; }
   .attendee-row {
@@ -2835,10 +2852,6 @@
   .attendee-full-tag { border-radius:999px; padding:4px 12px; font-size:12px; font-weight:600; border-width:1px; border-style:solid; }
   .attendee-card-wm { position:absolute; bottom:-10px; right:-4px; font-size:90px; font-weight:900; opacity:0.05; line-height:1; pointer-events:none; z-index:0; }
 
-  /* Chat bubble production polish */
-  .msg-bubble { font-size:14px; line-height:1.5; }
-  .msg-bubble.own { border-radius:18px 18px 4px 18px; }
-  .msg-bubble.other { border-radius:18px 18px 18px 4px; }
   .msg-ts { font-size:10px; color:var(--text-muted); margin-top:2px; opacity:0.7; }
 </style>
 </head>
@@ -3192,7 +3205,7 @@ const EMAIL_PATTERN=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 let state={view:'browse',selectedEventId:null,selectedCategory:'all',calendarDay:null,
   userId:null,          // Supabase UUID — set after upsert on login
   profileName:'',profileEmail:'',profileId:null,specialBadges:[],theme:'light',
-  editingProfile:false,myCard:null,rsvps:{},attendeeCards:{},chats:{},friends:[],friendsOnly:false};
+  editingProfile:false,myCard:null,rsvps:{},attendeeCards:{},chats:{},friends:[],friendsOnly:false,goingOpen:{}};
 let cardDraft={theme:'midnight',bgStyle:'midnight',accentColor:'#60A5FA',pattern:'lightning',patternOpacity:0.18,bio:'',interests:'',fact:'',motto:'',photo:'',areas:[]};
 let cardEditorEventId=null;
 let lmap=null,lmapFitted=false;
@@ -4439,6 +4452,12 @@ function closeAttendeePeek(){
   const ov=document.getElementById('attendee-peek-overlay');
   if(ov) ov.classList.remove('open');
 }
+
+function toggleGoingSection(id){
+  if(!state.goingOpen) state.goingOpen={};
+  state.goingOpen[id]=!state.goingOpen[id];
+  renderView();
+}
 async function toggleRsvp(id){
   const list=state.rsvps[id]||[];
   const alreadyRsvpd=list.includes(state.profileName);
@@ -4959,7 +4978,11 @@ function renderDetail(id){
     <div class="panel detail-card" style="--corner:${c.color};">
       <span class="event-badge" style="background:${c.color};">${ev.category}</span>${statusChip}${capBadge}${priceBadge}
       <h2 class="detail-title">${ev.title}</h2>
-      <div class="detail-meta-row"><span>${ev.date}, ${ev.time}</span><span>${ev.venue}${ev.area?`, ${ev.area}`:''}</span><span>By ${escapeHtml(ev.host)}</span></div>
+      <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;flex-wrap:wrap;">
+        <span style="font-size:14px;font-weight:700;color:${c.color};">📅 ${ev.date}</span>
+        <span style="font-size:13px;font-weight:600;color:var(--text);">· ${ev.time}</span>
+      </div>
+      <div class="detail-meta-row"><span>${ev.venue}${ev.area?`, ${ev.area}`:''}</span><span>By ${escapeHtml(ev.host)}</span></div>
       <div class="detail-desc">${ev.desc}</div>
       ${bookBtn}
       <div class="attendee-section">
@@ -4990,51 +5013,73 @@ function renderConnect(id){
       </div>`
     :`<div class="panel intro-form"><div style="font-weight:700;font-size:15px;margin-bottom:5px;color:var(--text);">No card yet</div><div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Create one and it'll show up here and at every future event automatically.</div><button class="btn btn-small" style="width:100%;" onclick="openCardEditor(${id})">Create your card</button></div>`;
   const others=attendees.filter(n=>n!==state.profileName);
-  const othersHtml=others.length?others.map(name=>{
+  const goingOpen=!!(state.goingOpen&&state.goingOpen[id]);
+  // Preview avatars (collapsed state)
+  const previewAvas=others.slice(0,5).map(name=>{
+    const card=cardsMap[name]; const ct=card?getTheme(card.theme):null;
+    const avaColor=ct?ct.accent:'var(--accent)';
+    return `<div class="going-preview-ava" style="background:${avaColor};">${initials(name)}</div>`;
+  }).join('');
+  // Full grid cards (expanded state)
+  const goingGridHtml=others.length?others.map(name=>{
     const card=cardsMap[name]; const fr=isFriend(name); const person=personByName(name);
-    let avaColor='var(--accent)', bioSnippet='';
-    if(card){
-      const ct=getTheme(card.theme);
-      avaColor=ct?ct.accent:'var(--accent)';
-      bioSnippet=card.bio||(card.interests?card.interests.split(',')[0].trim():'');
-    } else if(person){ bioSnippet=person.blurb||''; }
+    const ct=card?getTheme(card.theme):null;
+    const avaColor=ct?ct.accent:'var(--accent)';
+    const cbg=ct?ct.bg:'var(--surface)'; const cborder=ct?ct.border:'var(--line)';
+    const ctext=ct?ct.text:'var(--text)'; const ctextSoft=ct?ct.textSoft:'var(--text-muted)';
+    const bioSnippet=card?card.bio:person?person.blurb:'';
+    const interests=card&&card.interests?card.interests.split(',').map(s=>s.trim()).filter(Boolean).slice(0,2):[];
+    const tagsHtml=interests.map(t=>`<span class="going-card-tag" style="border-color:${avaColor}55;color:${ctext};background:${avaColor}18;">${escapeHtml(t)}</span>`).join('');
     const safeName=escapeHtml(name).replace(/'/g,"\\'");
-    return `<div class="attendee-row" onclick="peekAttendee(${id},'${safeName}')">
-      <div class="attendee-ava" style="background:${avaColor};">${initials(name)}</div>
-      <div class="attendee-info">
-        <div class="attendee-name">${escapeHtml(name)}${fr?' <span style="font-size:11px;color:var(--gold);font-weight:800;">★</span>':''}</div>
-        ${bioSnippet?`<div class="attendee-bio-snippet">${escapeHtml(bioSnippet)}</div>`:''}
-      </div>
-      <div class="attendee-chev">›</div>
+    return `<div class="going-card" style="background:${cbg};border-color:${cborder};" onclick="peekAttendee(${id},'${safeName}')">
+      <div class="going-card-ava" style="background:${avaColor};">${initials(name)}</div>
+      <div class="going-card-name" style="color:${ctext};">${escapeHtml(name)}${fr?` <span style="color:var(--gold);font-size:10px;">★</span>`:''}</div>
+      ${bioSnippet?`<div class="going-card-bio" style="color:${ctextSoft};">${escapeHtml(bioSnippet)}</div>`:''}
+      ${tagsHtml?`<div class="going-card-tags">${tagsHtml}</div>`:''}
     </div>`;
-  }).join(''):`<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">No one else has RSVP'd yet.</div>`;
+  }).join(''):`<div style="color:var(--text-muted);font-size:13px;padding:12px 0;text-align:center;grid-column:1/-1;">No one else has RSVP'd yet.</div>`;
   const ownTheme=_myCols;
+  // Chat open countdown
+  const daysUntil=Math.ceil((chatUnlockTime(ev)-Date.now())/(24*60*60*1000));
   return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><span class="event-badge" style="background:${c.color};">${ev.category}</span><h2>${ev.title}</h2><p>${attendees.length} going · ${chatIsOpen(ev)?'Chat open':(eventStatus(ev)==='past'?'Chat closed':'Chat opens a week before')}</p></div>
+    <div class="connect-header">
+      <span class="event-badge" style="background:${c.color};">${ev.category}</span>
+      <h2>${ev.title}</h2>
+      <p style="margin-top:4px;"><span style="font-size:13px;font-weight:600;color:var(--text);">${ev.date} · ${ev.time}</span></p>
+      <p>${attendees.length} going · ${escapeHtml(ev.venue)}</p>
+    </div>
     <div class="section-title">Your card</div>${yourCardHtml}
-    <div class="section-title">Who else is going (${others.length})</div><div class="attendees-list">${othersHtml}</div>
-    <div class="section-title" style="justify-content:space-between;"><span style="display:flex;align-items:center;gap:8px;">Group Chat</span><button class="btn btn-outline btn-small" onclick="refreshConnect(${id})">Refresh</button></div>
+    <div class="section-title">Who's going (${others.length})</div>
+    <div class="going-section-hdr" onclick="toggleGoingSection(${id})">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="going-previews">${previewAvas||'<span style="font-size:12px;color:var(--text-muted);">None yet</span>'}</div>
+        <span style="font-size:13.5px;font-weight:700;color:var(--text);">${others.length} attendee${others.length!==1?'s':''}</span>
+      </div>
+      <span style="font-size:13px;font-weight:600;color:var(--accent);">${goingOpen?'Hide ↑':'View all ↓'}</span>
+    </div>
+    ${goingOpen?`<div class="going-grid">${goingGridHtml}</div>`:''}
+    <div class="section-title">Group Chat</div>
     ${chatIsOpen(ev)?`<div class="panel chat-box">
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;padding:0 2px;">${attendees.length} member${attendees.length!==1?'s':''} · Chat active weekly before the event</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;padding:0 2px;">${attendees.length} member${attendees.length!==1?'s':''} · Chat active for this event</div>
       <div class="chat-messages" id="chat-messages">${chat.length?chat.map(m=>{
         const isOwn=m.name===state.profileName;
-        const _oa=ownTheme?ownTheme.accent:c.color;
-        const nameCol=isOwn?_oa:'var(--text-muted)';
-        return `<div class="msg-row ${isOwn?'own':''}">
-          <div style="display:flex;flex-direction:column;${isOwn?'align-items:flex-end;':'align-items:flex-start;'}max-width:85%;">
-            <div style="font-size:10.5px;font-weight:700;color:${nameCol};margin-bottom:2px;${isOwn?'text-align:right;':''}letter-spacing:0.3px;">${escapeHtml(m.name.split(' ')[0])}</div>
-            <div class="msg-bubble ${isOwn?'own':'other'}" style="${isOwn?`background:${ownTheme?ownTheme.bg:'var(--accent)'};color:${ownTheme?ownTheme.text:'#fff'};`:''}">${escapeHtml(m.text)}</div>
-          </div>
-        </div>`;
-      }).join(''):`<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:22px;">No messages yet — be the first to say something.</div>`}</div>
+        const nameCol=isOwn?_myAccent:'var(--text-muted)';
+        return `<div class="msg-row ${isOwn?'own':''}"><div class="msg-col ${isOwn?'own':''}">
+          <div class="msg-sender" style="color:${nameCol};">${escapeHtml(m.name.split(' ')[0])}</div>
+          <div class="msg-bubble ${isOwn?'own':'other'}" style="${isOwn?`background:${ownTheme.bg};color:${ownTheme.text};`:''}">${escapeHtml(m.text)}</div>
+        </div></div>`;
+      }).join(''):`<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:28px 16px;">No messages yet — be the first to say something.</div>`}</div>
       <div class="chat-input-row"><input id="chat-input" class="chat-input" placeholder="Say something to the group…" onkeydown="handleChatKey(event,${id})"/><button class="btn" style="background:${c.color};color:#fff;" onclick="sendChat(${id})">Send</button></div>
-    </div>`:`<div class="panel" style="--corner:var(--line);padding:20px;text-align:center;">
+    </div>`:`<div class="panel" style="padding:22px 20px;text-align:center;">
       ${eventStatus(ev)==='past'?
-        `<div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:6px;">Chat closed</div>
-         <div style="font-size:13px;color:var(--text-muted);line-height:1.6;">The event has ended, so this chat is now closed. We hope you made some great real-world connections!</div>`
+        `<div style="font-size:28px;margin-bottom:10px;">💬</div>
+         <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:6px;">Chat closed</div>
+         <div style="font-size:13px;color:var(--text-muted);line-height:1.6;">This event has ended. We hope you made some great connections!</div>`
       :
-        `<div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:6px;">Chat opens a week before this event</div>
-         <div style="font-size:13px;color:var(--text-muted);line-height:1.6;">The group chat unlocks a week prior to the start time — come back then to meet the other attendees and get ready together.</div>`
+        `<div style="font-size:28px;margin-bottom:10px;">🔒</div>
+         <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:6px;">Chat opens in ${daysUntil>0?`${daysUntil} day${daysUntil!==1?'s':''}`:'less than a day'}</div>
+         <div style="font-size:13px;color:var(--text-muted);line-height:1.6;">The group chat unlocks 7 days before the event so you can meet your fellow attendees beforehand.</div>
+         <div style="margin-top:16px;padding:10px 14px;background:var(--surface-2);border-radius:12px;font-size:13px;font-weight:700;color:var(--accent);">${ev.date} · ${ev.time}</div>`
       }
     </div>`}
   `;
@@ -6083,14 +6128,15 @@ function renderSocialTab(){
             ${hasUnread?`<span style="font-size:9px;font-weight:800;background:#E23B3B;color:#fff;padding:1px 6px;border-radius:999px;">${isNewOpen&&chat.length===0?'Chat Open':'New'}</span>`:''}
           </div>
           <div style="font-size:14.5px;font-weight:700;line-height:1.2;margin-bottom:3px;">${escapeHtml(ev.title)}</div>
-          <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:5px;">${ev.date} · ${att.length} going</div>
+          <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:2px;">${ev.date} · ${ev.time}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:5px;">${escapeHtml(ev.venue)}${ev.area?` · ${escapeHtml(ev.area)}`:''} · ${att.length} going</div>
           ${open&&status!=='past'
             ? lastMsg
               ? `<div style="font-size:12.5px;color:var(--text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong style="color:var(--text);">${escapeHtml(lastMsg.name.split(' ')[0])}:</strong> ${escapeHtml(lastMsg.text)}</div>`
               : `<div style="font-size:12px;color:var(--text-muted);font-style:italic;">No messages yet — be the first to say hi</div>`
             : status==='past'
               ? `<div style="font-size:12px;color:var(--text-muted);">Event ended — chat closed</div>`
-              : `<div style="font-size:12px;color:var(--text-muted);">Chat opens a week before the event</div>`
+              : (()=>{ const d=Math.ceil((chatUnlockTime(ev)-Date.now())/(86400000)); return `<div style="font-size:12px;color:var(--accent);font-weight:600;">🔒 Chat opens in ${d>0?`${d} day${d!==1?'s':''}`:'less than a day'}</div>`; })()
           }
         </div>
         <div style="flex-shrink:0;color:var(--text-muted);font-size:18px;align-self:center;">›</div>
