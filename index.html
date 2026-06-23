@@ -422,13 +422,13 @@
   .badge-chat-dot { position:absolute; top:-6px; left:-6px; width:14px; height:14px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; border:2px solid #fff; z-index:4; box-shadow:0 1px 4px rgba(0,0,0,0.4); }
   .badge-chat-dot svg { display:block; }
 
-  /* ══ REGULAR EVENT NODES — INK SPLAT ══ */
+  /* ══ EVENT NODES — INK SPLAT ══ */
   .evpin-splat {
-    position:relative; width:20px; height:20px;
+    position:relative; width:var(--sz,20px); height:var(--sz,20px);
     display:flex; align-items:center; justify-content:center; cursor:pointer;
   }
   .splat-body {
-    width:20px; height:20px;
+    width:var(--sz,20px); height:var(--sz,20px);
     background:var(--c);
     clip-path:polygon(50% 2%,62% 14%,78% 6%,75% 24%,92% 30%,78% 40%,94% 52%,76% 56%,85% 72%,66% 68%,65% 88%,52% 72%,48% 92%,35% 72%,32% 88%,22% 68%,14% 78%,20% 56%,6% 52%,20% 40%,8% 30%,24% 24%,22% 6%,38% 14%);
     filter:drop-shadow(0 2px 5px rgba(0,0,0,0.48));
@@ -4777,34 +4777,14 @@ function refreshMarkers(){
     el.className='evpin-wrap';
     const hot=isHotEvent(ev);
     const chatOpen=chatIsOpen(ev)&&status!=='past';
-    let markerAnchor, popupOffset;
-    if(hot){
-      const shortTitle=ev.title.length>16?ev.title.slice(0,15)+'…':ev.title;
-      el.innerHTML=`<div class="evpin-badge ${status}" style="--c:${color}">
-        <div class="badge-card">
-          <div class="badge-hot-strip">HOT</div>
-          <div class="badge-title-area">
-            <div class="badge-evname">${escapeHtml(shortTitle)}</div>
-            ${status==='live'?'<div class="badge-status-live"><span class="badge-live-dot"></span>LIVE NOW</div>':''}
-          </div>
-        </div>
-        <div class="badge-tail"></div>
-        ${friendGoing?'<span class="badge-star">★</span>':''}
-        ${chatOpen?'<span class="badge-chat-dot"><svg viewBox="0 0 20 20" width="7" height="7" fill="#fff"><path d="M18 2H2C.9 2 0 2.9 0 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></span>':''}
-      </div>`;
-      markerAnchor='bottom';
-      popupOffset={top:[0,8],bottom:[0,-82],left:[14,0],right:[-14,0]};
-    } else {
-      el.innerHTML=`<div class="evpin-splat ${status}" style="--c:${color}">
-        <div class="splat-body"></div>
-        ${friendGoing?'<span class="splat-star">★</span>':''}
-        ${chatOpen?'<span class="splat-chat-dot"><svg viewBox="0 0 20 20" width="6" height="6" fill="#fff"><path d="M18 2H2C.9 2 0 2.9 0 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></span>':''}
-      </div>`;
-      markerAnchor='center';
-      popupOffset={top:[0,8],bottom:[0,-14],left:[10,0],right:[-10,0]};
-    }
+    const splatSize=hot?26:20;
+    el.innerHTML=`<div class="evpin-splat ${status}${hot?' hot':''}" style="--c:${color};--sz:${splatSize}px">
+      <div class="splat-body"></div>
+      ${friendGoing?'<span class="splat-star">★</span>':''}
+      ${chatOpen?'<span class="splat-chat-dot"><svg viewBox="0 0 20 20" width="6" height="6" fill="#fff"><path d="M18 2H2C.9 2 0 2.9 0 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></span>':''}
+    </div>`;
 
-    const marker=new mapboxgl.Marker({element:el,anchor:markerAnchor}).setLngLat([ev.lon,ev.lat]);
+    const marker=new mapboxgl.Marker({element:el,anchor:'center'}).setLngLat([ev.lon,ev.lat]);
 
     let closeTimer=null;
 
@@ -4812,7 +4792,7 @@ function refreshMarkers(){
       if(activePopupEventId===ev.id) return;
       closeActivePopup();
       const popup=new mapboxgl.Popup({
-        offset:popupOffset,
+        offset:{top:[0,8],bottom:[0,-14],left:[10,0],right:[-10,0]},
         closeButton:false, closeOnClick:false, className:'evtip-popup', anchor:'bottom', maxWidth:'240px'
       }).setLngLat([ev.lon,ev.lat]).setHTML(pinTooltipHtml(ev)).addTo(lmap);
       activePopup=popup; activePopupEventId=ev.id;
