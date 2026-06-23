@@ -2773,6 +2773,73 @@
     .detail-card { border-radius: 16px; padding: 16px 14px; }
     .id-card { border-radius: 16px; }
   }
+
+  /* ── Attendee list & peek sheet ───────────────────────────── */
+  .attendees-list { display:flex; flex-direction:column; gap:6px; margin-bottom:4px; }
+  .attendee-row {
+    display:flex; align-items:center; gap:14px;
+    padding:13px 16px; border-radius:16px;
+    background:var(--surface); border:1px solid var(--line);
+    cursor:pointer; transition:background .12s ease, transform .1s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .attendee-row:active { background:var(--surface-2); transform:scale(0.985); }
+  .attendee-ava {
+    width:46px; height:46px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; font-weight:800; color:#fff; flex-shrink:0;
+    box-shadow:0 2px 8px rgba(0,0,0,0.18);
+    letter-spacing:-0.5px;
+  }
+  .attendee-info { flex:1; min-width:0; }
+  .attendee-name { font-size:14.5px; font-weight:700; color:var(--text); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .attendee-bio-snippet { font-size:12px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .attendee-chev { color:var(--text-muted); font-size:20px; flex-shrink:0; line-height:1; }
+
+  /* Attendee peek bottom sheet */
+  .attendee-peek-ov {
+    position:fixed; inset:0; z-index:8500;
+    background:rgba(0,0,0,0.55); backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    display:flex; align-items:flex-end; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .22s ease;
+  }
+  .attendee-peek-ov.open { opacity:1; pointer-events:all; }
+  .attendee-peek-sheet {
+    width:100%; max-width:520px;
+    background:var(--surface); border-radius:26px 26px 0 0;
+    padding:0 0 calc(20px + env(safe-area-inset-bottom,0px));
+    max-height:88dvh; overflow-y:auto;
+    transform:translateY(80px);
+    transition:transform .3s cubic-bezier(0.22,1,0.36,1);
+  }
+  .attendee-peek-ov.open .attendee-peek-sheet { transform:translateY(0); }
+  .attendee-peek-handle { width:36px; height:4px; border-radius:2px; background:var(--line); margin:12px auto 0; }
+  .attendee-peek-body { padding:20px 20px 4px; }
+  .attendee-peek-close-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+  .attendee-peek-label { font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; }
+  .attendee-peek-close { border:none; background:var(--surface-2); width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:15px; color:var(--text-muted); display:flex; align-items:center; justify-content:center; transition:background .12s; }
+  .attendee-peek-close:hover { background:var(--line); }
+
+  /* Full attendee card inside peek sheet */
+  .attendee-full-card {
+    border-radius:20px; padding:22px 20px; position:relative; overflow:hidden;
+    margin-bottom:14px;
+  }
+  .attendee-full-card-header { display:flex; align-items:center; gap:14px; margin-bottom:16px; position:relative; z-index:1; }
+  .attendee-full-ava { width:58px; height:58px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:#fff; flex-shrink:0; box-shadow:0 4px 16px rgba(0,0,0,0.28); }
+  .attendee-full-name { font-size:20px; font-weight:800; line-height:1.15; }
+  .attendee-full-sub { font-size:12px; margin-top:3px; opacity:0.65; }
+  .attendee-full-bio { font-size:13.5px; line-height:1.65; margin-bottom:14px; position:relative; z-index:1; }
+  .attendee-full-tags { display:flex; flex-wrap:wrap; gap:6px; position:relative; z-index:1; }
+  .attendee-full-tag { border-radius:999px; padding:4px 12px; font-size:12px; font-weight:600; border-width:1px; border-style:solid; }
+  .attendee-card-wm { position:absolute; bottom:-10px; right:-4px; font-size:90px; font-weight:900; opacity:0.05; line-height:1; pointer-events:none; z-index:0; }
+
+  /* Chat bubble production polish */
+  .msg-bubble { font-size:14px; line-height:1.5; }
+  .msg-bubble.own { border-radius:18px 18px 4px 18px; }
+  .msg-bubble.other { border-radius:18px 18px 18px 4px; }
+  .msg-ts { font-size:10px; color:var(--text-muted); margin-top:2px; opacity:0.7; }
 </style>
 </head>
 <body>
@@ -4313,9 +4380,10 @@ async function loadConnectData(id){
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:`event_id=eq.${id}`},payload=>{
         const msg={name:payload.new.user_name,text:payload.new.text,ts:new Date(payload.new.created_at).getTime()};
         if(!state.chats[id]) state.chats[id]=[];
-        // Avoid duplicates (our own messages arrive here too)
-        const exists=state.chats[id].some(m=>m.ts===msg.ts&&m.name===msg.name&&m.text===msg.text);
-        if(!exists) state.chats[id].push(msg);
+        // Remove matching optimistic copy (our own send echoed back by realtime)
+        const optIdx=state.chats[id].findIndex(m=>m._opt&&m.name===msg.name&&m.text===msg.text);
+        if(optIdx!==-1) state.chats[id].splice(optIdx,1);
+        state.chats[id].push(msg);
         if(state.view==='connect'&&state.selectedEventId===id){
           renderView();
           setTimeout(()=>{ const cm=document.getElementById('chat-messages'); if(cm) cm.scrollTop=cm.scrollHeight; },30);
@@ -4326,6 +4394,51 @@ async function loadConnectData(id){
   }
 }
 async function refreshConnect(id){ await loadConnectData(id); markSocialSeen(id); renderView(); }
+
+function peekAttendee(evId, name){
+  const cardsMap=state.attendeeCards[evId]||{};
+  const card=cardsMap[name]; const person=personByName(name); const fr=isFriend(name);
+  let ca='var(--accent)',cbg='var(--surface)',cborder='var(--line)',ctext='var(--text)',ctextSoft='var(--text-muted)';
+  if(card){ const ct=getTheme(card.theme); if(ct){ ca=ct.accent; cbg=ct.bg; cborder=ct.border; ctext=ct.text; ctextSoft=ct.textSoft||ct.text; } }
+  const ava=initials(name);
+  const bio=card?.bio||(person?.blurb||'');
+  const interests=card?.interests?card.interests.split(',').map(s=>s.trim()).filter(Boolean):[];
+  const fact=card?.fact||'';
+  const tagsHtml=interests.map(t=>`<span class="attendee-full-tag" style="background:${ca}22;border-color:${ca}55;color:${ctext};">${escapeHtml(t)}</span>`).join('');
+  let photo='';
+  try{ if(name===state.profileName) photo=localStorage.getItem('card_photo:'+name)||''; }catch(e){}
+  const avatarHtml=photo
+    ?`<div class="attendee-full-ava" style="background:${ca};overflow:hidden;"><img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></div>`
+    :`<div class="attendee-full-ava" style="background:${ca};">${ava}</div>`;
+  const cardHtml=`<div class="attendee-full-card" style="background:${cbg};border:1px solid ${cborder};">
+    <div class="attendee-full-card-header">
+      ${avatarHtml}
+      <div style="flex:1;min-width:0;">
+        <div class="attendee-full-name" style="color:${ctext};">${escapeHtml(name)}${fr?' <span style="color:var(--gold);">★</span>':''}</div>
+        ${fact?`<div class="attendee-full-sub" style="color:${ctextSoft};">${escapeHtml(fact)}</div>`:''}
+      </div>
+    </div>
+    ${bio?`<div class="attendee-full-bio" style="color:${ctextSoft};">${escapeHtml(bio)}</div>`:''}
+    ${tagsHtml?`<div class="attendee-full-tags">${tagsHtml}</div>`:''}
+    <div class="attendee-card-wm" style="color:${ca};">${ava}</div>
+  </div>`;
+  let ov=document.getElementById('attendee-peek-overlay');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='attendee-peek-overlay';
+    ov.className='attendee-peek-ov';
+    ov.innerHTML=`<div class="attendee-peek-sheet"><div class="attendee-peek-handle"></div><div class="attendee-peek-body"><div class="attendee-peek-close-row"><span class="attendee-peek-label">Attendee Profile</span><button class="attendee-peek-close" onclick="closeAttendeePeek()">✕</button></div><div id="attendee-peek-content"></div></div></div>`;
+    ov.addEventListener('click',e=>{ if(e.target===ov) closeAttendeePeek(); });
+    document.body.appendChild(ov);
+  }
+  document.getElementById('attendee-peek-content').innerHTML=cardHtml;
+  requestAnimationFrame(()=>{ ov.classList.add('open'); });
+}
+
+function closeAttendeePeek(){
+  const ov=document.getElementById('attendee-peek-overlay');
+  if(ov) ov.classList.remove('open');
+}
 async function toggleRsvp(id){
   const list=state.rsvps[id]||[];
   const alreadyRsvpd=list.includes(state.profileName);
@@ -4343,7 +4456,7 @@ async function sendChat(id){
   if(!text) return;
   input.value='';
   // Optimistically append so sender sees their message immediately
-  const msg={name:state.profileName,text,ts:Date.now()};
+  const msg={name:state.profileName,text,ts:Date.now(),_opt:true};
   if(!state.chats[id]) state.chats[id]=[];
   state.chats[id].push(msg);
   renderView();
@@ -4879,21 +4992,27 @@ function renderConnect(id){
   const others=attendees.filter(n=>n!==state.profileName);
   const othersHtml=others.length?others.map(name=>{
     const card=cardsMap[name]; const fr=isFriend(name); const person=personByName(name);
+    let avaColor='var(--accent)', bioSnippet='';
     if(card){
-      const ct=getTheme(card.theme); const ca=ct?ct.accent:'var(--accent)';
-      return `<div class="panel intro-card" style="--corner:${ca};background:${ct?ct.bg:'var(--surface)'};border-color:${ct?ct.border:'var(--line)'};">
-        <div class="intro-name" style="color:${ct?ct.text:'var(--text)'};">${fr?'<span class="star">★</span> ':''}${escapeHtml(card.name)}</div>
-        ${card.bio?`<div class="intro-field-label" style="color:${ct?ct.textSoft:'var(--text-muted)'};">About</div><div class="intro-field-val" style="color:${ct?ct.textSoft:'var(--text-soft)'};">${escapeHtml(card.bio)}</div>`:''}
-        ${card.interests?`<div class="intro-field-label" style="color:${ct?ct.textSoft:'var(--text-muted)'};">Interests</div><div class="interest-tags">${card.interests.split(',').map(t=>`<span class="interest-tag" style="border-color:${ca};color:${ct?ct.text:'var(--text)'};">${escapeHtml(t.trim())}</span>`).join('')}</div>`:''}
-      </div>`;
-    }
-    return `<div class="panel intro-card" style="--corner:${fr?'var(--gold)':'var(--line)'}"><div class="intro-name">${fr?'<span class="star">★</span> ':''}${escapeHtml(name)}</div>${person?`<div class="intro-field-val" style="margin-top:5px;">${escapeHtml(person.blurb)}</div>`:''}</div>`;
-  }).join(''):`<div style="color:var(--text-muted);font-size:13px;">No one else has RSVP'd yet.</div>`;
+      const ct=getTheme(card.theme);
+      avaColor=ct?ct.accent:'var(--accent)';
+      bioSnippet=card.bio||(card.interests?card.interests.split(',')[0].trim():'');
+    } else if(person){ bioSnippet=person.blurb||''; }
+    const safeName=escapeHtml(name).replace(/'/g,"\\'");
+    return `<div class="attendee-row" onclick="peekAttendee(${id},'${safeName}')">
+      <div class="attendee-ava" style="background:${avaColor};">${initials(name)}</div>
+      <div class="attendee-info">
+        <div class="attendee-name">${escapeHtml(name)}${fr?' <span style="font-size:11px;color:var(--gold);font-weight:800;">★</span>':''}</div>
+        ${bioSnippet?`<div class="attendee-bio-snippet">${escapeHtml(bioSnippet)}</div>`:''}
+      </div>
+      <div class="attendee-chev">›</div>
+    </div>`;
+  }).join(''):`<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">No one else has RSVP'd yet.</div>`;
   const ownTheme=_myCols;
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="connect-header"><span class="event-badge" style="background:${c.color};">${ev.category}</span><h2>${ev.title}</h2><p>${attendees.length} going · ${chatIsOpen(ev)?'Chat open':(eventStatus(ev)==='past'?'Chat closed':'Chat opens a week before')}</p></div>
     <div class="section-title">Your card</div>${yourCardHtml}
-    <div class="section-title">Who else is going (${others.length})</div><div class="intro-grid">${othersHtml}</div>
+    <div class="section-title">Who else is going (${others.length})</div><div class="attendees-list">${othersHtml}</div>
     <div class="section-title" style="justify-content:space-between;"><span style="display:flex;align-items:center;gap:8px;">Group Chat</span><button class="btn btn-outline btn-small" onclick="refreshConnect(${id})">Refresh</button></div>
     ${chatIsOpen(ev)?`<div class="panel chat-box">
       <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;padding:0 2px;">${attendees.length} member${attendees.length!==1?'s':''} · Chat active weekly before the event</div>
@@ -4904,7 +5023,7 @@ function renderConnect(id){
         return `<div class="msg-row ${isOwn?'own':''}">
           <div style="display:flex;flex-direction:column;${isOwn?'align-items:flex-end;':'align-items:flex-start;'}max-width:85%;">
             <div style="font-size:10.5px;font-weight:700;color:${nameCol};margin-bottom:2px;${isOwn?'text-align:right;':''}letter-spacing:0.3px;">${escapeHtml(m.name.split(' ')[0])}</div>
-            <div class="msg-bubble ${isOwn?'own':'other'}" style="${isOwn?`background:${ownTheme?ownTheme.bg:'var(--accent)'};color:${ownTheme?ownTheme.text:'#fff'};`:''}border-radius:14px;">${escapeHtml(m.text)}</div>
+            <div class="msg-bubble ${isOwn?'own':'other'}" style="${isOwn?`background:${ownTheme?ownTheme.bg:'var(--accent)'};color:${ownTheme?ownTheme.text:'#fff'};`:''}">${escapeHtml(m.text)}</div>
           </div>
         </div>`;
       }).join(''):`<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:22px;">No messages yet — be the first to say something.</div>`}</div>
