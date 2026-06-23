@@ -202,17 +202,18 @@
   .intro-field-val{font-size:13px;line-height:1.5;color:var(--text-soft);}
   .interest-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
   .interest-tag{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:11px;font-weight:600;color:var(--text-soft);}
-  .chat-box{padding:18px;margin-top:8px;}
-  .chat-messages{max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px;}
+  .chat-box{padding:18px 18px 20px;margin-top:8px;}
+  .chat-messages{max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px;-webkit-overflow-scrolling:touch;}
   .msg-row{display:flex;}
   .msg-row.own{justify-content:flex-end;}
-  .msg-bubble{max-width:85%;padding:10px 14px;font-size:13px;line-height:1.5;border-radius:16px;}
+  .msg-bubble{max-width:85%;padding:10px 14px;font-size:13px;line-height:1.5;border-radius:16px;word-break:break-word;}
   .msg-bubble.other{background:var(--surface-2);border:1px solid var(--line-soft);color:var(--text-soft);border-bottom-left-radius:5px;}
   .msg-bubble.own{color:#fff;border-bottom-right-radius:5px;}
   .msg-name{font-size:10px;font-weight:700;color:var(--text-muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:0.4px;}
-  .chat-input-row{display:flex;gap:8px;margin-top:12px;}
-  .chat-input{flex:1;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:10px 16px;font-family:var(--font-sans);font-size:16px;color:var(--text);outline:none;}
+  .chat-input-row{display:flex;gap:8px;margin-top:14px;align-items:center;}
+  .chat-input{flex:1;min-width:0;box-sizing:border-box;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:10px 16px;font-family:var(--font-sans);font-size:16px;color:var(--text);outline:none;}
   .chat-input:focus{border-color:var(--accent);}
+  .chat-input-row .btn{flex-shrink:0;white-space:nowrap;}
 
   .profile-top{display:grid;grid-template-columns:320px 1fr;gap:22px;align-items:start;}
   @media(max-width:720px){.profile-top{grid-template-columns:1fr;gap:16px;}}
@@ -2585,10 +2586,26 @@
     .interest-pill { padding: 6px 12px; font-size: 12px; }
 
     /* Chat input area */
-    .chat-input-row { padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+    .chat-input-row { padding-bottom: 4px; }
 
     /* Ticket modal */
     .ticket-body { padding: 20px 16px !important; }
+
+    /* Host form: tighter section padding so inputs breathe */
+    .host-section { padding: 16px 12px; }
+
+    /* Redeem row: allow shrinking on narrow screens */
+    .redeem-input { min-width: 0; }
+
+    /* Stat boxes: fit on narrow phones */
+    .stat-box { min-width: 72px; flex: 1; }
+
+    /* Gate inputs: ensure they never bleed past the screen */
+    .gate-input { max-width: 100%; box-sizing: border-box; }
+
+    /* Date / time split inputs sit full-width */
+    input[type="date"].gate-input,
+    input[type="time"].gate-input { appearance: none; -webkit-appearance: none; }
   }
 
   /* Extra-small (iPhone SE etc) */
@@ -2598,11 +2615,13 @@
     .cc-style-grid { grid-template-columns: repeat(3, 1fr); }
     .badge-grid { grid-template-columns: repeat(2, 1fr) !important; }
     .detail-title { font-size: 18px; }
+    .host-section { padding: 14px 10px; }
+    .stat-box { min-width: 60px; }
   }
 
   /* Standalone / added-to-home-screen mode — no address bar */
   @media (display-mode: standalone) {
-    #app { padding-bottom: calc(var(--bot-h) + 20px + env(safe-area-inset-bottom, 0px)); }
+    #app { padding-bottom: calc(var(--bot-h) + 12px); }
     .top-bar { border-bottom-color: transparent; box-shadow: 0 1px 0 var(--line); }
   }
 
@@ -4641,13 +4660,17 @@ function selectAutocompleteAddress(lat,lon,fullAddress,name){
 async function submitHostEvent(){
   const title=(document.getElementById('host-title')?.value||'').trim();
   const cat=document.getElementById('host-cat')?.value;
-  const startVal=document.getElementById('host-start')?.value;
-  const endVal=document.getElementById('host-end')?.value;
+  const startDate=document.getElementById('host-start-date')?.value;
+  const startTime=document.getElementById('host-start-time')?.value;
+  const endDate=document.getElementById('host-end-date')?.value;
+  const endTime=document.getElementById('host-end-time')?.value;
+  const startVal=startDate&&startTime?`${startDate}T${startTime}`:'';
+  const endVal=endDate&&endTime?`${endDate}T${endTime}`:'';
   const areaName=(document.getElementById('host-area')?.value||'').trim();
   const venue=(document.getElementById('host-venue')?.value||'').trim();
   const capStr=document.getElementById('host-capacity')?.value;
   const desc=(document.getElementById('host-desc')?.value||'').trim();
-  if(!title||!startVal||!endVal||!venue||!capStr){ alert("Please fill in title, start/end times, venue, and capacity."); return; }
+  if(!title||!startVal||!endVal||!venue||!capStr){ alert("Please fill in title, start/end date & time, venue, and capacity."); return; }
   if(_hostType==='public'){ alert("Your event has been submitted for review. The Cumulus team will be in touch within 24 hours."); return; }
   const stDate=new Date(startVal),enDate=new Date(endVal);
   if(stDate>=enDate){ alert("End must be after start."); return; }
@@ -4866,7 +4889,7 @@ function renderConnect(id){
     }
     return `<div class="panel intro-card" style="--corner:${fr?'var(--gold)':'var(--line)'}"><div class="intro-name">${fr?'<span class="star">★</span> ':''}${escapeHtml(name)}</div>${person?`<div class="intro-field-val" style="margin-top:5px;">${escapeHtml(person.blurb)}</div>`:''}</div>`;
   }).join(''):`<div style="color:var(--text-muted);font-size:13px;">No one else has RSVP'd yet.</div>`;
-  const ownTheme=_myT;
+  const ownTheme=_myCols;
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="connect-header"><span class="event-badge" style="background:${c.color};">${ev.category}</span><h2>${ev.title}</h2><p>${attendees.length} going · ${chatIsOpen(ev)?'Chat open':(eventStatus(ev)==='past'?'Chat closed':'Chat opens a week before')}</p></div>
     <div class="section-title">Your card</div>${yourCardHtml}
@@ -5858,10 +5881,14 @@ function renderSocialTab(){
 
       <div class="host-section">
         <div class="host-section-title">Date &amp; time</div>
-        <label class="intro-field-label">Start</label>
-        <input id="host-start" type="datetime-local" class="gate-input" style="width:100%;box-sizing:border-box;min-width:0;"/>
-        <label class="intro-field-label">End</label>
-        <input id="host-end" type="datetime-local" class="gate-input" style="width:100%;box-sizing:border-box;min-width:0;"/>
+        <label class="intro-field-label">Start date</label>
+        <input id="host-start-date" type="date" class="gate-input"/>
+        <label class="intro-field-label">Start time</label>
+        <input id="host-start-time" type="time" class="gate-input"/>
+        <label class="intro-field-label" style="margin-top:14px;">End date</label>
+        <input id="host-end-date" type="date" class="gate-input"/>
+        <label class="intro-field-label">End time</label>
+        <input id="host-end-time" type="time" class="gate-input"/>
       </div>
 
       <div class="host-section" style="overflow:visible;">
@@ -6036,23 +6063,6 @@ document.addEventListener('click', function(e) {
   ripple.addEventListener('animationend', () => ripple.remove());
 }, { passive: true });
 
-// --- Stagger grid items on tab switch ---
-const _origRenderNav = renderNav;
-renderNav = function() {
-  _origRenderNav.apply(this, arguments);
-  // Animate nav links in
-  requestAnimationFrame(() => {
-    document.querySelectorAll('.nav-link').forEach((el, i) => {
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(6px)';
-      setTimeout(() => {
-        el.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
-        el.style.opacity = '';
-        el.style.transform = '';
-      }, i * 35);
-    });
-  });
-};
 
 // --- Gate card: add stagger to form fields ---
 const _origRenderGate = renderGate;
