@@ -374,7 +374,7 @@
 
 
   /* Event pins and clusters */
-  .evpin-wrap{background:transparent;border:none;cursor:pointer;position:relative;}
+  .evpin-wrap{background:transparent;border:none;cursor:pointer;}
   .evpin{position:relative;width:20px;height:20px;}
   .evpin .pin{
     position:absolute;inset:0;border-radius:50%;background:var(--c);
@@ -397,22 +397,26 @@
   .evpin.hot .pin{box-shadow:0 0 0 2.5px var(--c),0 0 0 4.5px rgba(255,255,255,0.75),0 2px 8px rgba(0,0,0,0.4),0 0 12px -1px var(--c);}
   .evpin.hot:hover .pin,.evpin.hot.open .pin{box-shadow:0 0 0 2.5px var(--c),0 0 0 4.5px rgba(255,255,255,0.9),0 3px 12px rgba(0,0,0,0.5),0 0 20px var(--c);}
   @keyframes hotPulse{0%,100%{box-shadow:0 0 0 2.5px var(--c),0 0 0 4.5px rgba(255,255,255,0.75),0 2px 8px rgba(0,0,0,0.4),0 0 10px var(--c);}50%{box-shadow:0 0 0 2.5px var(--c),0 0 0 4.5px rgba(255,255,255,0.95),0 2px 8px rgba(0,0,0,0.4),0 0 22px var(--c);}}
-  /* Floating label bubble above pin for live / hot / upcoming-soon events */
-  .pin-bubble{
-    position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
-    background:rgba(12,15,22,0.9);color:#fff;
-    font-size:9px;font-weight:700;font-family:var(--font-sans,sans-serif);
-    padding:2px 7px;border-radius:6px;white-space:nowrap;
-    border:1px solid rgba(255,255,255,0.14);box-shadow:0 2px 8px rgba(0,0,0,0.5);
-    letter-spacing:0.4px;pointer-events:none;z-index:10;
+  /* Separate bubble marker — sits above the pin as its own Mapbox Marker element */
+  .pin-bubble-wrap{pointer-events:none;}
+  .pin-bubble-card{
+    position:relative;
+    background:var(--surface,#1e2130);
+    border:1.5px solid var(--c);
+    border-radius:9px;padding:5px 9px 6px;
+    min-width:90px;max-width:144px;
+    box-shadow:0 3px 14px rgba(0,0,0,0.55);
+    font-family:var(--font-sans,sans-serif);
   }
-  .pin-bubble::after{
+  .pin-bubble-card::after{
     content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
-    border-left:4px solid transparent;border-right:4px solid transparent;
-    border-top:4px solid rgba(12,15,22,0.9);
+    border-left:5px solid transparent;border-right:5px solid transparent;
+    border-top:5px solid var(--c);
   }
-  .pin-bubble.bubble-live{background:var(--c);border-color:rgba(255,255,255,0.28);}
-  .pin-bubble.bubble-live::after{border-top-color:var(--c);}
+  .pbc-title{font-size:10px;font-weight:700;color:var(--text,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;}
+  .pbc-sub{font-size:9px;color:var(--text-muted,rgba(255,255,255,0.55));margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;}
+  .pbc-status{display:flex;align-items:center;gap:3px;font-size:8px;font-weight:800;color:var(--c);margin-top:3px;text-transform:uppercase;letter-spacing:0.6px;}
+  .pbc-dot{width:5px;height:5px;border-radius:50%;background:var(--c);animation:pulse 1.6s ease-out infinite;}
 
   /* HTML Clusters */
   .cluster-pin {
@@ -4708,8 +4712,8 @@ function syncHtmlMarkers(){
   const visibleIds = new Set(visible.map(f=>String(f.properties.id)));
   Object.entries(htmlMarkerRefs).forEach(([evId,ref])=>{
     const show=visibleIds.has(evId);
-    if(show&&!ref.added){ ref.marker.addTo(lmap); ref.added=true; }
-    else if(!show&&ref.added){ ref.marker.remove(); ref.added=false; if(String(activePopupEventId)===evId) closeActivePopup(); }
+    if(show&&!ref.added){ ref.marker.addTo(lmap); if(ref.bubbleMarker) ref.bubbleMarker.addTo(lmap); ref.added=true; }
+    else if(!show&&ref.added){ ref.marker.remove(); if(ref.bubbleMarker) ref.bubbleMarker.remove(); ref.added=false; if(String(activePopupEventId)===evId) closeActivePopup(); }
   });
 }
 
@@ -4718,7 +4722,7 @@ function refreshMarkers(){
   const src=lmap.getSource('events');
   if(!src){ lmap.once('load',refreshMarkers); return; }
 
-  Object.values(htmlMarkerRefs).forEach(ref=>{ if(ref.added) ref.marker.remove(); });
+  Object.values(htmlMarkerRefs).forEach(ref=>{ if(ref.added){ ref.marker.remove(); if(ref.bubbleMarker) ref.bubbleMarker.remove(); } });
   htmlMarkerRefs={};
 
   
@@ -4736,19 +4740,31 @@ function refreshMarkers(){
     const el=document.createElement('div');
     el.className='evpin-wrap';
     const hot=isHotEvent(ev);
-    const soon=status==='upcoming'&&(ev.startsAt-Date.now())<=7*24*60*60*1000;
-    const chatBadge=chatIsOpen(ev)&&status!=='past'?'<span class="pin-chat"><svg viewBox="0 0 20 20" width="7" height="7" fill="#fff"><path d="M18 2H2C.9 2 0 2.9 0 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></span>':'';
-    const shortTitle=ev.title.length>14?ev.title.slice(0,13)+'…':ev.title;
-    const bubbleHtml=status==='live'
-      ?`<span class="pin-bubble bubble-live" style="--c:${color}">● LIVE</span>`
-      :(hot||soon)?`<span class="pin-bubble">${escapeHtml(shortTitle)}</span>`
-      :'';
-    el.innerHTML=`${bubbleHtml}<div class="evpin ${status}${hot?' hot':''}" style="--c:${color}">
+    const chatOpen=chatIsOpen(ev)&&status!=='past';
+    const chatBadge=chatOpen?'<span class="pin-chat"><svg viewBox="0 0 20 20" width="7" height="7" fill="#fff"><path d="M18 2H2C.9 2 0 2.9 0 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></span>':'';
+    el.innerHTML=`<div class="evpin ${status}${hot?' hot':''}" style="--c:${color}">
       ${status==='live'?'<span class="pulse-ring"></span><span class="pulse-ring r2"></span>':''}
       <div class="pin"><span class="pin-dot"></span></div>
       ${friendGoing?'<span class="pin-star">★</span>':''}
       ${chatBadge}
     </div>`;
+
+    // Separate bubble marker — own Mapbox Marker so it never affects the pin's anchor
+    let bubbleMarker=null;
+    if(status!=='past'&&(hot||chatOpen)){
+      const bEl=document.createElement('div');
+      bEl.className='pin-bubble-wrap';
+      const t=ev.title.length>18?ev.title.slice(0,17)+'…':ev.title;
+      const statusHtml=status==='live'
+        ?`<div class="pbc-status"><span class="pbc-dot"></span>Live now</div>`
+        :chatOpen?`<div class="pbc-status"><span class="pbc-dot"></span>Chat open</div>`:'';
+      bEl.innerHTML=`<div class="pin-bubble-card" style="--c:${color}">
+        <div class="pbc-title">${escapeHtml(t)}</div>
+        ${ev.area?`<div class="pbc-sub">${escapeHtml(ev.area)}</div>`:''}
+        ${statusHtml}
+      </div>`;
+      bubbleMarker=new mapboxgl.Marker({element:bEl,anchor:'bottom',offset:[0,-15]}).setLngLat([ev.lon,ev.lat]);
+    }
 
     const marker=new mapboxgl.Marker({element:el,anchor:'center'}).setLngLat([ev.lon,ev.lat]);
 
@@ -4784,7 +4800,7 @@ function refreshMarkers(){
       else { openPopup(); }
     });
 
-    htmlMarkerRefs[String(ev.id)]={marker,el,added:false};
+    htmlMarkerRefs[String(ev.id)]={marker,bubbleMarker,el,added:false};
   });
 
   if(!lmapFitted&&geo.features.length>0){
