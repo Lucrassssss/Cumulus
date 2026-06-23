@@ -3072,12 +3072,15 @@ const EVENT_SEED = [
   {id:100, title:"Open Source Contributors Meetup", category:"Tech & Talks", host:"Theo Wright", venue:"Code & Coffee House", area:"Islington", address:"Islington Green, London N1", startOffsetMin:27747, durationMin:180, capacity:78, desc:"Find a project, pick up an issue, pair with someone who knows the codebase."},
 ];
 
+// Anchor to UTC midnight of today — same reference point on every device
+const _d = new Date(); const DAY_EPOCH = Date.UTC(_d.getUTCFullYear(), _d.getUTCMonth(), _d.getUTCDate());
+
 const EVENTS = EVENT_SEED.map(seed => ({
   id: seed.id, title: seed.title, category: seed.category, host: seed.host,
   venue: seed.venue, area: seed.area, address: seed.address,
   lat: null, lon: null,
-  startTime: new Date(Date.now() + seed.startOffsetMin*60000).toISOString(),
-  endTime: new Date(Date.now() + (seed.startOffsetMin + seed.durationMin)*60000).toISOString(),
+  startTime: new Date(DAY_EPOCH + seed.startOffsetMin*60000).toISOString(),
+  endTime: new Date(DAY_EPOCH + (seed.startOffsetMin + seed.durationMin)*60000).toISOString(),
   capacity: seed.capacity, desc: seed.desc
 }));
 
