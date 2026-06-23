@@ -16,35 +16,17 @@
 <link id="pwa-apple-icon" rel="apple-touch-icon" href="">
 <link id="pwa-apple-icon-precomposed" rel="apple-touch-icon-precomposed" href="">
 <link id="pwa-manifest-link" rel="manifest" href="">
-<!-- ═══════════════════════════════════════════════════════════════
-     SUPABASE — replace YOUR_PROJECT_URL and YOUR_ANON_KEY below
-     with the values from Supabase → Settings → API
-     ═══════════════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   const SUPABASE_URL = 'https://xyzrvgbdnevllwvxqcka.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5enJ2Z2JkbmV2bGx3dnhxY2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NDM0NTAsImV4cCI6MjA5NzQxOTQ1MH0.jfSmMobPUV1tTg2cmyAvTGuRmAyd9C5r-pooMVpSV6E';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 </script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:ital,wght@0,400;0,500&display=swap" rel="stylesheet">
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-  [data-theme="light"]{
-    --bg:#EDEAE5;--bg-2:#E0DDD7;--surface:#F9F8F6;--surface-2:#ECEAE6;
-    --text:#1C1917;--text-soft:#44403C;--text-muted:#8A857E;
-    --line:rgba(28,25,23,0.09);--line-soft:rgba(28,25,23,0.045);
-    --accent:#3B6E94;--accent-deep:#2B5270;--shadow:rgba(18,14,10,0.09);
-    --gold:#A8781A;--gold-tint:rgba(168,120,26,0.11);--blot-color:#B2C2CE;--scrim:rgba(236,233,228,0.86);
-  }
-  [data-theme="dark"]{
-    --bg:#0F0D0C;--bg-2:#090807;--surface:#181512;--surface-2:#211E1B;
-    --text:#F0EDE8;--text-soft:#B5AFA9;--text-muted:#6B6560;
-    --line:rgba(240,237,232,0.09);--line-soft:rgba(240,237,232,0.045);
-    --accent:#5A8FAD;--accent-deep:#3A6A88;--shadow:rgba(0,0,0,0.64);
-    --gold:#C0961F;--gold-tint:rgba(192,150,31,0.14);--blot-color:#F0EDE8;--scrim:rgba(8,6,5,0.82);
-  }
   :root{
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
     /* Safe-area-aware heights so content is never hidden under the notch or home indicator */
@@ -112,7 +94,7 @@
     transition: border-color .15s ease, background .15s ease;
   }
   .search-input:focus { border-color: var(--accent); background: var(--surface); }
-  .search-input::placeholder { color: var(--text-muted); font-size: 14px; }
+  .search-input::placeholder { color: var(--text-muted); }
   .theme-toggle {
     background: transparent; border: 1px solid var(--line); color: var(--text);
     cursor: pointer; font-weight: 700; font-size: 13px;
@@ -965,11 +947,8 @@
     box-shadow: none !important;
     filter: drop-shadow(0 0 3px color-mix(in srgb, var(--accent) 45%, transparent));
     transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), filter 0.25s ease !important;
-    animation: splatIdle 5s ease-in-out infinite !important;
-    will-change: transform;
   }
   .section-title:hover::before {
-    animation: none !important;
     transform: rotate(22deg) scale(1.55) !important;
     filter: drop-shadow(0 0 8px var(--accent)) !important;
   }
@@ -1005,6 +984,36 @@
     from { opacity:0; transform:translateX(-50%) scaleX(0.15) scaleY(0.3); }
     to   { opacity:1; transform:translateX(-50%) scaleX(1)    scaleY(1);   }
   }
+
+  /* ── Toast notifications ── */
+  .cu-toast-wrap { position:fixed; bottom:calc(var(--bot-h) + 12px); left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column-reverse; align-items:center; gap:8px; pointer-events:none; }
+  .cu-toast {
+    background:var(--surface); color:var(--text); border:1px solid var(--line);
+    border-radius:12px; padding:11px 18px; font-size:13.5px; font-weight:600;
+    box-shadow:0 6px 24px var(--shadow); max-width:320px; text-align:center;
+    animation:toastIn .25s cubic-bezier(.34,1.56,.64,1) both;
+    pointer-events:auto; white-space:nowrap;
+  }
+  .cu-toast.error { border-color:#E23B3B; color:#E23B3B; background:color-mix(in srgb,#E23B3B 8%,var(--surface)); }
+  .cu-toast.success { border-color:var(--accent); color:var(--accent); background:color-mix(in srgb,var(--accent) 8%,var(--surface)); }
+  .cu-toast.hiding { animation:toastOut .2s ease both; }
+  @keyframes toastIn  { from{opacity:0;transform:translateY(10px) scale(.95);}to{opacity:1;transform:translateY(0) scale(1);} }
+  @keyframes toastOut { from{opacity:1;transform:translateY(0);}to{opacity:0;transform:translateY(8px);} }
+
+  /* ── Gate inline error ── */
+  .gate-field-error { font-size:12px; color:#E23B3B; font-weight:600; margin:4px 0 0; display:none; }
+  .gate-field-error.show { display:block; }
+
+  /* ── Confirm sheet ── */
+  .cu-confirm-overlay { position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.45); backdrop-filter:blur(4px); display:flex; align-items:flex-end; justify-content:center; animation:fadeIn .18s ease both; }
+  .cu-confirm-sheet { background:var(--surface); border-radius:20px 20px 0 0; padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px)); width:100%; max-width:480px; animation:slideUp .22s cubic-bezier(.34,1.56,.64,1) both; }
+  .cu-confirm-title { font-size:16px; font-weight:700; color:var(--text); margin-bottom:6px; }
+  .cu-confirm-body { font-size:14px; color:var(--text-soft); margin-bottom:20px; line-height:1.5; }
+  .cu-confirm-actions { display:flex; gap:10px; }
+  .cu-confirm-actions .btn { flex:1; }
+  .cu-confirm-actions .btn-cancel { flex:1; background:var(--surface-2); color:var(--text); border:1px solid var(--line); box-shadow:none; }
+  @keyframes fadeIn { from{opacity:0;}to{opacity:1;} }
+  @keyframes slideUp { from{transform:translateY(60px);}to{transform:translateY(0);} }
 
   /* Chat countdown display */
   .chat-countdown-wrap { display:flex; justify-content:center; align-items:flex-start; gap:10px; margin:14px 0 12px; }
@@ -1269,7 +1278,7 @@
   }
   .area-chip-num {
     font-size: 10px; font-weight: 800; color: var(--accent);
-    background: rgba(37,99,235,0.1); border-radius: 99px; padding: 1px 6px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent); border-radius: 99px; padding: 1px 6px;
   }
   .area-chip-rank { font-size: 9px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; }
 
@@ -1478,7 +1487,7 @@
     letter-spacing:-0.025em; line-height:1.05; margin-bottom:3px;
   }
   .cv2-bio {
-    font-size:11px; color:rgba(255,255,255,0.38);
+    font-size:11px; color:rgba(255,255,255,0.58);
     font-weight:400; margin-bottom:12px; line-height:1.5;
   }
   .cv2-divider {
@@ -1498,7 +1507,7 @@
     color:#fff; line-height:1; display:block; margin-bottom:2px;
   }
   .cv2-stat-label {
-    font-size:9px; color:rgba(255,255,255,0.28);
+    font-size:9px; color:rgba(255,255,255,0.55);
     letter-spacing:0.08em; text-transform:uppercase; font-weight:600;
   }
   .cv2-tags {
@@ -1519,11 +1528,11 @@
   .cv2-footer-left {}
   .cv2-uid {
     font-family:'DM Mono',monospace; font-size:8.5px;
-    color:rgba(255,255,255,0.16); letter-spacing:0.1em;
+    color:rgba(255,255,255,0.45); letter-spacing:0.1em;
     display:block; margin-bottom:2px;
   }
   .cv2-areas {
-    font-size:9px; color:rgba(255,255,255,0.22); letter-spacing:0.04em;
+    font-size:9px; color:rgba(255,255,255,0.45); letter-spacing:0.04em;
   }
   .cv2-qr-btn {
     width:36px; height:36px; border-radius:4px; border:none; cursor:pointer;
@@ -1577,7 +1586,7 @@
     position: relative;
     overflow: hidden;
   }
-  .ce-photo-zone:hover { border-color: var(--accent); background: rgba(var(--accent-rgb,37,99,235),0.04); }
+  .ce-photo-zone:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 4%, transparent); }
   .ce-photo-zone input[type=file] { position: absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
   .ce-photo-preview {
     width: 72px; height: 72px; border-radius: 50%;
@@ -2067,7 +2076,7 @@
     position: absolute; right: -10px; bottom: -22px;
     font-size: 100px; font-weight: 900; color: rgba(255,255,255,0.07);
     line-height: 1; pointer-events: none; user-select: none;
-    letter-radius: -4px;
+    letter-spacing: -4px;
   }
   .lp-pass-label {
     font-size: 9px; font-weight: 800; letter-spacing: 2.5px;
@@ -2829,7 +2838,7 @@
   .redeem-box { border-radius: 14px; }
 
   /* Map caption bar */
-  #map-caption-bar { border-radius: 0; font-size: 11px; }
+  #map-caption-bar { font-size: 11px; }
 
   /* Phone photo upload zone */
   .ce-photo-zone { border-radius: 13px; }
@@ -3297,6 +3306,23 @@ async function storageSet(key,value){ return localSet(key,value); }
 function initials(name){ if(!name||!name.trim()) return '?'; const p=name.trim().split(/\s+/); return (p[0][0]+(p.length>1?p[1][0]:'')).toUpperCase(); }
 function hexToRgba(hex,a){ const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16); return `rgba(${r},${g},${b},${a})`; }
 function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function showToast(msg, type='info'){
+  let wrap=document.getElementById('cu-toast-wrap');
+  if(!wrap){ wrap=document.createElement('div'); wrap.id='cu-toast-wrap'; wrap.className='cu-toast-wrap'; document.body.appendChild(wrap); }
+  const t=document.createElement('div');
+  t.className='cu-toast'+(type==='error'?' error':type==='success'?' success':'');
+  t.textContent=msg;
+  wrap.appendChild(t);
+  setTimeout(()=>{ t.classList.add('hiding'); t.addEventListener('animationend',()=>t.remove(),{once:true}); },3200);
+}
+function showConfirm(title, body, confirmLabel, dangerFnName){
+  const ov=document.createElement('div');
+  ov.className='cu-confirm-overlay';
+  ov.setAttribute('id','cu-confirm-overlay');
+  ov.innerHTML=`<div class="cu-confirm-sheet" role="dialog" aria-modal="true"><div class="cu-confirm-title">${escapeHtml(title)}</div><div class="cu-confirm-body">${escapeHtml(body)}</div><div class="cu-confirm-actions"><button class="btn btn-cancel" onclick="document.getElementById('cu-confirm-overlay')?.remove()">Cancel</button><button class="btn" onclick="document.getElementById('cu-confirm-overlay')?.remove();window[${JSON.stringify(dangerFnName)}](true)">${escapeHtml(confirmLabel)}</button></div></div>`;
+  document.body.appendChild(ov);
+}
 function getTheme(id){ return CARD_THEMES.find(t=>t.id===id)||CARD_THEMES[0]; }
 function getBgStyle(id){ return CARD_BG_STYLES.find(s=>s.id===id)||CARD_BG_STYLES[0]; }
 function getAccentColor(id){ return CARD_ACCENT_COLORS.find(c=>c.id===id); }
@@ -3315,31 +3341,6 @@ function resolveCardColors(bgStyleId, accentHex){
 }
 function applyTheme(){ document.documentElement.setAttribute('data-theme',state.theme); }
 
-// ═══════════════════════════════════════════════════════════════════════
-// SUPABASE SETUP — run this SQL in Supabase → SQL Editor before opening:
-//
-// create table tickets (
-//   id bigserial primary key,
-//   ticket_id text unique not null,
-//   booking_id text,
-//   seat_num int,
-//   total_seats int,
-//   event_id bigint references events(id) on delete cascade,
-//   user_id uuid references users(id) on delete cascade,
-//   ticket_type text,
-//   type_label text,
-//   price_per_ticket numeric(10,2) default 0,
-//   total numeric(10,2) default 0,
-//   purchaser_name text,
-//   purchased_at timestamptz default now()
-// );
-// alter table tickets enable row level security;
-// create policy "public read tickets" on tickets for select using (true);
-// create policy "public insert tickets" on tickets for insert with check (true);
-//
-// See cumulus-supabase-guide.md for the full setup (users, events, rsvps,
-// chat_messages, friends tables + RLS policies + Realtime publication).
-// ═══════════════════════════════════════════════════════════════════════
 
 // ---- MAPBOX TOKEN ----
 const DEFAULT_MAPBOX_TOKEN='pk.eyJ1IjoibHVjcmFzc3Nzc3MiLCJhIjoiY21xam1pcTJ4MGt0dTJzcXhobnQyZ3owMiJ9.RpRNYuS-zJnNdZ3wOGl61g';
@@ -3705,16 +3706,21 @@ function renderGate(prefillName,prefillEmail){
     <!-- ── FOOTER ── -->
     <footer class="lp-footer">
       <div class="lp-nav-logo" style="margin-bottom:10px;">${BLOT_SVG}<span style="font-size:16px;font-weight:800;color:var(--text-muted);">Cumulus</span></div>
-      <p style="font-size:12px;color:var(--text-muted);margin:0;">London Community Events · ${new Date().getFullYear()}</p>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 10px;">London Community Events · ${new Date().getFullYear()}</p>
+      <div style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap;">
+        <a href="/privacy" style="font-size:11px;color:var(--text-muted);text-decoration:none;opacity:0.65;transition:opacity .15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.65'">Privacy</a>
+        <a href="/terms" style="font-size:11px;color:var(--text-muted);text-decoration:none;opacity:0.65;transition:opacity .15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.65'">Terms</a>
+        <a href="mailto:hello@cumulusapp.co" style="font-size:11px;color:var(--text-muted);text-decoration:none;opacity:0.65;transition:opacity .15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.65'">Contact</a>
+      </div>
     </footer>
 
     <!-- ── SIGN-UP MODAL ── -->
     <div class="lp-signup-overlay" id="lp-signup-overlay" onclick="if(event.target===this)closeLpSignup()">
       <div class="lp-signup-modal">
-        <button class="lp-signup-close" onclick="closeLpSignup()">✕</button>
+        <button class="lp-signup-close" onclick="closeLpSignup()" aria-label="Close">✕</button>
 
         <div class="lp-pass-preview" style="margin-bottom:24px;">
-          <div class="lp-pass-card" id="lp-pass-preview-card" style="background:linear-gradient(140deg,#3E7CB8,#2A5680);">
+          <div class="lp-pass-card" id="lp-pass-preview-card" style="background:linear-gradient(140deg,var(--accent),var(--accent-deep));">
             <div class="lp-pass-shine"></div>
             <div class="lp-pass-label">// Cumulus Pass</div>
             <div class="lp-pass-name" id="lp-pass-name-preview">Your name here</div>
@@ -3744,6 +3750,7 @@ function renderGate(prefillName,prefillEmail){
           <div class="lp-float-line"></div>
         </div>
 
+        <p id="gate-field-error" class="gate-field-error"></p>
         <button class="lp-claim-btn" onclick="submitGate()">
           <span class="lp-claim-btn-text">Join the community →</span>
           <div class="lp-claim-shimmer"></div>
@@ -3797,11 +3804,14 @@ function lpUpdatePassName(val){
   const el=document.getElementById('lp-pass-name-preview');
   if(el) el.textContent=val.trim()||'Your name here';
 }
+function gateErr(msg){ const el=document.getElementById('gate-field-error'); if(el){el.textContent=msg;el.classList.add('show');} }
 async function submitGate(){
   const name=(document.getElementById('gate-name').value||'').trim();
   const email=(document.getElementById('gate-email').value||'').trim();
-  if(!name){ alert('Please add your name.'); return; }
-  if(!EMAIL_PATTERN.test(email)){ alert('Please add a valid email address.'); return; }
+  const errEl=document.getElementById('gate-field-error');
+  if(errEl) errEl.classList.remove('show');
+  if(!name){ gateErr('Please add your name.'); return; }
+  if(!EMAIL_PATTERN.test(email)){ gateErr('Please enter a valid email address.'); return; }
 
   // Show loading state
   const btn=document.querySelector('.lp-claim-btn');
@@ -4386,16 +4396,17 @@ function cancelEditProfile(){ state.editingProfile=false; renderNav(); }
 async function saveProfile(){
   const name=(document.getElementById('profile-name-input')?.value||'').trim();
   const email=(document.getElementById('profile-email-input')?.value||'').trim();
-  if(!name){ alert('Please add your name.'); return; }
-  if(!EMAIL_PATTERN.test(email)){ alert('Please add a valid email address.'); return; }
+  if(!name){ showToast('Please add your name.','error'); return; }
+  if(!EMAIL_PATTERN.test(email)){ showToast('Please enter a valid email address.','error'); return; }
   state.profileName=name; state.profileEmail=email; state.editingProfile=false;
   await persistProfile(); renderNav(); renderView();
+  showToast('Profile saved.','success');
 }
 function destroyMainMap(){ if(lmap){ try{ lmap.remove(); }catch(e){} lmap=null; lmapFitted=false; closeActivePopup(); } }
 function destroyHostMap(){ if(hostMap){ try{ hostMap.remove(); }catch(e){} hostMap=null; hostMarker=null; } }
 
-async function resetProfile(){
-  if(!confirm("Sign out and return to the welcome screen?")) return;
+async function resetProfile(confirmed){
+  if(!confirmed){ showConfirm('Sign out?','You\'ll return to the welcome screen. Your data is saved.','Sign out','resetProfile'); return; }
   // Clear local session cache
   try{ localStorage.removeItem('cumulus_email'); }catch(e){}
   try{ localStorage.removeItem('prefs'); }catch(e){}
@@ -4508,7 +4519,7 @@ function peekAttendee(evId, name){
     ov=document.createElement('div');
     ov.id='attendee-peek-overlay';
     ov.className='attendee-peek-ov';
-    ov.innerHTML=`<div class="attendee-peek-sheet"><div class="attendee-peek-handle"></div><div class="attendee-peek-body"><div class="attendee-peek-close-row"><span class="attendee-peek-label">Attendee Profile</span><button class="attendee-peek-close" onclick="closeAttendeePeek()">✕</button></div><div id="attendee-peek-content"></div></div></div>`;
+    ov.innerHTML=`<div class="attendee-peek-sheet"><div class="attendee-peek-handle"></div><div class="attendee-peek-body"><div class="attendee-peek-close-row"><span class="attendee-peek-label">Attendee Profile</span><button class="attendee-peek-close" onclick="closeAttendeePeek()" aria-label="Close">✕</button></div><div id="attendee-peek-content"></div></div></div>`;
     ov.addEventListener('click',e=>{ if(e.target===ov) closeAttendeePeek(); });
     document.body.appendChild(ov);
   }
@@ -4601,13 +4612,13 @@ async function redeemBadge(){
   const code=(input?.value||'').trim().toUpperCase();
   if(!code) return;
   const match=SPECIAL_BADGES.find(b=>b.code===code);
-  if(!match){ alert("That code isn't recognised."); return; }
-  if(state.specialBadges.includes(match.id)){ alert(`You already have the "${match.name}" badge.`); return; }
+  if(!match){ showToast("Code not recognised. Check and try again.",'error'); return; }
+  if(state.specialBadges.includes(match.id)){ showToast(`You already have the "${match.name}" badge.`); return; }
   state.specialBadges.push(match.id);
   if(state.userId){
     await sb.from('users').update({special_badges:state.specialBadges}).eq('id',state.userId);
   }
-  input.value=''; renderView(); alert(`Unlocked: ${match.name}`);
+  input.value=''; renderView(); showToast(`Unlocked: ${match.name}`,'success');
 }
 function getEventDay(ev){ const m=ev.date.match(/(\d{1,2})/); return m?parseInt(m[1],10):null; }
 function buildCalendarWeeks(year,monthIdx){
@@ -4931,11 +4942,20 @@ async function submitHostEvent(){
   const venue=(document.getElementById('host-venue')?.value||'').trim();
   const capStr=document.getElementById('host-capacity')?.value;
   const desc=(document.getElementById('host-desc')?.value||'').trim();
-  if(!title||!startVal||!endVal||!venue||!capStr){ alert("Please fill in title, start/end date & time, venue, and capacity."); return; }
-  if(_hostType==='public'){ alert("Your event has been submitted for review. The Cumulus team will be in touch within 24 hours."); return; }
+  if(!title||!startVal||!endVal||!venue||!capStr){ showToast('Please fill in title, date & time, venue, and capacity.','error'); return; }
   const stDate=new Date(startVal),enDate=new Date(endVal);
-  if(stDate>=enDate){ alert("End must be after start."); return; }
+  if(stDate>=enDate){ showToast('End time must be after start time.','error'); return; }
+
+  if(_hostType==='public'){
+    showToast('Submitted for review. We\'ll be in touch within 24 hours.','success');
+    state.view='browse'; renderNav(); renderView();
+    return;
+  }
+
   const address=document.getElementById('host-address-search')?.value||'';
+
+  const btn=document.getElementById('host-submit-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Creating…'; }
 
   const {data,error}=await sb.from('events').insert({
     title, category:cat,
@@ -4946,7 +4966,8 @@ async function submitHostEvent(){
     description:desc, capacity:parseInt(capStr,10), price:0
   }).select().single();
 
-  if(error){ alert('Failed to create event. Please try again.'); console.error(error); return; }
+  if(btn){ btn.disabled=false; btn.textContent='Create private event →'; }
+  if(error){ showToast('Failed to create event. Please try again.','error'); console.error(error); return; }
 
   // Add to local EVENTS array so map updates immediately without a page reload
   const newEvent={
@@ -4964,40 +4985,8 @@ async function submitHostEvent(){
   await sb.from('rsvps').insert({event_id:data.id,user_id:state.userId,user_name:state.profileName});
   state.rsvps[data.id]=[state.profileName];
 
-  alert("Event created and pinned to the map!");
+  showToast('Event created and pinned to the map!','success');
   openEvent(data.id);
-}
-
-function renderHost(){
-  if(mapboxConfigured()) setTimeout(initHostMap,0);
-  return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>Create an Event</h2><p>Pin it to the map for your community</p></div>
-    <div class="panel intro-form" style="--corner:var(--accent);overflow:visible;">
-      <label class="intro-field-label">Event Title</label>
-      <input id="host-title" class="gate-input" placeholder="e.g., Summer Park Picnic"/>
-      <label class="intro-field-label">Category</label>
-      <select id="host-cat" class="gate-input">${Object.keys(CATS).map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:130px;"><label class="intro-field-label">Start Date & Time</label><input id="host-start" type="datetime-local" class="gate-input"/></div>
-        <div style="flex:1;min-width:130px;"><label class="intro-field-label">End Date & Time</label><input id="host-end" type="datetime-local" class="gate-input"/></div>
-      </div>
-      <label class="intro-field-label">Search Address</label>
-      <div style="position:relative;margin-bottom:10px;">
-        <input id="host-address-search" class="gate-input" placeholder="Street name or postcode..." oninput="handleAddressAutocomplete()" autocomplete="off"/>
-        <div id="autocomplete-results" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;max-height:200px;overflow-y:auto;z-index:2000;display:none;box-shadow:0 8px 20px var(--shadow);"></div>
-      </div>
-      <div id="host-map-picker"></div>
-      <div id="host-lat-lon-text" style="font-size:11px;color:var(--text-muted);margin-bottom:10px;font-weight:600;">Default: Central London — search above or tap map to pin exact location</div>
-      <label class="intro-field-label">Venue / Room Name</label>
-      <input id="host-venue" class="gate-input" placeholder="e.g., Room 4, Community Center"/>
-      <label class="intro-field-label">Neighbourhood / Area (optional)</label>
-      <input id="host-area" class="gate-input" placeholder="e.g., Westminster"/>
-      <label class="intro-field-label">Attendee Limit</label>
-      <input id="host-capacity" type="number" min="1" class="gate-input" placeholder="e.g., 20"/>
-      <label class="intro-field-label">Description</label>
-      <textarea id="host-desc" class="gate-input" rows="3" placeholder="What's the vibe?"></textarea>
-      <button class="btn" style="margin-top:18px;width:100%;" onclick="submitHostEvent()">Publish Event</button>
-    </div>`;
 }
 
 function showMapLayer(visible){
@@ -5052,7 +5041,7 @@ function getFilteredEvents(){
 }
 function toggleFriendsOnly(){
   state.friendsOnly=!state.friendsOnly;
-  if(state.friendsOnly){ const any=EVENTS.some(ev=>attendeesFor(ev.id).some(isFriend)); if(!any) alert("No friends going to any events yet. Add friends in the Friends tab."); }
+  if(state.friendsOnly){ const any=EVENTS.some(ev=>attendeesFor(ev.id).some(isFriend)); if(!any) showToast("No friends going to events yet. Add friends in the Social tab."); }
   renderView();
 }
 function refreshFilters(){
@@ -5288,9 +5277,9 @@ async function addFriendByCode(){
   const input=document.getElementById('friend-code-input'); const code=(input?.value||'').trim();
   if(!code) return;
   const person=DEMO_PEOPLE.find(p=>p.code===code);
-  if(!person){ alert("Code not recognised. Check the code and try again."); return; }
-  if(state.friends.includes(person.name)){ alert(`${person.name} is already a friend.`); return; }
-  state.friends.push(person.name); await persistFriends(); input.value=''; renderView(); alert(`Added ${person.name} as a friend!`);
+  if(!person){ showToast("Code not recognised. Check and try again.",'error'); return; }
+  if(state.friends.includes(person.name)){ showToast(`${person.name} is already a friend.`); return; }
+  state.friends.push(person.name); await persistFriends(); input.value=''; renderView(); showToast(`Added ${person.name} as a friend!`,'success');
 }
 function buildFriendQR(){
   const el=document.getElementById('friend-qr'); if(!el) return;
@@ -5334,7 +5323,7 @@ function openExpandedCard(){
 
   const html=`<div class="card-xl-overlay" id="card-xl-overlay" onclick="if(event.target===this)closeExpandedCard()">
     <div class="card-xl-outer">
-      <button class="card-xl-close" onclick="closeExpandedCard()">✕</button>
+      <button class="card-xl-close" onclick="closeExpandedCard()" aria-label="Close">✕</button>
       <div class="card-xl-v2" style="
         --cv2-bg:${cardBg};
         --cv2-accent:${accent};
@@ -5713,13 +5702,7 @@ function renderAchievements(){
 }
 
 function editProfile(){
-  const nameVal=state.profileName, emailVal=state.profileEmail;
-  const newName=prompt('Update your name:', nameVal); if(newName===null) return;
-  const newEmail=prompt('Update your email:', emailVal); if(newEmail===null) return;
-  if(!newName.trim()){ alert('Name cannot be empty.'); return; }
-  if(!EMAIL_PATTERN.test(newEmail.trim())){ alert('Please enter a valid email.'); return; }
-  state.profileName=newName.trim(); state.profileEmail=newEmail.trim();
-  persistProfile().then(()=>renderView());
+  state.editingProfile=true; renderNav(); renderView();
 }
 
 function updateAboutCounter(el){
@@ -5855,7 +5838,7 @@ async function processPayment(){
   const card=(document.getElementById('pay-card')?.value||'').replace(/\s/g,'');
   const expiry=document.getElementById('pay-expiry')?.value||'';
   const cvv=(document.getElementById('pay-cvv')?.value||'').trim();
-  if(!name||card.length<15||expiry.length<4||cvv.length<3){ alert('Please fill in all payment details correctly.'); return; }
+  if(!name||card.length<15||expiry.length<4||cvv.length<3){ showToast('Please fill in all payment details correctly.','error'); return; }
   const btn=document.getElementById('pay-btn');
   if(btn){btn.disabled=true;btn.innerHTML='<span style="opacity:.7">Processing…</span>';}
   await new Promise(r=>setTimeout(r,1800));
