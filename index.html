@@ -780,72 +780,100 @@
   }
 
   /* ══════════════════════════════════════════
-     THUNDER / CLOUD VISUAL THEME
-     Light grey · Electric blue · Lightning yellow
+     AURORA BACKDROP — Indigo · Violet · Gold
+     Professional · Welcoming · Spectacular
      ══════════════════════════════════════════ */
 
-  /* Palette overrides — tighten to blue+yellow only */
+  /* Palette */
   [data-theme="light"] {
-    --bg: #F0F2F6;
-    --bg-2: #E4E8EF;
+    --bg: #F7F6FF;
+    --bg-2: #ECEAFB;
     --surface: #FFFFFF;
-    --surface-2: #EDF0F5;
-    --accent: #2563EB;
-    --accent-deep: #1D4ED8;
-    --gold: #FBBF24;
-    --gold-tint: rgba(251,191,36,0.12);
-    --blot-color: #BFCFEC;
-    --shadow: rgba(20,40,80,0.10);
-    --scrim: rgba(224,228,238,0.82);
+    --surface-2: #F1F0FC;
+    --text: #18171F;
+    --text-soft: #3D3A50;
+    --text-muted: #8A88A2;
+    --line: rgba(24,23,31,0.08);
+    --line-soft: rgba(24,23,31,0.04);
+    --accent: #5E54F0;
+    --accent-deep: #4338CA;
+    --gold: #C4860A;
+    --gold-tint: rgba(196,134,10,0.10);
+    --shadow: rgba(18,16,48,0.09);
+    --scrim: rgba(238,237,255,0.90);
+    --mesh-a: rgba(94,84,240,0.10);
+    --mesh-b: rgba(196,134,10,0.08);
+    --mesh-c: rgba(59,52,180,0.07);
   }
   [data-theme="dark"] {
-    --accent: #3B82F6;
-    --accent-deep: #2563EB;
-    --gold: #FBBF24;
-    --gold-tint: rgba(251,191,36,0.14);
-    --bg: #0B0D14;
-    --bg-2: #080A10;
-    --surface: #12151F;
-    --surface-2: #1A1E2C;
-    --shadow: rgba(0,0,0,0.6);
-    --blot-color: #1E3A6E;
+    --bg: #07070F;
+    --bg-2: #040409;
+    --surface: #0E0E1A;
+    --surface-2: #161624;
+    --text: #ECEDF8;
+    --text-soft: #AEACCC;
+    --text-muted: #6B6882;
+    --line: rgba(236,237,248,0.08);
+    --line-soft: rgba(236,237,248,0.04);
+    --accent: #7B72FF;
+    --accent-deep: #5E54F0;
+    --gold: #F0B429;
+    --gold-tint: rgba(240,180,41,0.13);
+    --shadow: rgba(0,0,0,0.82);
+    --scrim: rgba(4,4,12,0.90);
+    --mesh-a: rgba(94,84,240,0.24);
+    --mesh-b: rgba(240,180,41,0.10);
+    --mesh-c: rgba(79,70,229,0.20);
   }
 
-  /* Cloud-shaped background blobs */
-  .bg-blot {
-    border-radius: 60% 40% 70% 30% / 50% 60% 40% 50% !important;
-    filter: blur(70px) !important;
-  }
-  .blot-a {
-    background: linear-gradient(135deg, var(--accent), #93C5FD) !important;
-    opacity: 0.18 !important;
-    width: 520px !important; height: 320px !important;
-  }
-  .blot-b {
-    background: linear-gradient(135deg, var(--gold), #FDE68A) !important;
-    opacity: 0.15 !important;
-    width: 380px !important; height: 260px !important;
-  }
-  .blot-c {
-    background: linear-gradient(135deg, #BFDBFE, var(--accent)) !important;
-    opacity: 0.12 !important;
-  }
-  [data-theme="dark"] .blot-a { opacity: 0.12 !important; }
-  [data-theme="dark"] .blot-b { opacity: 0.08 !important; }
-  [data-theme="dark"] .blot-c { opacity: 0.07 !important; }
-
-  /* Lightning bolt SVG decoration — injected via pseudo on hero */
-  body::before {
-    content: '';
-    position: fixed;
-    top: 0; right: 0;
-    width: 340px; height: 340px;
-    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='110,10 85,90 115,90 75,190 145,190 120,105 150,105' fill='%23FBBF24' opacity='0.06'/%3E%3C/svg%3E") no-repeat center / contain;
-    pointer-events: none; z-index: 0;
-    animation: drift1 28s ease-in-out infinite alternate;
+  /* Three-point mesh gradient body */
+  body {
+    background:
+      radial-gradient(ellipse 90% 55% at -5% -10%, var(--mesh-a), transparent 55%),
+      radial-gradient(ellipse 65% 45% at 108% 12%, var(--mesh-b), transparent 50%),
+      radial-gradient(ellipse 75% 55% at 55% 110%, var(--mesh-c), transparent 55%),
+      var(--bg);
   }
 
-  /* Bubbly nav icons — pill container */
+  /* Aurora blobs — 5 orbs, each independently colored */
+  .bg-blot { filter: blur(90px); }
+  .blot-a { width: 660px; height: 420px; top: -180px; left: -140px; border-radius: 44% 56% 62% 38% / 52% 42% 58% 48%; animation: drift1 34s ease-in-out infinite alternate; }
+  .blot-b { width: 520px; height: 360px; top: 220px; right: -160px; border-radius: 58% 42% 38% 62% / 42% 60% 40% 58%; animation: drift2 29s ease-in-out infinite alternate; }
+  .blot-c { width: 700px; height: 400px; bottom: -180px; left: -80px; border-radius: 40% 60% 54% 46% / 56% 38% 62% 44%; animation: drift3 38s ease-in-out infinite alternate; }
+  .blot-d { width: 460px; height: 320px; top: 52%; right: -90px; border-radius: 62% 38% 42% 58% / 44% 56% 52% 48%; animation: drift4 26s ease-in-out infinite alternate; }
+  .blot-e { width: 380px; height: 260px; bottom: 110px; left: 30%; border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%; animation: drift1 22s ease-in-out infinite alternate-reverse; }
+
+  /* Light: soft pastel aurora */
+  [data-theme="light"] .blot-a { background: #818CF8; opacity: 0.32; }
+  [data-theme="light"] .blot-b { background: #38BDF8; opacity: 0.22; }
+  [data-theme="light"] .blot-c { background: #FB7185; opacity: 0.18; }
+  [data-theme="light"] .blot-d { background: #34D399; opacity: 0.16; }
+  [data-theme="light"] .blot-e { background: #FBBF24; opacity: 0.20; }
+
+  /* Dark: deep aurora */
+  [data-theme="dark"] .blot-a { background: #4F46E5; opacity: 0.28; }
+  [data-theme="dark"] .blot-b { background: #0EA5E9; opacity: 0.22; }
+  [data-theme="dark"] .blot-c { background: #E879A0; opacity: 0.16; }
+  [data-theme="dark"] .blot-d { background: #059669; opacity: 0.14; }
+  [data-theme="dark"] .blot-e { background: #D97706; opacity: 0.14; }
+
+  /* Drift animations — gentle float with subtle rotation */
+  @keyframes drift1 { 0% { transform: translate(0,0) rotate(0deg); } 100% { transform: translate(28px,16px) rotate(4deg); } }
+  @keyframes drift2 { 0% { transform: translate(0,0) rotate(0deg); } 100% { transform: translate(-22px,-14px) rotate(-3deg); } }
+  @keyframes drift3 { 0% { transform: translate(0,0) rotate(0deg); } 100% { transform: translate(16px,-10px) rotate(2deg); } }
+  @keyframes drift4 { 0% { transform: translate(0,0) rotate(0deg); } 100% { transform: translate(-14px,20px) rotate(-4deg); } }
+
+  /* Film grain texture */
+  .bg-grain {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    mix-blend-mode: overlay;
+  }
+  [data-theme="light"] .bg-grain { opacity: 0.030; }
+  [data-theme="dark"] .bg-grain { opacity: 0.045; }
+
+  /* Nav icon pill */
   .nav-link .nav-icon {
     background: var(--surface-2);
     border-radius: 10px;
@@ -863,83 +891,40 @@
     transform: scale(1.1) translateY(-1px);
   }
 
-  /* Category chips — bubbly cloud pill */
-  .mchip {
-    border-radius: 16px !important;
-    padding: 8px 14px !important;
-    font-size: 12.5px !important;
-    gap: 6px !important;
-  }
+  /* Category chips */
+  .mchip { border-radius: 16px !important; padding: 8px 14px !important; font-size: 12.5px !important; gap: 6px !important; }
   .mdot { width: 9px !important; height: 9px !important; box-shadow: 0 0 5px currentColor; }
 
-  /* Section kicker dot → mini cloud */
-  .section-title::before {
-    width: 8px !important; height: 8px !important;
-    border-radius: 3px 6px 6px 3px !important;
-    box-shadow: 0 0 8px var(--accent) !important;
-  }
+  /* Section kicker */
+  .section-title::before { width: 8px !important; height: 8px !important; border-radius: 3px 6px 6px 3px !important; box-shadow: 0 0 8px var(--accent) !important; }
 
-  /* Top bar — thinner, cloudier */
-  .top-bar {
-    box-shadow: 0 1px 0 var(--line-soft), 0 4px 32px rgba(37,99,235,0.05) !important;
-  }
+  /* Panel accent bar */
+  .panel::after { background: var(--corner, var(--accent)) !important; height: 2px !important; }
 
-  /* Panel accent bar — only blue or gold, no rainbow */
-  .panel::after {
-    background: var(--corner, var(--accent)) !important;
-    height: 2px !important;
-  }
-
-  /* Btn — blue only, no purple */
-  .btn {
-    background: var(--accent) !important;
-  }
+  /* Buttons */
+  .btn { background: var(--accent) !important; }
   .btn.btn-outline { background: transparent !important; }
   .btn.btn-text { background: transparent !important; }
 
-  /* Landing page: remove purple, use blue→yellow */
-  .lp-hero-gradient {
-    background: linear-gradient(135deg, var(--accent) 0%, #60A5FA 40%, var(--gold) 100%) !important;
-    background-size: 200% 100% !important;
-    -webkit-background-clip: text !important;
-    background-clip: text !important;
-  }
-  .lp-hero-btn-primary {
-    background: linear-gradient(135deg, var(--accent), #1D4ED8) !important;
-    box-shadow: 0 8px 28px color-mix(in srgb, var(--accent) 40%, transparent) !important;
-  }
-  .lp-venues-cta, .lp-submit-btn, .lp-claim-btn {
-    background: linear-gradient(135deg, var(--accent), #1D4ED8) !important;
-    box-shadow: 0 8px 28px color-mix(in srgb, var(--accent) 35%, transparent) !important;
-  }
-  .lp-accent-text {
-    background: linear-gradient(135deg, var(--accent), var(--gold)) !important;
-    -webkit-background-clip: text !important;
-    background-clip: text !important;
-  }
-  .lp-join-headline em {
-    background: linear-gradient(135deg, var(--accent) 0%, #60A5FA 50%, var(--gold) 100%) !important;
-    background-size: 200% 100% !important;
-    -webkit-background-clip: text !important;
-    background-clip: text !important;
-  }
-  .lp-signup-card::before, .lp-form-panel::before {
-    background: linear-gradient(90deg, var(--accent), var(--gold), var(--accent)) !important;
-    background-size: 300% 100% !important;
-  }
-  .lp-venues-section {
-    background: linear-gradient(135deg, #050C1F 0%, #0A1A3A 50%, #0D1F4A 100%) !important;
-  }
+  /* Landing hero gradient */
+  .lp-hero-gradient { background: linear-gradient(135deg, var(--accent) 0%, #A78BFA 45%, var(--gold) 100%) !important; background-size: 200% 100% !important; -webkit-background-clip: text !important; background-clip: text !important; }
+  .lp-hero-btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-deep)) !important; box-shadow: 0 8px 28px color-mix(in srgb, var(--accent) 40%, transparent) !important; }
+  .lp-venues-cta, .lp-submit-btn, .lp-claim-btn { background: linear-gradient(135deg, var(--accent), var(--accent-deep)) !important; box-shadow: 0 8px 28px color-mix(in srgb, var(--accent) 35%, transparent) !important; }
+  .lp-accent-text { background: linear-gradient(135deg, var(--accent), var(--gold)) !important; -webkit-background-clip: text !important; background-clip: text !important; }
+  .lp-join-headline em { background: linear-gradient(135deg, var(--accent) 0%, #A78BFA 50%, var(--gold) 100%) !important; background-size: 200% 100% !important; -webkit-background-clip: text !important; background-clip: text !important; }
+  .lp-signup-card::before, .lp-form-panel::before { background: linear-gradient(90deg, var(--accent), var(--gold), var(--accent)) !important; background-size: 300% 100% !important; }
+  .lp-venues-section { background: linear-gradient(135deg, #06060F 0%, #0C0A22 50%, #0E0A1E 100%) !important; }
 
-  /* Lightning bolt hero decoration on landing */
+  /* Landing hero — ambient aurora glow replaces lightning bolt */
   .lp-hero { overflow: hidden; }
   .lp-hero::after {
     content: '';
     position: absolute;
-    bottom: -40px; right: -30px;
-    width: 280px; height: 320px;
-    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='110,10 80,100 115,100 70,230 150,230 118,115 152,115' fill='%23FBBF24' opacity='0.09'/%3E%3C/svg%3E") no-repeat center / contain;
+    bottom: -100px; right: -100px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent) 0%, transparent 70%);
     pointer-events: none; z-index: 0;
+    animation: drift2 24s ease-in-out infinite alternate;
   }
 
   /* ══════════════════════════════════════════
@@ -2857,6 +2842,9 @@
 <div class="bg-blot blot-a"></div>
 <div class="bg-blot blot-b"></div>
 <div class="bg-blot blot-c"></div>
+<div class="bg-blot blot-d"></div>
+<div class="bg-blot blot-e"></div>
+<div class="bg-grain" aria-hidden="true"></div>
 <div id="gate-root"></div>
 <div id="card-editor-root"></div>
 
