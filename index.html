@@ -1144,9 +1144,12 @@
     font-size: 82px; font-weight: 900; opacity: 0.07;
     line-height: 1; pointer-events: none; user-select: none; z-index: 1;
   }
+  .ce-intensity-bar { display:flex; align-items:center; gap:10px; margin:10px 0 4px; padding:8px 12px; background:var(--surface-2); border-radius:10px; border:1px solid var(--line); }
+  .ce-intensity-label { font-size:10px; font-weight:700; color:var(--text-muted); white-space:nowrap; letter-spacing:0.6px; text-transform:uppercase; }
+  .ce-intensity-pct { font-size:11px; font-weight:700; color:var(--accent); min-width:28px; text-align:right; }
   .ce-card-hint {
     font-size: 11px; font-weight: 500; color: var(--text-muted);
-    text-align: center; margin-top: 12px; line-height: 1.55; letter-spacing: 0.1px;
+    text-align: center; margin-top: 8px; line-height: 1.55; letter-spacing: 0.1px;
   }
   .ce-left-actions { display: flex; gap: 9px; width: 100%; max-width: 288px; }
 
@@ -3097,126 +3100,225 @@ function personByName(n){ return DEMO_PEOPLE.find(p=>p.name===n); }
 
 // ─── Background Styles (50+) — the gradient/texture of the card ─────────────
 const CARD_BG_STYLES = [
-  // ── Dark ──
-  {id:'midnight',   name:'Midnight',    bg:'linear-gradient(145deg,#090b14 0%,#0f1729 55%,#1a2744 100%)', dark:true},
-  {id:'obsidian',   name:'Obsidian',    bg:'linear-gradient(145deg,#0a0a0a 0%,#1a1a1a 55%,#2d2d2d 100%)', dark:true},
-  {id:'charcoal',   name:'Charcoal',    bg:'linear-gradient(145deg,#1c1c1e 0%,#2c2c2e 55%,#3a3a3c 100%)', dark:true},
-  {id:'slate',      name:'Slate',       bg:'linear-gradient(145deg,#0f172a 0%,#1e293b 55%,#334155 100%)', dark:true},
-  {id:'ink',        name:'Ink',         bg:'linear-gradient(145deg,#13111c 0%,#211d30 55%,#2d2840 100%)', dark:true},
-  {id:'abyss',      name:'Abyss',       bg:'linear-gradient(145deg,#030712 0%,#0a0f1e 55%,#111827 100%)', dark:true},
-  {id:'noir',       name:'Noir',        bg:'linear-gradient(145deg,#0a0a0c 0%,#15151a 55%,#1f1f27 100%)', dark:true},
-  {id:'volcanic',   name:'Volcanic',    bg:'linear-gradient(145deg,#1a0505 0%,#2d0a0a 55%,#3d1212 100%)', dark:true},
-  {id:'cosmos',     name:'Cosmos',      bg:'linear-gradient(145deg,#050212 0%,#0d0625 55%,#130a38 100%)', dark:true},
-  {id:'carbon',     name:'Carbon',      bg:'linear-gradient(145deg,#111 0%,#1e1e1e 40%,#252525 60%,#1a1a1a 100%)', dark:true},
-  // ── Light ──
-  {id:'cloud',      name:'Cloud',       bg:'linear-gradient(145deg,#f8fafc 0%,#e8f0fe 55%,#dbeafe 100%)', dark:false},
-  {id:'pearl',      name:'Pearl',       bg:'linear-gradient(145deg,#fefefe 0%,#f5f5f5 55%,#ebebeb 100%)', dark:false},
-  {id:'cream',      name:'Cream',       bg:'linear-gradient(145deg,#fffef7 0%,#faf8ef 55%,#f5f2e3 100%)', dark:false},
-  {id:'cotton',     name:'Cotton',      bg:'linear-gradient(145deg,#fdfcff 0%,#f3efff 55%,#ede8ff 100%)', dark:false},
-  {id:'frost',      name:'Frost',       bg:'linear-gradient(145deg,#f0f9ff 0%,#e0f2fe 55%,#bae6fd 100%)', dark:false},
-  {id:'linen',      name:'Linen',       bg:'linear-gradient(145deg,#faf9f7 0%,#f2efea 55%,#e8e2d8 100%)', dark:false},
-  {id:'chalk',      name:'Chalk',       bg:'linear-gradient(145deg,#f8f8f6 0%,#eeede8 55%,#e2e0d8 100%)', dark:false},
-  {id:'mist',       name:'Mist',        bg:'linear-gradient(145deg,#e2e8f0 0%,#cbd5e1 50%,#e0e7ff 100%)', dark:false},
-  {id:'blush',      name:'Blush',       bg:'linear-gradient(145deg,#fff0f3 0%,#ffe4e9 55%,#ffd6de 100%)', dark:false},
-  {id:'sage-light', name:'Sage',        bg:'linear-gradient(145deg,#f0fdf4 0%,#dcfce7 55%,#bbf7d0 100%)', dark:false},
-  // ── Rich Dark Colour ──
-  {id:'ocean',      name:'Ocean',       bg:'linear-gradient(145deg,#0c1f3f 0%,#0e3460 55%,#124a80 100%)', dark:true},
-  {id:'forest',     name:'Forest',      bg:'linear-gradient(145deg,#052e16 0%,#14532d 55%,#166534 100%)', dark:true},
-  {id:'cherry',     name:'Cherry',      bg:'linear-gradient(145deg,#3b0012 0%,#5c0020 55%,#7f0030 100%)', dark:true},
-  {id:'cobalt',     name:'Cobalt',      bg:'linear-gradient(145deg,#0a1628 0%,#172554 55%,#1e3a8a 100%)', dark:true},
-  {id:'jade',       name:'Jade',        bg:'linear-gradient(145deg,#042f2e 0%,#134e4a 55%,#115e59 100%)', dark:true},
-  {id:'amber-dark', name:'Amber',       bg:'linear-gradient(145deg,#1c1200 0%,#2d1d00 55%,#3d2800 100%)', dark:true},
-  {id:'plum',       name:'Plum',        bg:'linear-gradient(145deg,#2e1065 0%,#4a1d96 55%,#5b21b6 100%)', dark:true},
-  {id:'crimson',    name:'Crimson',     bg:'linear-gradient(145deg,#450a0a 0%,#7f1d1d 55%,#991b1b 100%)', dark:true},
-  {id:'denim',      name:'Denim',       bg:'linear-gradient(145deg,#1d2438 0%,#2d3655 55%,#374469 100%)', dark:true},
-  {id:'copper-bg',  name:'Copper',      bg:'linear-gradient(145deg,#1c0f08 0%,#2d1a0e 55%,#40251a 100%)', dark:true},
+  // ── Dark Tones ──
+  {id:'midnight',      name:'Midnight',       bg:'linear-gradient(145deg,#090b14 0%,#0f1729 55%,#1a2744 100%)', dark:true},
+  {id:'obsidian',      name:'Obsidian',       bg:'linear-gradient(145deg,#0a0a0a 0%,#1a1a1a 55%,#2d2d2d 100%)', dark:true},
+  {id:'charcoal',      name:'Charcoal',       bg:'linear-gradient(145deg,#1c1c1e 0%,#2c2c2e 55%,#3a3a3c 100%)', dark:true},
+  {id:'slate',         name:'Slate',          bg:'linear-gradient(145deg,#0f172a 0%,#1e293b 55%,#334155 100%)', dark:true},
+  {id:'ink',           name:'Ink',            bg:'linear-gradient(145deg,#13111c 0%,#211d30 55%,#2d2840 100%)', dark:true},
+  {id:'abyss',         name:'Abyss',          bg:'linear-gradient(145deg,#030712 0%,#0a0f1e 55%,#111827 100%)', dark:true},
+  {id:'noir',          name:'Noir',           bg:'linear-gradient(145deg,#0a0a0c 0%,#15151a 55%,#1f1f27 100%)', dark:true},
+  {id:'volcanic',      name:'Volcanic',       bg:'linear-gradient(145deg,#1a0505 0%,#2d0a0a 55%,#3d1212 100%)', dark:true},
+  {id:'cosmos',        name:'Cosmos',         bg:'linear-gradient(145deg,#050212 0%,#0d0625 55%,#130a38 100%)', dark:true},
+  {id:'carbon',        name:'Carbon',         bg:'linear-gradient(145deg,#111 0%,#1e1e1e 40%,#252525 60%,#1a1a1a 100%)', dark:true},
+  {id:'graphite',      name:'Graphite',       bg:'linear-gradient(145deg,#1f2023 0%,#2a2b2f 55%,#36373d 100%)', dark:true},
+  {id:'pitch',         name:'Pitch',          bg:'linear-gradient(145deg,#06060a 0%,#0e0e14 55%,#18181e 100%)', dark:true},
+  {id:'nightfall',     name:'Nightfall',      bg:'linear-gradient(145deg,#0d0e1a 0%,#161730 55%,#1f2044 100%)', dark:true},
+  {id:'anthracite',    name:'Anthracite',     bg:'linear-gradient(145deg,#181a1d 0%,#24272c 55%,#303540 100%)', dark:true},
+  {id:'void',          name:'Void',           bg:'linear-gradient(145deg,#020204 0%,#060608 55%,#0a0a0e 100%)', dark:true},
+  // ── Light Tones ──
+  {id:'cloud',         name:'Cloud',          bg:'linear-gradient(145deg,#f8fafc 0%,#e8f0fe 55%,#dbeafe 100%)', dark:false},
+  {id:'pearl',         name:'Pearl',          bg:'linear-gradient(145deg,#fefefe 0%,#f5f5f5 55%,#ebebeb 100%)', dark:false},
+  {id:'cream',         name:'Cream',          bg:'linear-gradient(145deg,#fffef7 0%,#faf8ef 55%,#f5f2e3 100%)', dark:false},
+  {id:'cotton',        name:'Cotton',         bg:'linear-gradient(145deg,#fdfcff 0%,#f3efff 55%,#ede8ff 100%)', dark:false},
+  {id:'frost',         name:'Frost',          bg:'linear-gradient(145deg,#f0f9ff 0%,#e0f2fe 55%,#bae6fd 100%)', dark:false},
+  {id:'linen-bg',      name:'Linen',          bg:'linear-gradient(145deg,#faf9f7 0%,#f2efea 55%,#e8e2d8 100%)', dark:false},
+  {id:'chalk',         name:'Chalk',          bg:'linear-gradient(145deg,#f8f8f6 0%,#eeede8 55%,#e2e0d8 100%)', dark:false},
+  {id:'mist',          name:'Mist',           bg:'linear-gradient(145deg,#e2e8f0 0%,#cbd5e1 50%,#e0e7ff 100%)', dark:false},
+  {id:'blush',         name:'Blush',          bg:'linear-gradient(145deg,#fff0f3 0%,#ffe4e9 55%,#ffd6de 100%)', dark:false},
+  {id:'sage-light',    name:'Sage',           bg:'linear-gradient(145deg,#f0fdf4 0%,#dcfce7 55%,#bbf7d0 100%)', dark:false},
+  {id:'snow',          name:'Snow',           bg:'linear-gradient(145deg,#ffffff 0%,#f9fafb 55%,#f1f3f6 100%)', dark:false},
+  {id:'ivory',         name:'Ivory',          bg:'linear-gradient(145deg,#fffff4 0%,#fdfde6 55%,#fafad0 100%)', dark:false},
+  {id:'eggshell',      name:'Eggshell',       bg:'linear-gradient(145deg,#f5f0e8 0%,#ede4d2 55%,#e4d8c2 100%)', dark:false},
+  {id:'lilac-mist',    name:'Lilac Mist',     bg:'linear-gradient(145deg,#f8f0ff 0%,#f0e0ff 55%,#e8ccff 100%)', dark:false},
+  {id:'peach-mist',    name:'Peach Mist',     bg:'linear-gradient(145deg,#fff5f0 0%,#feecd6 55%,#fde0c0 100%)', dark:false},
+  // ── Rich & Deep ──
+  {id:'ocean',         name:'Ocean',          bg:'linear-gradient(145deg,#0c1f3f 0%,#0e3460 55%,#124a80 100%)', dark:true},
+  {id:'forest',        name:'Forest',         bg:'linear-gradient(145deg,#052e16 0%,#14532d 55%,#166534 100%)', dark:true},
+  {id:'cherry',        name:'Cherry',         bg:'linear-gradient(145deg,#3b0012 0%,#5c0020 55%,#7f0030 100%)', dark:true},
+  {id:'cobalt',        name:'Cobalt',         bg:'linear-gradient(145deg,#0a1628 0%,#172554 55%,#1e3a8a 100%)', dark:true},
+  {id:'jade',          name:'Jade',           bg:'linear-gradient(145deg,#042f2e 0%,#134e4a 55%,#115e59 100%)', dark:true},
+  {id:'amber-dark',    name:'Amber',          bg:'linear-gradient(145deg,#1c1200 0%,#2d1d00 55%,#3d2800 100%)', dark:true},
+  {id:'plum',          name:'Plum',           bg:'linear-gradient(145deg,#2e1065 0%,#4a1d96 55%,#5b21b6 100%)', dark:true},
+  {id:'crimson',       name:'Crimson',        bg:'linear-gradient(145deg,#450a0a 0%,#7f1d1d 55%,#991b1b 100%)', dark:true},
+  {id:'denim',         name:'Denim',          bg:'linear-gradient(145deg,#1d2438 0%,#2d3655 55%,#374469 100%)', dark:true},
+  {id:'copper-bg',     name:'Copper',         bg:'linear-gradient(145deg,#1c0f08 0%,#2d1a0e 55%,#40251a 100%)', dark:true},
+  {id:'burgundy',      name:'Burgundy',       bg:'linear-gradient(145deg,#2d0a1f 0%,#4a1030 55%,#6b1840 100%)', dark:true},
+  {id:'pine',          name:'Pine',           bg:'linear-gradient(145deg,#0c2b16 0%,#1a4a2a 55%,#1e5c34 100%)', dark:true},
+  {id:'aubergine',     name:'Aubergine',      bg:'linear-gradient(145deg,#1e0a2a 0%,#32104a 55%,#4a1870 100%)', dark:true},
+  {id:'mahogany',      name:'Mahogany',       bg:'linear-gradient(145deg,#2a0e08 0%,#401812 55%,#5a2820 100%)', dark:true},
+  {id:'steel-dark',    name:'Steel',          bg:'linear-gradient(145deg,#0c1f38 0%,#162d50 55%,#203e6a 100%)', dark:true},
   // ── Gradient Moods ──
-  {id:'aurora',     name:'Aurora',      bg:'linear-gradient(145deg,#022c22 0%,#064e3b 35%,#065f46 65%,#0a4a5e 100%)', dark:true},
-  {id:'sunset',     name:'Sunset',      bg:'linear-gradient(145deg,#3b1a2c 0%,#7f1d41 35%,#c2410c 70%,#d97706 100%)', dark:true},
-  {id:'twilight',   name:'Twilight',    bg:'linear-gradient(145deg,#1e1b4b 0%,#3730a3 40%,#6d28d9 70%,#be185d 100%)', dark:true},
-  {id:'deepspace',  name:'Deep Space',  bg:'linear-gradient(145deg,#010409 0%,#030d1a 35%,#0a1628 65%,#0c0f2e 100%)', dark:true},
-  {id:'summer',     name:'Summer',      bg:'linear-gradient(145deg,#fffde0 0%,#fef9c3 40%,#fde68a 70%,#fbbf24 100%)', dark:false},
-  {id:'arctic',     name:'Arctic',      bg:'linear-gradient(145deg,#ecfeff 0%,#cffafe 40%,#a5f3fc 70%,#67e8f9 100%)', dark:false},
-  {id:'jungle',     name:'Jungle',      bg:'linear-gradient(145deg,#052e16 0%,#064e3b 40%,#065f46 70%,#047857 100%)', dark:true},
-  {id:'lagoon',     name:'Lagoon',      bg:'linear-gradient(145deg,#0c4a6e 0%,#0369a1 40%,#0284c7 70%,#38bdf8 100%)', dark:true},
-  {id:'fire',       name:'Fire',        bg:'linear-gradient(145deg,#450a0a 0%,#7f1d1d 30%,#b91c1c 60%,#ef4444 90%,#fbbf24 100%)', dark:true},
-  {id:'violet-storm',name:'V. Storm',   bg:'linear-gradient(145deg,#1e1b4b 0%,#312e81 40%,#4338ca 70%,#6366f1 100%)', dark:true},
-  {id:'ember',      name:'Ember',       bg:'linear-gradient(145deg,#1c0800 0%,#43100a 40%,#7c2d12 70%,#c2410c 100%)', dark:true},
-  {id:'northern-lights',name:'N. Lights',bg:'linear-gradient(145deg,#0a1f0a 0%,#063a2c 35%,#0a4a5e 65%,#1e1b4b 100%)', dark:true},
-  {id:'galaxy',     name:'Galaxy',      bg:'linear-gradient(145deg,#03001e 0%,#1a0533 35%,#0d0533 65%,#030014 100%)', dark:true},
-  {id:'bloom',      name:'Bloom',       bg:'linear-gradient(145deg,#fdf2f8 0%,#fce7f3 40%,#fbcfe8 70%,#f9a8d4 100%)', dark:false},
-  {id:'citrus',     name:'Citrus',      bg:'linear-gradient(145deg,#fefce8 0%,#fef9c3 40%,#fef08a 70%,#fdba74 100%)', dark:false},
-  {id:'storm',      name:'Storm',       bg:'linear-gradient(145deg,#0f1729 0%,#1a3356 55%,#243b55 100%)', dark:true},
-  {id:'nimbus',     name:'Nimbus',      bg:'linear-gradient(145deg,#0c1445 0%,#1a237e 55%,#283593 100%)', dark:true},
-  {id:'electric',   name:'Electric',    bg:'linear-gradient(145deg,#fffbeb 0%,#fef3c7 50%,#fefce8 100%)', dark:false},
-  {id:'thunder',    name:'Thunder',     bg:'linear-gradient(145deg,#18181b 0%,#27272a 55%,#3f3f46 100%)', dark:true},
-  {id:'cirrus',     name:'Cirrus',      bg:'linear-gradient(145deg,#e0f2fe 0%,#bae6fd 50%,#e0f2fe 100%)', dark:false},
-  {id:'dusk',       name:'Dusk',        bg:'linear-gradient(145deg,#1a1a2e 0%,#16213e 55%,#0f3460 100%)', dark:true},
-  {id:'rose-gold',  name:'Rose Gold',   bg:'linear-gradient(145deg,#fff1f1 0%,#ffe0e6 40%,#ffd0db 70%,#ffc0cc 100%)', dark:false},
-  {id:'forest-floor',name:'Forest Floor',bg:'linear-gradient(145deg,#1c2518 0%,#243320 55%,#2d4028 100%)', dark:true},
+  {id:'aurora',        name:'Aurora',         bg:'linear-gradient(145deg,#022c22 0%,#064e3b 35%,#065f46 65%,#0a4a5e 100%)', dark:true},
+  {id:'sunset',        name:'Sunset',         bg:'linear-gradient(145deg,#3b1a2c 0%,#7f1d41 35%,#c2410c 70%,#d97706 100%)', dark:true},
+  {id:'twilight',      name:'Twilight',       bg:'linear-gradient(145deg,#1e1b4b 0%,#3730a3 40%,#6d28d9 70%,#be185d 100%)', dark:true},
+  {id:'deepspace',     name:'Deep Space',     bg:'linear-gradient(145deg,#010409 0%,#030d1a 35%,#0a1628 65%,#0c0f2e 100%)', dark:true},
+  {id:'summer',        name:'Summer',         bg:'linear-gradient(145deg,#fffde0 0%,#fef9c3 40%,#fde68a 70%,#fbbf24 100%)', dark:false},
+  {id:'arctic',        name:'Arctic',         bg:'linear-gradient(145deg,#ecfeff 0%,#cffafe 40%,#a5f3fc 70%,#67e8f9 100%)', dark:false},
+  {id:'jungle',        name:'Jungle',         bg:'linear-gradient(145deg,#052e16 0%,#064e3b 40%,#065f46 70%,#047857 100%)', dark:true},
+  {id:'lagoon',        name:'Lagoon',         bg:'linear-gradient(145deg,#0c4a6e 0%,#0369a1 40%,#0284c7 70%,#38bdf8 100%)', dark:true},
+  {id:'fire',          name:'Fire',           bg:'linear-gradient(145deg,#450a0a 0%,#7f1d1d 30%,#b91c1c 60%,#ef4444 90%,#fbbf24 100%)', dark:true},
+  {id:'violet-storm',  name:'V. Storm',       bg:'linear-gradient(145deg,#1e1b4b 0%,#312e81 40%,#4338ca 70%,#6366f1 100%)', dark:true},
+  {id:'ember',         name:'Ember',          bg:'linear-gradient(145deg,#1c0800 0%,#43100a 40%,#7c2d12 70%,#c2410c 100%)', dark:true},
+  {id:'northern-lights',name:'N. Lights',    bg:'linear-gradient(145deg,#0a1f0a 0%,#063a2c 35%,#0a4a5e 65%,#1e1b4b 100%)', dark:true},
+  {id:'galaxy',        name:'Galaxy',         bg:'linear-gradient(145deg,#03001e 0%,#1a0533 35%,#0d0533 65%,#030014 100%)', dark:true},
+  {id:'bloom',         name:'Bloom',          bg:'linear-gradient(145deg,#fdf2f8 0%,#fce7f3 40%,#fbcfe8 70%,#f9a8d4 100%)', dark:false},
+  {id:'citrus',        name:'Citrus',         bg:'linear-gradient(145deg,#fefce8 0%,#fef9c3 40%,#fef08a 70%,#fdba74 100%)', dark:false},
+  {id:'rose-gold',     name:'Rose Gold',      bg:'linear-gradient(145deg,#fff1f1 0%,#ffe0e6 40%,#ffd0db 70%,#ffc0cc 100%)', dark:false},
+  {id:'forest-floor',  name:'Forest Floor',   bg:'linear-gradient(145deg,#1c2518 0%,#243320 55%,#2d4028 100%)', dark:true},
+  {id:'prism',         name:'Prism',          bg:'linear-gradient(145deg,#0f0030 0%,#220058 30%,#3c0070 65%,#180050 100%)', dark:true},
+  {id:'vapor',         name:'Vapor',          bg:'linear-gradient(145deg,#18002c 0%,#2a0055 35%,#4a0888 65%,#1a0840 100%)', dark:true},
+  {id:'mango-glow',    name:'Mango',          bg:'linear-gradient(145deg,#fffbe8 0%,#fff3c4 40%,#ffd870 70%,#ffb020 100%)', dark:false},
+  {id:'midnight-ocean',name:'M. Ocean',       bg:'linear-gradient(145deg,#000528 0%,#001a55 35%,#004e92 70%,#000428 100%)', dark:true},
+  {id:'magma',         name:'Magma',          bg:'linear-gradient(145deg,#1a0000 0%,#3d0000 35%,#7a1500 65%,#c45000 100%)', dark:true},
+  {id:'royal-purple',  name:'Royal',          bg:'linear-gradient(145deg,#0a0030 0%,#160055 40%,#2200a0 70%,#3000c8 100%)', dark:true},
+  {id:'deep-teal',     name:'Deep Teal',      bg:'linear-gradient(145deg,#002028 0%,#004050 35%,#006070 65%,#008090 100%)', dark:true},
+  {id:'spring',        name:'Spring',         bg:'linear-gradient(145deg,#f0ffe8 0%,#d4f7b8 40%,#a8ef80 70%,#7be048 100%)', dark:false},
+  {id:'arctic-dawn',   name:'Arctic Dawn',    bg:'linear-gradient(145deg,#c8f0ff 0%,#92d8f8 40%,#58b8e8 70%,#2898d8 100%)', dark:false},
+  {id:'amethyst',      name:'Amethyst',       bg:'linear-gradient(145deg,#160030 0%,#2c0055 35%,#3e0070 65%,#4a0088 100%)', dark:true},
+  {id:'deep-rose',     name:'Deep Rose',      bg:'linear-gradient(145deg,#1e0016 0%,#3a0030 35%,#5a0050 65%,#780060 100%)', dark:true},
+  {id:'peach-glow',    name:'Peach Glow',     bg:'linear-gradient(145deg,#fff0e8 0%,#ffe0c8 40%,#ffc8a0 70%,#ffb080 100%)', dark:false},
+  {id:'forest-night',  name:'Forest Night',   bg:'linear-gradient(145deg,#051a10 0%,#0a2e1c 40%,#0f3c26 70%,#134c30 100%)', dark:true},
+  // ── Cloud Classics ──
+  {id:'storm',         name:'Storm',          bg:'linear-gradient(145deg,#0f1729 0%,#1a3356 55%,#243b55 100%)', dark:true},
+  {id:'nimbus',        name:'Nimbus',         bg:'linear-gradient(145deg,#0c1445 0%,#1a237e 55%,#283593 100%)', dark:true},
+  {id:'electric',      name:'Electric',       bg:'linear-gradient(145deg,#fffbeb 0%,#fef3c7 50%,#fefce8 100%)', dark:false},
+  {id:'thunder',       name:'Thunder',        bg:'linear-gradient(145deg,#18181b 0%,#27272a 55%,#3f3f46 100%)', dark:true},
+  {id:'cirrus',        name:'Cirrus',         bg:'linear-gradient(145deg,#e0f2fe 0%,#bae6fd 50%,#e0f2fe 100%)', dark:false},
+  {id:'dusk',          name:'Dusk',           bg:'linear-gradient(145deg,#1a1a2e 0%,#16213e 55%,#0f3460 100%)', dark:true},
+  {id:'overcast',      name:'Overcast',       bg:'linear-gradient(145deg,#9ca3af 0%,#d1d5db 55%,#e5e7eb 100%)', dark:false},
+  {id:'haze',          name:'Haze',           bg:'linear-gradient(145deg,#c0c9d8 0%,#d8e0ea 55%,#eaeef4 100%)', dark:false},
+  {id:'squall',        name:'Squall',         bg:'linear-gradient(145deg,#1c2440 0%,#2a3458 55%,#3a4670 100%)', dark:true},
+  {id:'altitude',      name:'Altitude',       bg:'linear-gradient(145deg,#f0f6ff 0%,#e0eeff 55%,#cce0ff 100%)', dark:false},
+  // ── Vintage & Warm ──
+  {id:'sepia',         name:'Sepia',          bg:'linear-gradient(145deg,#2a1e0a 0%,#3d2c14 55%,#4e3920 100%)', dark:true},
+  {id:'warm-stone',    name:'Warm Stone',     bg:'linear-gradient(145deg,#f5ede0 0%,#ecdbc4 55%,#e0c9a8 100%)', dark:false},
+  {id:'terracotta-bg', name:'Terracotta',     bg:'linear-gradient(145deg,#1c0e08 0%,#341610 55%,#4a1e16 100%)', dark:true},
+  {id:'parchment',     name:'Parchment',      bg:'linear-gradient(145deg,#faf5e4 0%,#f5edd0 55%,#eee3bc 100%)', dark:false},
+  {id:'antique',       name:'Antique',        bg:'linear-gradient(145deg,#f0e8d0 0%,#e8dac0 55%,#dccaaa 100%)', dark:false},
+  {id:'washed-denim',  name:'Washed Denim',   bg:'linear-gradient(145deg,#c8d8e8 0%,#b8c8d8 55%,#a8b8c8 100%)', dark:false},
+  {id:'dusty-rose',    name:'Dusty Rose',     bg:'linear-gradient(145deg,#f0dcd8 0%,#e8cac6 55%,#ddb8b4 100%)', dark:false},
+  {id:'harvest',       name:'Harvest',        bg:'linear-gradient(145deg,#1e1000 0%,#342000 55%,#4a3000 100%)', dark:true},
+  {id:'cedar',         name:'Cedar',          bg:'linear-gradient(145deg,#1a0e08 0%,#2e1a10 55%,#3e2618 100%)', dark:true},
+  {id:'tobacco',       name:'Tobacco',        bg:'linear-gradient(145deg,#241408 0%,#382210 55%,#4a3018 100%)', dark:true},
+  {id:'wheat',         name:'Wheat',          bg:'linear-gradient(145deg,#fef8ec 0%,#faf0d4 55%,#f5e6bc 100%)', dark:false},
+  {id:'clay',          name:'Clay',           bg:'linear-gradient(145deg,#1e1208 0%,#32200e 55%,#442e14 100%)', dark:true},
+  {id:'bourbon',       name:'Bourbon',        bg:'linear-gradient(145deg,#1c0e00 0%,#301800 55%,#402400 100%)', dark:true},
+  {id:'sand-dune',     name:'Sand Dune',      bg:'linear-gradient(145deg,#f0e8d0 0%,#e8d8b8 55%,#dcc89e 100%)', dark:false},
+  {id:'amber-cream',   name:'Amber Cream',    bg:'linear-gradient(145deg,#fffaee 0%,#fef5d8 55%,#fce8b8 100%)', dark:false},
 ];
 
 // ─── Accent Colors (50+) — the highlight color on the card ──────────────────
 const CARD_ACCENT_COLORS = [
   // Blues
-  {id:'sky',        name:'Sky',         hex:'#38BDF8'},
-  {id:'blue',       name:'Blue',        hex:'#3B82F6'},
-  {id:'cobalt-ac',  name:'Cobalt',      hex:'#2563EB'},
-  {id:'sapphire',   name:'Sapphire',    hex:'#1D4ED8'},
-  {id:'navy',       name:'Navy',        hex:'#1E40AF'},
-  {id:'ice',        name:'Ice',         hex:'#BAE6FD'},
-  {id:'periwinkle', name:'Periwinkle',  hex:'#818CF8'},
-  {id:'cerulean',   name:'Cerulean',    hex:'#06B6D4'},
-  {id:'steel',      name:'Steel',       hex:'#7B9FD4'},
-  {id:'powder',     name:'Powder',      hex:'#93C5FD'},
+  {id:'sky',          name:'Sky',          hex:'#38BDF8'},
+  {id:'blue',         name:'Blue',         hex:'#3B82F6'},
+  {id:'cobalt-ac',    name:'Cobalt',       hex:'#2563EB'},
+  {id:'sapphire',     name:'Sapphire',     hex:'#1D4ED8'},
+  {id:'navy',         name:'Navy',         hex:'#1E40AF'},
+  {id:'ice',          name:'Ice',          hex:'#BAE6FD'},
+  {id:'periwinkle',   name:'Periwinkle',   hex:'#818CF8'},
+  {id:'cerulean',     name:'Cerulean',     hex:'#06B6D4'},
+  {id:'steel',        name:'Steel',        hex:'#7B9FD4'},
+  {id:'powder',       name:'Powder',       hex:'#93C5FD'},
+  {id:'azure',        name:'Azure',        hex:'#0EA5E9'},
+  {id:'denim-ac',     name:'Denim',        hex:'#3B5E9E'},
+  {id:'ocean-ac',     name:'Ocean',        hex:'#0369A1'},
+  {id:'cobalt-light', name:'Cobalt Lt',    hex:'#60A5FA'},
+  {id:'powder-deep',  name:'Powder Deep',  hex:'#7DD3FC'},
   // Purples
-  {id:'violet',     name:'Violet',      hex:'#7C3AED'},
-  {id:'purple',     name:'Purple',      hex:'#9333EA'},
-  {id:'lavender',   name:'Lavender',    hex:'#A78BFA'},
-  {id:'indigo',     name:'Indigo',      hex:'#6366F1'},
-  {id:'grape',      name:'Grape',       hex:'#6D28D9'},
-  {id:'mauve',      name:'Mauve',       hex:'#C084FC'},
-  {id:'lilac',      name:'Lilac',       hex:'#DDD6FE'},
-  {id:'heather',    name:'Heather',     hex:'#8B5CF6'},
+  {id:'violet',       name:'Violet',       hex:'#7C3AED'},
+  {id:'purple',       name:'Purple',       hex:'#9333EA'},
+  {id:'lavender',     name:'Lavender',     hex:'#A78BFA'},
+  {id:'indigo',       name:'Indigo',       hex:'#6366F1'},
+  {id:'grape',        name:'Grape',        hex:'#6D28D9'},
+  {id:'mauve',        name:'Mauve',        hex:'#C084FC'},
+  {id:'lilac',        name:'Lilac',        hex:'#DDD6FE'},
+  {id:'heather',      name:'Heather',      hex:'#8B5CF6'},
+  {id:'amethyst-ac',  name:'Amethyst',     hex:'#7C2D92'},
+  {id:'byzantium',    name:'Byzantium',    hex:'#5C2D91'},
+  {id:'wisteria',     name:'Wisteria',     hex:'#BFA2DB'},
+  {id:'aubergine-ac', name:'Aubergine',    hex:'#4B0082'},
+  {id:'orchid-ac',    name:'Orchid',       hex:'#DA70D6'},
   // Pinks & Reds
-  {id:'hot-pink',   name:'Hot Pink',    hex:'#EC4899'},
-  {id:'rose-ac',    name:'Rose',        hex:'#F43F5E'},
-  {id:'crimson-ac', name:'Crimson',     hex:'#DC2626'},
-  {id:'coral',      name:'Coral',       hex:'#FB7185'},
-  {id:'blush-ac',   name:'Blush',       hex:'#FDA4AF'},
-  {id:'magenta',    name:'Magenta',     hex:'#D946EF'},
-  {id:'scarlet',    name:'Scarlet',     hex:'#EF4444'},
-  {id:'flamingo',   name:'Flamingo',    hex:'#FF6B9D'},
-  {id:'salmon',     name:'Salmon',      hex:'#FA8072'},
-  {id:'ruby',       name:'Ruby',        hex:'#BE123C'},
+  {id:'hot-pink',     name:'Hot Pink',     hex:'#EC4899'},
+  {id:'rose-ac',      name:'Rose',         hex:'#F43F5E'},
+  {id:'crimson-ac',   name:'Crimson',      hex:'#DC2626'},
+  {id:'coral',        name:'Coral',        hex:'#FB7185'},
+  {id:'blush-ac',     name:'Blush',        hex:'#FDA4AF'},
+  {id:'magenta',      name:'Magenta',      hex:'#D946EF'},
+  {id:'scarlet',      name:'Scarlet',      hex:'#EF4444'},
+  {id:'flamingo',     name:'Flamingo',     hex:'#FF6B9D'},
+  {id:'salmon',       name:'Salmon',       hex:'#FA8072'},
+  {id:'ruby',         name:'Ruby',         hex:'#BE123C'},
+  {id:'candy',        name:'Candy',        hex:'#FF69B4'},
+  {id:'cherry-ac',    name:'Cherry',       hex:'#C0392B'},
+  {id:'bubblegum',    name:'Bubblegum',    hex:'#FF85C0'},
+  {id:'cerise',       name:'Cerise',       hex:'#DE3163'},
+  {id:'carnation',    name:'Carnation',    hex:'#FFA0B4'},
   // Oranges & Yellows
-  {id:'amber',      name:'Amber',       hex:'#FBBF24'},
-  {id:'gold',       name:'Gold',        hex:'#F59E0B'},
-  {id:'tangerine',  name:'Tangerine',   hex:'#F97316'},
-  {id:'peach',      name:'Peach',       hex:'#FED7AA'},
-  {id:'copper-ac',  name:'Copper',      hex:'#B45309'},
-  {id:'honey',      name:'Honey',       hex:'#FDE68A'},
-  {id:'sunshine',   name:'Sunshine',    hex:'#EAB308'},
-  {id:'butter',     name:'Butter',      hex:'#FEF08A'},
-  {id:'saffron',    name:'Saffron',     hex:'#CA8A04'},
+  {id:'amber',        name:'Amber',        hex:'#FBBF24'},
+  {id:'gold',         name:'Gold',         hex:'#F59E0B'},
+  {id:'tangerine',    name:'Tangerine',    hex:'#F97316'},
+  {id:'peach',        name:'Peach',        hex:'#FED7AA'},
+  {id:'copper-ac',    name:'Copper',       hex:'#B45309'},
+  {id:'honey',        name:'Honey',        hex:'#FDE68A'},
+  {id:'sunshine',     name:'Sunshine',     hex:'#EAB308'},
+  {id:'butter',       name:'Butter',       hex:'#FEF08A'},
+  {id:'saffron',      name:'Saffron',      hex:'#CA8A04'},
+  {id:'apricot',      name:'Apricot',      hex:'#FFAD60'},
+  {id:'mustard',      name:'Mustard',      hex:'#D4A017'},
+  {id:'burnt-orange', name:'Burnt Org',    hex:'#CC5500'},
+  {id:'lemon',        name:'Lemon',        hex:'#FFF44F'},
+  {id:'goldenrod',    name:'Goldenrod',    hex:'#DAA520'},
   // Greens
-  {id:'emerald',    name:'Emerald',     hex:'#10B981'},
-  {id:'mint',       name:'Mint',        hex:'#6EE7B7'},
-  {id:'jade-ac',    name:'Jade',        hex:'#059669'},
-  {id:'sage-ac',    name:'Sage',        hex:'#84CC16'},
-  {id:'lime',       name:'Lime',        hex:'#A3E635'},
-  {id:'teal',       name:'Teal',        hex:'#14B8A6'},
-  {id:'seafoam',    name:'Seafoam',     hex:'#5EEAD4'},
-  {id:'moss',       name:'Moss',        hex:'#4D7C0F'},
-  {id:'forest-ac',  name:'Forest',      hex:'#166534'},
-  {id:'olive',      name:'Olive',       hex:'#65A30D'},
+  {id:'emerald',      name:'Emerald',      hex:'#10B981'},
+  {id:'mint',         name:'Mint',         hex:'#6EE7B7'},
+  {id:'jade-ac',      name:'Jade',         hex:'#059669'},
+  {id:'sage-ac',      name:'Sage',         hex:'#84CC16'},
+  {id:'lime',         name:'Lime',         hex:'#A3E635'},
+  {id:'teal',         name:'Teal',         hex:'#14B8A6'},
+  {id:'seafoam',      name:'Seafoam',      hex:'#5EEAD4'},
+  {id:'moss',         name:'Moss',         hex:'#4D7C0F'},
+  {id:'forest-ac',    name:'Forest',       hex:'#166534'},
+  {id:'olive',        name:'Olive',        hex:'#65A30D'},
+  {id:'lime-green',   name:'Lime Grn',     hex:'#32CD32'},
+  {id:'pine-green',   name:'Pine',         hex:'#01796F'},
+  {id:'viridian',     name:'Viridian',     hex:'#40826D'},
+  {id:'sage-green',   name:'Sage Grn',     hex:'#8FBC8F'},
+  {id:'hunter',       name:'Hunter',       hex:'#355E3B'},
+  // Warm Tones
+  {id:'terracotta',   name:'Terracotta',   hex:'#CC4E2A'},
+  {id:'brick',        name:'Brick',        hex:'#B5451B'},
+  {id:'rust',         name:'Rust',         hex:'#B7410E'},
+  {id:'bronze',       name:'Bronze',       hex:'#CD7F32'},
+  {id:'hazel',        name:'Hazel',        hex:'#8E7455'},
+  {id:'maple',        name:'Maple',        hex:'#D4723A'},
+  {id:'cinnamon',     name:'Cinnamon',     hex:'#D2691E'},
+  // Cool Tones
+  {id:'slate-blue-ac',name:'Slate Blue',   hex:'#6A7FDB'},
+  {id:'arctic-ac',    name:'Arctic',       hex:'#B2E0F0'},
+  {id:'powder-blue',  name:'Powder Blue',  hex:'#B0D8E8'},
+  {id:'muted-teal',   name:'Muted Teal',   hex:'#5F9EA0'},
+  {id:'seafoam-deep', name:'Seafoam Dp',   hex:'#3CB371'},
+  {id:'mint-fresh',   name:'Mint Fresh',   hex:'#98FF98'},
+  {id:'glacier',      name:'Glacier',      hex:'#72A0C1'},
   // Neutrals & Metallics
-  {id:'white',      name:'White',       hex:'#FFFFFF'},
-  {id:'silver',     name:'Silver',      hex:'#CBD5E1'},
-  {id:'platinum',   name:'Platinum',    hex:'#E2E8F0'},
-  {id:'champagne',  name:'Champagne',   hex:'#FAF0E6'},
-  {id:'sand',       name:'Sand',        hex:'#D4B896'},
-  {id:'slate-ac',   name:'Slate',       hex:'#94A3B8'},
+  {id:'white',        name:'White',        hex:'#FFFFFF'},
+  {id:'silver',       name:'Silver',       hex:'#CBD5E1'},
+  {id:'platinum',     name:'Platinum',     hex:'#E2E8F0'},
+  {id:'champagne',    name:'Champagne',    hex:'#FAF0E6'},
+  {id:'sand',         name:'Sand',         hex:'#D4B896'},
+  {id:'slate-ac',     name:'Slate',        hex:'#94A3B8'},
+  {id:'warm-white',   name:'Warm White',   hex:'#FFF8F0'},
+  {id:'oyster',       name:'Oyster',       hex:'#EDE0D4'},
+  {id:'stone',        name:'Stone',        hex:'#C2B280'},
+  {id:'pewter',       name:'Pewter',       hex:'#96A0A8'},
+  {id:'graphite-ac',  name:'Graphite',     hex:'#707880'},
+  // Metallics
+  {id:'gold-foil',    name:'Gold Foil',    hex:'#FFD700'},
+  {id:'rose-gold-ac', name:'Rose Gold',    hex:'#E8A09A'},
+  {id:'neon-cyan',    name:'Neon Cyan',    hex:'#00FFFF'},
 ];
 
 // ─── Legacy CARD_THEMES (kept for backward compat) ──────────────────────────
@@ -3250,6 +3352,14 @@ const CARD_PATTERNS={
   rings:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="1" fill="none">${Array.from({length:13},(_,i)=>`<ellipse cx="200" cy="125" rx="${(i+1)*30}" ry="${(i+1)*19}"/>`).join('')}</g></svg>`,
   sunburst:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="0.9" fill="none">${Array.from({length:44},(_,i)=>{const a=(i/44)*Math.PI*0.92-Math.PI*0.02;return `<line x1="0" y1="250" x2="${(Math.cos(a)*620).toFixed(1)}" y2="${(250+Math.sin(a)*620).toFixed(1)}"/>`;}).join('')}</g></svg>`,
   linen:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" fill="none">${Array.from({length:51},(_,i)=>`<line x1="${i*8}" y1="0" x2="${i*8}" y2="250" stroke-width="${i%2===0?0.9:0.32}"/>`).join('')}${Array.from({length:32},(_,i)=>`<line x1="0" y1="${i*8}" x2="400" y2="${i*8}" stroke-width="${i%2===0?0.32:0.9}"/>`).join('')}</g></svg>`,
+  dots:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor">${Array.from({length:260},(_,i)=>{const col=i%20,row=Math.floor(i/20),x=col*21+10,y=row*21+10;return `<circle cx="${x}" cy="${y}" r="1.6"/>`;}).join('')}</g></svg>`,
+  diagonal:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="0.75">${Array.from({length:76},(_,i)=>{const o=i*8-220;return `<line x1="${400-o}" y1="0" x2="${90-o}" y2="250"/>`;}).join('')}</g></svg>`,
+  zigzag:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="1.2" fill="none">${Array.from({length:14},(_,i)=>{const y=i*20;const pts=Array.from({length:28},(_,j)=>`${j*16},${y+(j%2===0?0:10)}`).join(' ');return `<polyline points="${pts}"/>`;}).join('')}</g></svg>`,
+  grid:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="0.5" fill="none">${Array.from({length:21},(_,i)=>`<line x1="${i*20}" y1="0" x2="${i*20}" y2="250"/>`).join('')}${Array.from({length:13},(_,i)=>`<line x1="0" y1="${i*21}" x2="400" y2="${i*21}"/>`).join('')}</g></svg>`,
+  triangles:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="0.8" fill="none">${(()=>{const W=32,H=28,out=[];for(let r=0;r<12;r++){for(let c=0;c<16;c++){const x=c*W+(r%2?W/2:0),y=r*H;out.push(`<polygon points="${x},${y+H} ${x+W/2},${y} ${x+W},${y+H}"/>`);}}return out.join('');})()}</g></svg>`,
+  dashes:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="1.1" stroke-linecap="round">${Array.from({length:200},(_,i)=>{const col=i%20,row=Math.floor(i/20),x=col*22+(row%2?11:0),y=row*14+7;return `<line x1="${x}" y1="${y}" x2="${x+10}" y2="${y}"/>`;}).join('')}</g></svg>`,
+  petals:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="0.9" fill="none">${(()=>{const out=[];for(let r=0;r<8;r++){for(let c=0;c<14;c++){const x=c*30+(r%2?15:0),y=r*32;out.push(`<ellipse cx="${x}" cy="${y}" rx="8" ry="14" transform="rotate(0 ${x} ${y})"/>`);out.push(`<ellipse cx="${x}" cy="${y}" rx="8" ry="14" transform="rotate(60 ${x} ${y})"/>`);out.push(`<ellipse cx="${x}" cy="${y}" rx="8" ry="14" transform="rotate(120 ${x} ${y})"/>`);}}return out.join('');})()}</g></svg>`,
+  cobweb:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="0.7" fill="none">${Array.from({length:12},(_,i)=>{const a=i*(Math.PI*2/12),x2=(200+Math.cos(a)*280).toFixed(1),y2=(125+Math.sin(a)*200).toFixed(1);return `<line x1="200" y1="125" x2="${x2}" y2="${y2}"/>`;}).join('')}${[40,80,120,160].map(r=>`<ellipse cx="200" cy="125" rx="${r*1.4}" ry="${r}"/>`).join('')}</g></svg>`,
 };
 
 const LONDON_AREAS=['Shoreditch','Dalston','Hackney','Peckham','Brixton','Clapham','Soho','Fitzrovia','Islington','Bethnal Green','Bermondsey','Borough','Vauxhall','Battersea','Chelsea','Fulham','Hammersmith','Notting Hill','Kensington','Camden','Kentish Town','Holloway','Crouch End','Stoke Newington','Wood Green','Tottenham','Stratford','Bow','Canary Wharf','Greenwich','Lewisham','New Cross','Crystal Palace','Dulwich','Herne Hill','Tooting','Wimbledon','Richmond','Kingston','Putney','Wandsworth','Balham','Elephant & Castle','Southwark','Wapping','Mayfair','Marylebone','King\'s Cross','Angel','Farringdon','Barbican','Clerkenwell','Whitechapel','Bethnal Green','Stepney','Mile End','Walthamstow','Leyton'];
@@ -3286,10 +3396,10 @@ const BLOT_SVG=`<svg class="blot-icon" viewBox="0 0 20 20" xmlns="http://www.w3.
 const EMAIL_PATTERN=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 let state={view:'browse',selectedEventId:null,selectedCategory:'all',calendarDay:null,
-  userId:null,          // Supabase UUID — set after upsert on login
+  userId:null,
   profileName:'',profileEmail:'',profileId:null,specialBadges:[],theme:'light',
-  editingProfile:false,myCard:null,rsvps:{},attendeeCards:{},chats:{},friends:[],friendsOnly:false,goingOpen:{}};
-let cardDraft={theme:'midnight',bgStyle:'midnight',accentColor:'#60A5FA',pattern:'lines',patternOpacity:0.18,bio:'',interests:'',fact:'',motto:'',photo:'',areas:[]};
+  editingProfile:false,myCard:null,rsvps:{},attendeeCards:{},chats:{},friends:[],friendsOnly:false,goingOpen:{},liveOnly:false,hotOnly:false};
+let cardDraft={theme:'midnight',bgStyle:'midnight',accentColor:'#60A5FA',pattern:'constellation',patternOpacity:0.35,bio:'',interests:'',fact:'',motto:'',photo:'',areas:[]};
 let cardEditorEventId=null;
 let lmap=null,lmapFitted=false;
 let hostMap=null,hostMarker=null;
@@ -3864,10 +3974,10 @@ function openCardEditor(eventId){
   try{ savedPhoto=localStorage.getItem('card_photo:'+state.profileName)||''; }catch(e){}
   const savedBg=ext.bgStyle||ex?.theme||'midnight';
   const savedAccent=ext.accentColor||ex?.accentColor||'#60A5FA';
-  const savedOpacity=ext.patternOpacity!=null?ext.patternOpacity:0.18;
+  const savedOpacity=ext.patternOpacity!=null?ext.patternOpacity:0.35;
   cardDraft=ex
     ?{theme:savedBg,bgStyle:savedBg,accentColor:savedAccent,pattern:ext.pattern||'lightning',patternOpacity:savedOpacity,bio:ex.bio||'',interests:ex.interests||'',fact:ex.fact||'',motto:ext.motto||'',photo:savedPhoto,areas:ext.areas||[]}
-    :{theme:'midnight',bgStyle:'midnight',accentColor:'#60A5FA',pattern:'lines',patternOpacity:0.18,bio:'',interests:'',fact:'',motto:'',photo:savedPhoto,areas:ext.areas||[]};
+    :{theme:'midnight',bgStyle:'midnight',accentColor:'#60A5FA',pattern:'constellation',patternOpacity:0.35,bio:'',interests:'',fact:'',motto:'',photo:savedPhoto,areas:ext.areas||[]};
   renderCardEditor();
 }
 function captureDraftFields(){
@@ -3989,12 +4099,15 @@ function renderCardEditor(){
 
   // Build color swatch grid by color family
   const colorFamilies=[
-    {label:'Blues',     ids:['sky','blue','cobalt-ac','sapphire','navy','ice','periwinkle','cerulean','steel','powder']},
-    {label:'Purples',   ids:['violet','purple','lavender','indigo','grape','mauve','lilac','heather']},
-    {label:'Pinks & Reds', ids:['hot-pink','rose-ac','crimson-ac','coral','blush-ac','magenta','scarlet','flamingo','salmon','ruby']},
-    {label:'Oranges & Yellows', ids:['amber','gold','tangerine','peach','copper-ac','honey','sunshine','butter','saffron']},
-    {label:'Greens',    ids:['emerald','mint','jade-ac','sage-ac','lime','teal','seafoam','moss','forest-ac','olive']},
-    {label:'Neutrals',  ids:['white','silver','platinum','champagne','sand','slate-ac']},
+    {label:'Blues',           ids:['sky','blue','cobalt-ac','sapphire','navy','ice','periwinkle','cerulean','steel','powder','azure','denim-ac','ocean-ac','cobalt-light','powder-deep']},
+    {label:'Purples',         ids:['violet','purple','lavender','indigo','grape','mauve','lilac','heather','amethyst-ac','byzantium','wisteria','aubergine-ac','orchid-ac']},
+    {label:'Pinks & Reds',    ids:['hot-pink','rose-ac','crimson-ac','coral','blush-ac','magenta','scarlet','flamingo','salmon','ruby','candy','cherry-ac','bubblegum','cerise','carnation']},
+    {label:'Oranges & Yellows',ids:['amber','gold','tangerine','peach','copper-ac','honey','sunshine','butter','saffron','apricot','mustard','burnt-orange','lemon','goldenrod']},
+    {label:'Greens',          ids:['emerald','mint','jade-ac','sage-ac','lime','teal','seafoam','moss','forest-ac','olive','lime-green','pine-green','viridian','sage-green','hunter']},
+    {label:'Warm Tones',      ids:['terracotta','brick','rust','bronze','hazel','maple','cinnamon']},
+    {label:'Cool Tones',      ids:['slate-blue-ac','arctic-ac','powder-blue','muted-teal','seafoam-deep','mint-fresh','glacier']},
+    {label:'Neutrals',        ids:['white','silver','platinum','champagne','sand','slate-ac','warm-white','oyster','stone','pewter','graphite-ac']},
+    {label:'Metallics',       ids:['gold-foil','rose-gold-ac','neon-cyan']},
   ];
   const colorSwatchesHtml=colorFamilies.map(fam=>`
     <div class="cc-family-label">${fam.label}</div>
@@ -4012,11 +4125,12 @@ function renderCardEditor(){
 
   // Build background style grid
   const styleFamilies=[
-    {label:'Dark Tones',  ids:['midnight','obsidian','charcoal','slate','ink','abyss','noir','volcanic','cosmos','carbon']},
-    {label:'Light Tones', ids:['cloud','pearl','cream','cotton','frost','linen','chalk','mist','blush','sage-light']},
-    {label:'Rich & Deep', ids:['ocean','forest','cherry','cobalt','jade','amber-dark','plum','crimson','denim','copper-bg']},
-    {label:'Gradient Moods', ids:['aurora','sunset','twilight','deepspace','summer','arctic','jungle','lagoon','fire','violet-storm','ember','northern-lights','galaxy','bloom','citrus','rose-gold','forest-floor']},
-    {label:'Cloud Classics', ids:['storm','nimbus','electric','thunder','cirrus','dusk']},
+    {label:'Dark Tones',    ids:['midnight','obsidian','charcoal','slate','ink','abyss','noir','volcanic','cosmos','carbon','graphite','pitch','nightfall','anthracite','void']},
+    {label:'Light Tones',   ids:['cloud','pearl','cream','cotton','frost','linen-bg','chalk','mist','blush','sage-light','snow','ivory','eggshell','lilac-mist','peach-mist']},
+    {label:'Rich & Deep',   ids:['ocean','forest','cherry','cobalt','jade','amber-dark','plum','crimson','denim','copper-bg','burgundy','pine','aubergine','mahogany','steel-dark']},
+    {label:'Gradient Moods',ids:['aurora','sunset','twilight','deepspace','summer','arctic','jungle','lagoon','fire','violet-storm','ember','northern-lights','galaxy','bloom','citrus','rose-gold','forest-floor','prism','vapor','mango-glow','midnight-ocean','magma','royal-purple','deep-teal','spring','arctic-dawn','amethyst','deep-rose','peach-glow','forest-night']},
+    {label:'Cloud Classics',ids:['storm','nimbus','electric','thunder','cirrus','dusk','overcast','haze','squall','altitude']},
+    {label:'Vintage & Warm',ids:['sepia','warm-stone','terracotta-bg','parchment','antique','washed-denim','dusty-rose','harvest','cedar','tobacco','wheat','clay','bourbon','sand-dune','amber-cream']},
   ];
   const styleGridHtml=styleFamilies.map(fam=>`
     <div class="cc-family-label">${fam.label}</div>
@@ -4039,9 +4153,15 @@ function renderCardEditor(){
     {id:'none',          label:'✕  None'},
     {id:'lines',         label:'// Lines'},
     {id:'mesh',          label:'⊞ Mesh'},
+    {id:'dots',          label:'· Dots'},
+    {id:'grid',          label:'⊟ Grid'},
+    {id:'diagonal',      label:'⟋ Diagonal'},
+    {id:'zigzag',        label:'⟨⟩ Zigzag'},
+    {id:'dashes',        label:'— Dashes'},
     {id:'halftone',      label:'⠿ Halftone'},
     {id:'hexgrid',       label:'⬡ Hex'},
     {id:'topo',          label:'⌇ Topo'},
+    {id:'triangles',     label:'△ Triangles'},
     {id:'constellation', label:'✦ Stars'},
     {id:'blueprint',     label:'⊕ Blueprint'},
     {id:'waves',         label:'∿ Waves'},
@@ -4051,20 +4171,12 @@ function renderCardEditor(){
     {id:'plus',          label:'+ Plus'},
     {id:'rings',         label:'◎ Rings'},
     {id:'sunburst',      label:'☀ Rays'},
+    {id:'petals',        label:'❀ Petals'},
+    {id:'cobweb',        label:'⊙ Cobweb'},
     {id:'linen',         label:'▦ Weave'},
   ];
-  const opacityPct=Math.round((cardDraft.patternOpacity||0.18)*100);
   const patternTabHtml=`<div class="cc-pattern-grid">
     ${patternOptions.map(p=>`<button class="cc-pattern-btn${cardDraft.pattern===p.id?' active':''}" data-pat="${p.id}" onclick="selectCardPattern('${p.id}')">${p.label}</button>`).join('')}
-  </div>
-  <div style="margin-top:22px;">
-    <div class="ce-section-label" style="margin-bottom:10px;">Intensity <span id="ce-opacity-val" class="ce-optional">${opacityPct}%</span></div>
-    <div style="display:flex;align-items:center;gap:12px;">
-      <span style="font-size:11px;color:var(--text-muted);">Subtle</span>
-      <input type="range" min="0.02" max="0.85" step="0.01" value="${cardDraft.patternOpacity||0.18}"
-        style="flex:1;accent-color:var(--accent);" oninput="setPatternOpacity(this.value)"/>
-      <span style="font-size:11px;color:var(--text-muted);">Bold</span>
-    </div>
   </div>`;
 
   const areaPillsHtml=LONDON_AREAS.map(a=>{
@@ -4074,7 +4186,7 @@ function renderCardEditor(){
   }).join('');
 
   const liveCardHtml=`<div class="ce-live-card" id="ce-live-card" style="background:${t.bg};border-color:${t.border};">
-    <div class="ce-pattern" id="ce-pattern" style="color:${t.accent};opacity:${cardDraft.patternOpacity||0.18};">${CARD_PATTERNS[cardDraft.pattern]||''}</div>
+    <div class="ce-pattern" id="ce-pattern" style="color:${t.accent};opacity:${cardDraft.patternOpacity||0.35};">${CARD_PATTERNS[cardDraft.pattern]||''}</div>
     ${cardDraft.photo?`<img src="${cardDraft.photo}" id="ce-preview-photo" style="position:absolute;top:0;right:0;width:56px;height:56px;object-fit:cover;border-radius:0 6px 0 10px;border-left:1.5px solid ${t.accent};border-bottom:1.5px solid ${t.accent};z-index:3;" alt=""/>`:
       `<div id="ce-preview-photo"></div>`}
     <div class="ce-card-shine"></div>
@@ -4128,7 +4240,15 @@ function renderCardEditor(){
                 <div class="ce-photo-inline-lbl">Add photo</div>`}
           </div>
         </div>
-        <div class="ce-card-hint">Colour × background × pattern mix freely</div>
+        <div class="ce-card-hint">Background · colour · pattern — live preview</div>
+        <div class="ce-intensity-bar">
+          <span class="ce-intensity-label">Pattern</span>
+          <input type="range" id="ce-opacity-global" min="0.02" max="0.85" step="0.01"
+            value="${cardDraft.patternOpacity||0.35}"
+            style="flex:1;accent-color:var(--accent);cursor:pointer;"
+            oninput="setPatternOpacity(this.value)"/>
+          <span class="ce-intensity-pct" id="ce-opacity-val">${Math.round((cardDraft.patternOpacity||0.35)*100)}%</span>
+        </div>
         <div class="ce-left-actions">
           <button class="btn" style="flex:1;" onclick="saveCard()">Save card</button>
           ${allowSkip
@@ -5037,8 +5157,12 @@ function getFilteredEvents(){
     return hasLocation&&mc&&mq;
   });
   if(state.friendsOnly) list=list.filter(ev=>attendeesFor(ev.id).some(isFriend));
+  if(state.liveOnly) list=list.filter(ev=>eventStatus(ev)==='live');
+  if(state.hotOnly) list=list.filter(ev=>isHotEvent(ev));
   return list;
 }
+function toggleLiveOnly(){ state.liveOnly=!state.liveOnly; if(state.liveOnly) state.hotOnly=false; renderView(); }
+function toggleHotOnly(){ state.hotOnly=!state.hotOnly; if(state.hotOnly) state.liveOnly=false; renderView(); }
 function toggleFriendsOnly(){
   state.friendsOnly=!state.friendsOnly;
   if(state.friendsOnly){ const any=EVENTS.some(ev=>attendeesFor(ev.id).some(isFriend)); if(!any) showToast("No friends going to events yet. Add friends in the Social tab."); }
@@ -5050,6 +5174,8 @@ function refreshFilters(){
   let html=`<button class="mchip ${aa?'active':''}" style="${aa?'background:var(--accent);color:#fff;border-color:transparent;':''}" onclick="setCategory('all')">All</button>`;
   html+=Object.entries(CATS).map(([cat,c])=>{ const a=state.selectedCategory===cat; return `<button class="mchip ${a?'active':''}" style="${a?`background:${c.color};color:#fff;border-color:transparent;`:''}" onclick="setCategory('${cat}')"><span class="mdot" style="background:${c.color}"></span>${cat}</button>`; }).join('');
   html+=`<button class="mchip ${state.friendsOnly?'active':''}" style="${state.friendsOnly?'background:var(--gold);color:#1a1400;border-color:transparent;':''}" onclick="toggleFriendsOnly()"><span class="star">★</span> Friends</button>`;
+  html+=`<button class="mchip ${state.liveOnly?'active':''}" style="${state.liveOnly?'background:#E23B3B;color:#fff;border-color:transparent;':''}" onclick="toggleLiveOnly()"><span style="width:6px;height:6px;border-radius:50%;background:${state.liveOnly?'#fff':'#E23B3B'};display:inline-block;margin-right:2px;animation:${state.liveOnly?'blink 1.3s ease-in-out infinite':'none'}"></span>Live</button>`;
+  html+=`<button class="mchip ${state.hotOnly?'active':''}" style="${state.hotOnly?'background:#F97316;color:#fff;border-color:transparent;':''}" onclick="toggleHotOnly()">🔥 Hot</button>`;
   el.innerHTML=html;
 }
 
@@ -5079,7 +5205,7 @@ function renderDetail(id){
   const ticket=getTicketForEvent(id); const price=eventPrice(ev);
   const spacesLeft=ev.capacity?Math.max(0,ev.capacity-attendees.length):null;
   const isFull=spacesLeft!==null&&spacesLeft<=0&&!ticket;
-  const statusChip=status==='live'?`<span class="live-chip"><span class="dot"></span>Live now</span>`:`<span class="upcoming-chip">${status==='past'?'Ended':'Upcoming'}</span>`;
+  const statusChip=status==='live'?`<button class="live-chip" style="border:none;background:none;cursor:pointer;padding:0;" onclick="document.getElementById('going-section')?.scrollIntoView({behavior:'smooth'})"><span class="dot"></span>Live now</button>`:`<span class="upcoming-chip">${status==='past'?'Ended':'Upcoming'}</span>`;
   const capBadge=ev.capacity?`<span class="event-badge" style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);margin-left:6px;font-size:10px;">${spacesLeft} spaces left</span>`:'';
   const priceBadge=price?`<span class="event-badge" style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);margin-left:6px;font-size:10px;">From £${price}</span>`:`<span class="event-badge" style="background:#22C55E22;color:#22C55E;border:1px solid #22C55E44;margin-left:6px;font-size:10px;">Free</span>`;
   let bookBtn='';
@@ -5195,7 +5321,7 @@ function renderConnect(id){
     </div>
     <div class="section-title">Your card</div>${yourCardHtml}
     <div class="section-title">Who's going (${others.length})</div>
-    <div class="going-section-hdr" onclick="toggleGoingSection(${id})">
+    <div class="going-section-hdr" id="going-section" onclick="toggleGoingSection(${id})">
       <div style="display:flex;align-items:center;gap:10px;">
         <div class="going-previews">${previewAvas||'<span style="font-size:12px;color:var(--text-muted);">None yet</span>'}</div>
         <span style="font-size:13.5px;font-weight:700;color:var(--text);">${others.length} attendee${others.length!==1?'s':''}</span>
@@ -5457,7 +5583,7 @@ function renderProfile(){
       ?`<div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid ${accent};flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><img src="${profilePhoto}" style="width:100%;height:100%;object-fit:cover;display:block;"/></div>`
       :`<div style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${accent}22;border:2px solid ${accent}55;flex-shrink:0;font-size:18px;font-weight:800;color:${accent};">${initStr}</div>`;
     return `<div class="id-card profile-id-card" style="background:${bg};border:${borderStyle};box-shadow:${shadowStyle};">
-      <div style="position:absolute;inset:0;pointer-events:none;color:${accent};opacity:${ext.patternOpacity||0.18};">${pat}</div>
+      <div style="position:absolute;inset:0;pointer-events:none;color:${accent};opacity:${ext.patternOpacity||0.35};">${pat}</div>
       <div class="ce-card-shine"></div>
       <div style="position:relative;z-index:2;display:flex;flex-direction:column;height:100%;">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;">
