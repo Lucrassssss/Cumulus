@@ -3738,7 +3738,7 @@ function renderGate(prefillName,prefillEmail){
           <p style="color:rgba(255,255,255,0.72);font-size:15px;line-height:1.75;max-width:480px;">List your venue on Cumulus and reach thousands of active Londoners who are already looking for their next night out. We handle discovery, ticketing, pre-event buzz, and real-time attendee connection — you focus on the event.</p>
           <div class="lp-venue-features">
             <div class="lp-venue-feat"><div class="lp-feat-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div><div><div class="lp-feat-title">Map-first discovery</div><div class="lp-feat-desc">Your venue pinned and filterable across London's live event map.</div></div></div>
-            <div class="lp-venue-feat"><div class="lp-feat-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20 12c0-1.1.9-2 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v4c1.1 0 2 .9 2 2s-.9 2-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2zm-6 3.5h-4v-2h4v2zm0-5h-4v-2h4v2z"/></svg></div><div><div class="lp-feat-title">Integrated ticketing</div><div class="lp-feat-desc">Multiple ticket tiers, early bird, VIP — all under one flow.</div></div></div>
+            <div class="lp-venue-feat"><div class="lp-feat-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20 12c0-1.1.9-2 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v4c1.1 0 2 .9 2 2s-.9 2-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2zm-6 3.5h-4v-2h4v2zm0-5h-4v-2h4v2z"/></svg></div><div><div class="lp-feat-title">Zero-fee ticketing</div><div class="lp-feat-desc">Hosts keep 100% of their price. Cumulus adds only a flat platform fee to the buyer — no percentage cuts, ever.</div></div></div>
             <div class="lp-venue-feat"><div class="lp-feat-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg></div><div><div class="lp-feat-title">Pre-event community</div><div class="lp-feat-desc">Attendees connect before they arrive — higher show rates, better energy.</div></div></div>
             <div class="lp-venue-feat"><div class="lp-feat-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div><div><div class="lp-feat-title">Featured placement</div><div class="lp-feat-desc">Major events get priority placement across the Cumulus platform.</div></div></div>
           </div>
@@ -5061,6 +5061,8 @@ async function submitHostEvent(){
   const areaName=(document.getElementById('host-area')?.value||'').trim();
   const venue=(document.getElementById('host-venue')?.value||'').trim();
   const capStr=document.getElementById('host-capacity')?.value;
+  const priceStr=document.getElementById('host-price')?.value;
+  const priceVal=priceStr?parseFloat(priceStr):0;
   const desc=(document.getElementById('host-desc')?.value||'').trim();
   if(!title||!startVal||!endVal||!venue||!capStr){ showToast('Please fill in title, date & time, venue, and capacity.','error'); return; }
   const stDate=new Date(startVal),enDate=new Date(endVal);
@@ -5083,7 +5085,7 @@ async function submitHostEvent(){
     venue, area:areaName||'London', address,
     lat:newEventLat, lon:newEventLon,
     start_time:stDate.toISOString(), end_time:enDate.toISOString(),
-    description:desc, capacity:parseInt(capStr,10), price:0
+    description:desc, capacity:parseInt(capStr,10), price:priceVal
   }).select().single();
 
   if(btn){ btn.disabled=false; btn.textContent='Create private event →'; }
@@ -5096,7 +5098,7 @@ async function submitHostEvent(){
     venue:data.venue, area:data.area, address:data.address,
     lat:data.lat, lon:data.lon,
     startTime:data.start_time, endTime:data.end_time,
-    desc:data.description, capacity:data.capacity, price:0
+    desc:data.description, capacity:data.capacity, price:priceVal
   };
   computeEventDates(newEvent);
   EVENTS.push(newEvent);
@@ -5878,16 +5880,18 @@ function renderCalendar(){
 // ════════════════════════════════════════════════
 // TICKET SYSTEM
 // ════════════════════════════════════════════════
-const CAT_BASE_PRICE={'Creative':15,'Gaming':10,'Movie Nights':10,'Board Games':8,'Meetups':0,'Food & Drink':28,'Live Music':15,'Wellness & Outdoors':12,'Tech & Talks':12};
-function eventPrice(ev){ const base=CAT_BASE_PRICE[ev.category]??10; if(!base) return 0; const v=[0,-2,2,3,-3,5,2,-1,4,-2]; return Math.max(base+v[ev.id%10],3); }
+function eventPrice(ev){ return ev.price||0; }
+function getCumulusFee(ticketPrice){
+  if(ticketPrice<=0) return 0;
+  if(ticketPrice<=15) return 1.00;
+  if(ticketPrice<=40) return 2.00;
+  return 3.50;
+}
 function ticketTypes(ev){
-  const base=eventPrice(ev);
-  if(!base) return [{id:'free',label:'Free Registration',price:0,desc:'Claim your spot — no charge'}];
-  const att=attendeesFor(ev.id).length; const pct=ev.capacity?att/ev.capacity:0;
-  const types=[{id:'general',label:'General Admission',price:base,desc:'Standard entry to the event'}];
-  if(pct<0.6) types.push({id:'earlybird',label:'Early Bird',price:Math.max(base-3,5),desc:'Limited availability — grab it fast'});
-  types.push({id:'vip',label:'VIP',price:base+12,desc:'Priority entry + exclusive area access'});
-  return types;
+  const basePrice=eventPrice(ev);
+  if(!basePrice) return [{id:'free',label:'Free Registration',price:0,platformFee:0,desc:'Claim your spot — no charge'}];
+  const platformFee=getCumulusFee(basePrice);
+  return [{id:'general',label:'General Admission',price:basePrice,platformFee,desc:'Standard entry to the event'}];
 }
 function generateTicketId(){ return 'CU-'+Math.random().toString(36).slice(2,8).toUpperCase(); }
 
@@ -5971,12 +5975,15 @@ async function processPayment(){
   const ev=EVENTS.find(e=>e.id===bookingDraft.eventId);
   const sel=ticketTypes(ev).find(t=>t.id===bookingDraft.type)||ticketTypes(ev)[0];
   const baseId=generateTicketId(); const n=bookingDraft.qty;
+  const platformFee=sel.platformFee||0;
+  const totalCharged=sel.price+platformFee;
   const newTickets=Array.from({length:n},(_,i)=>({
     ticketId:n>1?`${baseId}-${String(i+1).padStart(2,'0')}`:baseId,
     seatNum:n>1?i+1:null, totalSeats:n>1?n:null, bookingId:baseId,
-    eventId:ev.id,type:sel.id,typeLabel:sel.label,
-    pricePerTicket:sel.price,total:sel.price,
-    purchaserName:state.profileName,purchasedAt:Date.now()
+    eventId:ev.id, type:sel.id, typeLabel:sel.label,
+    pricePerTicket:sel.price, platformFee,
+    total:totalCharged,
+    purchaserName:state.profileName, purchasedAt:Date.now()
   }));
   myTickets.push(...newTickets);
   await _insertTickets(newTickets);
@@ -6023,12 +6030,13 @@ function renderBook(){
   const ev=EVENTS.find(e=>e.id===bookingDraft.eventId); if(!ev) return '<div class="empty-state">Event not found.</div>';
   const c=CATS[ev.category]; const types=ticketTypes(ev);
   const sel=types.find(t=>t.id===bookingDraft.type)||types[0];
-  const isFree=!eventPrice(ev); const qty=bookingDraft.qty; const total=sel.price*qty;
+  const isFree=!eventPrice(ev); const qty=bookingDraft.qty;
+  const baseTotal=sel.price*qty; const feeTotal=(sel.platformFee||0)*qty; const finalTotal=baseTotal+feeTotal;
   const typeCards=types.map(t=>`
     <div onclick="setBookingType('${t.id}')" style="border:2px solid ${bookingDraft.type===t.id?c.color:'var(--line)'};border-radius:14px;padding:14px 16px;cursor:pointer;background:${bookingDraft.type===t.id?hexToRgba(c.color,0.07):'var(--surface-2)'};transition:all .15s;margin-bottom:10px;">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
         <div><div style="font-weight:700;font-size:14px;color:var(--text);">${t.label}</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${t.desc}</div></div>
-        <div style="font-size:18px;font-weight:800;color:${bookingDraft.type===t.id?c.color:'var(--text)'};">${t.price?`£${t.price}`:'Free'}</div>
+        <div style="font-size:18px;font-weight:800;color:${bookingDraft.type===t.id?c.color:'var(--text)'};">${t.price?`£${t.price.toFixed(2)}`:'Free'}</div>
       </div>
     </div>`).join('');
   return `<button class="back-btn" onclick="goBack()">←</button>
@@ -6044,10 +6052,13 @@ function renderBook(){
     </div>`:''}
     <div class="panel" style="--corner:${c.color};padding:16px 20px;background:${hexToRgba(c.color,0.05)};margin-bottom:18px;">
       <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:10px;">Order summary</div>
-      <div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--text-soft);margin-bottom:6px;"><span>${sel.label}${!isFree?` × ${qty}`:''}</span><span>${sel.price?`£${sel.price} each`:'Free'}</span></div>
-      <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:var(--text);padding-top:10px;border-top:1px solid var(--line);"><span>Total</span><span style="color:${c.color};">${total?`£${total.toFixed(2)}`:'Free'}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--text-soft);margin-bottom:6px;"><span>${sel.label}${!isFree?` × ${qty}`:''}</span><span>${sel.price?`£${baseTotal.toFixed(2)}`:'Free'}</span></div>
+      ${!isFree?`
+      <div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--text-soft);margin-bottom:4px;"><span>Cumulus platform fee</span><span>£${feeTotal.toFixed(2)}</span></div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-style:italic;">The host keeps 100% of their ticket price.</div>`:''}
+      <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:var(--text);padding-top:10px;border-top:1px solid var(--line);"><span>Total</span><span style="color:${c.color};">${finalTotal?`£${finalTotal.toFixed(2)}`:'Free'}</span></div>
     </div>
-    <button class="btn" style="width:100%;background:${c.color};padding:14px;font-size:15px;" onclick="${isFree?`registerFree(${ev.id})`:`proceedToCheckout()`}">${isFree?'Register Free →':`Continue to Payment · £${total.toFixed(2)} →`}</button>`;
+    <button class="btn" style="width:100%;background:${c.color};padding:14px;font-size:15px;" onclick="${isFree?`registerFree(${ev.id})`:`proceedToCheckout()`}">${isFree?'Register Free →':`Continue to Payment · £${finalTotal.toFixed(2)} →`}</button>`;
 }
 
 // ─── Render: Mock payment ────────────────────────────────────────────────
@@ -6055,7 +6066,7 @@ function renderCheckout(){
   const ev=EVENTS.find(e=>e.id===bookingDraft.eventId); if(!ev) return '';
   const c=CATS[ev.category]; const types=ticketTypes(ev);
   const sel=types.find(t=>t.id===bookingDraft.type)||types[0];
-  const total=(sel.price*bookingDraft.qty).toFixed(2);
+  const total=((sel.price+(sel.platformFee||0))*bookingDraft.qty).toFixed(2);
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="connect-header"><h2>Payment</h2><p>${escapeHtml(ev.title)} · ${sel.label} × ${bookingDraft.qty}</p></div>
     <div style="background:var(--gold-tint);border:1px solid var(--gold);border-radius:14px;padding:13px 16px;margin-bottom:20px;font-size:13px;color:var(--text-soft);line-height:1.6;">
@@ -6395,6 +6406,13 @@ function renderSocialTab(){
         <div class="host-section-title">Capacity</div>
         <label class="intro-field-label">Max attendees</label>
         <input id="host-capacity" type="number" min="1" class="gate-input" placeholder="e.g., 20"/>
+      </div>
+
+      <div class="host-section">
+        <div class="host-section-title">Pricing</div>
+        <label class="intro-field-label">Ticket Price (£) — You keep 100%</label>
+        <input id="host-price" type="number" min="0" step="0.01" class="gate-input" placeholder="e.g. 10 (Leave blank for free)"/>
+        <div class="host-notice">We add a flat, transparent platform fee to the buyer at checkout to cover processing. You keep every penny of your ticket price.</div>
       </div>
 
       <button id="host-submit-btn" class="btn" style="width:100%;margin-bottom:24px;font-size:15px;" onclick="submitHostEvent()">${_hostType==='private'?'Create private event →':'Submit for review →'}</button>`;
