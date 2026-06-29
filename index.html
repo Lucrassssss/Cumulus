@@ -5266,6 +5266,34 @@ let _odCur = 'Traction';
 const _odGbp = v => new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP',minimumFractionDigits:0,maximumFractionDigits:0}).format(Math.round(v)||0);
 const _odFmt = v => v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(1)+'k':Math.round(v).toString();
 
+async function clearAllTestData(confirmed){
+  if(!confirmed){
+    showConfirm(
+      'Wipe all test data?',
+      'This deletes every row in users, events, rsvps, tickets, chat_messages, and friends in Supabase. Seed events in the app are unaffected (they\'re hardcoded). Cannot be undone.',
+      'Wipe everything',
+      'clearAllTestData'
+    );
+    return;
+  }
+  showToast('Wiping…','info');
+  try{
+    await Promise.all([
+      sb.from('chat_messages').delete().neq('id',0),
+      sb.from('rsvps').delete().neq('id',0),
+      sb.from('tickets').delete().neq('id',0),
+      sb.from('friends').delete().neq('id',0),
+    ]);
+    await sb.from('events').delete().neq('id',0);
+    await sb.from('users').delete().neq('id',0);
+    showToast('All test data wiped. Signing out…','success');
+    setTimeout(()=>resetProfile(true),1200);
+  }catch(err){
+    console.error('Wipe failed:',err);
+    showToast('Wipe failed — check console','error');
+  }
+}
+
 function od_tog(id){
   const wrap=document.getElementById('od-wrap'); if(!wrap) return;
   const h=wrap.querySelector('#od-sh-'+id), b=wrap.querySelector('#od-sb-'+id);
@@ -5744,6 +5772,12 @@ function renderOwnerDash(){
           <span style="font-family:'SF Mono',monospace;font-size:13px;font-weight:600;color:#F1F1EF" id="od-infra-tot">£0</span>
         </div>
       </div>
+    </div>
+
+    <!-- DEV TOOLS -->
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid #2A2B32;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#5F5E5A;margin-bottom:10px;">Developer tools</div>
+      <button onclick="clearAllTestData()" style="width:100%;padding:11px;background:transparent;border:1px solid #E24B4A44;border-radius:10px;color:#E24B4A;font-size:12px;font-weight:600;cursor:pointer;font-family:-apple-system,sans-serif;letter-spacing:0.01em;">🗑 Wipe all Supabase test data &amp; sign out</button>
     </div>
   </div>`;
 }
