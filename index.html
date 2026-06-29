@@ -5279,13 +5279,13 @@ async function clearAllTestData(confirmed){
   showToast('Wiping…','info');
   try{
     await Promise.all([
-      sb.from('chat_messages').delete().neq('id',0),
-      sb.from('rsvps').delete().neq('id',0),
-      sb.from('tickets').delete().neq('id',0),
-      sb.from('friends').delete().neq('id',0),
+      sb.from('chat_messages').delete().not('id','is',null),
+      sb.from('rsvps').delete().not('id','is',null),
+      sb.from('tickets').delete().not('id','is',null),
+      sb.from('friends').delete().not('id','is',null),
     ]);
-    await sb.from('events').delete().neq('id',0);
-    await sb.from('users').delete().neq('id',0);
+    await sb.from('events').delete().not('id','is',null);
+    await sb.from('users').delete().not('id','is',null);
     showToast('All test data wiped. Signing out…','success');
     setTimeout(()=>resetProfile(true),1200);
   }catch(err){
@@ -6419,11 +6419,20 @@ function renderProfile(){
         <span class="prof-action-label">Edit name &amp; email</span>
         <span class="prof-action-right">›</span>
       </button>
-      <button class="prof-action-row prof-action-signout" onclick="resetProfile()">
+      <button class="prof-action-row prof-action-signout" onclick="resetProfile(true)">
         <span class="prof-action-label">Sign out</span>
         <span class="prof-action-right">›</span>
       </button>
     </div>
+    ${state.profileEmail==='gondoxml@gmail.com'?`
+    <div style="margin-top:18px;padding:14px 16px;background:rgba(226,59,59,0.06);border:1px solid rgba(226,59,59,0.18);border-radius:14px;">
+      <div style="font-size:11px;font-weight:700;color:#E23B3B;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">⚙️ Admin</div>
+      <button class="prof-action-row prof-action-signout" style="border-radius:10px;border:1px solid rgba(226,59,59,0.25);" onclick="if(confirm('Delete ALL rows in users, events, rsvps, tickets, chat_messages, friends? This cannot be undone.')){clearAllTestData(true)}">
+        <span class="prof-action-icon">🗑</span>
+        <span class="prof-action-label">Wipe all test data &amp; sign out</span>
+      </button>
+    </div>`:''}
+
 
     <!-- About me + interests + spots (all in one card) -->
     <div class="prof-about-section">
