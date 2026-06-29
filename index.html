@@ -2935,6 +2935,118 @@
   .attendee-card-wm { position:absolute; bottom:-10px; right:-4px; font-size:90px; font-weight:900; opacity:0.05; line-height:1; pointer-events:none; z-index:0; }
 
   .msg-ts { font-size:10px; color:var(--text-muted); margin-top:2px; opacity:0.7; }
+
+  /* ── OWNER FINANCIAL DASHBOARD ── */
+  #od-wrap { background:#0F1117; border-radius:16px; padding:18px 16px 24px; margin-top:12px; color:#F1F1EF; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+  #od-wrap *{box-sizing:border-box;}
+  #od-wrap h2{font-size:16px;font-weight:700;color:#fff;margin:0 0 2px;}
+  #od-wrap .od-sub{font-size:11px;color:#868C96;margin-bottom:12px;}
+  #od-wrap .pb{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+  #od-wrap .pb button{padding:6px 10px;font-size:11px;font-weight:500;border-radius:8px;border:1px solid #2A2B32;background:transparent;color:#868C96;cursor:pointer;min-height:34px;}
+  #od-wrap .pb button.a{background:#1A3A5C;color:#5B9FD9;border-color:#5B9FD9;}
+  #od-wrap .pb button.hype{border-color:#534AB7;color:#AFA9EC;}
+  #od-wrap .pb button.hype.a{background:#1A1850;color:#AFA9EC;border-color:#7F77DD;}
+  #od-wrap .ctx{font-size:11px;color:#9CA3AF;margin-bottom:10px;padding:10px 12px;border-radius:10px;background:#15161A;line-height:1.6;}
+  #od-wrap .ctx strong{font-weight:500;color:#C5C6CB;}
+  #od-wrap .status-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+  #od-wrap .status-pill{padding:4px 9px;border-radius:20px;font-size:10px;font-weight:600;display:flex;align-items:center;gap:5px;}
+  #od-wrap .sp-green{background:#0F2A1A;color:#22C55E;border:1px solid #1D9E75;}
+  #od-wrap .sp-amber{background:#2A1E00;color:#E0B23C;border:1px solid #E0B23C;}
+  #od-wrap .sp-red{background:#1A0A0A;color:#E24B4A;border:1px solid #E24B4A;}
+  #od-wrap .sp-blue{background:#1A2F4A;color:#5B9FD9;border:1px solid #5B9FD9;}
+  #od-wrap .sp-purple{background:#1A1850;color:#AFA9EC;border:1px solid #7F77DD;}
+  #od-wrap .od-card{background:#15161A;border:1px solid #2A2B32;border-radius:12px;padding:14px;margin-bottom:10px;}
+  #od-wrap .od-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#5F5E5A;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+  #od-wrap .od-dot{width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0;}
+  #od-wrap .od-sr{margin-bottom:12px;}#od-wrap .od-sr:last-child{margin-bottom:0;}
+  #od-wrap .od-st{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;align-items:center;}
+  #od-wrap .od-st span:first-child{color:#868C96;}
+  #od-wrap .od-vb{font-weight:600;color:#5B9FD9;font-family:'SF Mono',monospace;font-size:13px;}
+  #od-wrap .od-vp{font-weight:600;color:#D4537E;font-family:'SF Mono',monospace;font-size:13px;}
+  #od-wrap .od-vr{font-weight:600;color:#E24B4A;font-family:'SF Mono',monospace;font-size:13px;}
+  #od-wrap input[type=range]{width:100%;height:30px;cursor:pointer;accent-color:#5B9FD9;}
+  #od-wrap .tier-box{background:#1E1F24;border-radius:10px;padding:10px 12px;margin-top:8px;}
+  #od-wrap .tb-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:11px;}
+  #od-wrap .tb-row.active{background:#1A2F4A;border-radius:6px;padding:4px 8px;margin:2px -8px;}
+  #od-wrap .tb-label{color:#868C96;}
+  #od-wrap .tb-val{font-family:'SF Mono',monospace;font-weight:600;}
+  #od-wrap .tb-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px;text-transform:uppercase;letter-spacing:.04em;}
+  #od-wrap .badge-t1{background:#1A3A5C;color:#5B9FD9;}
+  #od-wrap .badge-t2{background:#0F3320;color:#22C55E;}
+  #od-wrap .badge-t3{background:#3A2800;color:#E0B23C;}
+  #od-wrap .badge-t4{background:#1A1850;color:#AFA9EC;}
+  #od-wrap .tb-div{height:1px;background:#2A2B32;margin:5px 0;}
+  #od-wrap .tb-total{display:flex;justify-content:space-between;font-size:12px;font-weight:600;padding:4px 0;}
+  #od-wrap .od-stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+  #od-wrap .od-stats2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+  #od-wrap .od-sc{background:#1E1F24;border-radius:10px;padding:10px 12px;}
+  #od-wrap .od-sc .od-sl{font-size:10px;color:#868C96;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+  #od-wrap .od-sc .od-sv{font-size:14px;font-weight:600;font-family:'SF Mono',monospace;}
+  #od-wrap .od-sv.bl{color:#5B9FD9;}#od-wrap .od-sv.gn{color:#22C55E;}#od-wrap .od-sv.rd{color:#E24B4A;}#od-wrap .od-sv.am{color:#E0B23C;}#od-wrap .od-sv.pu{color:#7F77DD;}#od-wrap .od-sv.pk{color:#D4537E;}
+  #od-wrap .plr{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid #1E1F24;gap:8px;}
+  #od-wrap .plr:last-child{border-bottom:none;}
+  #od-wrap .pll{font-size:12px;color:#868C96;flex:1;min-width:0;}
+  #od-wrap .pll small{display:block;font-size:10px;color:#5F5E5A;margin-top:1px;}
+  #od-wrap .pll.s{color:#C5C6CB;font-weight:500;}
+  #od-wrap .plv{font-family:'SF Mono',monospace;font-size:12px;color:#F1F1EF;white-space:nowrap;text-align:right;flex-shrink:0;}
+  #od-wrap .plv.dim{color:#5F5E5A;}#od-wrap .plv.am{color:#E0B23C;}#od-wrap .plv.rd{color:#E24B4A;}#od-wrap .plv.pu{color:#7F77DD;}#od-wrap .plv.str{color:#635BFF;}#od-wrap .plv.gn{color:#22C55E;}#od-wrap .plv.pk{color:#D4537E;}
+  #od-wrap .od-div{height:1px;background:#1E1F24;margin:7px 0;}
+  #od-wrap .od-stag{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#5F5E5A;margin-bottom:3px;margin-top:3px;}
+  #od-wrap .od-th{margin-top:14px;padding-top:14px;border-top:1px solid #2A2B32;display:flex;justify-content:space-between;align-items:flex-end;}
+  #od-wrap .od-t1{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#5B9FD9;margin-bottom:2px;}
+  #od-wrap .od-t2{font-size:10px;color:#868C96;}
+  #od-wrap .od-thv{font-family:'SF Mono',monospace;font-size:26px;font-weight:700;}
+  #od-wrap .od-thv.pos{color:#22C55E;}#od-wrap .od-thv.neg{color:#E24B4A;}
+  #od-wrap .ibar-row{margin-bottom:10px;}#od-wrap .ibar-row:last-child{margin-bottom:0;}
+  #od-wrap .ibar-top{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:3px;}
+  #od-wrap .ibar-name{color:#868C96;display:flex;align-items:center;gap:5px;}
+  #od-wrap .ibar-nums{font-family:'SF Mono',monospace;font-size:10px;color:#5F5E5A;}
+  #od-wrap .ibar-track{height:5px;background:#0F1117;border-radius:3px;overflow:hidden;}
+  #od-wrap .ibar-fill{height:100%;border-radius:3px;transition:width .2s,background .2s;}
+  #od-wrap .tbadge{font-size:10px;font-weight:600;padding:2px 6px;border-radius:6px;}
+  #od-wrap .tok{background:#0F3320;color:#22C55E;}#od-wrap .twarn{background:#3A2800;color:#E0B23C;}#od-wrap .tdanger{background:#2A0A0A;color:#E24B4A;}
+  #od-wrap .ibar-det{font-size:10px;color:#5F5E5A;margin-top:2px;display:flex;justify-content:space-between;}
+  #od-wrap .uc{font-weight:600;font-family:'SF Mono',monospace;font-size:10px;}
+  #od-wrap .uc.ok{color:#22C55E;}#od-wrap .uc.bad{color:#E24B4A;}
+  #od-wrap .risk-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 10px;background:#1E1F24;border-radius:8px;margin-bottom:6px;}
+  #od-wrap .risk-row:last-child{margin-bottom:0;}
+  #od-wrap .rc{font-family:'SF Mono',monospace;font-size:13px;font-weight:600;}
+  #od-wrap .rc.ok{color:#22C55E;}#od-wrap .rc.warn{color:#E0B23C;}#od-wrap .rc.bad{color:#E24B4A;}
+  #od-wrap .pitfall-alert{padding:9px 12px;border-radius:10px;margin-bottom:6px;font-size:11px;line-height:1.5;display:none;}
+  #od-wrap .pitfall-alert.show{display:block;}
+  #od-wrap .pitfall-alert.warn{background:#2A1E00;border:1px solid #E0B23C;color:#E0B23C;}
+  #od-wrap .pitfall-alert.danger{background:#1A0A0A;border:1px solid #E24B4A;color:#E24B4A;}
+  #od-wrap .pitfall-alert.info{background:#1A2F4A;border:1px solid #5B9FD9;color:#5B9FD9;}
+  #od-wrap .section-h{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#15161A;border:1px solid #2A2B32;border-radius:10px;cursor:pointer;margin-bottom:4px;min-height:44px;}
+  #od-wrap .section-h .sh-t{font-size:12px;font-weight:500;color:#C5C6CB;display:flex;align-items:center;gap:6px;}
+  #od-wrap .section-h .sh-v{font-family:'SF Mono',monospace;font-size:11px;color:#868C96;}
+  #od-wrap .sh-arr{font-size:12px;color:#5F5E5A;transition:transform .2s;}
+  #od-wrap .section-h.open .sh-arr{transform:rotate(180deg);}
+  #od-wrap .section-b{display:none;}#od-wrap .section-b.open{display:block;}
+  #od-wrap .vetting-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;}
+  #od-wrap .vet-card{background:#1E1F24;border-radius:8px;padding:8px 10px;border:1px solid transparent;}
+  #od-wrap .vet-card.active{border-color:#5B9FD9;}
+  #od-wrap .vc-tier{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
+  #od-wrap .vc-rule{font-size:10px;color:#868C96;line-height:1.4;}
+  #od-wrap .founder-box{padding:10px 12px;background:#1E1F24;border-radius:10px;font-size:11px;line-height:1.7;color:#868C96;}
+  #od-wrap .founder-row{display:flex;justify-content:space-between;margin-bottom:4px;}
+  /* Host payouts panel */
+  .hp-panel{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px;}
+  .hp-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+  .hp-tier-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:10px;margin-bottom:6px;border:1px solid var(--line);}
+  .hp-tier-row.active{border-color:var(--accent);background:var(--surface);}
+  .hp-tier-label{font-size:11px;color:var(--text-muted);font-weight:500;}
+  .hp-tier-fee{font-size:13px;font-weight:700;color:var(--accent);font-family:'DM Mono',monospace;}
+  .hp-breakdown{background:var(--surface);border-radius:10px;padding:14px;margin-top:10px;}
+  .hp-line{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:12px;color:var(--text-muted);border-bottom:1px solid var(--line);}
+  .hp-line:last-child{border-bottom:none;}
+  .hp-line.total{color:var(--text);font-weight:700;font-size:13px;padding-top:8px;margin-top:2px;}
+  .hp-line.host-keep{color:#22C55E;font-weight:700;}
+  .hp-val{font-family:'DM Mono',monospace;font-weight:600;}
+  .hp-vetting{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:11px;line-height:1.5;}
+  .hp-vetting.t1{background:#1A2F4A22;border:1px solid #5B9FD944;color:var(--text-muted);}
+  .hp-vetting.t2{background:#0F332022;border:1px solid #22C55E44;color:var(--text-muted);}
+  .hp-vetting.t3{background:#3A280022;border:1px solid #E0B23C44;color:var(--text-muted);}
 </style>
 </head>
 <body>
@@ -4457,7 +4569,7 @@ async function addFriend(friendName,friendUserId){
 
 function renderNav(){
   const activeTab = ['tickets','my-tickets','book','checkout','confirmed'].includes(state.view)?'profile'
-    :['social','friends','host'].includes(state.view)?'social'
+    :['social','friends','host','owner-dash'].includes(state.view)?'social'
     :['calendar','calendar-day'].includes(state.view)?'calendar'
     :['achievements'].includes(state.view)?'profile'
     :state.view;
@@ -5118,6 +5230,575 @@ function showMapLayer(visible){
   });
 }
 
+// ═══════════════════════════════════════════════════════
+// OWNER FINANCIAL DASHBOARD
+// ═══════════════════════════════════════════════════════
+
+const OD_PRESETS = {
+  Launch:{ev:15,tx:25,pr:12,fep:20,frp:6,fev:5,frv:20,cb:0.3,drop:3,
+    ctx:'<strong>Launch:</strong> Solo founder. Tier 1 events (£12 avg). Pre-VAT. Connect Standard — zero per-host fees. 48hr escrow hold is the fraud buffer.',
+    cs:{cost:0,l:'Not yet needed'},eng:{cost:0,l:'You are the engineer'}},
+  Traction:{ev:80,tx:35,pr:14,fep:120,frp:7,fev:20,frv:35,cb:0.5,drop:3,
+    ctx:'<strong>Traction:</strong> ~80 paid events/mo. £14 avg = Tier 1 (£1.50 fee). Monitor VAT threshold. In-app refund UX deflects chargebacks. Private + vetted free events.',
+    cs:{cost:1050,l:'Part-time CS (50%)'},eng:{cost:350,l:'Engineer retainer 8 hrs/mo'}},
+  Scaling:{ev:350,tx:50,pr:18,fep:500,frp:7,fev:80,frv:40,cb:0.5,drop:3,
+    ctx:'<strong>Scaling:</strong> £18 avg = Tier 2 threshold area. Approaching VAT at this volume. Connect Standard saves ~£2/mo per host vs Express.',
+    cs:{cost:2100,l:'Full-time CS rep'},eng:{cost:4500,l:'Engineer pt contract 3d/wk'}},
+  Dominance:{ev:1500,tx:75,pr:22,fep:2000,frp:7,fev:350,frv:45,cb:0.5,drop:3,
+    ctx:'<strong>Dominance:</strong> £22 avg = Tier 2 (£2.50 fee). VAT registered. Post-VAT net ~£1.67/ticket. Stripe revenue share negotiations should begin.',
+    cs:{cost:4200,l:'CS team × 2'},eng:{cost:9000,l:'Senior engineer 5d/wk'}},
+  CityLeader:{ev:5000,tx:90,pr:22,fep:6000,frp:8,fev:1000,frv:50,cb:0.4,drop:3,
+    ctx:'<strong>City Leader:</strong> 450k paid tickets/mo. VAT registered. Enterprise infra deals. Stripe Connect revenue share active.',
+    cs:{cost:18000,l:'Head of CS + 4 reps'},eng:{cost:18000,l:'2 full-time engineers'}},
+  London1:{ev:12000,tx:100,pr:25,fep:14000,frp:8,fev:2500,frv:55,cb:0.3,drop:3,
+    ctx:'<strong>London #1:</strong> 1.2M paid tickets/mo. Tier 2 fee (£2.50). VAT registered. Enterprise agreements across stack. Stripe Connect revenue share at maximum leverage.',
+    cs:{cost:45000,l:'CS team of 10 + manager'},eng:{cost:50000,l:'Engineering team of 5'}},
+  Custom:{ev:80,tx:35,pr:14,fep:120,frp:7,fev:20,frv:35,cb:0.5,drop:3,
+    ctx:'<strong>Custom:</strong> Adjust all inputs manually.',
+    cs:{cost:0,l:'Set manually'},eng:{cost:0,l:'Set manually'}}
+};
+let _odCur = 'Traction';
+
+const _odGbp = v => new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP',minimumFractionDigits:0,maximumFractionDigits:0}).format(Math.round(v)||0);
+const _odFmt = v => v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(1)+'k':Math.round(v).toString();
+
+function od_tog(id){
+  const wrap=document.getElementById('od-wrap'); if(!wrap) return;
+  const h=wrap.querySelector('#od-sh-'+id), b=wrap.querySelector('#od-sb-'+id);
+  if(!h||!b) return;
+  const o=b.classList.contains('open');
+  b.classList.toggle('open',!o); h.classList.toggle('open',!o);
+}
+
+function _odPlatformFee(pr){
+  if(pr<=15) return {fee:1.50,tier:1,label:'Tier 1',badge:'badge-t1'};
+  if(pr<=40) return {fee:2.50,tier:2,label:'Tier 2',badge:'badge-t2'};
+  if(pr<=71) return {fee:3.50,tier:3,label:'Tier 3',badge:'badge-t3'};
+  return {fee:4.50,tier:4,label:'Tier 4',badge:'badge-t4'};
+}
+function _odVatOnFee(fee,vatReg){ return vatReg?fee/6:0; }
+function _odStripeCost(total){ return total*0.015+0.20; }
+function _odBarCol(p){ return p<60?'#22C55E':p<85?'#E0B23C':'#E24B4A'; }
+function _odTierCls(p){ return p<60?'tbadge tok':p<85?'tbadge twarn':'tbadge tdanger'; }
+function _odSetBar(g,id,p){ const el=g(id); if(el){el.style.width=Math.min(p,100)+'%';el.style.background=_odBarCol(Math.min(p,100));} }
+function _odSetTier(g,id,l,p){ const el=g(id); if(el){el.className=_odTierCls(Math.min(p,100));el.textContent=l;} }
+function _odCalcSupa(r,m){ const o=r>500000||m>50000; return {cost:o?20:0,rp:Math.min(r/500000*100,100),mp:Math.min(m/50000*100,100),over:o}; }
+function _odCalcMb(l){ if(l<=50000) return {cost:0,p:l/50000*100,t:'Free'}; return {cost:Math.round((l-50000)/1000*0.4*100)/100,p:100,t:'Paid'}; }
+function _odCalcEm(e){ if(e<=3000) return {cost:0,p:e/3000*100,t:'Free'}; if(e<=50000) return {cost:15,p:e/50000*100,t:'Starter'}; return {cost:35,p:e/100000*100,t:'Pro'}; }
+function _odCalcVc(i){ if(i<=1e6) return {cost:0,p:i/1e6*100,t:'Free'}; return {cost:18,p:100,t:'Pro'}; }
+
+function od_renderStaff(){
+  const wrap=document.getElementById('od-wrap'); if(!wrap) return;
+  const g=id=>wrap.querySelector('#'+id);
+  const st=(id,v)=>{ const el=g(id); if(el) el.textContent=v; };
+  const p=OD_PRESETS[_odCur]; const list=g('od-staff-list'); if(!list) return;
+  list.innerHTML='';
+  [{name:'CS team',data:p.cs},{name:'Engineering',data:p.eng}].forEach(r=>{
+    const el=document.createElement('div');
+    el.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#1E1F24;border-radius:10px;margin-bottom:6px;';
+    const z=r.data.cost===0;
+    el.innerHTML='<div><div style="font-size:12px;font-weight:500;color:#C5C6CB">'+r.name+'</div><div style="font-size:10px;color:#5F5E5A;margin-top:2px">'+r.data.l+'</div></div><div><div style="font-family:\'SF Mono\',monospace;font-size:13px;font-weight:600;color:'+(z?'#5F5E5A':'#E24B4A')+'">'+_odGbp(r.data.cost)+'/mo</div></div>';
+    list.appendChild(el);
+  });
+  const tot=p.cs.cost+p.eng.cost;
+  st('od-staff-total',_odGbp(tot)); st('od-shv-staff',_odGbp(tot)+'/mo');
+}
+
+function od_recalc(){
+  const wrap=document.getElementById('od-wrap'); if(!wrap) return;
+  const g=id=>wrap.querySelector('#'+id);
+  const gv=id=>{ const el=g(id); return el?Number(el.value):0; };
+  const st=(id,v)=>{ const el=g(id); if(el) el.textContent=v; };
+
+  const ev=gv('od-sl-ev'),tx=gv('od-sl-tx'),pr=gv('od-sl-pr');
+  const fep=gv('od-sl-fe-p'),frp=gv('od-sl-fr-p'),fev=gv('od-sl-fe-v'),frv=gv('od-sl-fr-v');
+  const cbRate=gv('od-sl-cb')/100, dropRate=gv('od-sl-drop')/100;
+
+  st('od-lev',ev.toLocaleString()); st('od-ltx',tx.toLocaleString()); st('od-lpr','£'+pr);
+  st('od-lfe-p',fep.toLocaleString()); st('od-lfr-p',Math.min(frp,10));
+  st('od-lfe-v',fev.toLocaleString()); st('od-lfr-v',frv);
+  st('od-lcb',gv('od-sl-cb').toFixed(1)+'%'); st('od-ldrop',gv('od-sl-drop')+'%');
+  st('od-shv-paid',ev.toLocaleString()+' events · £'+pr);
+
+  const {fee,tier,label}=_odPlatformFee(pr);
+  const checkoutPrice=pr+fee;
+  const stripePerTx=_odStripeCost(checkoutPrice);
+  const grossTix=ev*tx;
+  const annFeeRev=grossTix*fee*12;
+  const vatReg=annFeeRev>=90000;
+  const vatPerTix=_odVatOnFee(fee,vatReg);
+  const netFeePerTix=fee-vatPerTix-stripePerTx;
+  const dropTix=Math.round(grossTix*dropRate);
+  const paidTix=Math.max(0,grossTix-dropTix);
+
+  // Tier box
+  ['t1','t2','t3','t4'].forEach((t,i)=>{
+    const el=g('od-tbr-'+t); if(el) el.className='tb-row'+(tier===i+1?' active':'');
+  });
+  st('od-tb-tiern',tier);
+  st('od-tb-host','£'+pr.toFixed(2));
+  const elFee=g('od-tb-fee'); if(elFee) elFee.textContent='£'+fee.toFixed(2);
+  const elStr=g('od-tb-stripe'); if(elStr) elStr.textContent='-£'+stripePerTx.toFixed(2);
+  const elVat=g('od-tb-vat'); if(elVat) elVat.textContent=vatReg?('-£'+vatPerTix.toFixed(2)):'£0.00 (pre-threshold)';
+  st('od-tb-checkout','£'+checkoutPrice.toFixed(2));
+  const elNet=g('od-tb-net'); if(elNet){ elNet.textContent=(netFeePerTix<0?'-':'')+'£'+Math.abs(netFeePerTix).toFixed(2); elNet.style.color=netFeePerTix<0.20?'#E24B4A':netFeePerTix<0.50?'#E0B23C':'#22C55E'; }
+
+  st('od-st-ptx',_odFmt(paidTix)); st('od-st-fee','£'+fee.toFixed(2)); st('od-st-checkout','£'+checkoutPrice.toFixed(2));
+
+  // Revenue
+  const grossFeeRev=paidTix*fee;
+  const totalVat=paidTix*vatPerTix;
+  const netFeeRev=grossFeeRev-totalVat;
+  const totalStripe=paidTix*stripePerTx;
+  const cbCount=Math.round(paidTix*cbRate);
+  const cbCost=cbCount*15;
+  const gp=netFeeRev-totalStripe-cbCost;
+
+  st('od-pl-pf',_odGbp(grossFeeRev));
+  const pfNote=g('od-pf-note'); if(pfNote) pfNote.textContent=_odFmt(paidTix)+' tickets × £'+fee.toFixed(2)+' ('+label+')';
+  const plVat=g('od-pl-vat'); if(plVat){ plVat.textContent=vatReg?('-'+_odGbp(totalVat)):'£0'; plVat.className='plv '+(vatReg?'rd':'dim'); }
+  const vatNote=g('od-vat-note'); if(vatNote) vatNote.textContent=vatReg?('Registered · annualised £'+Math.round(annFeeRev/1000)+'k > £90k threshold'):'Pre-threshold · annualised £'+Math.round(annFeeRev/1000)+'k / £90k';
+  st('od-pl-netrev',_odGbp(netFeeRev));
+  const plStr=g('od-pl-str'); if(plStr){ plStr.textContent='-'+_odGbp(totalStripe); plStr.className='plv str'; }
+  const strNote=g('od-str-note'); if(strNote) strNote.textContent='1.5%+20p on £'+checkoutPrice.toFixed(2)+' × '+_odFmt(paidTix)+' txns';
+  const plCb=g('od-pl-cb'); if(plCb){ plCb.textContent=cbCount>0?('-'+_odGbp(cbCost)):'£0'; plCb.className='plv '+(cbCount>0?'rd':'dim'); }
+  const cbNote=g('od-cb-note'); if(cbNote) cbNote.textContent=cbCount>0?(cbCount+' disputes × £15'):('No disputes modelled');
+  st('od-pl-gp',_odGbp(gp));
+
+  // Infra
+  const privRsvp=fep*Math.min(frp,10), vetRsvp=fev*frv, totalFree=privRsvp+vetRsvp;
+  const totalLoad=paidTix+totalFree;
+  const freeRatio=totalLoad>0?totalFree/totalLoad:0;
+  st('od-total-free',_odFmt(totalFree));
+  st('od-load-ratio',Math.round(freeRatio*100)+'% free');
+  const lb=g('od-load-bar'); if(lb){ lb.style.width=Math.min(freeRatio*100,100)+'%'; lb.style.background=_odBarCol(Math.min(freeRatio/0.6*100,100)); }
+  st('od-shv-free',_odFmt(totalFree)+' free RSVPs/mo');
+
+  const dbRows=totalLoad*5, maus=Math.round(totalLoad*0.6), mapLoads=paidTix*2, emails=totalLoad*1.5, inv=totalLoad*8;
+  const sb=_odCalcSupa(dbRows,maus), mb=_odCalcMb(mapLoads), em=_odCalcEm(emails), vc=_odCalcVc(inv);
+  _odSetBar(g,'od-sb-b',sb.rp); _odSetTier(g,'od-sb-t',sb.over?'Over free':sb.rp>60?'Near limit':'Free',sb.rp); st('od-sb-n',_odFmt(dbRows));
+  const sbC=g('od-sb-c'); if(sbC){ sbC.textContent='£'+sb.cost; sbC.className='uc '+(sb.cost>0?'bad':'ok'); }
+  _odSetBar(g,'od-mau-b',sb.mp); _odSetTier(g,'od-mau-t',sb.over?'Over free':sb.mp>60?'Near limit':'Free',sb.mp); st('od-mau-n',_odFmt(maus)+' MAUs');
+  _odSetBar(g,'od-mb-b',mb.p); _odSetTier(g,'od-mb-t',mb.t,mb.p); st('od-mb-n',_odFmt(mapLoads));
+  const mbC=g('od-mb-c'); if(mbC){ mbC.textContent='£'+Math.round(mb.cost); mbC.className='uc '+(mb.cost>0?'bad':'ok'); }
+  _odSetBar(g,'od-em-b',em.p); _odSetTier(g,'od-em-t',em.t,em.p); st('od-em-n',_odFmt(emails));
+  const emC=g('od-em-c'); if(emC){ emC.textContent='£'+em.cost; emC.className='uc '+(em.cost>0?'bad':'ok'); }
+  _odSetBar(g,'od-vc-b',vc.p); _odSetTier(g,'od-vc-t',vc.t,vc.p); st('od-vc-n',_odFmt(inv));
+  const vcC=g('od-vc-c'); if(vcC){ vcC.textContent='£'+vc.cost; vcC.className='uc '+(vc.cost>0?'bad':'ok'); }
+  const totalInfra=sb.cost+Math.round(mb.cost)+em.cost+vc.cost;
+  st('od-infra-tot','£'+totalInfra.toLocaleString()); st('od-shv-infra','£'+totalInfra+'/mo');
+  const plSb=g('od-pl-sb'); if(plSb){ plSb.textContent=sb.cost>0?'-£'+sb.cost:'£0'; plSb.className='plv '+(sb.cost>0?'am':'dim'); }
+  const sbPl=g('od-sb-pl'); if(sbPl) sbPl.textContent=sb.cost>0?'Pro':'Free';
+  const plMb=g('od-pl-mb'); if(plMb){ plMb.textContent=mb.cost>0?'-£'+Math.round(mb.cost):'£0'; plMb.className='plv '+(mb.cost>0?'am':'dim'); }
+  const mbPl=g('od-mb-pl'); if(mbPl) mbPl.textContent=mb.t;
+  const plEm=g('od-pl-em'); if(plEm){ plEm.textContent=em.cost>0?'-£'+em.cost:'£0'; plEm.className='plv '+(em.cost>0?'am':'dim'); }
+  const emPl=g('od-em-pl'); if(emPl) emPl.textContent=em.t;
+  const plVc=g('od-pl-vc'); if(plVc){ plVc.textContent=vc.cost>0?'-£'+vc.cost:'£0'; plVc.className='plv '+(vc.cost>0?'am':'dim'); }
+  const vcPl=g('od-vc-pl'); if(vcPl) vcPl.textContent=vc.t;
+
+  // Staffing
+  const p=OD_PRESETS[_odCur];
+  const csC=p.cs.cost, engC=p.eng.cost, totalStaff=csC+engC, totalOpex=totalInfra+totalStaff;
+  const plCs=g('od-pl-cs'); if(plCs){ plCs.textContent=csC>0?'-'+_odGbp(csC):'£0'; plCs.className='plv '+(csC>0?'pu':'dim'); }
+  const csN=g('od-cs-n'); if(csN) csN.textContent=p.cs.l;
+  const plEng=g('od-pl-eng'); if(plEng){ plEng.textContent=engC>0?'-'+_odGbp(engC):'£0'; plEng.className='plv '+(engC>0?'pu':'dim'); }
+  const engN=g('od-eng-n'); if(engN) engN.textContent=p.eng.l;
+  st('od-pl-opex','-'+_odGbp(totalOpex));
+
+  // Tax + founder draw
+  const pre=gp-totalOpex, ann=pre*12, tr=pre>0?(ann>50000?0.25:0.19):0, tax=pre>0?pre*tr:0, netAfterTax=pre-tax;
+  const DRAW_TARGET=10000, DRAW_CAP=20000;
+  let actualDraw, drawLabel, reinvest;
+  if(netAfterTax<=0){ actualDraw=0; drawLabel='Business not yet profitable'; reinvest=0; }
+  else if(netAfterTax<DRAW_TARGET){ actualDraw=netAfterTax; drawLabel='Below £10k — taking all profit as draw'; reinvest=0; }
+  else if(netAfterTax<DRAW_CAP){ actualDraw=DRAW_TARGET; drawLabel='£10k/mo draw · surplus reinvested'; reinvest=netAfterTax-actualDraw; }
+  else { actualDraw=DRAW_CAP; drawLabel='£20k/mo hard cap reached · everything above reinvests'; reinvest=netAfterTax-actualDraw; }
+
+  st('od-pl-pre',_odGbp(pre));
+  const taxL=g('od-tax-l'); if(taxL) taxL.textContent='UK corp tax · '+(tr*100)+'% effective rate';
+  st('od-pl-tax','-'+_odGbp(tax));
+  const plDraw=g('od-pl-draw'); if(plDraw) plDraw.textContent=actualDraw>0?('-'+_odGbp(actualDraw)):'£0';
+  const drawNote=g('od-draw-note'); if(drawNote) drawNote.textContent=drawLabel;
+  const drawDisplay=g('od-draw-display'); if(drawDisplay) drawDisplay.textContent=_odGbp(actualDraw)+'/mo';
+  const neEl=g('od-pl-net'); if(neEl){ neEl.textContent=_odGbp(reinvest); neEl.className='od-thv '+(reinvest>0?'pos':netAfterTax<=0?'neg':'pos'); }
+
+  // Status pills
+  const pillTier=g('od-pill-tier'); if(pillTier){ pillTier.textContent=label+' · £'+fee.toFixed(2)+'/ticket'; pillTier.className='status-pill '+(tier===1?'sp-blue':tier===2?'sp-green':tier===3?'sp-amber':'sp-purple'); }
+  const pillVat=g('od-pill-vat'); if(pillVat){ pillVat.textContent=vatReg?'VAT Registered':'Pre-VAT (£'+Math.round(annFeeRev/1000)+'k/£90k)'; pillVat.className='status-pill '+(vatReg?'sp-red':'sp-green'); }
+  const pillStripe=g('od-pill-stripe'); if(pillStripe){ pillStripe.textContent='Stripe · £'+stripePerTx.toFixed(2)+'/txn'; pillStripe.className='status-pill sp-blue'; }
+  const pillNet=g('od-pill-net'); if(pillNet){ pillNet.textContent='Net £'+netFeePerTix.toFixed(2)+'/ticket'; pillNet.className='status-pill '+(netFeePerTix<0.20?'sp-red':netFeePerTix<0.60?'sp-amber':'sp-green'); }
+
+  // Vetting highlight
+  ['od-vc1','od-vc2','od-vc3','od-vc4'].forEach(id=>{ const el=g(id); if(el) el.className='vet-card'; });
+  if(pr<20){ const el=g('od-vc1'); if(el) el.className='vet-card active'; }
+  else if(pr<50){ const el=g('od-vc2'); if(el) el.className='vet-card active'; }
+  else { const el=g('od-vc3'); if(el) el.className='vet-card active'; }
+
+  // Alerts
+  const stripePct=netFeeRev>0?totalStripe/netFeeRev*100:0;
+  const aVat=g('od-alert-vat'); if(aVat) aVat.className='pitfall-alert '+(vatReg?'info show':'');
+  const aCb=g('od-alert-cb'); if(aCb) aCb.className='pitfall-alert '+(cbCost>500?'warn show':'');
+  const aStr=g('od-alert-stripe'); if(aStr) aStr.className='pitfall-alert '+(stripePct>40?'warn show':'');
+  const aMar=g('od-alert-margin'); if(aMar) aMar.className='pitfall-alert '+(pre<0?'danger show':'');
+  const aRat=g('od-alert-ratio'); if(aRat) aRat.className='pitfall-alert '+(freeRatio>0.6?'warn show':'');
+
+  // Risk list
+  const risks=[
+    {n:'Net margin per ticket',d:'After Stripe + VAT (ex-infra/staff)',v:'£'+netFeePerTix.toFixed(2),cls:netFeePerTix<0.20?'bad':netFeePerTix<0.50?'warn':'ok',note:netFeePerTix<0.20?'Below safety floor':'Healthy'},
+    {n:'VAT status',d:vatReg?'Registered · 20% absorbed from fee':'Pre-threshold — build reserves',v:vatReg?_odGbp(totalVat)+'/mo withheld':'Pre-VAT',cls:vatReg?'warn':'ok',note:vatReg?'Checkout price unchanged':'Cross £90k annualised fee revenue to trigger'},
+    {n:'Stripe fee drag',d:'Processing as % of net fee revenue',v:Math.round(stripePct)+'%',cls:stripePct>40?'bad':stripePct>25?'warn':'ok',note:stripePct>40?'Raise ticket price to Tier 2 range':'Acceptable'},
+    {n:'Chargeback exposure',d:cbCount+' disputes · £15 each',v:_odGbp(cbCost)+'/mo',cls:cbCost>2000?'bad':cbCost>500?'warn':'ok',note:'In-app refund UX deflects most'},
+    {n:'Free load ratio',d:Math.round(freeRatio*100)+'% of RSVPs are free',v:Math.round(freeRatio*100)+'%',cls:freeRatio>0.8?'bad':freeRatio>0.6?'warn':'ok',note:'Private cap (10) + vetting keeps this manageable'},
+    {n:'Staffing vs gross profit',d:'Staff cost as % of gross profit',v:gp>0?Math.round(totalStaff/gp*100)+'%':'N/A',cls:gp>0&&totalStaff>gp?'bad':gp>0&&totalStaff/gp>0.6?'warn':'ok',note:'Hire too early = margin squeeze'},
+  ];
+  const rl=g('od-risk-list'); if(!rl) return;
+  rl.innerHTML=''; let score=0;
+  risks.forEach(r=>{
+    if(r.cls==='bad') score+=2; else if(r.cls==='warn') score+=1;
+    const el=document.createElement('div'); el.className='risk-row';
+    el.innerHTML='<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;color:#C5C6CB">'+r.n+'</div><div style="font-size:10px;color:#5F5E5A;margin-top:2px">'+r.d+'</div><div style="font-size:10px;color:#5B9FD9;margin-top:2px">'+r.note+'</div></div><div style="text-align:right;flex-shrink:0;margin-left:8px"><div class="rc '+r.cls+'">'+r.v+'</div></div>';
+    rl.appendChild(el);
+  });
+  st('od-shv-risks',score===0?'All clear':score<=2?'Low risk':score<=4?'Watch':score<=6?'High risk':'Critical');
+  st('od-shv-risk',gv('od-sl-cb').toFixed(1)+'% CB · '+gv('od-sl-drop')+'% drop');
+}
+
+function initOwnerDash(){
+  const wrap=document.getElementById('od-wrap'); if(!wrap) return;
+  const g=id=>wrap.querySelector('#'+id);
+  const sv2=(id,v)=>{ const el=g(id); if(el) el.value=v; };
+
+  ['od-sl-ev','od-sl-tx','od-sl-pr','od-sl-fe-p','od-sl-fr-p','od-sl-fe-v','od-sl-fr-v','od-sl-cb','od-sl-drop'].forEach(id=>{
+    const el=g(id); if(!el) return;
+    el.addEventListener('input',()=>{
+      _odCur='Custom';
+      wrap.querySelectorAll('[data-odp]').forEach(b=>{ b.classList.remove('a'); if(b.dataset.odp==='Custom') b.classList.add('a'); });
+      const ctx=g('od-ctx'); if(ctx) ctx.innerHTML=OD_PRESETS.Custom.ctx;
+      od_renderStaff(); od_recalc();
+    });
+  });
+
+  const presetsEl=g('od-presets');
+  if(presetsEl){
+    presetsEl.addEventListener('click',e=>{
+      const btn=e.target.closest('[data-odp]'); if(!btn) return;
+      const n=btn.dataset.odp; _odCur=n;
+      wrap.querySelectorAll('[data-odp]').forEach(b=>{ b.classList.remove('a'); if(b.classList.contains('hype')) b.classList.remove('a'); });
+      btn.classList.add('a');
+      const p=OD_PRESETS[n];
+      sv2('od-sl-ev',p.ev); sv2('od-sl-tx',p.tx); sv2('od-sl-pr',p.pr);
+      sv2('od-sl-fe-p',p.fep); sv2('od-sl-fr-p',p.frp); sv2('od-sl-fe-v',p.fev); sv2('od-sl-fr-v',p.frv);
+      sv2('od-sl-cb',p.cb); sv2('od-sl-drop',p.drop);
+      const ctx=g('od-ctx'); if(ctx) ctx.innerHTML=p.ctx;
+      od_renderStaff(); od_recalc();
+    });
+  }
+
+  const ctx=g('od-ctx'); if(ctx) ctx.innerHTML=OD_PRESETS[_odCur].ctx;
+  od_renderStaff(); od_recalc();
+}
+
+function renderOwnerDash(){
+  const isOwner = state.profileEmail==='gondoxml@gmail.com';
+  if(!isOwner) return `<div class="empty-state" style="padding:40px 20px;text-align:center;"><div style="font-size:32px;margin-bottom:12px;">🔒</div><div style="font-weight:700;margin-bottom:6px;">Restricted</div><div style="color:var(--text-muted);font-size:13px;">Owner access only.</div></div>`;
+
+  const p=OD_PRESETS[_odCur];
+  return `
+  <div class="connect-header" style="padding-top:16px;"><h2>Finances</h2><p>Live P&amp;L · Risk analysis · Infrastructure headroom</p></div>
+  <div class="social-seg">
+    <button class="social-seg-btn" onclick="openSocialTab()">Events</button>
+    <button class="social-seg-btn" onclick="openFriends()">Friends</button>
+    <button class="social-seg-btn" onclick="openHost()">Host</button>
+    <button class="social-seg-btn active">Finances</button>
+  </div>
+  <div id="od-wrap">
+    <h2>Cumulus financial engine</h2>
+    <p class="od-sub">4-tier fees · VAT logic · Escrow model · Risk analysis · London calibrated</p>
+
+    <div class="pb" id="od-presets">
+      <button data-odp="Launch">Launch</button>
+      <button data-odp="Traction" class="a">Traction</button>
+      <button data-odp="Scaling">Scaling</button>
+      <button data-odp="Dominance">Dominance</button>
+      <button class="hype" data-odp="CityLeader">City Leader</button>
+      <button class="hype" data-odp="London1">London #1</button>
+      <button data-odp="Custom">Custom</button>
+    </div>
+    <div class="ctx" id="od-ctx"></div>
+
+    <div class="status-bar">
+      <div class="status-pill sp-blue" id="od-pill-tier">—</div>
+      <div class="status-pill sp-green" id="od-pill-vat">Pre-VAT</div>
+      <div class="status-pill sp-blue" id="od-pill-stripe">Stripe</div>
+      <div class="status-pill sp-green" id="od-pill-net">—</div>
+    </div>
+
+    <div class="pitfall-alert info" id="od-alert-vat">ℹ VAT threshold crossed — 20% absorbed from platform fee. Checkout price unchanged. Net margin per ticket reduces.</div>
+    <div class="pitfall-alert warn" id="od-alert-cb">⚠ Chargeback fees exceeding £500/mo — ensure in-app refund UX is prominent to deflect bank disputes.</div>
+    <div class="pitfall-alert warn" id="od-alert-stripe">⚠ Stripe fees over 40% of fee revenue — consider raising average ticket price above £15 to unlock Tier 2.</div>
+    <div class="pitfall-alert danger" id="od-alert-margin">⚠ Pre-tax margin negative — costs outpacing revenue. Review staffing timing.</div>
+    <div class="pitfall-alert warn" id="od-alert-ratio">⚠ Free event load above 60% of total RSVPs — tighten vetted organiser criteria.</div>
+
+    <!-- PAID EVENTS -->
+    <div class="section-h open" id="od-sh-paid" onclick="od_tog('paid')">
+      <span class="sh-t"><span class="od-dot" style="background:#5B9FD9"></span> Paid events</span>
+      <span style="display:flex;align-items:center;gap:8px"><span class="sh-v" id="od-shv-paid">—</span><span class="sh-arr">▾</span></span>
+    </div>
+    <div class="section-b open" id="od-sb-paid">
+      <div class="od-card">
+        <div class="od-sr"><div class="od-st"><span>Monthly paid events</span><span class="od-vb" id="od-lev">—</span></div><input type="range" id="od-sl-ev" min="1" max="10000" step="1" value="${p.ev}"></div>
+        <div class="od-sr"><div class="od-st"><span>Avg. tickets per event</span><span class="od-vb" id="od-ltx">—</span></div><input type="range" id="od-sl-tx" min="5" max="500" step="1" value="${p.tx}"></div>
+        <div class="od-sr"><div class="od-st"><span>Avg. ticket price (host cut)</span><span class="od-vb" id="od-lpr">—</span></div><input type="range" id="od-sl-pr" min="1" max="200" step="1" value="${p.pr}"></div>
+        <div class="tier-box">
+          <div class="tb-row" id="od-tbr-t1"><span class="tb-label">£0–£15 <span class="tb-badge badge-t1">Tier 1</span></span><span class="tb-val" style="color:#5B9FD9">£1.50 fee</span></div>
+          <div class="tb-row" id="od-tbr-t2"><span class="tb-label">£16–£40 <span class="tb-badge badge-t2">Tier 2</span></span><span class="tb-val" style="color:#22C55E">£2.50 fee</span></div>
+          <div class="tb-row" id="od-tbr-t3"><span class="tb-label">£41–£71 <span class="tb-badge badge-t3">Tier 3</span></span><span class="tb-val" style="color:#E0B23C">£3.50 fee</span></div>
+          <div class="tb-row" id="od-tbr-t4"><span class="tb-label">£72+ <span class="tb-badge badge-t4">Tier 4</span></span><span class="tb-val" style="color:#AFA9EC">£4.50 fee</span></div>
+          <div class="tb-div"></div>
+          <div class="tb-row"><span class="tb-label">Host sets price</span><span class="tb-val" id="od-tb-host">—</span></div>
+          <div class="tb-row"><span class="tb-label">Cumulus fee (Tier <span id="od-tb-tiern">—</span>)</span><span class="tb-val" style="color:#22C55E" id="od-tb-fee">—</span></div>
+          <div class="tb-row"><span class="tb-label">Stripe on total (1.5%+20p)</span><span class="tb-val" style="color:#E24B4A" id="od-tb-stripe">—</span></div>
+          <div class="tb-row"><span class="tb-label">VAT from fee (if >£90k/yr)</span><span class="tb-val" style="color:#E24B4A" id="od-tb-vat">—</span></div>
+          <div class="tb-div"></div>
+          <div class="tb-total"><span style="color:#C5C6CB">Attendee pays</span><span style="color:#F1F1EF" id="od-tb-checkout">—</span></div>
+          <div class="tb-total" style="margin-top:4px"><span style="color:#C5C6CB">Cumulus nets/ticket</span><span id="od-tb-net" style="color:#22C55E">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FREE EVENTS -->
+    <div class="section-h" id="od-sh-free" onclick="od_tog('free')" style="margin-top:4px">
+      <span class="sh-t"><span class="od-dot" style="background:#D4537E"></span> Free events</span>
+      <span style="display:flex;align-items:center;gap:8px"><span class="sh-v" id="od-shv-free">—</span><span class="sh-arr">▾</span></span>
+    </div>
+    <div class="section-b" id="od-sb-free">
+      <div class="od-card">
+        <div class="od-sr"><div class="od-st"><span>Private events/mo (friends, cap 10)</span><span class="od-vp" id="od-lfe-p">—</span></div><input type="range" id="od-sl-fe-p" min="0" max="5000" step="1" value="${p.fep}"></div>
+        <div class="od-sr"><div class="od-st"><span>Avg. RSVPs (max 10)</span><span class="od-vp" id="od-lfr-p">—</span></div><input type="range" id="od-sl-fr-p" min="2" max="10" step="1" value="${p.frp}"></div>
+        <div style="height:1px;background:#2A2B32;margin:8px 0"></div>
+        <div class="od-sr"><div class="od-st"><span>Vetted organiser free events/mo</span><span class="od-vp" id="od-lfe-v">—</span></div><input type="range" id="od-sl-fe-v" min="0" max="3000" step="1" value="${p.fev}"></div>
+        <div class="od-sr"><div class="od-st"><span>Avg. RSVPs per vetted event</span><span class="od-vp" id="od-lfr-v">—</span></div><input type="range" id="od-sl-fr-v" min="5" max="200" step="1" value="${p.frv}"></div>
+        <div style="margin-top:10px;padding:10px 12px;background:#1E1F24;border-radius:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px"><span style="color:#868C96">Total free RSVPs/mo</span><span style="font-family:'SF Mono',monospace;color:#D4537E" id="od-total-free">—</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px"><span style="color:#868C96">Free vs total load</span><span style="font-family:'SF Mono',monospace" id="od-load-ratio">—</span></div>
+          <div style="height:5px;background:#0F1117;border-radius:3px;overflow:hidden"><div id="od-load-bar" style="height:100%;border-radius:3px;background:#D4537E;width:0%"></div></div>
+          <div style="font-size:10px;color:#5F5E5A;margin-top:5px">Private events capped at 10 RSVPs · vetted requires 3 successful paid events</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOST VETTING -->
+    <div class="section-h" id="od-sh-vet" onclick="od_tog('vet')" style="margin-top:4px">
+      <span class="sh-t"><span class="od-dot" style="background:#E0B23C"></span> Host vetting tiers</span>
+      <span style="display:flex;align-items:center;gap:8px"><span class="sh-v" id="od-shv-vet">Active</span><span class="sh-arr">▾</span></span>
+    </div>
+    <div class="section-b" id="od-sb-vet">
+      <div class="od-card">
+        <div style="font-size:11px;color:#868C96;margin-bottom:8px;line-height:1.5">Vetting scales with financial risk. Graduated hosts (3+ paid events, zero disputes) bypass all gates.</div>
+        <div class="vetting-grid">
+          <div class="vet-card" id="od-vc1"><div class="vc-tier" style="color:#5B9FD9">Tier 1 · Under £20</div><div class="vc-rule">Instant publish. 48hr escrow hold is security buffer.</div></div>
+          <div class="vet-card" id="od-vc2"><div class="vc-tier" style="color:#22C55E">Tier 2 · £20–£49</div><div class="vc-rule">Requires social graph verification or community website.</div></div>
+          <div class="vet-card" id="od-vc3"><div class="vc-tier" style="color:#E0B23C">Tier 3 · £50+</div><div class="vc-rule">Queue pause. Host submits justification or venue docs. 4hr review target.</div></div>
+          <div class="vet-card" id="od-vc4"><div class="vc-tier" style="color:#AFA9EC">Graduated</div><div class="vc-rule">3 successful paid events, zero dispute flags — all gates removed permanently.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RISK INPUTS -->
+    <div class="section-h" id="od-sh-risk" onclick="od_tog('risk')" style="margin-top:4px">
+      <span class="sh-t"><span class="od-dot" style="background:#E24B4A"></span> Risk inputs</span>
+      <span style="display:flex;align-items:center;gap:8px"><span class="sh-v" id="od-shv-risk">—</span><span class="sh-arr">▾</span></span>
+    </div>
+    <div class="section-b" id="od-sb-risk">
+      <div class="od-card">
+        <div class="od-sr"><div class="od-st"><span>Chargeback rate (% paid tickets)</span><span class="od-vr" id="od-lcb">—</span></div><input type="range" id="od-sl-cb" min="0" max="2" step="0.1" value="${p.cb}"></div>
+        <div style="font-size:10px;color:#5F5E5A;margin-top:-4px;margin-bottom:10px">CNP industry avg 0.6–1.0% · in-app refund UX deflects to ~0.3–0.5% · £15 fee per dispute</div>
+        <div class="od-sr"><div class="od-st"><span>Fee drop-off at checkout (%)</span><span class="od-vr" id="od-ldrop">—</span></div><input type="range" id="od-sl-drop" min="0" max="20" step="1" value="${p.drop}"></div>
+        <div style="font-size:10px;color:#5F5E5A;margin-top:-4px">Tickets lost due to visible fee — lower with DICE-style upfront pricing (3% realistic)</div>
+      </div>
+    </div>
+
+    <!-- STAFFING -->
+    <div class="section-h" id="od-sh-staff" onclick="od_tog('staff')" style="margin-top:4px">
+      <span class="sh-t"><span class="od-dot" style="background:#7F77DD"></span> Staffing</span>
+      <span style="display:flex;align-items:center;gap:8px"><span class="sh-v" id="od-shv-staff">—</span><span class="sh-arr">▾</span></span>
+    </div>
+    <div class="section-b" id="od-sb-staff">
+      <div class="od-card">
+        <div id="od-staff-list"></div>
+        <div style="margin-top:10px;padding:9px 12px;background:#1E1F24;border-radius:10px;display:flex;justify-content:space-between">
+          <span style="font-size:12px;color:#868C96">Total team staffing/mo</span>
+          <span style="font-family:'SF Mono',monospace;font-size:14px;font-weight:600;color:#7F77DD" id="od-staff-total">£0</span>
+        </div>
+        <div style="height:1px;background:#2A2B32;margin:12px 0"></div>
+        <div class="od-lbl"><span class="od-dot" style="background:#22C55E"></span> Founder draw (automatic)</div>
+        <div class="founder-box">
+          <div class="founder-row"><span>Below £10k profit</span><span style="font-family:'SF Mono',monospace;color:#C5C6CB">Take all of it</span></div>
+          <div class="founder-row"><span>£10k – £20k profit</span><span style="font-family:'SF Mono',monospace;color:#22C55E">Draw £10k · rest reinvests</span></div>
+          <div class="founder-row" style="margin-bottom:0"><span>Above £20k profit</span><span style="font-family:'SF Mono',monospace;color:#22C55E">Hard cap £20k · rest reinvests</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P&L -->
+    <div style="margin-top:10px">
+      <div class="od-card">
+        <div class="od-stats3">
+          <div class="od-sc"><div class="od-sl">Paid tickets</div><div class="od-sv bl" id="od-st-ptx">—</div></div>
+          <div class="od-sc"><div class="od-sl">Platform fee</div><div class="od-sv gn" id="od-st-fee">—</div></div>
+          <div class="od-sc"><div class="od-sl">Buyer pays</div><div class="od-sv" id="od-st-checkout" style="color:#F1F1EF">—</div></div>
+        </div>
+
+        <div class="od-stag">Revenue</div>
+        <div class="plr"><div class="pll">Platform fees collected<small id="od-pf-note">—</small></div><div class="plv gn" id="od-pl-pf">—</div></div>
+        <div class="plr"><div class="pll">UK VAT withheld (if applicable)<small id="od-vat-note">—</small></div><div class="plv rd" id="od-pl-vat">—</div></div>
+        <div class="plr"><div class="pll s">Net fee revenue (ex-VAT)</div><div class="plv" id="od-pl-netrev">—</div></div>
+
+        <div class="od-div"></div>
+        <div class="od-stag">Payment costs (Connect Standard)</div>
+        <div class="plr"><div class="pll">Stripe processing (1.5% + 20p)<small id="od-str-note">—</small></div><div class="plv str" id="od-pl-str">—</div></div>
+        <div class="plr"><div class="pll">Chargebacks<small id="od-cb-note">—</small></div><div class="plv rd" id="od-pl-cb">—</div></div>
+        <div class="plr"><div class="pll s">Gross profit after payments</div><div class="plv" id="od-pl-gp">—</div></div>
+
+        <div class="od-div"></div>
+        <div class="od-stag">Infrastructure</div>
+        <div class="plr"><div class="pll">Supabase<small id="od-sb-pl">—</small></div><div class="plv am" id="od-pl-sb">£0</div></div>
+        <div class="plr"><div class="pll">Mapbox<small id="od-mb-pl">—</small></div><div class="plv am" id="od-pl-mb">£0</div></div>
+        <div class="plr"><div class="pll">Resend<small id="od-em-pl">—</small></div><div class="plv am" id="od-pl-em">£0</div></div>
+        <div class="plr"><div class="pll">Vercel<small id="od-vc-pl">—</small></div><div class="plv am" id="od-pl-vc">£0</div></div>
+
+        <div class="od-div"></div>
+        <div class="od-stag">Staffing</div>
+        <div class="plr"><div class="pll">CS team<small id="od-cs-n">—</small></div><div class="plv pu" id="od-pl-cs">—</div></div>
+        <div class="plr"><div class="pll">Engineering<small id="od-eng-n">—</small></div><div class="plv pu" id="od-pl-eng">—</div></div>
+
+        <div class="od-div"></div>
+        <div class="plr"><div class="pll s">Total OpEx</div><div class="plv am" id="od-pl-opex">—</div></div>
+        <div class="plr"><div class="pll s">Pre-tax net margin</div><div class="plv" id="od-pl-pre">—</div></div>
+        <div class="plr"><div class="pll">UK corp tax<small id="od-tax-l">—</small></div><div class="plv rd" id="od-pl-tax">—</div></div>
+        <div class="plr"><div class="pll">Founder draw<small id="od-draw-note">—</small></div><div class="plv gn" id="od-pl-draw">—</div></div>
+
+        <div class="od-th">
+          <div><div class="od-t1">Reinvestment pool</div><div class="od-t2">Profit returned to business after your draw</div></div>
+          <div style="text-align:right">
+            <div class="od-thv pos" id="od-pl-net">—</div>
+            <div style="font-size:11px;margin-top:4px;font-family:'SF Mono',monospace;color:#868C96">your draw: <span id="od-draw-display" style="color:#22C55E">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PITFALL ANALYSIS -->
+    <div class="section-h" id="od-sh-risks" onclick="od_tog('risks')" style="margin-top:10px">
+      <span class="sh-t"><span class="od-dot" style="background:#E24B4A"></span> Pitfall analysis</span>
+      <span style="display:flex;align-items:center;gap:8px"><span class="sh-v" id="od-shv-risks">—</span><span class="sh-arr">▾</span></span>
+    </div>
+    <div class="section-b" id="od-sb-risks">
+      <div class="od-card" style="margin-top:4px"><div id="od-risk-list"></div></div>
+    </div>
+
+    <!-- INFRASTRUCTURE -->
+    <div class="section-h" id="od-sh-infra" onclick="od_tog('infra')" style="margin-top:4px">
+      <span class="sh-t"><span class="od-dot" style="background:#1D9E75"></span> Infrastructure headroom</span>
+      <span style="display:flex;align-items:center;gap:8px"><span class="sh-v" id="od-shv-infra">—</span><span class="sh-arr">▾</span></span>
+    </div>
+    <div class="section-b" id="od-sb-infra">
+      <div class="od-card" style="margin-top:4px">
+        <div class="ibar-row">
+          <div class="ibar-top"><span class="ibar-name">Supabase rows <span class="tbadge tok" id="od-sb-t">Free</span></span><span class="ibar-nums" id="od-sb-n">—</span></div>
+          <div class="ibar-track"><div class="ibar-fill" id="od-sb-b" style="width:0%"></div></div>
+          <div class="ibar-det"><span>Free 500k → Pro £20</span><span class="uc ok" id="od-sb-c">£0</span></div>
+        </div>
+        <div class="ibar-row">
+          <div class="ibar-top"><span class="ibar-name">Supabase MAUs <span class="tbadge tok" id="od-mau-t">Free</span></span><span class="ibar-nums" id="od-mau-n">—</span></div>
+          <div class="ibar-track"><div class="ibar-fill" id="od-mau-b" style="width:0%"></div></div>
+          <div class="ibar-det"><span>Free 50k → Pro 100k</span><span class="uc ok" id="od-mau-c">incl.</span></div>
+        </div>
+        <div class="ibar-row">
+          <div class="ibar-top"><span class="ibar-name">Mapbox <span class="tbadge tok" id="od-mb-t">Free</span></span><span class="ibar-nums" id="od-mb-n">—</span></div>
+          <div class="ibar-track"><div class="ibar-fill" id="od-mb-b" style="width:0%"></div></div>
+          <div class="ibar-det"><span>Free 50k → £0.40/1k</span><span class="uc ok" id="od-mb-c">£0</span></div>
+        </div>
+        <div class="ibar-row">
+          <div class="ibar-top"><span class="ibar-name">Resend <span class="tbadge tok" id="od-em-t">Free</span></span><span class="ibar-nums" id="od-em-n">—</span></div>
+          <div class="ibar-track"><div class="ibar-fill" id="od-em-b" style="width:0%"></div></div>
+          <div class="ibar-det"><span>Free 3k → Starter £15 → Pro £35</span><span class="uc ok" id="od-em-c">£0</span></div>
+        </div>
+        <div class="ibar-row">
+          <div class="ibar-top"><span class="ibar-name">Vercel <span class="tbadge tok" id="od-vc-t">Free</span></span><span class="ibar-nums" id="od-vc-n">—</span></div>
+          <div class="ibar-track"><div class="ibar-fill" id="od-vc-b" style="width:0%"></div></div>
+          <div class="ibar-det"><span>Free 1M → Pro £18</span><span class="uc ok" id="od-vc-c">£0</span></div>
+        </div>
+        <div style="margin-top:10px;padding:9px 12px;background:#1E1F24;border-radius:10px;display:flex;justify-content:space-between">
+          <span style="font-size:12px;color:#868C96">Total infra/mo</span>
+          <span style="font-family:'SF Mono',monospace;font-size:13px;font-weight:600;color:#F1F1EF" id="od-infra-tot">£0</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// HOST PAYOUTS PANEL
+// ═══════════════════════════════════════════════════════
+function renderHostPayoutsPanel(){
+  const tiers=[
+    {range:'Free',fee:0,label:'Free event',badge:'#22C55E',desc:'No fee added. Free events are zero-cost for everyone.'},
+    {range:'£1–£15',fee:1.50,tier:1,badge:'#5B9FD9',vet:'Instant publish. 48hr escrow hold.',vetCls:'t1'},
+    {range:'£16–£40',fee:2.50,tier:2,badge:'#22C55E',vet:'Social graph verification required.',vetCls:'t2'},
+    {range:'£41–£71',fee:3.50,tier:3,badge:'#E0B23C',vet:'Queue pause — 4hr review target.',vetCls:'t3'},
+    {range:'£72+',fee:4.50,tier:4,badge:'#AFA9EC',vet:'Full venue docs required.',vetCls:'t3'},
+  ];
+  const tierRows=tiers.map(t=>`
+    <div class="hp-tier-row">
+      <span class="hp-tier-label">${t.range}</span>
+      <span class="hp-tier-fee" style="color:${t.badge}">${t.fee===0?'No fee':'+ £'+t.fee.toFixed(2)+' Cumulus fee'}</span>
+    </div>`).join('');
+
+  return `
+  <div class="hp-panel">
+    <div class="hp-title">💸 Your payouts explained</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">You set the ticket price. Cumulus adds a flat, transparent platform fee to the buyer only. You keep 100% of your price — always.</div>
+    ${tierRows}
+    <div style="margin-top:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Fee calculator</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <span style="font-size:12px;color:var(--text-muted);">Your price: £</span>
+        <input id="hp-price-input" type="number" min="0" step="0.01" placeholder="e.g. 12" class="gate-input" style="max-width:120px;margin:0;" oninput="updateHostPayouts()"/>
+      </div>
+      <div id="hp-breakdown-result" class="hp-breakdown" style="display:none;"></div>
+    </div>
+    <div style="margin-top:12px;padding:10px 12px;background:var(--surface-2);border-radius:10px;font-size:11px;color:var(--text-muted);line-height:1.6;">
+      <strong style="color:var(--text);">Payout timeline:</strong> Funds held in escrow until 48 hours after your event ends, then released directly to your Stripe account. Graduated hosts (3+ events, zero disputes) get all friction removed.
+    </div>
+  </div>`;
+}
+
+function updateHostPayouts(){
+  const input=document.getElementById('hp-price-input');
+  const result=document.getElementById('hp-breakdown-result');
+  if(!input||!result) return;
+  const price=parseFloat(input.value)||0;
+  if(price<=0){ result.style.display='none'; return; }
+  const fee=getCumulusFee(price);
+  const buyerTotal=price+fee;
+  const stripeCost=buyerTotal*0.015+0.20;
+  const tierNum=price<=15?1:price<=40?2:price<=71?3:4;
+  const vetMsg=price<20?'Instant publish — Tier 1 pricing.'
+    :price<50?'Requires social verification (Instagram/website).'
+    :'Queue pause — submit venue or justification docs.';
+  result.style.display='block';
+  result.innerHTML=`
+    <div class="hp-line"><span>Your ticket price</span><span class="hp-val">£${price.toFixed(2)}</span></div>
+    <div class="hp-line host-keep"><span>You receive (100% of your price)</span><span class="hp-val" style="color:#22C55E">£${price.toFixed(2)}</span></div>
+    <div class="hp-line"><span>Cumulus fee (Tier ${tierNum}) — paid by buyer</span><span class="hp-val" style="color:var(--accent)">+ £${fee.toFixed(2)}</span></div>
+    <div class="hp-line"><span>Buyer pays total</span><span class="hp-val">£${buyerTotal.toFixed(2)}</span></div>
+    <div class="hp-line"><span style="font-size:10px;opacity:0.6">Stripe processing (absorbed by Cumulus)</span><span class="hp-val" style="font-size:10px;opacity:0.6">£${stripeCost.toFixed(2)}</span></div>
+    <div style="margin-top:8px;padding:8px 0;font-size:11px;color:var(--text-muted);">📋 ${vetMsg}</div>`;
+}
+
+function openOwnerDash(){ state.view='owner-dash'; renderNav(); renderView(); window.scrollTo({top:0,behavior:'smooth'}); }
+
 function renderView(){
   const app=document.getElementById('app'); const container=document.getElementById('view-container');
   if(state.view!=='host') destroyHostMap();
@@ -5147,6 +5828,7 @@ function renderView(){
   else if(state.view==='calendar-day') container.innerHTML=renderCalendarDay();
   else if(state.view==='tickets') container.innerHTML=renderTicketsTab();
   else if(state.view==='social'){ container.innerHTML=renderSocialTab(); }
+  else if(state.view==='owner-dash'){ container.innerHTML=renderOwnerDash(); setTimeout(initOwnerDash,0); }
   const cm=document.getElementById('chat-messages'); if(cm) cm.scrollTop=cm.scrollHeight;
 }
 
@@ -5883,9 +6565,10 @@ function renderCalendar(){
 function eventPrice(ev){ return ev.price||0; }
 function getCumulusFee(ticketPrice){
   if(ticketPrice<=0) return 0;
-  if(ticketPrice<=15) return 1.00;
-  if(ticketPrice<=40) return 2.00;
-  return 3.50;
+  if(ticketPrice<=15) return 1.50;
+  if(ticketPrice<=40) return 2.50;
+  if(ticketPrice<=71) return 3.50;
+  return 4.50;
 }
 function ticketTypes(ev){
   const basePrice=eventPrice(ev);
@@ -6347,11 +7030,13 @@ function setHostType(t){
 
 function renderSocialTab(){
   const view=state.view;
+  const isOwner=state.profileEmail==='gondoxml@gmail.com';
 
   const seg=`<div class="social-seg">
     <button class="social-seg-btn${view==='social'?' active':''}" onclick="openSocialTab()">Events</button>
     <button class="social-seg-btn${view==='friends'?' active':''}" onclick="openFriends()">Friends${state.friends.length?` (${state.friends.length})`:''}</button>
     <button class="social-seg-btn${view==='host'?' active':''}" onclick="openHost()">Host</button>
+    ${isOwner?`<button class="social-seg-btn${view==='owner-dash'?' active':''}" onclick="openOwnerDash()" style="color:${view==='owner-dash'?'':'#E0B23C'};">Finances</button>`:''}
   </div>`;
 
   // ── HOST content ──────────────────────────────────────────────────────
@@ -6415,7 +7100,8 @@ function renderSocialTab(){
         <div class="host-notice">We add a flat, transparent platform fee to the buyer at checkout to cover processing. You keep every penny of your ticket price.</div>
       </div>
 
-      <button id="host-submit-btn" class="btn" style="width:100%;margin-bottom:24px;font-size:15px;" onclick="submitHostEvent()">${_hostType==='private'?'Create private event →':'Submit for review →'}</button>`;
+      <button id="host-submit-btn" class="btn" style="width:100%;margin-bottom:16px;font-size:15px;" onclick="submitHostEvent()">${_hostType==='private'?'Create private event →':'Submit for review →'}</button>
+      ${renderHostPayoutsPanel()}`;
   }
 
   // ── FRIENDS content ───────────────────────────────────────────────────
