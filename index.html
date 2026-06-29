@@ -3065,6 +3065,7 @@
   <div id="map-filters" class="map-filters" style="display:none;"></div>
   <div id="geocode-banner"></div>
   <div id="map-caption-bar" class="map-caption" style="display:none;"><span class="cap-live"><span class="dot"></span>Live</span> events pulse · tap pin to view</div>
+  <div id="owner-fin-fab" style="display:none;"></div>
   <div id="view-container"></div>
 </div>
 <script>
@@ -4520,6 +4521,7 @@ async function initApp(){
   }
 
   await loadFriends();
+  if(state.profileEmail==='gondoxml@gmail.com') state.view='owner-dash';
   renderNav(); renderView();
 }
 
@@ -5228,6 +5230,8 @@ function showMapLayer(visible){
     const el=document.getElementById(id);
     if(el) el.style.display=visible?'':'none';
   });
+  const fab=document.getElementById('owner-fin-fab');
+  if(fab) fab.style.display=visible&&state.profileEmail==='gondoxml@gmail.com'?'block':'none';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -5504,8 +5508,14 @@ function renderOwnerDash(){
 
   const p=OD_PRESETS[_odCur];
   return `
-  <div class="connect-header" style="padding-top:16px;"><h2>Finances</h2><p>Live P&amp;L · Risk analysis · Infrastructure headroom</p></div>
-  <div class="social-seg">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding-top:16px;margin-bottom:4px;">
+    <div>
+      <div style="font-size:18px;font-weight:800;color:var(--text);">Finances</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:1px;">Live P&amp;L · Risk analysis · Infrastructure</div>
+    </div>
+    <button onclick="goBrowse()" style="background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;">← Map</button>
+  </div>
+  <div class="social-seg" style="margin-bottom:12px;">
     <button class="social-seg-btn" onclick="openSocialTab()">Events</button>
     <button class="social-seg-btn" onclick="openFriends()">Friends</button>
     <button class="social-seg-btn" onclick="openHost()">Host</button>
@@ -5861,6 +5871,11 @@ function refreshFilters(){
   html+=`<button class="mchip ${state.liveOnly?'active':''}" style="${state.liveOnly?'background:#E23B3B;color:#fff;border-color:transparent;':''}" onclick="toggleLiveOnly()"><span style="width:6px;height:6px;border-radius:50%;background:${state.liveOnly?'#fff':'#E23B3B'};display:inline-block;margin-right:2px;animation:${state.liveOnly?'blink 1.3s ease-in-out infinite':'none'}"></span>Live</button>`;
   html+=`<button class="mchip ${state.hotOnly?'active':''}" style="${state.hotOnly?'background:#F97316;color:#fff;border-color:transparent;':''}" onclick="toggleHotOnly()">🔥 Hot</button>`;
   el.innerHTML=html;
+  // Owner-only floating finances button overlaid on the map
+  const fab=document.getElementById('owner-fin-fab');
+  if(fab&&state.profileEmail==='gondoxml@gmail.com'){
+    fab.innerHTML=`<button onclick="openOwnerDash()" style="position:fixed;bottom:calc(var(--bot-h)+14px);right:16px;z-index:1100;background:#0D1117;color:#22C55E;border:1px solid #22C55E55;border-radius:12px;padding:10px 15px;font-size:12px;font-weight:700;font-family:-apple-system,sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 4px 20px rgba(0,0,0,0.45);letter-spacing:0.02em;">📊 <span>Live Finances</span></button>`;
+  }
 }
 
 function pinTooltipHtml(ev){
