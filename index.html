@@ -33,7 +33,8 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5enJ2Z2JkbmV2bGx3dnhxY2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NDM0NTAsImV4cCI6MjA5NzQxOTQ1MH0.jfSmMobPUV1tTg2cmyAvTGuRmAyd9C5r-pooMVpSV6E';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 </script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:ital,wght@0,400;0,500&display=swap" rel="stylesheet">
+<!-- Variable Inter with optical sizing + DM Sans for display headings -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&family=DM+Sans:ital,opsz,wght@0,9..40,300..900;1,9..40,300..900&family=DM+Mono:ital,wght@0,400;0,500&display=swap" rel="stylesheet">
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -4402,6 +4403,476 @@
     color: var(--text-soft) !important;
     max-width: 520px !important;
     margin: 0 auto !important;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     EVENTS HUB — VISUAL REFRESH
+     ──────────────────────────────────────────────────────────────────
+     DESIGN SYSTEM
+     ─────────────
+     Typography
+       Headings  : DM Sans, 800–900 weight, opsz auto, tight letter-spacing
+       Body      : Inter (variable), opsz auto, 400–600 weight
+       Mono      : DM Mono (dates, codes, badges)
+       Scale     : 10 / 11 / 12 / 13 / 14 / 16 / 18 / 22 / 28 / 36px
+       Line-height: headings 1.15 · body 1.65 · meta 1.4
+       Letter-sp : headings −0.03em · labels +0.06em · body 0
+
+     Spacing (8px grid)
+       xxs  4px  · xs  8px  · sm  12px · md  16px
+       lg  24px  · xl  32px · 2xl 48px · 3xl 64px
+
+     Colors — extend existing palette with semantic tokens
+       --ch-badge-text : text on solid coloured badges
+       --ch-date-bg    : subtle tinted date pill background
+       --ch-cta-glow   : coloured glow under the CTA button
+       --ch-divider    : hairline separator, more visible than --line
+
+     Borders & Radius
+       Cards   : 20px  · Pills: 999px · Inputs: 12px · Chips: 10px
+       Border  : 1px solid var(--line) — cards use slightly bolder 1.5px
+
+     Shadows (layered — 3-stop)
+       Resting : 0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.05)
+       Hover   : 0 2px 4px rgba(0,0,0,0.06), 0 8px 20px rgba(0,0,0,0.10), 0 24px 56px rgba(0,0,0,0.12)
+  ══════════════════════════════════════════════════════════════════ */
+
+  /* ── 0. Global type rendering ───────────────────────────────── */
+  :root {
+    --font-display: 'DM Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono:    'DM Mono', 'SFMono-Regular', 'Consolas', monospace;
+
+    /* Layered shadow tokens */
+    --shadow-card:  0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.05);
+    --shadow-hover: 0 2px 4px rgba(0,0,0,0.06), 0 8px 20px rgba(0,0,0,0.10), 0 28px 60px rgba(0,0,0,0.13);
+    --shadow-btn:   0 2px 8px rgba(0,0,0,0.14), 0 6px 20px rgba(0,0,0,0.10);
+
+    /* 8-px spacing scale */
+    --sp-1:  4px;
+    --sp-2:  8px;
+    --sp-3:  12px;
+    --sp-4:  16px;
+    --sp-5:  20px;
+    --sp-6:  24px;
+    --sp-8:  32px;
+    --sp-10: 40px;
+    --sp-12: 48px;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ── 1. COLOR PALETTE — semantic tokens ─────────────────────── */
+  [data-theme="light"] {
+    --ch-divider:    rgba(24,23,31,0.10);
+    --ch-date-bg:    rgba(94,84,240,0.07);
+    --ch-meta-icon:  rgba(24,23,31,0.30);
+    --ch-panel-bg:   #FAFAFE;
+    --ch-input-bg:   #F4F3FD;
+  }
+  [data-theme="dark"] {
+    --ch-divider:    rgba(236,237,248,0.10);
+    --ch-date-bg:    rgba(123,114,255,0.10);
+    --ch-meta-icon:  rgba(236,237,248,0.28);
+    --ch-panel-bg:   #0F0F1C;
+    --ch-input-bg:   #1A1A2C;
+  }
+
+  /* ── 2. PANEL — refined card base ───────────────────────────── */
+  .panel {
+    background: var(--ch-panel-bg) !important;
+    border: 1.5px solid var(--ch-divider) !important;
+    border-radius: 20px !important;
+    box-shadow: var(--shadow-card) !important;
+    transition: border-color .2s ease, box-shadow .22s ease, transform .22s cubic-bezier(0.22,1,0.36,1) !important;
+  }
+  .panel::after {
+    height: 2.5px !important;
+    border-radius: 20px 20px 0 0 !important;
+    opacity: 0.9 !important;
+  }
+  .panel:hover {
+    border-color: var(--accent) !important;
+    box-shadow: var(--shadow-hover) !important;
+    transform: translateY(-2px) !important;
+  }
+
+  /* ── 3. EVENT DETAIL CARD ────────────────────────────────────── */
+  .detail-card {
+    padding: var(--sp-8) var(--sp-8) var(--sp-8) !important;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  @media (max-width: 600px) {
+    .detail-card { padding: var(--sp-5) var(--sp-5) var(--sp-6) !important; }
+  }
+
+  /* Hierarchy — Event Title */
+  .detail-title {
+    font-family: var(--font-display) !important;
+    font-size: clamp(22px, 4vw, 30px) !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.03em !important;
+    color: var(--text) !important;
+    margin: var(--sp-3) 0 var(--sp-4) !important;
+  }
+
+  /* Hierarchy — Meta row (venue, host) */
+  .detail-meta-row {
+    display: flex !important;
+    gap: var(--sp-4) !important;
+    flex-wrap: wrap !important;
+    color: var(--text-muted) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.01em !important;
+    margin-bottom: var(--sp-5) !important;
+    padding-bottom: var(--sp-5) !important;
+    border-bottom: 1px solid var(--ch-divider) !important;
+  }
+
+  /* Hierarchy — Description */
+  .detail-desc {
+    font-size: 14.5px !important;
+    line-height: 1.72 !important;
+    color: var(--text-soft) !important;
+    margin-bottom: var(--sp-6) !important;
+    letter-spacing: 0.005em !important;
+  }
+
+  /* ── 4. DATE ROW — visual prominence ────────────────────────── */
+  .detail-card [style*="📅"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: var(--sp-2) !important;
+    font-family: var(--font-display) !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: var(--text) !important;
+    background: var(--ch-date-bg) !important;
+    border-radius: 8px !important;
+    padding: 5px 12px 5px 10px !important;
+  }
+
+  /* ── 5. STATUS CHIPS — refined pill treatment ───────────────── */
+  .event-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    padding: 3px 10px 3px 10px !important;
+    border-radius: 6px !important;
+    line-height: 1.6 !important;
+    margin-bottom: var(--sp-3) !important;
+  }
+  .upcoming-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    color: var(--text-muted) !important;
+    background: var(--surface-2) !important;
+    border: 1px solid var(--ch-divider) !important;
+    border-radius: 6px !important;
+    padding: 3px 10px !important;
+    margin-left: var(--sp-2) !important;
+    line-height: 1.6 !important;
+  }
+
+  /* ── 6. CTA BUTTON — refined with glow ──────────────────────── */
+  .detail-card .btn[style*="width:100%"],
+  .detail-card .btn[style*="width: 100%"] {
+    border-radius: 14px !important;
+    font-family: var(--font-display) !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.01em !important;
+    padding: 15px 24px !important;
+    min-height: 52px !important;
+    box-shadow: var(--shadow-btn) !important;
+    transition: transform .15s cubic-bezier(0.22,1,0.36,1), box-shadow .15s ease, filter .15s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+  .detail-card .btn[style*="width:100%"]::before,
+  .detail-card .btn[style*="width: 100%"]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.14) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .detail-card .btn[style*="width:100%"]:hover,
+  .detail-card .btn[style*="width: 100%"]:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15), 0 12px 32px rgba(0,0,0,0.18) !important;
+    filter: brightness(1.06) !important;
+  }
+  .detail-card .btn[style*="width:100%"]:active,
+  .detail-card .btn[style*="width: 100%"]:active {
+    transform: scale(0.98) translateY(0) !important;
+    filter: brightness(0.96) !important;
+  }
+
+  /* ── 7. ATTENDEE SECTION ────────────────────────────────────── */
+  .attendee-section {
+    margin-top: var(--sp-6) !important;
+    padding-top: var(--sp-6) !important;
+    border-top: 1px solid var(--ch-divider) !important;
+  }
+  .attendee-section h3 {
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.09em !important;
+    text-transform: uppercase !important;
+    color: var(--text-muted) !important;
+    margin: 0 0 var(--sp-3) !important;
+  }
+  .attendee-chip {
+    border-radius: 999px !important;
+    font-size: 12px !important;
+    padding: 5px 12px 5px 6px !important;
+    font-weight: 600 !important;
+    gap: 6px !important;
+  }
+
+  /* ── 8. CONNECT NOTE — unlock teaser ────────────────────────── */
+  .connect-note {
+    margin-top: var(--sp-5) !important;
+    padding: var(--sp-4) var(--sp-5) !important;
+    border-radius: 12px !important;
+    background: var(--ch-input-bg) !important;
+    border: 1px dashed var(--ch-divider) !important;
+    color: var(--text-muted) !important;
+    font-size: 12.5px !important;
+    line-height: 1.6 !important;
+    text-align: center !important;
+    letter-spacing: 0.005em !important;
+  }
+
+  /* ── 9. EVENT PLATE CARDS (grid view) ───────────────────────── */
+  .ev-plate-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)) !important;
+    gap: var(--sp-3) !important;
+    margin-top: var(--sp-3) !important;
+  }
+  .ev-plate {
+    border-radius: 16px !important;
+    padding: 18px 16px 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--sp-1) !important;
+    cursor: pointer !important;
+    position: relative !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    transition: transform .2s cubic-bezier(0.22,1,0.36,1), box-shadow .2s ease !important;
+    min-height: 130px !important;
+  }
+  .ev-plate:hover {
+    transform: translateY(-4px) scale(1.015) !important;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.28), 0 2px 8px rgba(0,0,0,0.16) !important;
+  }
+  .ev-plate:active { transform: scale(0.97) !important; }
+  .ev-plate-icon {
+    font-size: 24px !important;
+    line-height: 1 !important;
+    margin-bottom: var(--sp-2) !important;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.30)) !important;
+  }
+  .ev-plate-name {
+    font-family: var(--font-display) !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    color: rgba(255,255,255,0.94) !important;
+    letter-spacing: -0.01em !important;
+  }
+  .ev-plate-meta {
+    font-size: 10.5px !important;
+    font-weight: 500 !important;
+    color: rgba(255,255,255,0.55) !important;
+    letter-spacing: 0.01em !important;
+    margin-top: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+  .ev-plate-cat {
+    font-family: var(--font-sans) !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.09em !important;
+    text-transform: uppercase !important;
+    color: rgba(255,255,255,0.42) !important;
+    margin-top: var(--sp-2) !important;
+  }
+  .ev-plate-shine {
+    position: absolute !important;
+    inset: 0 !important;
+    background: linear-gradient(135deg, rgba(255,255,255,0.13) 0%, transparent 50%) !important;
+    pointer-events: none !important;
+  }
+  @media (max-width: 600px) {
+    .ev-plate-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+    .ev-plate { padding: 14px 13px 12px !important; min-height: 110px !important; border-radius: 14px !important; }
+    .ev-plate-name { font-size: 12px !important; }
+  }
+
+  /* ── 10. SEARCH BAR — refined ───────────────────────────────── */
+  .search-input {
+    background: var(--ch-input-bg) !important;
+    border-color: transparent !important;
+    border-radius: 12px !important;
+    font-size: 15px !important;
+    font-family: var(--font-sans) !important;
+    height: 38px !important;
+  }
+  .search-input:focus {
+    background: var(--surface) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent) !important;
+  }
+
+  /* ── 11. TOP & BOTTOM NAV — glass refinement ────────────────── */
+  .top-bar {
+    background: color-mix(in srgb, var(--surface) 85%, transparent) !important;
+    backdrop-filter: blur(24px) saturate(1.8) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(1.8) !important;
+    border-bottom: 1px solid var(--ch-divider) !important;
+    box-shadow: 0 1px 0 var(--line-soft), 0 4px 20px rgba(0,0,0,0.04) !important;
+  }
+  .bottom-nav {
+    background: color-mix(in srgb, var(--surface) 90%, transparent) !important;
+    backdrop-filter: blur(24px) saturate(1.8) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(1.8) !important;
+    border-top: 1px solid var(--ch-divider) !important;
+    box-shadow: 0 -1px 0 var(--line-soft) !important;
+  }
+  .nav-link {
+    font-family: var(--font-sans) !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+  }
+
+  /* ── 12. FILTER CHIPS — refined category bar ────────────────── */
+  .mchip {
+    font-family: var(--font-sans) !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.01em !important;
+    border-radius: 10px !important;
+    padding: 8px 14px !important;
+    gap: 6px !important;
+    border: 1.5px solid var(--line) !important;
+    transition: background .14s ease, border-color .14s ease, transform .12s ease !important;
+  }
+  .mchip:active { transform: scale(0.95) !important; }
+
+  /* ── 13. BUTTON SYSTEM ──────────────────────────────────────── */
+  .btn {
+    font-family: var(--font-display) !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+    letter-spacing: -0.005em !important;
+    transition: transform .14s cubic-bezier(0.22,1,0.36,1), filter .14s ease, box-shadow .14s ease !important;
+  }
+  .btn:hover { filter: brightness(1.05) !important; }
+  .btn:active { transform: scale(0.97) !important; filter: brightness(0.95) !important; }
+  .btn-outline {
+    border-width: 1.5px !important;
+    border-color: var(--ch-divider) !important;
+  }
+  .back-btn {
+    font-family: var(--font-display) !important;
+    font-weight: 700 !important;
+    border-radius: 11px !important;
+    border: 1.5px solid var(--ch-divider) !important;
+    box-shadow: 0 1px 4px var(--shadow) !important;
+  }
+
+  /* ── 14. SECTION TITLE LABELS ───────────────────────────────── */
+  .section-title {
+    font-family: var(--font-sans) !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.10em !important;
+    text-transform: uppercase !important;
+    color: var(--text-muted) !important;
+  }
+
+  /* ── 15. DESKTOP LAYOUT — max-width container ───────────────── */
+  #view-container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: var(--sp-5) var(--sp-5) calc(var(--bot-h) + var(--sp-8));
+  }
+  @media (min-width: 768px) {
+    #view-container { padding: var(--sp-8) var(--sp-6) calc(var(--bot-h) + var(--sp-10)); }
+  }
+  @media (min-width: 1024px) {
+    #view-container { max-width: 760px; padding: var(--sp-10) 0 calc(var(--bot-h) + var(--sp-12)); }
+  }
+
+  /* ── 16. PROFESSIONAL POLISH — 3 KEY TWEAKS ─────────────────── */
+  /*
+    TWEAK 1 — Optical line-height harmony
+    All body copy uses 1.65 (not 1.5 or 1.8). Headings use 1.15.
+    This ratio keeps text scannable without looking airy.
+  */
+  .detail-desc { line-height: 1.68 !important; }
+
+  /*
+    TWEAK 2 — Subpixel shadow depth (3-stop)
+    Replace single rgba shadow with layered: near-sharp layer
+    for definition + far-soft layer for depth. The eye reads
+    it as a real lifted surface without feeling heavy.
+  */
+  .panel { box-shadow: var(--shadow-card) !important; }
+
+  /*
+    TWEAK 3 — Controlled opacity on muted text
+    text-muted at 0.62 opacity rather than a flat grey.
+    This lets dark/light themes both read as intentionally
+    soft rather than inaccessible or washed-out.
+  */
+  .detail-meta-row,
+  .attendee-section h3,
+  .ev-plate-cat {
+    opacity: 0.82 !important;
+  }
+
+  /* ── 17. LIVE CHIP — keep existing energy ───────────────────── */
+  .live-chip {
+    font-family: var(--font-sans) !important;
+    font-weight: 800 !important;
+    font-size: 10px !important;
+    letter-spacing: 0.07em !important;
+  }
+
+  /* ── 18. RESPONSIVE GRID — mobile-first ─────────────────────── */
+  @media (max-width: 480px) {
+    .detail-title { font-size: 21px !important; letter-spacing: -0.02em !important; }
+    .detail-desc  { font-size: 14px !important; }
+    #view-container { padding: var(--sp-4) var(--sp-4) calc(var(--bot-h) + var(--sp-6)); }
+  }
+  @media (max-width: 375px) {
+    .detail-title { font-size: 19px !important; }
+    .detail-card  { padding: var(--sp-4) !important; }
   }
 
 </style>
