@@ -4245,7 +4245,11 @@
   }
   .lp-cld {
     position: absolute;
-    max-width: 55vw;
+    width: 55vw;
+    aspect-ratio: 2049/815;
+    background-image: var(--cloud-png);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
     opacity: 0.55;
     animation: lpCldDrift calc(14s * var(--ci, 1)) linear infinite;
     will-change: transform;
@@ -4253,7 +4257,7 @@
   }
   [data-theme="dark"] .lp-cld {
     opacity: 0.22;
-    filter: brightness(0.7) saturate(0.4) contrast(1.1);
+    filter: brightness(0.45) saturate(0.25) hue-rotate(205deg);
   }
   @keyframes lpCldDrift {
     0%   { transform: translateX(0vw); }
@@ -5190,11 +5194,11 @@ function renderGate(prefillName,prefillEmail){
     <section class="lp-hero">
       <div class="lp-hero-bg"></div>
       <div class="lp-cloud-layer" aria-hidden="true">
-        <img src="./cloud1.png" class="lp-cld" style="--ci:1;bottom:2%;left:-20%">
-        <img src="./cloud2.png" class="lp-cld" style="--ci:2;bottom:18%;left:-30%">
-        <img src="./cloud3.png" class="lp-cld" style="--ci:3;bottom:6%;left:-25%">
-        <img src="./cloud4.png" class="lp-cld" style="--ci:4;bottom:28%;left:-15%">
-        <img src="./cloud5.png" class="lp-cld" style="--ci:5;bottom:12%;left:-22%">
+        <div class="lp-cld" style="--ci:1;bottom:2%;left:-20%"></div>
+        <div class="lp-cld" style="--ci:2;bottom:18%;left:-30%"></div>
+        <div class="lp-cld" style="--ci:3;bottom:6%;left:-25%"></div>
+        <div class="lp-cld" style="--ci:4;bottom:28%;left:-15%"></div>
+        <div class="lp-cld" style="--ci:5;bottom:12%;left:-22%"></div>
       </div>
       <div class="lp-hero-blobs">
         <div class="lp-blob lp-blob-a"></div>
