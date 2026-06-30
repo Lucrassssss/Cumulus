@@ -790,8 +790,14 @@
   .map-caption {
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    animation: viewSlideUp 0.4s 0.2s cubic-bezier(0.22,1,0.36,1) both;
   }
+  /* viewSlideUp's 'to' state sets transform:translateY(0)scale(1), which erases
+     the translateX(-50%) centering. Use a dedicated animation that preserves X. */
+  @keyframes captionSlideUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(14px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+  #map-caption-bar { animation: captionSlideUp 0.4s 0.2s cubic-bezier(0.22,1,0.36,1) both; }
 
   /* --- Map filter chips backdrop --- */
   .map-filters {
@@ -2709,6 +2715,14 @@
     .lp-hero { padding: 90px 16px 56px; }
     .lp-hero-title { font-size: clamp(32px, 10vw, 52px) !important; letter-spacing: -1.5px; }
     .lp-hero-sub { font-size: 15px !important; }
+
+    /* Landing nav: links hidden on mobile — must override later .lp-nav-links{display:flex} */
+    .lp-nav { padding: 10px 14px; }
+    .lp-nav-links { display: none !important; }
+    .lp-nav-btn { margin-left: auto !important; padding: 8px 14px !important; font-size: 12px !important; }
+
+    /* Map caption pill: clamp to viewport so it never clips right edge */
+    .map-caption { max-width: calc(100vw - 32px); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
     /* Interest pills: tighter spacing on mobile */
     .interest-pill { padding: 6px 12px; font-size: 12px; }
