@@ -12,6 +12,17 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#090A0C" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#3E7CB8">
+
+<!-- Instant theme: read saved pref or fall back to OS setting, runs before any CSS paints -->
+<script>
+(function(){
+  try {
+    var p = JSON.parse(localStorage.getItem('prefs') || '{}');
+    var t = p.theme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', t);
+  } catch(e) {}
+})();
+</script>
 <meta name="description" content="Cumulus — London community events. Your city, your people.">
 <link id="pwa-apple-icon" rel="apple-touch-icon" href="">
 <link id="pwa-apple-icon-precomposed" rel="apple-touch-icon-precomposed" href="">
@@ -4100,6 +4111,21 @@ function resolveCardColors(bgStyleId, accentHex){
 }
 function applyTheme(){ document.documentElement.setAttribute('data-theme',state.theme); }
 
+// Follow OS theme changes in real-time — only when the user hasn't pinned a preference
+try {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    try {
+      const p = JSON.parse(localStorage.getItem('prefs')||'{}');
+      if(p.theme) return; // user chose manually — don't override
+      state.theme = e.matches ? 'dark' : 'light';
+      applyTheme();
+      const tcMeta = document.querySelector('meta[name="theme-color"]:not([media])');
+      if(tcMeta) tcMeta.setAttribute('content', state.theme==='dark'?'#090A0C':'#3E7CB8');
+      try{ renderNav(); }catch(err){}
+    } catch(err) {}
+  });
+} catch(e) {}
+
 
 // ---- MAPBOX TOKEN ----
 const DEFAULT_MAPBOX_TOKEN='pk.eyJ1IjoibHVjcmFzc3Nzc3MiLCJhIjoiY21xam1pcTJ4MGt0dTJzcXhobnQyZ3owMiJ9.RpRNYuS-zJnNdZ3wOGl61g';
@@ -4159,7 +4185,13 @@ function isFriend(name){ return state.friends.includes(name); }
 function myFriendCode(){ return codeFor(state.profileName||'ME',state.profileId||'000000'); }
 
 async function toggleTheme(){
-  state.theme=state.theme==='light'?'dark':'light'; applyTheme();
+  state.theme=state.theme==='light'?'dark':'light';
+  applyTheme();
+  // Persist locally so the choice survives sessions / logged-out use
+  try{ const p=JSON.parse(localStorage.getItem('prefs')||'{}'); p.theme=state.theme; localStorage.setItem('prefs',JSON.stringify(p)); }catch(e){}
+  // Update browser chrome colour
+  const tcMeta=document.querySelector('meta[name="theme-color"]:not([media])');
+  if(tcMeta) tcMeta.setAttribute('content', state.theme==='dark'?'#090A0C':'#3E7CB8');
   if(state.userId){
     await sb.from('users').update({theme:state.theme}).eq('id',state.userId);
   }
@@ -4200,9 +4232,11 @@ function computeEventDates(ev){
 }
 
 async function start(){
-  // Theme: try localStorage first for instant paint, then sync from Supabase after login
+  // Theme: saved pref wins; if none, fall back to OS preference
+  const _sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const prefsRaw=await localGet('prefs');
-  if(prefsRaw){ try{ const p=JSON.parse(prefsRaw); if(p.theme) state.theme=p.theme; }catch(e){} }
+  if(prefsRaw){ try{ const p=JSON.parse(prefsRaw); if(p.theme) state.theme=p.theme; else state.theme=_sysDark?'dark':'light'; }catch(e){ state.theme=_sysDark?'dark':'light'; } }
+  else { state.theme=_sysDark?'dark':'light'; }
   applyTheme();
   MAPBOX_TOKEN=DEFAULT_MAPBOX_TOKEN;
 
@@ -4216,7 +4250,8 @@ async function start(){
       state.profileName=profile.name;
       state.profileEmail=profile.email;
       state.specialBadges=profile.special_badges||[];
-      state.theme=profile.theme||'light';
+      // Supabase-saved theme wins; if they never set one, respect OS pref
+      state.theme=profile.theme||(prefsRaw&&JSON.parse(prefsRaw||'{}').theme)||(_sysDark?'dark':'light');
       applyTheme();
       // Restore card from profile columns
       if(profile.card_bio||profile.card_theme){
@@ -5325,7 +5360,7 @@ function renderNav(){
       <div class="top-bar">
         <div class="logo-wrap" onclick="goBrowse()">${BLOT_SVG}<span class="logo hide-mobile">Cumulus</span></div>
         <input id="search-input" class="search-input" placeholder="Search events..." oninput="onSearchInput()" autocomplete="off"/>
-        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">${state.theme==='light'?'◑':'◐'}</button>
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" title="${state.theme==='dark'?'Switch to light mode':'Switch to dark mode'}">${state.theme==='dark'?'☀':'🌙'}</button>
       </div>
       <div class="bottom-nav">
         ${NAV_TABS.map(({label,v,action})=>`
