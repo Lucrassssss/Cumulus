@@ -3295,113 +3295,136 @@
   /* Sky gradient base */
   .cv-sky {
     position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 48% 35%,
-      #F0F8FF 0%, #D6EAF8 28%, #AECCE4 58%, #8BB8D4 100%);
+    background: radial-gradient(ellipse at 50% 40%,
+      #FFFFFF 0%, #EDF6FF 22%, #C8E0F0 50%, #9EC4DC 80%, #7AAFC8 100%);
   }
 
-  /* Cloud puffs — large blurred white blobs */
+  /* Cloud puffs — defined cumulus shapes with soft edges */
   .cv-puff {
     position: absolute;
-    background: #fff;
     border-radius: 50%;
     will-change: transform, opacity;
   }
-  .cv-puff-a { width:500px; height:340px; top:-60px;  left:-140px;  filter:blur(38px); opacity:0.96; }
-  .cv-puff-b { width:540px; height:380px; top:-40px;  right:-160px; filter:blur(42px); opacity:0.92; }
-  .cv-puff-c { width:620px; height:280px; top:28%;    left:50%; transform:translateX(-50%); filter:blur(50px); opacity:0.98; }
-  .cv-puff-d { width:420px; height:260px; top:50%;    left:-60px;   filter:blur(36px); opacity:0.88; }
-  .cv-puff-e { width:460px; height:300px; top:52%;    right:-100px; filter:blur(40px); opacity:0.90; }
-  .cv-puff-f { width:380px; height:220px; bottom:-40px; left:50%; transform:translateX(-50%); filter:blur(34px); opacity:0.94; }
-  .cv-puff-g { width:300px; height:200px; top:35%;    left:18%;     filter:blur(30px); opacity:0.80; }
-  .cv-puff-h { width:280px; height:180px; top:30%;    right:15%;    filter:blur(28px); opacity:0.82; }
+  /* Each puff uses a radial gradient for a bright centre, soft edge — low blur keeps them defined */
+  .cv-puff-a {
+    width:620px; height:420px; top:-70px; left:-160px;
+    border-radius: 58% 72% 64% 48% / 52% 44% 62% 54%;
+    background: radial-gradient(ellipse at 38% 28%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.96) 32%, rgba(228,242,255,0.55) 62%, transparent 100%);
+    filter:blur(7px); opacity:1;
+    box-shadow: 0 0 60px 10px rgba(255,255,255,0.35);
+  }
+  .cv-puff-b {
+    width:660px; height:460px; top:-55px; right:-180px;
+    border-radius: 72% 58% 50% 66% / 46% 58% 48% 64%;
+    background: radial-gradient(ellipse at 62% 30%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.97) 30%, rgba(222,238,255,0.50) 62%, transparent 100%);
+    filter:blur(9px); opacity:0.99;
+    box-shadow: 0 0 60px 10px rgba(255,255,255,0.30);
+  }
+  .cv-puff-c {
+    width:720px; height:360px; top:22%; left:50%; transform:translateX(-50%);
+    border-radius: 50% 50% 40% 60% / 42% 48% 52% 58%;
+    background: radial-gradient(ellipse at 50% 35%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.95) 28%, rgba(218,238,255,0.50) 60%, transparent 100%);
+    filter:blur(12px); opacity:1;
+    box-shadow: 0 0 80px 14px rgba(255,255,255,0.28);
+  }
+  .cv-puff-d {
+    width:500px; height:320px; top:44%; left:-90px;
+    border-radius: 62% 48% 56% 70% / 58% 42% 56% 44%;
+    background: radial-gradient(ellipse at 40% 32%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.94) 34%, rgba(224,240,255,0.48) 64%, transparent 100%);
+    filter:blur(7px); opacity:0.97;
+  }
+  .cv-puff-e {
+    width:540px; height:360px; top:46%; right:-110px;
+    border-radius: 48% 64% 70% 52% / 44% 56% 46% 60%;
+    background: radial-gradient(ellipse at 60% 30%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.95) 32%, rgba(218,236,255,0.46) 62%, transparent 100%);
+    filter:blur(9px); opacity:0.98;
+  }
+  .cv-puff-f {
+    width:460px; height:280px; bottom:-30px; left:50%; transform:translateX(-50%);
+    border-radius: 50% 50% 44% 56% / 40% 50% 54% 50%;
+    background: radial-gradient(ellipse at 50% 30%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.93) 35%, rgba(220,238,255,0.44) 65%, transparent 100%);
+    filter:blur(8px); opacity:0.98;
+  }
+  .cv-puff-g {
+    width:380px; height:260px; top:28%; left:14%;
+    border-radius: 54% 66% 48% 62% / 50% 46% 58% 52%;
+    background: radial-gradient(ellipse at 42% 36%, rgba(255,255,255,0.98) 0%, rgba(252,254,255,0.88) 36%, rgba(220,236,255,0.38) 66%, transparent 100%);
+    filter:blur(6px); opacity:0.92;
+  }
+  .cv-puff-h {
+    width:360px; height:240px; top:26%; right:12%;
+    border-radius: 66% 52% 60% 46% / 44% 62% 48% 56%;
+    background: radial-gradient(ellipse at 58% 34%, rgba(255,255,255,0.98) 0%, rgba(252,254,255,0.88) 34%, rgba(218,234,255,0.36) 66%, transparent 100%);
+    filter:blur(6px); opacity:0.93;
+  }
 
-  /* Bright halo — simulates light through cloud */
+  /* Sun-break halo — sits behind puffs, glows as clouds part */
   .cv-glow {
     position: absolute;
-    width: 70vmax; height: 70vmax;
-    top: 50%; left: 50%; transform: translate(-50%, -54%);
+    width: 65vmax; height: 65vmax;
+    top: 50%; left: 50%; transform: translate(-50%, -52%);
     border-radius: 50%;
     background: radial-gradient(circle,
-      rgba(255,255,255,0.95) 0%,
-      rgba(230,245,255,0.55) 35%,
-      transparent 65%);
-    filter: blur(30px);
-    will-change: transform;
+      rgba(255,255,255,1) 0%,
+      rgba(255,248,230,0.8) 18%,
+      rgba(240,220,180,0.35) 45%,
+      transparent 70%);
+    filter: blur(24px);
+    opacity: 0;
+    will-change: transform, opacity;
   }
 
-  /* ── Animation phases — SLOW CLOUD PARTING ─────────── */
+  /* ── Cloud parting animation ─────────────────────────── */
 
-  /* Phase 1 — clouds drift in from above */
-  @keyframes cvIn {
-    from { opacity: 0; transform: scale(0.92) translateY(-16px); }
-    to   { opacity: 1; transform: scale(1)    translateY(0);     }
-  }
-
-  /* Phase 2 — light glows and blooms as the cloud centre warms */
-  @keyframes cvGlowPart {
-    0%   { transform: translate(-50%,-54%) scale(0.5);  opacity: 0;   }
-    35%  { transform: translate(-50%,-54%) scale(1.1);  opacity: 0.9; }
-    100% { transform: translate(-50%,-54%) scale(2.8);  opacity: 0;   }
-  }
-
-  /* Phase 3 — left-side puffs slowly drift left */
+  /* Left puffs slide out left */
   @keyframes cvPartL {
     0%   { opacity: 1; transform: translateX(0); }
-    15%  { opacity: 1; }
-    100% { opacity: 0; transform: translateX(-115%) scale(0.88); filter: blur(55px); }
+    12%  { opacity: 1; }
+    100% { opacity: 0; transform: translateX(-130%) scale(0.9); filter: blur(28px); }
   }
-
-  /* Phase 3 — right-side puffs slowly drift right */
+  /* Right puffs slide out right */
   @keyframes cvPartR {
     0%   { opacity: 1; transform: translateX(0); }
-    15%  { opacity: 1; }
-    100% { opacity: 0; transform: translateX(115%) scale(0.88); filter: blur(55px); }
+    12%  { opacity: 1; }
+    100% { opacity: 0; transform: translateX(130%) scale(0.9); filter: blur(28px); }
   }
-
-  /* Center-top puff rises (preserves translateX(-50%) centering) */
+  /* Centre-top puff rises */
   @keyframes cvPartCU {
     0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
-    15%  { opacity: 1; }
-    100% { opacity: 0; transform: translateX(-50%) translateY(-115%) scale(0.82); filter: blur(55px); }
+    12%  { opacity: 1; }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-120%) scale(0.85); filter: blur(28px); }
   }
-
-  /* Center-bottom puff descends */
+  /* Centre-bottom puff drops */
   @keyframes cvPartCD {
     0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
-    15%  { opacity: 1; }
-    100% { opacity: 0; transform: translateX(-50%) translateY(115%) scale(0.82); filter: blur(55px); }
+    12%  { opacity: 1; }
+    100% { opacity: 0; transform: translateX(-50%) translateY(120%) scale(0.85); filter: blur(28px); }
   }
-
-  /* Sky gradient fades out as clouds split */
+  /* Sky fades away */
   @keyframes cvSkyFade {
     0%   { opacity: 1; }
-    25%  { opacity: 0.95; }
+    30%  { opacity: 0.85; }
     100% { opacity: 0; }
   }
-
-  /* Phase 1: clouds drift in */
-  .cv-phase-in { animation: cvIn 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
-
-  /* Phase 2: light blooms through cloud centre */
-  .cv-phase-glow .cv-glow { animation: cvGlowPart 2.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
-
-  /* Phase 3: clouds slowly part — centre clears, edges drift away */
-  .cv-phase-part .cv-sky   { animation: cvSkyFade 1.9s cubic-bezier(0.37, 0, 0.63, 1) both; }
-  .cv-phase-part .cv-puff-a { animation: cvPartL 1.95s cubic-bezier(0.37, 0, 0.63, 1) both; animation-delay: 0.00s; }
-  .cv-phase-part .cv-puff-d { animation: cvPartL 1.95s cubic-bezier(0.37, 0, 0.63, 1) both; animation-delay: 0.07s; }
-  .cv-phase-part .cv-puff-g { animation: cvPartL 1.95s cubic-bezier(0.37, 0, 0.63, 1) both; animation-delay: 0.14s; }
-  .cv-phase-part .cv-puff-b { animation: cvPartR 1.95s cubic-bezier(0.37, 0, 0.63, 1) both; animation-delay: 0.04s; }
-  .cv-phase-part .cv-puff-e { animation: cvPartR 1.95s cubic-bezier(0.37, 0, 0.63, 1) both; animation-delay: 0.10s; }
-  .cv-phase-part .cv-puff-h { animation: cvPartR 1.95s cubic-bezier(0.37, 0, 0.63, 1) both; animation-delay: 0.16s; }
-  .cv-phase-part .cv-puff-c { animation: cvPartCU 1.95s cubic-bezier(0.37, 0, 0.63, 1) both; animation-delay: 0.02s; }
-  .cv-phase-part .cv-puff-f { animation: cvPartCD 1.95s cubic-bezier(0.37, 0, 0.63, 1) both; animation-delay: 0.05s; }
-
-  /* App content breathes in once veil is gone */
-  @keyframes appReveal {
-    from { opacity:0; transform:scale(0.98) translateY(6px); }
-    to   { opacity:1; transform:scale(1)    translateY(0);   }
+  /* Sun breaks through as clouds part */
+  @keyframes cvGlowBreak {
+    0%   { opacity: 0; transform: translate(-50%,-52%) scale(0.5); }
+    30%  { opacity: 0.9; }
+    65%  { opacity: 1;   transform: translate(-50%,-52%) scale(1.2); }
+    100% { opacity: 0;   transform: translate(-50%,-52%) scale(2.2); }
   }
-  .app-reveal { animation: appReveal 0.55s var(--ease-expo) both; }
+
+  /* Parting phase — all triggered together */
+  .cv-phase-part .cv-sky    { animation: cvSkyFade  1.8s cubic-bezier(0.4, 0, 0.6, 1)  both; }
+  .cv-phase-part .cv-glow   { animation: cvGlowBreak 1.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+  .cv-phase-part .cv-puff-a { animation: cvPartL 1.75s cubic-bezier(0.4, 0, 0.6, 1) both; animation-delay: 0.00s; }
+  .cv-phase-part .cv-puff-d { animation: cvPartL 1.75s cubic-bezier(0.4, 0, 0.6, 1) both; animation-delay: 0.06s; }
+  .cv-phase-part .cv-puff-g { animation: cvPartL 1.75s cubic-bezier(0.4, 0, 0.6, 1) both; animation-delay: 0.12s; }
+  .cv-phase-part .cv-puff-b { animation: cvPartR 1.75s cubic-bezier(0.4, 0, 0.6, 1) both; animation-delay: 0.03s; }
+  .cv-phase-part .cv-puff-e { animation: cvPartR 1.75s cubic-bezier(0.4, 0, 0.6, 1) both; animation-delay: 0.08s; }
+  .cv-phase-part .cv-puff-h { animation: cvPartR 1.75s cubic-bezier(0.4, 0, 0.6, 1) both; animation-delay: 0.14s; }
+  .cv-phase-part .cv-puff-c { animation: cvPartCU 1.75s cubic-bezier(0.4, 0, 0.6, 1) both; animation-delay: 0.02s; }
+  .cv-phase-part .cv-puff-f { animation: cvPartCD 1.75s cubic-bezier(0.4, 0, 0.6, 1) both; animation-delay: 0.04s; }
 
   /* ════════════════════════════════════════════════════════════
      FLOATING AVATAR
@@ -4205,6 +4228,9 @@ async function start(){
           fact:profile.card_fact||''
         };
       }
+      // Raise the veil before enterApp renders — no flash from auth page to map
+      const veil=document.getElementById('cloud-veil');
+      if(veil) veil.classList.add('cv-active');
       enterApp();
       return;
     }
@@ -4682,6 +4708,8 @@ async function submitGate(){
 
   document.body.style.overflow='';
   document.getElementById('gate-root').innerHTML='';
+  const _sv=document.getElementById('cloud-veil');
+  if(_sv) _sv.classList.add('cv-active');
   enterApp();
 }
 
@@ -4720,39 +4748,36 @@ async function _submitHostApplication({name,email,bizName,hostDesc,whyHost}){
         <div class="gate-host-success-icon">🎉</div>
         <div class="gate-host-success-title">Application submitted!</div>
         <div class="gate-host-success-sub">Thanks ${escapeHtml(name)} — we'll review your application and get back to you within 48 hours. In the meantime, you can explore Cumulus as an attendee.</div>
-        <button class="btn" style="width:100%;margin-top:24px;" onclick="document.body.style.overflow='';document.getElementById('gate-root').innerHTML='';enterApp();">Explore Cumulus →</button>
+        <button class="btn" style="width:100%;margin-top:24px;" onclick="document.body.style.overflow='';document.getElementById('gate-root').innerHTML='';const _hv=document.getElementById('cloud-veil');if(_hv)_hv.classList.add('cv-active');enterApp();">Explore Cumulus →</button>
       </div>`;
   }
 }
 function showCloudTransition() {
   const veil = document.getElementById('cloud-veil');
   if (!veil) return;
-
-  // Phase 1 — clouds drift in from above, covering the sky
-  veil.classList.add('cv-active', 'cv-phase-in');
-
-  // Phase 2 — light blooms through cloud centre (warm glow)
-  setTimeout(() => veil.classList.add('cv-phase-glow'), 200);
-
-  // Phase 3 — clouds slowly part, revealing the map beneath
-  setTimeout(() => veil.classList.add('cv-phase-part'), 750);
-
-  // Cleanup — veil fully cleared, app breathes in
+  // Clouds are already visible (cv-active set before enterApp was called).
+  // Just trigger the parting animation — no drift-in, no app-reveal flash.
+  veil.classList.add('cv-phase-part');
   setTimeout(() => {
-    veil.classList.remove('cv-active','cv-phase-in','cv-phase-glow','cv-phase-part');
-    const app = document.getElementById('app');
-    if (app) {
-      app.classList.add('app-reveal');
-      setTimeout(() => app.classList.remove('app-reveal'), 650);
-    }
-  }, 2950);
+    veil.classList.remove('cv-active', 'cv-phase-part');
+  }, 2000);
 }
 
 function enterApp() {
+  const veil = document.getElementById('cloud-veil');
+  if (veil) veil.classList.add('cv-active'); // safety: ensure veil is up
   const app = document.getElementById('app');
   app.style.display = '';
-  initApp();                 // initialise underneath the cloud veil
-  showCloudTransition();     // then play the cloud-through animation
+  // Always boot to the map — never restore a stale tab from memory
+  state.view = 'browse';
+  // Render synchronously with seed data so the map is painted under the veil
+  EVENTS.forEach(ev => computeEventDates(ev));
+  renderNav();
+  renderView();
+  // Start parting after two frames (gives browser time to paint the map)
+  requestAnimationFrame(() => requestAnimationFrame(showCloudTransition));
+  // Load real data in the background without blocking
+  initApp();
 }
 
 function openCardEditor(eventId){
@@ -5202,10 +5227,8 @@ function closeCardEditor(){ document.getElementById('card-editor-root').innerHTM
 function openConnectGateway(id){ if(state.myCard) openConnect(id); else openCardEditor(id); }
 
 async function initApp(){
-  document.getElementById('nav-container').innerHTML=`<div class="top-bar"><div class="logo-wrap">${BLOT_SVG}<span class="logo">Cumulus</span></div></div>`;
-
-  // Seed events are always present; load real events from Supabase on top
-  EVENTS.forEach(ev=>computeEventDates(ev));
+  // Background data load — enterApp() already rendered the UI with seed data.
+  // This enriches it once Supabase responds without blocking the cloud animation.
   await loadRealEvents();
 
   await loadGeocodeCache();
@@ -5215,16 +5238,14 @@ async function initApp(){
   await loadMyTickets();
   await loadAllRsvps();
 
-  // Card is already loaded from profile columns in start() — no extra fetch needed
   if(!state.myCard){
-    // Fallback: check if card was saved in old localStorage format
     const cardRaw=await localGet(`card:${state.profileName}`);
     if(cardRaw){ try{ state.myCard=JSON.parse(cardRaw); }catch(e){} }
   }
 
   await loadFriends();
-  if(state.profileEmail==='gondoxml@gmail.com') state.view='owner-dash';
-  renderNav(); renderView();
+  // Refresh view quietly once real data is in (still on map = update markers)
+  if(state.view==='browse') renderView();
 }
 
 // ── Supabase data loaders ─────────────────────────────────────────────────
