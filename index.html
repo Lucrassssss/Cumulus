@@ -3679,6 +3679,714 @@
   .review-empty { text-align: center; padding: 48px 16px; color: var(--text-muted); }
   .review-empty-icon { font-size: 40px; margin-bottom: 10px; }
   .review-section-hd { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text-soft); margin: 16px 0 8px; }
+
+  /* ════════════════════════════════════════════════════════════
+     CUMULUS — GROUND-UP VISUAL REDESIGN
+     Design philosophy: generous space, deep contrast, cinematic motion
+     ════════════════════════════════════════════════════════════ */
+
+  /* ── DESIGN TOKENS ── */
+  :root {
+    --radius-card: 20px;
+    --radius-pill: 999px;
+    --radius-sm: 12px;
+    --blur-glass: blur(24px) saturate(2);
+    --nav-h: 72px;
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 40px;
+    --transition-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* ── TYPOGRAPHY & BODY ── */
+  body {
+    font-feature-settings: "kern" 1, "liga" 1, "ss01" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
+  }
+
+  /* ════════ TOP BAR ════════ */
+  .top-bar {
+    height: 60px !important;
+    padding: 0 20px !important;
+    gap: 12px !important;
+    background: color-mix(in srgb, var(--surface) 82%, transparent) !important;
+    backdrop-filter: blur(32px) saturate(2.2) !important;
+    -webkit-backdrop-filter: blur(32px) saturate(2.2) !important;
+    border-bottom: 1px solid var(--line) !important;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 4px 24px rgba(0,0,0,0.07) !important;
+  }
+  .logo-wrap { gap: 8px !important; }
+  .logo {
+    font-size: 18px !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.04em !important;
+    background: linear-gradient(118deg, var(--text) 30%, var(--accent) 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+  }
+  .search-input {
+    height: 40px !important;
+    border-radius: 14px !important;
+    background: var(--surface-2) !important;
+    border: 1.5px solid var(--line) !important;
+    font-size: 14px !important;
+    padding: 0 16px !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease !important;
+  }
+  .search-input:focus {
+    background: var(--surface) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--accent) 18%, transparent) !important;
+    outline: none !important;
+  }
+  .theme-toggle {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 12px !important;
+    background: var(--surface-2) !important;
+    border: 1.5px solid var(--line) !important;
+    font-size: 16px !important;
+    transition: background 0.15s, border-color 0.15s !important;
+  }
+  .theme-toggle:hover {
+    background: var(--surface) !important;
+    border-color: var(--accent) !important;
+  }
+
+  /* ════════ BOTTOM NAV — floating island ════════ */
+  .bottom-nav {
+    left: 14px !important;
+    right: 14px !important;
+    bottom: 12px !important;
+    height: auto !important;
+    border-radius: 26px !important;
+    background: color-mix(in srgb, var(--surface) 88%, transparent) !important;
+    backdrop-filter: blur(40px) saturate(2.4) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(2.4) !important;
+    border: 1px solid var(--line) !important;
+    box-shadow:
+      0 2px 8px rgba(0,0,0,0.04),
+      0 8px 32px rgba(0,0,0,0.10),
+      0 0 0 0.5px rgba(255,255,255,0.08) inset !important;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .nav-link {
+    border-radius: 18px !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    gap: 3px !important;
+    padding: 6px 10px !important;
+    transition: background 0.18s var(--transition-spring), color 0.18s ease !important;
+    color: var(--text-muted) !important;
+  }
+  .nav-link .nav-icon {
+    width: 22px !important; height: 22px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
+  .nav-link.active-cloud-tab {
+    background: color-mix(in srgb, var(--accent) 13%, transparent) !important;
+    color: var(--accent) !important;
+  }
+  .nav-link.active-cloud-tab .nav-icon {
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 55%, transparent)) !important;
+  }
+
+  /* ════════ PANELS ════════ */
+  .panel {
+    border-radius: var(--radius-card) !important;
+    background: color-mix(in srgb, var(--surface) 92%, transparent) !important;
+    backdrop-filter: blur(24px) saturate(1.8) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(1.8) !important;
+    border: 1px solid var(--line) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 12px 40px var(--shadow) !important;
+    transition: transform 0.22s var(--transition-spring), box-shadow 0.22s ease !important;
+  }
+  .panel::after { display: none !important; }
+  .panel:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06), 0 20px 56px var(--shadow) !important;
+  }
+
+  /* ════════ BACK BUTTON ════════ */
+  .back-btn {
+    width: 38px !important; height: 38px !important;
+    border-radius: 12px !important;
+    background: var(--surface-2) !important;
+    border: 1.5px solid var(--line) !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+    color: var(--text) !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    transition: background 0.15s, border-color 0.15s !important;
+  }
+  .back-btn:hover { background: var(--surface) !important; border-color: var(--accent) !important; }
+
+  /* ════════ MAP POPUP ════════ */
+  .evtip-inner {
+    background: rgba(8, 6, 18, 0.94) !important;
+    border: 1px solid rgba(255,255,255,0.10) !important;
+    border-left: none !important;
+    border-radius: 16px !important;
+    backdrop-filter: blur(24px) saturate(1.8) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(1.8) !important;
+    box-shadow: 0 20px 48px rgba(0,0,0,0.40), 0 0 0 1px rgba(255,255,255,0.05) !important;
+    padding: 14px 16px !important;
+    max-width: 230px !important;
+    color: #fff !important;
+  }
+  .evtip-inner * { color: inherit !important; }
+  .tip-title {
+    font-size: 14px !important; font-weight: 800 !important;
+    line-height: 1.3 !important; letter-spacing: -0.02em !important;
+    color: #fff !important; margin: 6px 0 5px !important;
+  }
+  .tip-meta { font-size: 11.5px !important; color: rgba(255,255,255,0.45) !important; line-height: 1.5 !important; }
+  .tip-cat {
+    font-size: 9.5px !important; font-weight: 800 !important;
+    letter-spacing: 0.1em !important; text-transform: uppercase !important;
+    padding: 3px 9px !important; border-radius: 6px !important; color: #fff !important;
+  }
+  .evtip-inner [style*="border-top"] {
+    border-top: 1px solid rgba(255,255,255,0.07) !important;
+    color: rgba(255,255,255,0.5) !important; font-size: 10.5px !important;
+    font-weight: 700 !important; letter-spacing: 0.05em !important;
+    margin-top: 10px !important; padding-top: 10px !important;
+  }
+
+  /* ════════ CATEGORY FILTER CHIPS ════════ */
+  .mchip {
+    height: 36px !important;
+    padding: 0 16px !important;
+    border-radius: 12px !important;
+    background: color-mix(in srgb, var(--surface) 92%, transparent) !important;
+    border: 1.5px solid var(--line) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.01em !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important;
+    transition: all 0.18s var(--transition-spring) !important;
+    white-space: nowrap !important;
+  }
+  .mchip:hover {
+    border-color: var(--accent) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.10) !important;
+  }
+  .mchip.active {
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface)) !important;
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    box-shadow: 0 0 0 1px var(--accent), 0 4px 16px color-mix(in srgb, var(--accent) 22%, transparent) !important;
+  }
+  .mdot {
+    width: 7px !important; height: 7px !important;
+    border-radius: 50% !important;
+    box-shadow: 0 0 6px currentColor !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* ════════ PROFILE STATS GRID ════════ */
+  .profile-stats {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 1px !important;
+    background: var(--line) !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    margin-bottom: 24px !important;
+    border: 1.5px solid var(--line) !important;
+  }
+  .stat-box {
+    background: var(--surface) !important;
+    border: none !important; border-radius: 0 !important;
+    padding: 20px 10px !important;
+    text-align: center !important; box-shadow: none !important;
+    transition: background 0.15s ease !important;
+  }
+  .stat-box:hover { background: var(--surface-2) !important; transform: none !important; }
+  .stat-num {
+    display: block !important;
+    font-size: 28px !important; font-weight: 900 !important;
+    letter-spacing: -0.04em !important; line-height: 1 !important;
+    background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    margin-bottom: 4px !important;
+  }
+  .stat-label {
+    font-size: 9px !important; font-weight: 800 !important;
+    text-transform: uppercase !important; letter-spacing: 0.1em !important;
+    color: var(--text-muted) !important;
+  }
+
+  /* ════════ SECTION & PAGE HEADINGS ════════ */
+  .page-title, h1.page-hd, .tab-hd {
+    font-size: 26px !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.04em !important;
+    color: var(--text) !important;
+    line-height: 1.15 !important;
+  }
+  .section-title {
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.14em !important;
+    color: var(--accent) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+  }
+  .section-title::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 18px !important; height: 2px !important;
+    background: var(--accent) !important;
+    border-radius: 1px !important;
+  }
+
+  /* ════════ BUTTONS ════════ */
+  .btn {
+    border-radius: 14px !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.01em !important;
+    font-size: 14px !important;
+    height: 44px !important;
+    transition: all 0.18s var(--transition-spring) !important;
+  }
+  .btn:not(.btn-outline):not(.btn-text) {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep, color-mix(in srgb, var(--accent) 70%, #000)) 100%) !important;
+    box-shadow:
+      0 4px 14px color-mix(in srgb, var(--accent) 38%, transparent),
+      0 1px 0 rgba(255,255,255,0.18) inset !important;
+    border: none !important;
+    color: #fff !important;
+  }
+  .btn:not(.btn-outline):not(.btn-text):hover {
+    transform: translateY(-1px) !important;
+    box-shadow:
+      0 8px 24px color-mix(in srgb, var(--accent) 48%, transparent),
+      0 1px 0 rgba(255,255,255,0.18) inset !important;
+    filter: brightness(1.06) !important;
+  }
+  .btn:not(.btn-outline):not(.btn-text):active { transform: translateY(0) !important; }
+  .btn-outline {
+    border: 1.5px solid var(--line) !important;
+    background: color-mix(in srgb, var(--surface) 70%, transparent) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    color: var(--text) !important;
+  }
+  .btn-outline:hover {
+    border-color: var(--accent) !important;
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface)) !important;
+    color: var(--accent) !important;
+  }
+
+  /* ════════ GATE / AUTH CARD ════════ */
+  .gate-card {
+    border-radius: 28px !important;
+    background: color-mix(in srgb, var(--surface) 90%, transparent) !important;
+    backdrop-filter: blur(40px) saturate(2.2) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(2.2) !important;
+    border: 1px solid var(--line) !important;
+    box-shadow: 0 40px 100px var(--shadow), 0 0 0 1px rgba(255,255,255,0.04) inset !important;
+    padding: 36px 32px !important;
+  }
+  .gate-input, .gate-wrap textarea, select.gate-input {
+    border-radius: 14px !important;
+    border: 1.5px solid var(--line) !important;
+    background: var(--surface-2) !important;
+    font-size: 15px !important;
+    height: 48px !important;
+    padding: 0 16px !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  }
+  .gate-wrap textarea { height: auto !important; padding: 14px 16px !important; }
+  .gate-input:focus, .gate-wrap textarea:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--accent) 16%, transparent) !important;
+    outline: none !important;
+  }
+
+  /* ════════ SOCIAL TABS ════════ */
+  .social-tabs, .sub-tabs {
+    background: var(--surface-2) !important;
+    border-radius: 14px !important;
+    padding: 4px !important;
+    gap: 3px !important;
+    border: 1px solid var(--line) !important;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.04) !important;
+  }
+  .social-tab-btn, .sub-tab-btn {
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    letter-spacing: -0.01em !important;
+    transition: all 0.15s ease !important;
+    color: var(--text-muted) !important;
+    padding: 8px 16px !important;
+  }
+  .social-tab-btn.active, .sub-tab-btn.active {
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.10) !important;
+  }
+
+  /* ════════ CALENDAR ════════ */
+  .cal-hd {
+    font-size: 22px !important; font-weight: 900 !important;
+    letter-spacing: -0.04em !important; color: var(--text) !important;
+  }
+  .cal-weekday {
+    font-size: 9px !important; font-weight: 800 !important;
+    text-transform: uppercase !important; letter-spacing: 0.12em !important;
+    color: var(--text-muted) !important;
+  }
+  .calendar-cell {
+    border-radius: 12px !important;
+    transition: background 0.12s ease, transform 0.12s ease !important;
+  }
+  .calendar-cell:hover { transform: scale(1.08) !important; }
+  .calendar-cell.today {
+    box-shadow: 0 0 0 2px var(--accent), 0 4px 14px color-mix(in srgb, var(--accent) 25%, transparent) !important;
+  }
+
+  /* ════════ LIST / SETTINGS ROWS ════════ */
+  .settings-row, .list-row {
+    border-radius: 14px !important;
+    padding: 12px 16px !important;
+    transition: background 0.12s ease !important;
+  }
+  .settings-row:hover, .list-row:hover { background: var(--surface-2) !important; }
+
+  /* ════════ EMPTY STATES ════════ */
+  .empty-state, .review-empty {
+    padding: 72px 28px !important;
+    color: var(--text-muted) !important;
+  }
+  .review-empty-icon { font-size: 40px !important; margin-bottom: 16px !important; opacity: 0.4 !important; }
+
+  /* ════════ EVENT CARDS ════════ */
+  .event-card, .ev-card {
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    transition: transform 0.22s var(--transition-spring), box-shadow 0.22s ease !important;
+  }
+  .event-card:hover, .ev-card:hover {
+    transform: translateY(-4px) scale(1.008) !important;
+    box-shadow: 0 16px 48px var(--shadow) !important;
+  }
+
+  /* ════════ LIVE CHIP ════════ */
+  .live-chip {
+    background: rgba(226,59,59,0.10) !important;
+    color: #E23B3B !important;
+    border: 1.5px solid rgba(226,59,59,0.28) !important;
+    border-radius: 8px !important;
+    font-weight: 800 !important; font-size: 10.5px !important;
+    letter-spacing: 0.06em !important; padding: 3px 9px !important;
+    display: inline-flex !important; align-items: center !important; gap: 5px !important;
+  }
+
+  /* ════════ TOAST ════════ */
+  .toast {
+    border-radius: 16px !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    background: color-mix(in srgb, var(--surface) 88%, transparent) !important;
+    border: 1px solid var(--line) !important;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.20) !important;
+    font-weight: 700 !important;
+    padding: 14px 18px !important;
+  }
+
+  /* ════════ PERSON CARDS ════════ */
+  .friend-card, .attendee-card, .intro-card {
+    border-radius: 18px !important;
+    transition: transform 0.22s var(--transition-spring), box-shadow 0.22s ease !important;
+  }
+  .friend-card:hover, .attendee-card:hover, .intro-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 36px var(--shadow) !important;
+  }
+
+  /* ════════ BADGES ════════ */
+  .badge-cell { border-radius: 18px !important; }
+  .badge-cell.earned {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06), 0 0 0 1.5px var(--line) !important;
+    transition: transform 0.18s var(--transition-spring) !important;
+  }
+  .badge-cell.earned:hover { transform: translateY(-2px) scale(1.04) !important; }
+
+  /* ════════ REVIEW CARDS ════════ */
+  .review-card {
+    border-radius: 18px !important;
+    border: 1.5px solid var(--line) !important;
+    padding: 20px !important;
+    transition: box-shadow 0.18s ease !important;
+  }
+  .review-card:hover { box-shadow: 0 8px 32px var(--shadow) !important; }
+
+  /* ════════ CLOUD-VEIL — cinematic redesign ════════
+     Light mode: drifting white clouds part to reveal the app.
+     Dark mode: storm-cloud parting with moonlight glow + lightning.
+     The cv-drift-* classes add continuous horizontal cloud drift
+     so clouds feel alive BEFORE the parting animation starts.
+  ════════ */
+
+  /* Continuous ambient drift — clouds slowly move left/right */
+  @keyframes cvDriftL {
+    0%   { transform: translateX(0px); }
+    50%  { transform: translateX(-28px); }
+    100% { transform: translateX(0px); }
+  }
+  @keyframes cvDriftR {
+    0%   { transform: translateX(0px); }
+    50%  { transform: translateX(28px); }
+    100% { transform: translateX(0px); }
+  }
+  @keyframes cvDriftU {
+    0%   { transform: translateX(-50%) translateY(0px); }
+    50%  { transform: translateX(-50%) translateY(-16px); }
+    100% { transform: translateX(-50%) translateY(0px); }
+  }
+  @keyframes cvDriftD {
+    0%   { transform: translateX(-50%) translateY(0px); }
+    50%  { transform: translateX(-50%) translateY(16px); }
+    100% { transform: translateX(-50%) translateY(0px); }
+  }
+  @keyframes cvDriftFree {
+    0%   { transform: translateX(0px) translateY(0px); }
+    33%  { transform: translateX(18px) translateY(-10px); }
+    66%  { transform: translateX(-12px) translateY(8px); }
+    100% { transform: translateX(0px) translateY(0px); }
+  }
+
+  /* Apply drift to idle clouds */
+  #cloud-veil.cv-active .cv-puff-a { animation: cvDriftL 9s ease-in-out infinite; }
+  #cloud-veil.cv-active .cv-puff-b { animation: cvDriftR 11s ease-in-out infinite; }
+  #cloud-veil.cv-active .cv-puff-c { animation: cvDriftU 13s ease-in-out infinite; }
+  #cloud-veil.cv-active .cv-puff-d { animation: cvDriftFree 10s ease-in-out infinite; }
+  #cloud-veil.cv-active .cv-puff-e { animation: cvDriftFree 12s ease-in-out infinite reverse; }
+  #cloud-veil.cv-active .cv-puff-f { animation: cvDriftD 14s ease-in-out infinite; }
+  #cloud-veil.cv-active .cv-puff-g { animation: cvDriftL 8s ease-in-out infinite reverse; }
+  #cloud-veil.cv-active .cv-puff-h { animation: cvDriftR 10s ease-in-out infinite reverse; }
+
+  /* Parting: override drift with sweep-out on cv-parting class */
+  #cloud-veil.cv-parting .cv-puff-a { animation: cvPartL 1.1s cubic-bezier(0.4,0,0.2,1) both !important; }
+  #cloud-veil.cv-parting .cv-puff-b { animation: cvPartR 1.1s cubic-bezier(0.4,0,0.2,1) both !important; }
+  #cloud-veil.cv-parting .cv-puff-c { animation: cvPartCU 1.15s cubic-bezier(0.4,0,0.2,1) both !important; }
+  #cloud-veil.cv-parting .cv-puff-d { animation: cvPartL 0.95s cubic-bezier(0.4,0,0.2,1) 0.04s both !important; }
+  #cloud-veil.cv-parting .cv-puff-e { animation: cvPartR 0.95s cubic-bezier(0.4,0,0.2,1) 0.04s both !important; }
+  #cloud-veil.cv-parting .cv-puff-f { animation: cvPartCD 1.2s cubic-bezier(0.4,0,0.2,1) both !important; }
+  #cloud-veil.cv-parting .cv-puff-g { animation: cvPartL 1.0s cubic-bezier(0.4,0,0.2,1) 0.06s both !important; }
+  #cloud-veil.cv-parting .cv-puff-h { animation: cvPartR 1.0s cubic-bezier(0.4,0,0.2,1) 0.06s both !important; }
+  #cloud-veil.cv-parting .cv-sky { animation: cvSkyFade 1.2s ease-out both !important; }
+  #cloud-veil.cv-parting .cv-glow { animation: cvGlowBreak 1.2s ease-out both !important; }
+  [data-theme="dark"] #cloud-veil.cv-parting .cv-glow { animation: cvMoonBreak 1.2s ease-out both !important; }
+
+  /* Stars fade in when entering dark cloud veil */
+  [data-theme="dark"] #cloud-veil.cv-active .cv-stars {
+    animation: cvStarsFadeIn 2.2s ease-out 0.3s forwards;
+  }
+  [data-theme="dark"] #cloud-veil.cv-active .cv-city-glow {
+    animation: cvStarsFadeIn 3s ease-out 0.6s forwards;
+  }
+  @keyframes cvStarsFadeIn {
+    to { opacity: 1; }
+  }
+
+  /* Sun rays slowly rotate in light mode */
+  [data-theme="light"] #cloud-veil.cv-active .cv-rays {
+    animation: cvRaysSpin 0.4s ease-out 0.2s forwards, cvRaysRotate 40s linear 0.6s infinite;
+  }
+  @keyframes cvRaysSpin { to { opacity: 0.7; } }
+  @keyframes cvRaysRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  /* ════════ SCROLLBARS ════════ */
+  ::-webkit-scrollbar { width: 3px; height: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+  /* ════════ APP LAYOUT — breathing room ════════ */
+  #app:not(.map-home) {
+    padding-top: calc(var(--top-h) + 16px) !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+    padding-bottom: calc(var(--bot-h) + 20px) !important;
+  }
+
+  /* ════════ LANDING HERO CLOUD LAYER ════════
+     Actual cloud PNGs drift across the hero bottom at staggered speeds.
+     Mirrors the reference CSS (translateX -100% → 100%, speed scaled by --ci).
+  ════════ */
+  .lp-cloud-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .lp-cld {
+    position: absolute;
+    max-width: 55vw;
+    opacity: 0.55;
+    animation: lpCldDrift calc(14s * var(--ci, 1)) linear infinite;
+    will-change: transform;
+    filter: brightness(1.08) saturate(0.7);
+  }
+  [data-theme="dark"] .lp-cld {
+    opacity: 0.22;
+    filter: brightness(0.7) saturate(0.4) contrast(1.1);
+  }
+  @keyframes lpCldDrift {
+    0%   { transform: translateX(0vw); }
+    100% { transform: translateX(160vw); }
+  }
+  /* Stagger start positions so they don't all begin at the same point */
+  .lp-cld:nth-child(1) { animation-delay: 0s; }
+  .lp-cld:nth-child(2) { animation-delay: calc(-14s * 0.3); }
+  .lp-cld:nth-child(3) { animation-delay: calc(-14s * 0.6); }
+  .lp-cld:nth-child(4) { animation-delay: calc(-14s * 0.15); }
+  .lp-cld:nth-child(5) { animation-delay: calc(-14s * 0.45); }
+
+  /* ════════ HERO & LANDING LAYOUT POLISH ════════ */
+  .lp-hero {
+    min-height: 100dvh !important;
+    padding: 120px 32px 96px !important;
+  }
+  .lp-hero-title {
+    font-size: clamp(42px, 7vw, 76px) !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.05em !important;
+    line-height: 1.05 !important;
+  }
+  .lp-hero-sub {
+    font-size: 18px !important;
+    line-height: 1.65 !important;
+    max-width: 560px !important;
+    margin: 0 auto 36px !important;
+    color: var(--text-soft) !important;
+  }
+  .lp-hero-kicker {
+    font-size: 11px !important;
+    letter-spacing: 0.12em !important;
+    border-radius: 999px !important;
+    padding: 7px 18px !important;
+    margin-bottom: 32px !important;
+    background: color-mix(in srgb, var(--surface) 90%, transparent) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+  }
+  .lp-hero-btn-primary {
+    height: 52px !important;
+    padding: 0 32px !important;
+    border-radius: 16px !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.02em !important;
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 65%, #000)) !important;
+    box-shadow: 0 8px 32px color-mix(in srgb, var(--accent) 42%, transparent) !important;
+  }
+  .lp-hero-btn-primary:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 12px 40px color-mix(in srgb, var(--accent) 52%, transparent) !important;
+  }
+  .lp-hero-btn-secondary {
+    height: 52px !important;
+    padding: 0 28px !important;
+    border-radius: 16px !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    border: 1.5px solid var(--line) !important;
+    background: color-mix(in srgb, var(--surface) 80%, transparent) !important;
+    backdrop-filter: blur(14px) !important;
+  }
+
+  /* ════════ LANDING NAV ════════ */
+  .lp-nav {
+    backdrop-filter: blur(32px) saturate(2) !important;
+    -webkit-backdrop-filter: blur(32px) saturate(2) !important;
+    background: color-mix(in srgb, var(--surface) 80%, transparent) !important;
+    border-bottom: 1px solid var(--line) !important;
+  }
+  .lp-nav-logo span {
+    font-size: 18px !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.04em !important;
+  }
+  .lp-nav-btn {
+    height: 40px !important;
+    padding: 0 20px !important;
+    border-radius: 12px !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+  }
+
+  /* ════════ LANDING FEATURE CARDS ════════ */
+  .lp-feat-card {
+    border-radius: 22px !important;
+    padding: 28px !important;
+    border: 1.5px solid var(--line) !important;
+    background: color-mix(in srgb, var(--surface) 88%, transparent) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    transition: transform 0.22s var(--transition-spring), box-shadow 0.22s ease !important;
+  }
+  .lp-feat-card:hover {
+    transform: translateY(-5px) !important;
+    box-shadow: 0 20px 56px var(--shadow), 0 0 0 1.5px var(--accent) !important;
+  }
+  .lp-feat-icon {
+    width: 52px !important; height: 52px !important;
+    border-radius: 16px !important;
+    margin-bottom: 20px !important;
+    font-size: 26px !important;
+  }
+  .lp-feat-title {
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.03em !important;
+    margin-bottom: 10px !important;
+  }
+  .lp-feat-body {
+    font-size: 14px !important;
+    line-height: 1.65 !important;
+    color: var(--text-soft) !important;
+  }
+
+  /* ════════ LANDING SECTION HEADINGS ════════ */
+  .lp-section-title {
+    font-size: clamp(28px, 4vw, 48px) !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.04em !important;
+    line-height: 1.1 !important;
+  }
+  .lp-section-sub {
+    font-size: 16px !important;
+    line-height: 1.65 !important;
+    color: var(--text-soft) !important;
+    max-width: 520px !important;
+    margin: 0 auto !important;
+  }
+
 </style>
 </head>
 <body>
@@ -4576,6 +5284,13 @@ function renderGate(prefillName,prefillEmail){
     <!-- ── HERO ── -->
     <section class="lp-hero">
       <div class="lp-hero-bg"></div>
+      <div class="lp-cloud-layer" aria-hidden="true">
+        <img src="./cloud1.png" class="lp-cld" style="--ci:1;bottom:2%;left:-20%">
+        <img src="./cloud2.png" class="lp-cld" style="--ci:2;bottom:18%;left:-30%">
+        <img src="./cloud3.png" class="lp-cld" style="--ci:3;bottom:6%;left:-25%">
+        <img src="./cloud4.png" class="lp-cld" style="--ci:4;bottom:28%;left:-15%">
+        <img src="./cloud5.png" class="lp-cld" style="--ci:5;bottom:12%;left:-22%">
+      </div>
       <div class="lp-hero-blobs">
         <div class="lp-blob lp-blob-a"></div>
         <div class="lp-blob lp-blob-b"></div>
