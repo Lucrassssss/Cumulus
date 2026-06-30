@@ -3683,32 +3683,53 @@
 <!-- SVG cloud defs: metaball shape filter + light/dark gradients -->
 <svg style="position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true">
   <defs>
-    <!-- Light mode: sharp cumulus silhouette + moderate turbulence warp for wispy edges -->
-    <filter id="cv-f-lgt" x="-65%" y="-65%" width="230%" height="230%" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="10" result="blur"/>
+    <!--
+      Light mode: fluffy bright cumulus.
+      Soft blur → mild threshold (keeps gradual alpha edge) → turbulence displaces
+      those semi-transparent edge pixels into natural wispy protrusions.
+      Result: solid bright core with organically ragged perimeter, like a real cloud PNG.
+    -->
+    <filter id="cv-f-lgt" x="-70%" y="-70%" width="240%" height="240%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="9" result="blur"/>
+      <!-- Soft threshold: alpha transition band is ~2× wider than before,
+           giving the displacement more wispy material to scatter. -->
       <feColorMatrix type="matrix" in="blur" result="shape"
-        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -12"/>
-      <feTurbulence type="fractalNoise" baseFrequency="0.04 0.06" numOctaves="4" seed="5" result="noise"/>
-      <feDisplacementMap in="shape" in2="noise" scale="42" xChannelSelector="R" yChannelSelector="G"/>
+        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 11 -3.5"/>
+      <!-- Fine+medium fractal noise — two scales overlap for organic texture -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.04 0.07" numOctaves="5" seed="3" result="noise"/>
+      <!-- scale=60: edge wisps extend 20-30px beyond the base silhouette -->
+      <feDisplacementMap in="shape" in2="noise" scale="60" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
-    <!-- Dark mode: softer threshold + heavy turbulence warp = misty storm cloud -->
-    <filter id="cv-f-drk" x="-75%" y="-75%" width="250%" height="250%" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="13" result="blur"/>
+
+    <!--
+      Dark mode: misty grey storm cloud.
+      Heavy blur (no hard threshold) keeps a wide gradual alpha falloff.
+      Heavy displacement scatters that falloff into long tendrils — like
+      the wispy grey/white cloud PNG silhouettes in the reference images.
+    -->
+    <filter id="cv-f-drk" x="-80%" y="-80%" width="260%" height="260%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="22" result="blur"/>
+      <!-- Very soft amplify: threshold at alpha=0.10, wide transition band.
+           Keeps the feathered fog-like edges of the blurred shapes intact. -->
       <feColorMatrix type="matrix" in="blur" result="shape"
-        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"/>
-      <feTurbulence type="fractalNoise" baseFrequency="0.032 0.048" numOctaves="4" seed="5" result="noise"/>
-      <feDisplacementMap in="shape" in2="noise" scale="70" xChannelSelector="R" yChannelSelector="G"/>
+        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 5 -0.5"/>
+      <!-- Coarser low-frequency noise → larger cloud tendrils / wisps -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.022 0.036" numOctaves="5" seed="7" result="noise"/>
+      <!-- scale=110: aggressive scatter of the foggy edge material -->
+      <feDisplacementMap in="shape" in2="noise" scale="110" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
+    <!-- Light: pure white top (sunlit), very faint cool blue-grey base (shadowed flat bottom) -->
     <linearGradient id="cv-grd-lgt" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%"   stop-color="rgb(255,255,255)"/>
-      <stop offset="55%"  stop-color="rgb(248,252,255)"/>
-      <stop offset="100%" stop-color="rgb(215,233,251)"/>
+      <stop offset="45%"  stop-color="rgb(255,255,255)"/>
+      <stop offset="100%" stop-color="rgb(210,228,248)"/>
     </linearGradient>
+    <!-- Dark: cool light grey top (moonlit rim), mid grey body, near-black base -->
     <linearGradient id="cv-grd-drk" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"   stop-color="rgb(192,186,228)"/>
-      <stop offset="28%"  stop-color="rgb(68,62,105)"/>
-      <stop offset="70%"  stop-color="rgb(30,24,52)"/>
-      <stop offset="100%" stop-color="rgb(14,10,26)"/>
+      <stop offset="0%"   stop-color="rgb(210,208,218)"/>
+      <stop offset="22%"  stop-color="rgb(148,144,165)"/>
+      <stop offset="60%"  stop-color="rgb(72,68,88)"/>
+      <stop offset="100%" stop-color="rgb(28,25,38)"/>
     </linearGradient>
   </defs>
 </svg>
