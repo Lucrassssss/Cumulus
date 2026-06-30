@@ -3310,36 +3310,45 @@
       #FFFFFF 0%, #EEF6FF 18%, #C5DDEF 46%, #95C0D8 75%, #72AACC 100%);
   }
 
-  /* ─── CLOUD PUFFS — SVG metaball silhouettes ─────────── */
+  /* ─── CLOUD PUFFS — natural cloud silhouettes ─────────── */
   .cv-puff {
     position: absolute; overflow: visible;
     will-change: transform, opacity;
   }
-  .cv-puff-a { width:640px;  height:340px; top:-80px;  left:-170px; }
-  .cv-puff-b { width:670px;  height:360px; top:-65px;  right:-190px; }
-  .cv-puff-c { width:740px;  height:350px; top:18%;    left:50%; transform:translateX(-50%); }
-  .cv-puff-d { width:510px;  height:285px; top:44%;    left:-95px; }
-  .cv-puff-e { width:545px;  height:295px; top:46%;    right:-115px; }
-  .cv-puff-f { width:480px;  height:255px; bottom:-20px; left:50%; transform:translateX(-50%); }
-  .cv-puff-g { width:400px;  height:260px; top:28%;    left:12%; }
-  .cv-puff-h { width:385px;  height:250px; top:26%;    right:10%; }
 
-  /* Cloud fill + shape filter — switched per theme */
-  .cv-cld { fill: url(#cv-grd-lgt); filter: url(#cv-f-lgt); }
-  [data-theme="dark"] .cv-cld { fill: url(#cv-grd-drk); filter: url(#cv-f-drk); }
+  /*
+    Viewport-unit sizing: clouds scale naturally on every screen size.
+    On mobile (375px): vw gives smaller absolute px, proportionally filling the screen.
+    On desktop (1440px): same vw values give generously-sized cloud banks.
+  */
+  .cv-puff-a { width:65vw;  height:26vw; top:-6vw;   left:-12vw; }
+  .cv-puff-b { width:68vw;  height:27vw; top:-4vw;   right:-14vw; }
+  .cv-puff-c { width:76vw;  height:28vw; top:16vw;   left:50%; transform:translateX(-50%); }
+  .cv-puff-d { width:58vw;  height:24vw; top:42%;    left:-8vw; }
+  .cv-puff-e { width:60vw;  height:24vw; top:44%;    right:-10vw; }
+  .cv-puff-f { width:62vw;  height:23vw; bottom:-4vw; left:50%; transform:translateX(-50%); }
+  .cv-puff-g { width:52vw;  height:24vw; top:30%;    left:10%; }
+  .cv-puff-h { width:50vw;  height:23vw; top:28%;    right:8%; }
 
-  /* Light mode: sunlit glow halo on SVG wrapper (depth gradient: front=stronger) */
-  .cv-puff-g, .cv-puff-h { filter: drop-shadow(0 -4px 16px rgba(255,255,255,0.55)); }
-  .cv-puff-d, .cv-puff-e, .cv-puff-f { filter: drop-shadow(0 -5px 20px rgba(255,255,255,0.50)); }
-  .cv-puff-a, .cv-puff-b { filter: drop-shadow(0 -6px 22px rgba(255,255,255,0.60)); }
-  .cv-puff-c             { filter: drop-shadow(0 -8px 28px rgba(255,255,255,0.55)); }
+  /* Mobile: drop two mid-layer clouds to keep render fast on small screens */
+  @media (max-width: 480px) {
+    .cv-puff-d, .cv-puff-e { display: none; }
+  }
 
-  /* Dark mode: extra depth blur on SVG wrapper (front=sharp, back=mist) */
+  /* Cloud fill: all color comes from CSS, shape from per-cloud filter */
+  .cv-cld { fill: url(#cv-grd-lgt); }
+  [data-theme="dark"] .cv-cld { fill: url(#cv-grd-drk); }
+
+  /* Light mode: sunlit glow halo on SVG wrapper */
+  .cv-puff-a, .cv-puff-b { filter: drop-shadow(0 -4px 18px rgba(255,255,255,0.55)); }
+  .cv-puff-c             { filter: drop-shadow(0 -6px 24px rgba(255,255,255,0.50)); }
+
+  /* Dark mode: per-depth mist blur (front=sharp, back=thick mist) */
   [data-theme="dark"] .cv-puff-g, [data-theme="dark"] .cv-puff-h { filter: none; }
-  [data-theme="dark"] .cv-puff-d, [data-theme="dark"] .cv-puff-e { filter: blur(2px); }
-  [data-theme="dark"] .cv-puff-c                                  { filter: blur(1px); }
-  [data-theme="dark"] .cv-puff-a, [data-theme="dark"] .cv-puff-b { filter: blur(3px); }
-  [data-theme="dark"] .cv-puff-f                                  { filter: blur(4px); }
+  [data-theme="dark"] .cv-puff-d, [data-theme="dark"] .cv-puff-e { filter: blur(3px); }
+  [data-theme="dark"] .cv-puff-c                                  { filter: blur(2px); }
+  [data-theme="dark"] .cv-puff-a, [data-theme="dark"] .cv-puff-b { filter: blur(4px); }
+  [data-theme="dark"] .cv-puff-f                                  { filter: blur(5px); }
 
   /* ─── DARK MODE SKY ───────────────────────────────────── */
   [data-theme="dark"] .cv-sky {
@@ -3680,56 +3689,77 @@
 <div class="bg-blot blot-e"></div>
 <div class="bg-grain" aria-hidden="true"></div>
 
-<!-- SVG cloud defs: metaball shape filter + light/dark gradients -->
+<!-- SVG cloud defs: per-cloud filters (unique seed each) + fill gradients -->
 <svg style="position:absolute;width:0;height:0;overflow:hidden;" aria-hidden="true">
   <defs>
     <!--
-      Light mode: fluffy bright cumulus.
-      Soft blur → mild threshold (keeps gradual alpha edge) → turbulence displaces
-      those semi-transparent edge pixels into natural wispy protrusions.
-      Result: solid bright core with organically ragged perimeter, like a real cloud PNG.
+      Recipe for every cloud:
+        1. Blur a single flat ellipse into a soft mass (no hard edges)
+        2. Light feColorMatrix to keep the wide gradual alpha falloff at the edges
+        3. feTurbulence fractal noise with a UNIQUE SEED per cloud
+        4. feDisplacementMap with heavy scale — completely destroys the ellipse shape
+           and replaces it with organic wispy tendrils matching the reference PNG look
     -->
-    <filter id="cv-f-lgt" x="-70%" y="-70%" width="240%" height="240%" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="9" result="blur"/>
-      <!-- Soft threshold: alpha transition band is ~2× wider than before,
-           giving the displacement more wispy material to scatter. -->
-      <feColorMatrix type="matrix" in="blur" result="shape"
-        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 11 -3.5"/>
-      <!-- Fine+medium fractal noise — two scales overlap for organic texture -->
-      <feTurbulence type="fractalNoise" baseFrequency="0.04 0.07" numOctaves="5" seed="3" result="noise"/>
-      <!-- scale=60: edge wisps extend 20-30px beyond the base silhouette -->
-      <feDisplacementMap in="shape" in2="noise" scale="60" xChannelSelector="R" yChannelSelector="G"/>
+    <filter id="cv-fa" x="-32%" y="-42%" width="164%" height="184%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="28" result="blur"/>
+      <feColorMatrix type="matrix" in="blur" result="s" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 6 -1.8"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.007 0.011" numOctaves="6" seed="2" result="n"/>
+      <feDisplacementMap in="s" in2="n" scale="130" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
-
-    <!--
-      Dark mode: misty grey storm cloud.
-      Heavy blur (no hard threshold) keeps a wide gradual alpha falloff.
-      Heavy displacement scatters that falloff into long tendrils — like
-      the wispy grey/white cloud PNG silhouettes in the reference images.
-    -->
-    <filter id="cv-f-drk" x="-80%" y="-80%" width="260%" height="260%" color-interpolation-filters="sRGB">
+    <filter id="cv-fb" x="-32%" y="-42%" width="164%" height="184%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="28" result="blur"/>
+      <feColorMatrix type="matrix" in="blur" result="s" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 6 -1.8"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.007 0.011" numOctaves="6" seed="8" result="n"/>
+      <feDisplacementMap in="s" in2="n" scale="130" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="cv-fc" x="-32%" y="-42%" width="164%" height="184%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="32" result="blur"/>
+      <feColorMatrix type="matrix" in="blur" result="s" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 5 -1.5"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.006 0.010" numOctaves="6" seed="4" result="n"/>
+      <feDisplacementMap in="s" in2="n" scale="145" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="cv-fd" x="-32%" y="-42%" width="164%" height="184%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="24" result="blur"/>
+      <feColorMatrix type="matrix" in="blur" result="s" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 6 -1.8"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.008 0.013" numOctaves="6" seed="11" result="n"/>
+      <feDisplacementMap in="s" in2="n" scale="115" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="cv-fe" x="-32%" y="-42%" width="164%" height="184%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="24" result="blur"/>
+      <feColorMatrix type="matrix" in="blur" result="s" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 6 -1.8"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.008 0.013" numOctaves="6" seed="16" result="n"/>
+      <feDisplacementMap in="s" in2="n" scale="115" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="cv-ff" x="-32%" y="-42%" width="164%" height="184%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="26" result="blur"/>
+      <feColorMatrix type="matrix" in="blur" result="s" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 6 -1.8"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.007 0.012" numOctaves="6" seed="23" result="n"/>
+      <feDisplacementMap in="s" in2="n" scale="120" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="cv-fg" x="-36%" y="-46%" width="172%" height="192%" color-interpolation-filters="sRGB">
       <feGaussianBlur stdDeviation="22" result="blur"/>
-      <!-- Very soft amplify: threshold at alpha=0.10, wide transition band.
-           Keeps the feathered fog-like edges of the blurred shapes intact. -->
-      <feColorMatrix type="matrix" in="blur" result="shape"
-        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 5 -0.5"/>
-      <!-- Coarser low-frequency noise → larger cloud tendrils / wisps -->
-      <feTurbulence type="fractalNoise" baseFrequency="0.022 0.036" numOctaves="5" seed="7" result="noise"/>
-      <!-- scale=110: aggressive scatter of the foggy edge material -->
-      <feDisplacementMap in="shape" in2="noise" scale="110" xChannelSelector="R" yChannelSelector="G"/>
+      <feColorMatrix type="matrix" in="blur" result="s" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 7 -2.2"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.009 0.014" numOctaves="6" seed="7" result="n"/>
+      <feDisplacementMap in="s" in2="n" scale="108" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
-    <!-- Light: pure white top (sunlit), very faint cool blue-grey base (shadowed flat bottom) -->
+    <filter id="cv-fh" x="-36%" y="-46%" width="172%" height="192%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="22" result="blur"/>
+      <feColorMatrix type="matrix" in="blur" result="s" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 7 -2.2"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.009 0.014" numOctaves="6" seed="31" result="n"/>
+      <feDisplacementMap in="s" in2="n" scale="108" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <!-- Light: bright white top, soft blue-grey shadowed base (real cumulus shading) -->
     <linearGradient id="cv-grd-lgt" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%"   stop-color="rgb(255,255,255)"/>
-      <stop offset="45%"  stop-color="rgb(255,255,255)"/>
-      <stop offset="100%" stop-color="rgb(210,228,248)"/>
+      <stop offset="40%"  stop-color="rgb(255,255,255)"/>
+      <stop offset="100%" stop-color="rgb(208,226,246)"/>
     </linearGradient>
-    <!-- Dark: cool light grey top (moonlit rim), mid grey body, near-black base -->
+    <!-- Dark: cool silver rim (moonlit), mid grey body, near-black base (storm cloud) -->
     <linearGradient id="cv-grd-drk" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"   stop-color="rgb(210,208,218)"/>
-      <stop offset="22%"  stop-color="rgb(148,144,165)"/>
-      <stop offset="60%"  stop-color="rgb(72,68,88)"/>
-      <stop offset="100%" stop-color="rgb(28,25,38)"/>
+      <stop offset="0%"   stop-color="rgb(205,202,215)"/>
+      <stop offset="20%"  stop-color="rgb(145,141,160)"/>
+      <stop offset="58%"  stop-color="rgb(70,66,85)"/>
+      <stop offset="100%" stop-color="rgb(26,23,36)"/>
     </linearGradient>
   </defs>
 </svg>
@@ -3743,94 +3773,46 @@
   <div class="cv-glow"></div>
   <div class="cv-lightning"></div>
   <!-- back layer — far clouds, part slower -->
-  <svg class="cv-puff cv-puff-a cv-back" viewBox="0 0 640 340" xmlns="http://www.w3.org/2000/svg">
-    <g class="cv-cld">
-      <ellipse cx="295" cy="244" rx="295" ry="126"/>
-      <circle cx="92"  cy="198" r="82"/>
-      <circle cx="186" cy="146" r="100"/>
-      <circle cx="302" cy="118" r="115"/>
-      <circle cx="422" cy="146" r="97"/>
-      <circle cx="526" cy="192" r="80"/>
-      <circle cx="150" cy="164" r="62"/>
-      <circle cx="364" cy="130" r="70"/>
+  <svg class="cv-puff cv-puff-a cv-back" viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg">
+    <g class="cv-cld" filter="url(#cv-fa)">
+      <ellipse cx="350" cy="162" rx="338" ry="112"/>
     </g>
   </svg>
-  <svg class="cv-puff cv-puff-b cv-back" viewBox="0 0 670 360" xmlns="http://www.w3.org/2000/svg">
-    <g class="cv-cld">
-      <ellipse cx="330" cy="256" rx="330" ry="132"/>
-      <circle cx="82"  cy="210" r="76"/>
-      <circle cx="178" cy="158" r="94"/>
-      <circle cx="302" cy="136" r="107"/>
-      <circle cx="432" cy="116" r="120"/>
-      <circle cx="550" cy="154" r="92"/>
-      <circle cx="632" cy="206" r="72"/>
-      <circle cx="368" cy="130" r="68"/>
+  <svg class="cv-puff cv-puff-b cv-back" viewBox="0 0 720 285" xmlns="http://www.w3.org/2000/svg">
+    <g class="cv-cld" filter="url(#cv-fb)">
+      <ellipse cx="360" cy="164" rx="348" ry="115"/>
     </g>
   </svg>
   <!-- mid layer -->
-  <svg class="cv-puff cv-puff-c" viewBox="0 0 740 350" xmlns="http://www.w3.org/2000/svg">
-    <g class="cv-cld">
-      <ellipse cx="368" cy="248" rx="368" ry="138"/>
-      <circle cx="90"  cy="202" r="84"/>
-      <circle cx="200" cy="148" r="100"/>
-      <circle cx="324" cy="114" r="116"/>
-      <circle cx="424" cy="90"  r="124"/>
-      <circle cx="542" cy="120" r="109"/>
-      <circle cx="658" cy="168" r="86"/>
-      <circle cx="264" cy="130" r="74"/>
-      <circle cx="480" cy="104" r="76"/>
-      <circle cx="376" cy="80"  r="66"/>
+  <svg class="cv-puff cv-puff-c" viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+    <g class="cv-cld" filter="url(#cv-fc)">
+      <ellipse cx="400" cy="172" rx="386" ry="128"/>
     </g>
   </svg>
-  <svg class="cv-puff cv-puff-d" viewBox="0 0 510 285" xmlns="http://www.w3.org/2000/svg">
-    <g class="cv-cld">
-      <ellipse cx="248" cy="200" rx="248" ry="108"/>
-      <circle cx="70"  cy="164" r="72"/>
-      <circle cx="163" cy="120" r="86"/>
-      <circle cx="270" cy="97"  r="95"/>
-      <circle cx="374" cy="122" r="80"/>
-      <circle cx="462" cy="163" r="66"/>
+  <svg class="cv-puff cv-puff-d" viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg">
+    <g class="cv-cld" filter="url(#cv-fd)">
+      <ellipse cx="300" cy="145" rx="286" ry="98"/>
     </g>
   </svg>
-  <svg class="cv-puff cv-puff-e" viewBox="0 0 545 295" xmlns="http://www.w3.org/2000/svg">
-    <g class="cv-cld">
-      <ellipse cx="270" cy="208" rx="270" ry="112"/>
-      <circle cx="70"  cy="170" r="68"/>
-      <circle cx="166" cy="126" r="82"/>
-      <circle cx="276" cy="102" r="97"/>
-      <circle cx="392" cy="116" r="84"/>
-      <circle cx="482" cy="158" r="68"/>
+  <svg class="cv-puff cv-puff-e" viewBox="0 0 620 255" xmlns="http://www.w3.org/2000/svg">
+    <g class="cv-cld" filter="url(#cv-fe)">
+      <ellipse cx="310" cy="148" rx="296" ry="100"/>
     </g>
   </svg>
-  <svg class="cv-puff cv-puff-f" viewBox="0 0 480 255" xmlns="http://www.w3.org/2000/svg">
-    <g class="cv-cld">
-      <ellipse cx="236" cy="180" rx="236" ry="98"/>
-      <circle cx="66"  cy="148" r="68"/>
-      <circle cx="160" cy="112" r="78"/>
-      <circle cx="262" cy="94"  r="86"/>
-      <circle cx="365" cy="110" r="76"/>
-      <circle cx="449" cy="148" r="62"/>
+  <svg class="cv-puff cv-puff-f" viewBox="0 0 640 255" xmlns="http://www.w3.org/2000/svg">
+    <g class="cv-cld" filter="url(#cv-ff)">
+      <ellipse cx="320" cy="148" rx="306" ry="100"/>
     </g>
   </svg>
   <!-- front layer — close clouds, part faster and travel further -->
-  <svg class="cv-puff cv-puff-g cv-front" viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg">
-    <g class="cv-cld">
-      <ellipse cx="198" cy="182" rx="198" ry="100"/>
-      <circle cx="58"  cy="148" r="72"/>
-      <circle cx="153" cy="107" r="87"/>
-      <circle cx="260" cy="86"  r="96"/>
-      <circle cx="356" cy="116" r="78"/>
-      <circle cx="200" cy="76"  r="56"/>
+  <svg class="cv-puff cv-puff-g cv-front" viewBox="0 0 520 240" xmlns="http://www.w3.org/2000/svg">
+    <g class="cv-cld" filter="url(#cv-fg)">
+      <ellipse cx="260" cy="140" rx="246" ry="95"/>
     </g>
   </svg>
-  <svg class="cv-puff cv-puff-h cv-front" viewBox="0 0 385 250" xmlns="http://www.w3.org/2000/svg">
-    <g class="cv-cld">
-      <ellipse cx="190" cy="175" rx="190" ry="97"/>
-      <circle cx="50"  cy="143" r="68"/>
-      <circle cx="145" cy="105" r="83"/>
-      <circle cx="248" cy="84"  r="93"/>
-      <circle cx="342" cy="110" r="74"/>
-      <circle cx="195" cy="74"  r="52"/>
+  <svg class="cv-puff cv-puff-h cv-front" viewBox="0 0 500 235" xmlns="http://www.w3.org/2000/svg">
+    <g class="cv-cld" filter="url(#cv-fh)">
+      <ellipse cx="250" cy="138" rx="236" ry="92"/>
     </g>
   </svg>
 </div>
