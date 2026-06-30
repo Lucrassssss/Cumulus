@@ -1081,12 +1081,26 @@
   }
   @keyframes ceShellIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
 
+  /* Desktop: side-by-side — card left, controls right */
+  @media (min-width: 781px) {
+    .ce-shell { flex-direction: row; }
+    .ce-left {
+      width: 360px; flex-shrink: 0;
+      border-bottom: none !important;
+      border-right: 1px solid var(--line);
+      justify-content: center;
+      overflow-y: auto;
+    }
+    .ce-card-wrap { width: min(300px, 86%); }
+    .ce-left-actions { max-width: 300px; }
+  }
+
   .ce-left {
     background: color-mix(in srgb, var(--bg-2) 70%, var(--bg) 30%);
     border-bottom: 1px solid var(--line);
     display: flex; flex-direction: column;
     align-items: center;
-    padding: 18px 24px 14px; gap: 10px; flex-shrink: 0; overflow-y: auto;
+    padding: 24px 24px 18px; gap: 12px; flex-shrink: 0; overflow-y: auto;
   }
   .ce-left-label {
     font-size: 10px; font-weight: 700; letter-spacing: 1.8px;
@@ -1095,6 +1109,22 @@
   }
   .ce-preview-row { display: flex; gap: 16px; align-items: flex-start; justify-content: center; }
   .ce-card-wrap { width: min(280px, 60vw); flex-shrink: 0; }
+  .ce-spin-hint {
+    font-size: 11px; color: var(--text-muted); text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    opacity: 0.7; letter-spacing: 0.2px; user-select: none;
+  }
+  .ce-photo-about {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: 12px;
+    border: 1.5px dashed var(--line); cursor: pointer; position: relative;
+    transition: border-color .18s;
+  }
+  .ce-photo-about:hover { border-color: var(--accent); }
+  .ce-photo-about input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .ce-photo-about-img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); flex-shrink: 0; }
+  .ce-photo-about-lbl { font-size: 12px; font-weight: 600; color: var(--text-muted); line-height: 1.4; }
+  .ce-photo-about-lbl span { display: block; font-size: 11px; font-weight: 400; margin-top: 2px; }
   .ce-photo-inline {
     width: 82px; flex-shrink: 0;
     border: 2px dashed var(--line); border-radius: 12px;
@@ -1110,7 +1140,7 @@
   .ce-live-card {
     border-radius: 18px; border: 1px solid;
     padding: 22px 20px; min-height: 190px;
-    position: relative; overflow: hidden;
+    position: relative; overflow: hidden; cursor: grab;
     box-shadow: 0 16px 44px rgba(0,0,0,0.24), 0 3px 10px rgba(0,0,0,0.10);
     transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s ease;
     will-change: transform; cursor: default;
@@ -2463,7 +2493,7 @@
     margin: 16px 0 8px; opacity: .75;
   }
   .cc-family-label:first-child { margin-top: 0; }
-  .cc-color-grid { display: grid; grid-template-columns: repeat(10,1fr); gap: 6px; }
+  .cc-color-grid { display: grid; grid-template-columns: repeat(12,1fr); gap: 5px; }
   .cc-swatch {
     width: 100%; aspect-ratio: 1; border-radius: 50%;
     border: 2.5px solid transparent; cursor: pointer;
@@ -2501,7 +2531,7 @@
     transform: scale(1.03);
   }
   .cc-style-preview {
-    height: 60px; display: flex; align-items: flex-end; padding: 6px 7px;
+    height: 44px; display: flex; align-items: flex-end; padding: 5px 7px;
     position: relative; overflow: hidden;
   }
   .cc-style-name {
@@ -2578,12 +2608,12 @@
 
   /* Responsive color grid */
   @media (max-width: 600px) {
-    .cc-color-grid { grid-template-columns: repeat(8, 1fr); }
+    .cc-color-grid { grid-template-columns: repeat(10, 1fr); }
     .cc-style-grid { grid-template-columns: repeat(4, 1fr); }
     .ev-plate-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
   }
   @media (max-width: 400px) {
-    .cc-color-grid { grid-template-columns: repeat(6, 1fr); }
+    .cc-color-grid { grid-template-columns: repeat(8, 1fr); }
     .cc-style-grid { grid-template-columns: repeat(3, 1fr); }
   }
 
@@ -2698,7 +2728,7 @@
   /* Extra-small (iPhone SE etc) */
   @media (max-width: 375px) {
     .ev-plate-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
-    .cc-color-grid { grid-template-columns: repeat(6, 1fr); gap: 6px; }
+    .cc-color-grid { grid-template-columns: repeat(8, 1fr); gap: 5px; }
     .cc-style-grid { grid-template-columns: repeat(3, 1fr); }
     .badge-grid { grid-template-columns: repeat(2, 1fr) !important; }
     .detail-title { font-size: 18px; }
@@ -4763,9 +4793,9 @@ function handleCardPhoto(input){
       // Update zone UI without full re-render
       const zone=document.getElementById('ce-photo-zone');
       if(zone) zone.innerHTML=`<input type="file" id="ce-photo-input" accept="image/*" onchange="handleCardPhoto(this)"/>
-        <img src="${cardDraft.photo}" class="ce-photo-inline-img" id="ce-photo-img" alt=""/>
-        <div class="ce-photo-inline-lbl">Tap to change</div>
-        <button class="ce-photo-remove" style="font-size:10px;" onclick="event.stopPropagation();removeCardPhoto()">Remove</button>`;
+        <img src="${cardDraft.photo}" class="ce-photo-about-img" id="ce-photo-img" alt=""/>
+        <div class="ce-photo-about-lbl">Tap to change<span>Shows in your card corner</span></div>
+        <button class="ce-photo-remove" style="margin-left:auto;font-size:10px;" onclick="event.stopPropagation();removeCardPhoto()">Remove</button>`;
     };
     img.src=e.target.result;
   };
@@ -4776,8 +4806,10 @@ function removeCardPhoto(){
   try{ localStorage.removeItem('card_photo:'+state.profileName); }catch(e){}
   const zone=document.getElementById('ce-photo-zone');
   if(zone) zone.innerHTML=`<input type="file" id="ce-photo-input" accept="image/*" onchange="handleCardPhoto(this)"/>
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="opacity:0.4;"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
-    <div class="ce-photo-inline-lbl">Add photo</div>`;
+    <div style="width:48px;height:48px;border-radius:50%;background:var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="opacity:0.45;"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+    </div>
+    <div class="ce-photo-about-lbl">Add photo<span>Shows in your card corner</span></div>`;
 }
 function selectCardTheme(id){
   captureDraftFields();
@@ -4985,30 +5017,14 @@ function renderCardEditor(){
     <!-- Split: preview | controls -->
     <div class="ce-shell">
 
-      <!-- TOP — live preview + photo uploader side by side -->
+      <!-- LEFT — live card preview only -->
       <div class="ce-left">
-        <div class="ce-preview-row">
-          <div class="ce-card-wrap">
-            ${liveCardHtml}
-          </div>
-          <div class="ce-photo-inline" id="ce-photo-zone">
-            <input type="file" id="ce-photo-input" accept="image/*" onchange="handleCardPhoto(this)"/>
-            ${cardDraft.photo
-              ?`<img src="${cardDraft.photo}" class="ce-photo-inline-img" id="ce-photo-img" alt=""/>
-                <div class="ce-photo-inline-lbl">Tap to change</div>
-                <button class="ce-photo-remove" style="font-size:10px;" onclick="event.stopPropagation();removeCardPhoto()">Remove</button>`
-              :`<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="opacity:0.4;"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
-                <div class="ce-photo-inline-lbl">Add photo</div>`}
-          </div>
+        <div class="ce-card-wrap">
+          ${liveCardHtml}
         </div>
-        <div class="ce-card-hint">Background · colour · pattern — live preview</div>
-        <div class="ce-intensity-bar">
-          <span class="ce-intensity-label">Pattern</span>
-          <input type="range" id="ce-opacity-global" min="0.02" max="0.85" step="0.01"
-            value="${cardDraft.patternOpacity||0.35}"
-            style="flex:1;accent-color:var(--accent);cursor:pointer;"
-            oninput="setPatternOpacity(this.value)"/>
-          <span class="ce-intensity-pct" id="ce-opacity-val">${Math.round((cardDraft.patternOpacity||0.35)*100)}%</span>
+        <div class="ce-spin-hint">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+          Drag to spin
         </div>
         <div class="ce-left-actions">
           <button class="btn" style="flex:1;" onclick="saveCard()">Save card</button>
@@ -5021,25 +5037,16 @@ function renderCardEditor(){
       <!-- RIGHT — tabbed controls -->
       <div class="ce-right">
 
-        <!-- Tab bar: Colour | Background | Pattern | Story | Places -->
+        <!-- Tab bar: Card Base | Pattern | Accent | About You -->
         <div class="ce-tabs-bar">
-          <button class="ce-tab-btn active" data-tab="colour"     onclick="switchCeTab('colour')">Colour</button>
-          <button class="ce-tab-btn"        data-tab="background" onclick="switchCeTab('background')">Background</button>
-          <button class="ce-tab-btn"        data-tab="pattern"    onclick="switchCeTab('pattern')">Pattern</button>
-          <button class="ce-tab-btn"        data-tab="story"      onclick="switchCeTab('story')">Story</button>
-          <button class="ce-tab-btn"        data-tab="places"     onclick="switchCeTab('places')">Places</button>
+          <button class="ce-tab-btn active" data-tab="base"    onclick="switchCeTab('base')">Card Base</button>
+          <button class="ce-tab-btn"        data-tab="pattern" onclick="switchCeTab('pattern')">Pattern</button>
+          <button class="ce-tab-btn"        data-tab="accent"  onclick="switchCeTab('accent')">Accent</button>
+          <button class="ce-tab-btn"        data-tab="about"   onclick="switchCeTab('about')">About You</button>
         </div>
 
-        <!-- ─ COLOUR TAB ─ -->
-        <div class="ce-tab-panel active" data-tab="colour">
-          <div class="ce-section">
-            <div class="ce-section-label">Highlight colour</div>
-            ${colorSwatchesHtml}
-          </div>
-        </div>
-
-        <!-- ─ BACKGROUND TAB ─ -->
-        <div class="ce-tab-panel" data-tab="background">
+        <!-- ─ CARD BASE TAB ─ -->
+        <div class="ce-tab-panel active" data-tab="base">
           <div class="ce-section">
             <div class="ce-section-label">Card background</div>
             ${styleGridHtml}
@@ -5052,15 +5059,48 @@ function renderCardEditor(){
             <div class="ce-section-label">Pattern overlay</div>
             ${patternTabHtml}
           </div>
+          <div class="ce-section">
+            <div class="ce-section-label">Pattern intensity</div>
+            <div class="ce-intensity-bar">
+              <input type="range" id="ce-opacity-global" min="0.02" max="0.85" step="0.01"
+                value="${cardDraft.patternOpacity||0.35}"
+                style="flex:1;accent-color:var(--accent);cursor:pointer;"
+                oninput="setPatternOpacity(this.value)"/>
+              <span class="ce-intensity-pct" id="ce-opacity-val">${Math.round((cardDraft.patternOpacity||0.35)*100)}%</span>
+            </div>
+          </div>
         </div>
 
-        <!-- ─ STORY TAB ─ -->
-        <div class="ce-tab-panel" data-tab="story">
+        <!-- ─ ACCENT TAB ─ -->
+        <div class="ce-tab-panel" data-tab="accent">
+          <div class="ce-section">
+            <div class="ce-section-label">Highlight colour</div>
+            ${colorSwatchesHtml}
+          </div>
+        </div>
+
+        <!-- ─ ABOUT YOU TAB ─ -->
+        <div class="ce-tab-panel" data-tab="about">
+
+          <div class="ce-section">
+            <div class="ce-section-label">Your photo <span class="ce-optional">optional</span></div>
+            <div class="ce-photo-about" id="ce-photo-zone">
+              <input type="file" id="ce-photo-input" accept="image/*" onchange="handleCardPhoto(this)"/>
+              ${cardDraft.photo
+                ?`<img src="${cardDraft.photo}" class="ce-photo-about-img" id="ce-photo-img" alt=""/>
+                  <div class="ce-photo-about-lbl">Tap to change<span>Shows in your card corner</span></div>
+                  <button class="ce-photo-remove" style="margin-left:auto;font-size:10px;" onclick="event.stopPropagation();removeCardPhoto()">Remove</button>`
+                :`<div style="width:48px;height:48px;border-radius:50%;background:var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="opacity:0.45;"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                  </div>
+                  <div class="ce-photo-about-lbl">Add photo<span>Shows in your card corner</span></div>`}
+            </div>
+          </div>
 
           <div class="ce-section">
             <div class="ce-section-label">Your motto <span class="ce-optional">optional · 60 chars</span></div>
             <input id="card-motto" class="ce-input" placeholder="e.g. Always up for something new" value="${escapeHtml(cardDraft.motto)}" oninput="updateCardPreview()" autocomplete="off" maxlength="60"/>
-            <div class="ce-char-hint">Shown in italic under your name on the pass</div>
+            <div class="ce-char-hint">Shown in italic under your name</div>
           </div>
 
           <div class="ce-section">
@@ -5071,7 +5111,7 @@ function renderCardEditor(){
           <div class="ce-section">
             <div class="ce-section-label">Interests <span class="ce-optional">comma separated</span></div>
             <input id="card-interests" class="ce-input" placeholder="e.g. live music, board games, hiking" value="${escapeHtml(cardDraft.interests)}" oninput="updateCardPreview()" autocomplete="off"/>
-            <div class="ce-char-hint">Shown as tags on your expanded card</div>
+            <div class="ce-char-hint">Shown as tags on your card</div>
           </div>
 
           <div class="ce-section">
@@ -5079,18 +5119,8 @@ function renderCardEditor(){
             <input id="card-fact" class="ce-input" placeholder="e.g. once got lost in IKEA for 3 hours" value="${escapeHtml(cardDraft.fact)}" oninput="updateCardPreview()" autocomplete="off"/>
           </div>
 
-          <div class="ce-save-row">
-            <button class="btn" style="flex:1;" onclick="saveCard()">Save card</button>
-            ${allowSkip?`<button class="btn btn-outline" onclick="skipCard()">Skip</button>`:`<button class="btn btn-outline" onclick="closeCardEditor()">Cancel</button>`}
-          </div>
-
-        </div>
-
-        <!-- ─ PLACES TAB ─ -->
-        <div class="ce-tab-panel" data-tab="places">
-
           <div class="ce-section">
-            <div class="ce-section-label">Your London spots <span class="ce-optional">pick up to 3</span></div>
+            <div class="ce-section-label">Your local spots <span class="ce-optional">pick up to 3</span></div>
             <div class="ce-char-hint" id="ce-area-hint" style="margin-bottom:14px;">${cardDraft.areas.length}/3 selected${cardDraft.areas.length===3?' — tap any to deselect':''}</div>
             <div class="ce-area-grid" id="ce-area-grid">${areaPillsHtml}</div>
           </div>
@@ -5105,16 +5135,40 @@ function renderCardEditor(){
       </div><!-- /ce-right -->
     </div><!-- /ce-shell -->
   </div>`;
+  // 3D drag-to-spin with spring return
   const liveCard=document.getElementById('ce-live-card');
-  liveCard.addEventListener('mousemove', e=>{
-    const r=e.currentTarget.getBoundingClientRect();
-    const x=((e.clientX-r.left)/r.width-0.5)*14;
-    const y=((e.clientY-r.top)/r.height-0.5)*-10;
-    e.currentTarget.style.transform=`perspective(900px) rotateX(${y}deg) rotateY(${x}deg)`;
+  liveCard.style.cursor='grab';
+  let _ceSpin=false,_ceStartX=0,_ceStartY=0,_cePrevX=0,_cePrevY=0;
+  let _ceRotY=0,_ceRotX=0,_ceVelY=0,_ceVelX=0,_ceRaf=0;
+  function _ceSetT(ry,rx){ liveCard.style.transform=`perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`; }
+  function _ceSpring(){
+    _ceVelY=_ceVelY*0.82-_ceRotY*0.12;
+    _ceVelX=_ceVelX*0.82-_ceRotX*0.12;
+    _ceRotY+=_ceVelY; _ceRotX+=_ceVelX;
+    _ceSetT(_ceRotY,_ceRotX);
+    if(Math.abs(_ceRotY)<0.1&&Math.abs(_ceRotX)<0.1&&Math.abs(_ceVelY)<0.1&&Math.abs(_ceVelX)<0.1){
+      _ceRotY=0;_ceRotX=0;_ceVelY=0;_ceVelX=0;_ceSetT(0,0);
+    } else { _ceRaf=requestAnimationFrame(_ceSpring); }
+  }
+  liveCard.addEventListener('pointerdown',e=>{
+    _ceSpin=true;_ceStartX=_cePrevX=e.clientX;_ceStartY=_cePrevY=e.clientY;
+    _ceRotY=0;_ceRotX=0;_ceVelY=0;_ceVelX=0;
+    cancelAnimationFrame(_ceRaf);
+    liveCard.setPointerCapture(e.pointerId);
+    liveCard.style.cursor='grabbing';
+    e.preventDefault();
   });
-  liveCard.addEventListener('mouseleave', e=>{
-    e.currentTarget.style.transform='perspective(900px) rotateX(0deg) rotateY(0deg)';
+  liveCard.addEventListener('pointermove',e=>{
+    if(!_ceSpin) return;
+    const dx=e.clientX-_ceStartX, dy=e.clientY-_ceStartY;
+    _ceVelY=(e.clientX-_cePrevX)*0.18; _ceVelX=-(e.clientY-_cePrevY)*0.12;
+    _cePrevX=e.clientX; _cePrevY=e.clientY;
+    _ceRotY=dx*0.18; _ceRotX=-dy*0.12;
+    _ceSetT(_ceRotY,_ceRotX);
   });
+  const _ceEnd=()=>{ if(!_ceSpin)return; _ceSpin=false; liveCard.style.cursor='grab'; _ceRaf=requestAnimationFrame(_ceSpring); };
+  liveCard.addEventListener('pointerup',_ceEnd);
+  liveCard.addEventListener('pointercancel',_ceEnd);
 }
 function switchCeTab(tab){
   captureDraftFields();
