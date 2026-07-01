@@ -899,8 +899,8 @@
     box-shadow: 0 1px 4px var(--shadow);
   }
   .nav-link.active-cloud-tab .nav-icon {
-    background: color-mix(in srgb, var(--accent) 15%, transparent);
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 30%, transparent);
+    background: var(--surface-2);
+    box-shadow: none;
   }
   .nav-link:hover .nav-icon {
     background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
@@ -2801,7 +2801,7 @@
     background: color-mix(in srgb, var(--surface) 92%, transparent);
   }
   .nav-link { border-radius: 12px; }
-  .nav-link.active-cloud-tab { background: color-mix(in srgb,var(--accent) 10%,transparent); }
+  .nav-link.active-cloud-tab { background: transparent; }
 
   /* Section titles: cleaner, less ALL CAPS weight */
   .section-title {
@@ -3168,7 +3168,7 @@
   .nav-link:active { transform: scale(0.84) !important; }
   .nav-link.active-cloud-tab {
     color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    background: transparent;
     border-radius: 12px;
     animation: navTabPop var(--dur-slow) var(--spring) both;
   }
@@ -3792,11 +3792,11 @@
     padding: 0 !important;
   }
   .nav-link.active-cloud-tab {
-    background: color-mix(in srgb, var(--accent) 13%, transparent) !important;
+    background: transparent !important;
     color: var(--accent) !important;
   }
   .nav-link.active-cloud-tab .nav-icon {
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 55%, transparent)) !important;
+    filter: none !important;
   }
 
   /* ════════ PANELS ════════ */
