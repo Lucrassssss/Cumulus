@@ -6811,7 +6811,8 @@
      fly-through loading. Fixed margins everywhere.
      ═══════════════════════════════════════════════════════════ */
 
-  :root { --lp-gutter: 22px; }
+  /* ONE gutter for the entire product — content, chrome, landing all align */
+  :root { --gutter: 24px; --lp-gutter: 24px; }
 
   /* ── CONSISTENT LANDING GUTTERS ─────────────────────────── */
   .lp-nav { padding-left: var(--lp-gutter) !important; padding-right: var(--lp-gutter) !important; }
@@ -6819,9 +6820,21 @@
   .lp-features, .lp-footer { padding-left: var(--lp-gutter) !important; padding-right: var(--lp-gutter) !important; }
   .lp-nav-inner { max-width: 1160px !important; }
 
-  /* ── MOBILE TOP BAR — balanced, not edge-hugging ────────── */
+  /* ── UNIFIED MOBILE GUTTER — kill double-padding; body aligns
+        with the top bar and bottom nav (single 20px rail) ──── */
+  @media (max-width: 720px) {
+    :root { --gutter: 20px; --lp-gutter: 20px; }
+    /* App body: #app owns the gutter, #view-container adds none (was stacking) */
+    #app:not(.map-home) { padding-left: var(--gutter) !important; padding-right: var(--gutter) !important; }
+    #view-container { padding-left: 0 !important; padding-right: 0 !important; }
+    /* Top bar aligns to the same rail */
+    .top-bar { padding-left: var(--gutter) !important; padding-right: var(--gutter) !important; }
+    /* Bottom nav edges align (icons still evenly distributed within) */
+    .bottom-nav { padding-left: 10px !important; padding-right: 10px !important; }
+  }
+
+  /* ── MOBILE TOP BAR / HERO ──────────────────────────────── */
   @media (max-width: 600px) {
-    :root { --lp-gutter: 18px; }
     .lp-nav { padding-top: 11px !important; padding-bottom: 11px !important; }
     .lp-nav-logo { font-size: 17px !important; }
     .lp-nav-btn { padding: 8px 15px !important; font-size: 12.5px !important; white-space: nowrap; }
@@ -6829,6 +6842,9 @@
     .lp-hero-title { font-size: 40px !important; letter-spacing: -1.4px !important; line-height: 1.06 !important; }
     .lp-hero-sub { font-size: 15px !important; }
     .lp-hero { padding-top: 92px !important; }
+    /* Hero buttons stretch to the gutter (align with the text edges) */
+    .lp-hero-actions { width: 100% !important; }
+    .lp-hero-btn-primary, .lp-hero-btn-secondary { max-width: none !important; width: 100% !important; }
   }
   @media (max-width: 380px) {
     .lp-hero-title { font-size: 35px !important; }
