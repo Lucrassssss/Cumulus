@@ -899,8 +899,8 @@
     box-shadow: 0 1px 4px var(--shadow);
   }
   .nav-link.active-cloud-tab .nav-icon {
-    background: var(--surface-2);
-    box-shadow: none;
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 30%, transparent);
   }
   .nav-link:hover .nav-icon {
     background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
@@ -3796,7 +3796,7 @@
     color: var(--accent) !important;
   }
   .nav-link.active-cloud-tab .nav-icon {
-    filter: none !important;
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 55%, transparent)) !important;
   }
 
   /* ════════ PANELS ════════ */
