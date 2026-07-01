@@ -6664,6 +6664,23 @@
     background: transparent !important;
   }
   .btn-outline:hover { background: color-mix(in srgb, var(--accent) 8%, transparent) !important; }
+  .btn-outline, .btn-text { box-shadow: none !important; }
+
+  /* ── PROFILE ADMIN & FINANCES PANEL ─────────────────────── */
+  .prof-admin-section { margin-top: 22px; }
+  .prof-admin-label {
+    font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-muted); margin: 0 4px 8px; display: flex; align-items: center; gap: 7px;
+  }
+  .prof-admin-label::before {
+    content: ''; width: 6px; height: 6px; border-radius: 2px; background: var(--accent);
+  }
+  .prof-action-sub {
+    display: block; font-size: 11.5px; font-weight: 500; color: var(--text-muted);
+    margin-top: 2px; letter-spacing: 0;
+  }
+  .prof-action-row.prof-action-danger .prof-action-label { color: #E06666 !important; }
+  [data-theme="light"] .prof-action-row.prof-action-danger .prof-action-label { color: #C0392B !important; }
 
   /* ── LANDING CTAs — flat, no glow, consistent radius ────── */
   .lp-hero-btn-primary, .lp-claim-btn, .lp-venues-cta, .lp-submit-btn {
@@ -6726,11 +6743,11 @@
   /* ── TYPE RHYTHM — tighten headings ─────────────────────── */
   .social-seg-btn, .mchip, .interest-pill { letter-spacing: -0.005em !important; }
 
-  /* ── CATEGORY BADGE — subtle yellow-tint pill, no rainbow ─ */
+  /* ── CATEGORY BADGE — per-category tinted pill (--cat) ──── */
   .event-badge {
-    background: color-mix(in srgb, var(--accent) 14%, transparent) !important;
-    color: var(--accent) !important;
-    border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent) !important;
+    background: color-mix(in srgb, var(--cat, var(--accent)) 15%, transparent) !important;
+    color: var(--cat, var(--accent)) !important;
+    border: 1px solid color-mix(in srgb, var(--cat, var(--accent)) 32%, transparent) !important;
     font-weight: 700 !important;
     letter-spacing: 0.4px !important;
     text-transform: uppercase !important;
@@ -6738,9 +6755,9 @@
     padding: 3px 9px !important;
   }
   [data-theme="dark"] .event-badge {
-    background: rgba(232,184,75,0.12) !important;
-    color: var(--accent) !important;
-    border-color: rgba(232,184,75,0.24) !important;
+    background: color-mix(in srgb, var(--cat, var(--accent)) 18%, transparent) !important;
+    color: color-mix(in srgb, var(--cat, var(--accent)) 85%, #fff) !important;
+    border-color: color-mix(in srgb, var(--cat, var(--accent)) 36%, transparent) !important;
   }
 
   /* ── CALENDAR CHIPS — monochrome, yellow left-accent ────── */
@@ -6953,10 +6970,19 @@ const EVENTS = EVENT_SEED.map(seed => ({
   capacity: seed.capacity, desc: seed.desc
 }));
 
+// Category palette — distinct, harmonious, no purple/indigo/violet.
+// Used only as scannability accents (dots, badges, markers, borders);
+// all interactive chrome (buttons/nav/CTAs) stays yellow.
 const CATS = {
-  "Creative":{color:"#E8B84B"}, "Gaming":{color:"#E8B84B"}, "Movie Nights":{color:"#E8B84B"},
-  "Board Games":{color:"#E8B84B"}, "Meetups":{color:"#E8B84B"}, "Food & Drink":{color:"#E8B84B"},
-  "Live Music":{color:"#E8B84B"}, "Wellness & Outdoors":{color:"#E8B84B"}, "Tech & Talks":{color:"#E8B84B"}
+  "Creative":{color:"#E8B84B"},            // gold
+  "Gaming":{color:"#35C98A"},              // emerald
+  "Movie Nights":{color:"#F0913E"},        // orange
+  "Board Games":{color:"#2FB6C4"},         // teal
+  "Meetups":{color:"#E85BA0"},             // pink
+  "Food & Drink":{color:"#E85641"},        // red
+  "Live Music":{color:"#F0687E"},          // rose
+  "Wellness & Outdoors":{color:"#8FC63D"}, // lime
+  "Tech & Talks":{color:"#4F9BE8"}         // blue
 };
 
 function eventStatus(ev){ const now=Date.now(); if(now>=ev.startsAt&&now<=ev.endsAt) return 'live'; if(now<ev.startsAt) return 'upcoming'; return 'past'; }
@@ -8574,11 +8600,9 @@ async function addFriend(friendName,friendUserId){
 }
 
 function renderNav(){
-  const activeTab = ['tickets','my-tickets','book','checkout','confirmed'].includes(state.view)?'profile'
-    :['social','friends','host','owner-dash'].includes(state.view)?'social'
+  const activeTab = ['tickets','my-tickets','book','checkout','confirmed','owner-dash','review','achievements'].includes(state.view)?'profile'
+    :['social','friends','host'].includes(state.view)?'social'
     :['calendar','calendar-day'].includes(state.view)?'calendar'
-    :['achievements'].includes(state.view)?'profile'
-    :state.view==='review'?'review'
     :state.view;
   const unread = getUnreadSocialCount();
   const navContainer = document.getElementById('nav-container');
@@ -8594,13 +8618,11 @@ function renderNav(){
       profile:`<svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`,
       review:`<svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>`
     };
-    const isAdmin=state.profileEmail==='gondoxml@gmail.com';
     const NAV_TABS=[
       {label:'Explore', v:'browse',   action:'goBrowse()'},
       {label:'Social',  v:'social',   action:'navStack=[];openSocialTab()'},
       {label:'Calendar',v:'calendar', action:'navStack=[];openCalendar()'},
       {label:'Profile', v:'profile',  action:'navStack=[];openProfile()'},
-      ...(isAdmin?[{label:'Review', v:'review', action:'openReview()'}]:[]),
     ];
     navContainer.innerHTML=`
       <div class="top-bar">
@@ -9698,18 +9720,10 @@ function renderOwnerDash(){
 
   const p=OD_PRESETS[_odCur];
   return `
-  <div style="display:flex;align-items:center;justify-content:space-between;padding-top:16px;margin-bottom:4px;">
-    <div>
-      <div style="font-size:18px;font-weight:800;color:var(--text);">Finances</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-top:1px;">Live data · P&amp;L projections · Risk analysis</div>
-    </div>
-    <button onclick="goBrowse()" style="background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;">← Map</button>
-  </div>
-  <div class="social-seg" style="margin-bottom:14px;">
-    <button class="social-seg-btn" onclick="openSocialTab()">Events</button>
-    <button class="social-seg-btn" onclick="openFriends()">Friends</button>
-    <button class="social-seg-btn" onclick="openHost()">Host</button>
-    <button class="social-seg-btn active">Finances</button>
+  <button class="back-btn" onclick="goBack()">←</button>
+  <div class="connect-header" style="padding-top:8px;">
+    <h2>Finances</h2>
+    <p>Live data · P&amp;L projections · Risk analysis</p>
   </div>
 
   <!-- Live Supabase data panel -->
@@ -10011,12 +10025,12 @@ function updateHostPayouts(){
     <div style="margin-top:8px;padding:8px 0;font-size:11px;color:var(--text-muted);">📋 ${vetMsg}</div>`;
 }
 
-function openOwnerDash(){ state.view='owner-dash'; renderNav(); renderView(); window.scrollTo({top:0,behavior:'smooth'}); }
+function openOwnerDash(){ pushNav(); state.view='owner-dash'; renderNav(); renderView(); window.scrollTo({top:0,behavior:'smooth'}); }
 
 /* ══════════════════════════════════════════════════
    HOST REVIEW — admin only
    ══════════════════════════════════════════════════ */
-function openReview(){ state.view='review'; renderNav(); renderView(); window.scrollTo({top:0,behavior:'smooth'}); }
+function openReview(){ pushNav(); state.view='review'; renderNav(); renderView(); window.scrollTo({top:0,behavior:'smooth'}); }
 
 function renderReview(){
   const container=document.getElementById('view-container');
@@ -10179,11 +10193,9 @@ function refreshFilters(){
   html+=`<button class="mchip ${state.liveOnly?'active':''}" style="${state.liveOnly?'background:#E23B3B;color:#fff;border-color:transparent;':''}" onclick="toggleLiveOnly()"><span style="width:6px;height:6px;border-radius:50%;background:${state.liveOnly?'#fff':'#E23B3B'};display:inline-block;margin-right:2px;animation:${state.liveOnly?'blink 1.3s ease-in-out infinite':'none'}"></span>Live</button>`;
   html+=`<button class="mchip ${state.hotOnly?'active':''}" style="${state.hotOnly?'background:#F97316;color:#fff;border-color:transparent;':''}" onclick="toggleHotOnly()">🔥 Hot</button>`;
   el.innerHTML=html;
-  // Owner-only floating finances button overlaid on the map
+  // Finances now live in Profile → Admin & Finances (no floating map button)
   const fab=document.getElementById('owner-fin-fab');
-  if(fab&&state.profileEmail==='gondoxml@gmail.com'){
-    fab.innerHTML=`<button onclick="openOwnerDash()" style="position:fixed;bottom:calc(var(--bot-h)+14px);right:16px;z-index:1100;background:#0D1117;color:#22C55E;border:1px solid #22C55E55;border-radius:12px;padding:10px 15px;font-size:12px;font-weight:700;font-family:-apple-system,sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 4px 20px rgba(0,0,0,0.45);letter-spacing:0.02em;">📊 <span>Live Finances</span></button>`;
-  }
+  if(fab) fab.innerHTML='';
 }
 
 function pinTooltipHtml(ev){
@@ -10230,7 +10242,7 @@ function renderDetail(id){
   const going=attendees.includes(state.profileName);
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="panel detail-card" style="--corner:${c.color};">
-      <span class="event-badge" style="background:${c.color};">${ev.category}</span>${statusChip}${capBadge}${priceBadge}
+      <span class="event-badge" style="--cat:;">${ev.category}</span>${statusChip}${capBadge}${priceBadge}
       <h2 class="detail-title">${ev.title}</h2>
       <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;flex-wrap:wrap;">
         <span style="font-size:14px;font-weight:700;color:${c.color};">📅 ${ev.date}</span>
@@ -10324,7 +10336,7 @@ function renderConnect(id){
   const daysUntil=Math.ceil((chatUnlockTime(ev)-Date.now())/(24*60*60*1000));
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="connect-header">
-      <span class="event-badge" style="background:${c.color};">${ev.category}</span>
+      <span class="event-badge" style="--cat:;">${ev.category}</span>
       <h2>${ev.title}</h2>
       <p style="margin-top:4px;"><span style="font-size:13px;font-weight:600;color:var(--text);">${ev.date} · ${ev.time}</span></p>
       <p>${attendees.length} going · ${escapeHtml(ev.venue)}</p>
@@ -10683,7 +10695,7 @@ function renderProfile(){
   const MUTED_CATS={'Creative':'rgba(232,184,75,0.10)','Gaming':'rgba(232,184,75,0.10)','Movie Nights':'rgba(232,184,75,0.10)','Board Games':'rgba(232,184,75,0.10)','Meetups':'rgba(232,184,75,0.10)','Food & Drink':'rgba(232,184,75,0.10)','Live Music':'rgba(232,184,75,0.10)','Wellness & Outdoors':'rgba(232,184,75,0.10)','Tech & Talks':'rgba(232,184,75,0.10)'};
   const recentEvHtml=recentEvents.map(ev=>{
     const c2=CATS[ev.category]||{color:'#E8B84B'};
-    const mutedBg=MUTED_CATS[ev.category]||'rgba(232,184,75,0.1)';
+    const mutedBg=hexToRgba(c2.color,0.09);
     const shortTitle=ev.title.length>28?ev.title.substring(0,26)+'…':ev.title;
     const evDate=ev.startsAt?new Date(ev.startsAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
     const status=eventStatus(ev);
@@ -10753,12 +10765,22 @@ function renderProfile(){
       </button>
     </div>
     ${state.profileEmail==='gondoxml@gmail.com'?`
-    <div style="margin-top:18px;padding:14px 16px;background:rgba(226,59,59,0.06);border:1px solid rgba(226,59,59,0.18);border-radius:14px;">
-      <div style="font-size:11px;font-weight:700;color:#E23B3B;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">⚙️ Admin</div>
-      <button class="prof-action-row prof-action-signout" style="border-radius:10px;border:1px solid rgba(226,59,59,0.25);" onclick="if(confirm('Delete ALL rows in users, events, rsvps, tickets, chat_messages, friends? This cannot be undone.')){clearAllTestData(true)}">
-        <span class="prof-action-icon">🗑</span>
-        <span class="prof-action-label">Wipe all test data &amp; sign out</span>
-      </button>
+    <div class="prof-admin-section">
+      <div class="prof-admin-label">Admin &amp; Finances</div>
+      <div class="prof-action-list">
+        <button class="prof-action-row" onclick="openOwnerDash()">
+          <span class="prof-action-label">Finances<span class="prof-action-sub">Live revenue &amp; payouts</span></span>
+          <span class="prof-action-right">›</span>
+        </button>
+        <button class="prof-action-row" onclick="openReview()">
+          <span class="prof-action-label">Host applications<span class="prof-action-sub">Review &amp; approve hosts</span></span>
+          <span class="prof-action-right">›</span>
+        </button>
+        <button class="prof-action-row prof-action-danger" onclick="if(confirm('Delete ALL rows in users, events, rsvps, tickets, chat_messages, friends? This cannot be undone.')){clearAllTestData(true)}">
+          <span class="prof-action-label">Wipe all test data</span>
+          <span class="prof-action-right">›</span>
+        </button>
+      </div>
     </div>`:''}
 
 
@@ -10840,10 +10862,10 @@ function renderAchievements(){
         const evDate=ev.startsAt?new Date(ev.startsAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
         const status=eventStatus(ev);
         const statusDot=status==='live'?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-right:4px;box-shadow:0 0 5px #22c55e88;"></span>`:status==='upcoming'?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c2.color};margin-right:4px;opacity:0.7;"></span>`:'';
-        return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:var(--surface-2);border:1px solid var(--line);border-left:2px solid var(--accent);">
+        return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:${hexToRgba(c2.color,0.08)};border:1px solid var(--line);border-left:2px solid ${c2.color};">
           <div style="font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;">${escapeHtml(shortTitle)}</div>
           <div style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;">${statusDot}${escapeHtml(ev.category)}</div>
-          ${evDate?`<div style="font-size:10px;color:var(--accent);font-weight:600;margin-top:4px;">${evDate}</div>`:''}
+          ${evDate?`<div style="font-size:10px;color:${c2.color};font-weight:600;margin-top:4px;">${evDate}</div>`:''}
         </div>`;
       }).join('')
     : `<div style="color:var(--text-muted);font-size:13px;padding:4px 0;">No events yet — browse and RSVP to get started.</div>`;
@@ -10934,7 +10956,7 @@ function renderCalendar(){
     if(!day) return `<div class="calendar-cell empty"></div>`;
     const dayEvents=eventsByDay[day]||[]; const isToday=day===todayDay;
     const dotN=Math.min(dayEvents.length,4);
-    const dots=dayEvents.length?`<div class="cal-dots">${Array.from({length:dotN},()=>`<span class="cal-dot"></span>`).join('')}${dayEvents.length>4?`<span class="cal-dot-more">+${dayEvents.length-4}</span>`:''}</div>`:'';
+    const dots=dayEvents.length?`<div class="cal-dots">${dayEvents.slice(0,dotN).map(ev=>{const cc=(CATS[ev.category]||{color:'var(--accent)'}).color;return `<span class="cal-dot" style="background:${cc};"></span>`;}).join('')}${dayEvents.length>4?`<span class="cal-dot-more">+${dayEvents.length-4}</span>`:''}</div>`:'';
     return `<div class="calendar-cell ${isToday?'today':''} ${dayEvents.length?'has-events':''} pointer" onclick="openCalendarDay(${day})" style="cursor:pointer;"><div class="calendar-day-num">${day}</div>${dots}</div>`;
   }).join('')).join('');
   return `<button class="back-btn" onclick="goBack()">←</button>
@@ -11109,7 +11131,7 @@ function renderBook(){
       </div>
     </div>`).join('');
   return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><span class="event-badge" style="background:${c.color};">${ev.category}</span><h2>${escapeHtml(ev.title)}</h2><p>${ev.date} · ${escapeHtml(ev.venue)}</p></div>
+    <div class="connect-header"><span class="event-badge" style="--cat:;">${ev.category}</span><h2>${escapeHtml(ev.title)}</h2><p>${ev.date} · ${escapeHtml(ev.venue)}</p></div>
     <div class="section-title">Choose your ticket</div>
     ${typeCards}
     ${!isFree?`
@@ -11167,7 +11189,7 @@ function renderConfirmed(){
         <div style="position:absolute;left:-13px;bottom:-14px;width:26px;height:26px;border-radius:50%;background:var(--bg);border:1px solid var(--line);z-index:2;"></div>
         <div style="position:absolute;right:-13px;bottom:-14px;width:26px;height:26px;border-radius:50%;background:var(--bg);border:1px solid var(--line);z-index:2;"></div>
         ${tickets.length>1?`<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${c.color};margin-bottom:6px;">Ticket ${t.seatNum} of ${t.totalSeats}</div>`:''}
-        <span class="event-badge" style="background:${c.color};margin-bottom:6px;">${ev.category}</span>
+        <span class="event-badge" style="--cat:;margin-bottom:6px;">${ev.category}</span>
         <div style="font-size:17px;font-weight:800;margin:6px 0 4px;line-height:1.2;color:var(--text);">${escapeHtml(ev.title)}</div>
         <div style="font-size:12px;color:var(--text-muted);margin-bottom:1px;">${ev.date} · ${ev.time}</div>
         <div style="font-size:12px;color:var(--text-muted);">${escapeHtml(ev.venue)}, ${escapeHtml(ev.area)}</div>
@@ -11207,7 +11229,7 @@ function renderMyTickets(){
     return `<div class="panel" style="--corner:${c.color};padding:16px 18px;margin-bottom:12px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px;">
         <div style="flex:1;min-width:0;">
-          <span class="event-badge" style="background:${c.color};font-size:10px;">${ev.category}</span>
+          <span class="event-badge" style="--cat:;font-size:10px;">${ev.category}</span>
           ${status==='live'?`<span class="live-chip" style="margin-left:6px;"><span class="dot"></span>Live</span>`:''}
           <div style="font-size:15px;font-weight:700;margin:6px 0 3px;line-height:1.2;">${escapeHtml(ev.title)}</div>
           <div style="font-size:12px;color:var(--text-muted);">${ev.date} · ${escapeHtml(ev.venue)}</div>
@@ -11258,7 +11280,7 @@ function renderCalendarDay(){
       <div style="display:flex;align-items:flex-start;gap:12px;justify-content:space-between;">
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
-            <span class="event-badge" style="background:${c.color};margin-bottom:0;">${ev.category}</span>
+            <span class="event-badge" style="--cat:;margin-bottom:0;">${ev.category}</span>
             ${status==='live'?`<span class="live-chip" style="margin-left:0;"><span class="dot"></span>Live now</span>`:`<span class="upcoming-chip" style="margin-left:0;">Upcoming</span>`}
           </div>
           <div style="font-size:16px;font-weight:800;line-height:1.2;margin-bottom:5px;color:var(--text);">${escapeHtml(ev.title)}</div>
@@ -11369,7 +11391,7 @@ function renderTicketsTab(){
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;">
           <div style="flex:1;min-width:0;">
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:5px;">
-              <span class="event-badge" style="background:${c.color};margin-bottom:0;">${ev.category}</span>
+              <span class="event-badge" style="--cat:;margin-bottom:0;">${ev.category}</span>
               ${status==='live'?`<span class="live-chip" style="margin-left:0;"><span class="dot"></span>Live</span>`:''}
               ${chatOpen&&status!=='past'?`<span style="font-size:9.5px;font-weight:700;color:var(--accent);background:rgba(232,184,75,0.12);padding:2px 7px;border-radius:999px;border:1px solid var(--accent);">Chat open</span>`:''}
             </div>
@@ -11422,7 +11444,6 @@ function renderSocialTab(){
     <button class="social-seg-btn${view==='social'?' active':''}" onclick="openSocialTab()">Events</button>
     <button class="social-seg-btn${view==='friends'?' active':''}" onclick="openFriends()">Friends${state.friends.length?` (${state.friends.length})`:''}</button>
     <button class="social-seg-btn${view==='host'?' active':''}" onclick="openHost()">Host</button>
-    ${isOwner?`<button class="social-seg-btn${view==='owner-dash'?' active':''}" onclick="openOwnerDash()" style="color:${view==='owner-dash'?'':'#E0B23C'};">Finances</button>`:''}
   </div>`;
 
   // ── HOST content ──────────────────────────────────────────────────────
