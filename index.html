@@ -6548,6 +6548,72 @@
     box-shadow: 0 8px 28px color-mix(in srgb, var(--accent) 35%, transparent) !important;
   }
 
+  /* ═══════════════════════════════════════════════════════════
+     REDESIGN 5.0 — Professional Polish
+     Refines shadow depth, spacing rhythm, motion restraint,
+     and interaction states on top of the Matte Black + Bone
+     White + Yellow system. No structure/JS/theme-identity change.
+     ═══════════════════════════════════════════════════════════ */
+
+  /* ── Crisper neutrals: less cream cast, more true bone/ink ── */
+  [data-theme="light"] {
+    --bg: #F7F5F0 !important;
+    --bg-2: #EFEBE2 !important;
+    --surface: #FFFFFF !important;
+    --surface-2: #F1EEE7 !important;
+    --shadow: rgba(10,10,10,0.07) !important;
+  }
+  [data-theme="dark"] {
+    --bg: #0A0A0A !important;
+    --bg-2: #060606 !important;
+    --surface: #141414 !important;
+    --surface-2: #1B1B1B !important;
+    --shadow: rgba(0,0,0,0.55) !important;
+  }
+
+  /* ── Typography: tighter, more confident hierarchy ─────────── */
+  h1, h2, h3, .detail-title, .section-title, .lp-hero-title {
+    letter-spacing: -0.02em !important;
+  }
+  body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+  /* ── Panels: quieter borders, softer layered elevation ─────── */
+  .panel {
+    border-color: var(--line-soft) !important;
+    box-shadow: 0 1px 2px var(--shadow), 0 12px 28px -12px var(--shadow) !important;
+    transition: border-color .2s ease, box-shadow .25s ease, transform .25s ease !important;
+  }
+  .panel:hover { transform: translateY(-1px); border-color: var(--line) !important; }
+
+  /* ── Buttons: calmer shadow, precise press feedback ────────── */
+  .btn { box-shadow: 0 1px 2px var(--shadow), 0 6px 16px -6px color-mix(in srgb, var(--accent) 45%, transparent) !important; }
+  .btn:active { transform: scale(0.97); }
+  .btn-outline:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
+
+  /* ── Nav / theme toggle: subtler, more deliberate transitions ── */
+  .nav-link, .theme-toggle, .btn, .btn-outline, .btn-text {
+    transition: color .18s ease, background-color .18s ease, border-color .18s ease, transform .12s ease !important;
+  }
+  .theme-toggle:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
+
+  /* ── Focus states for accessibility, styled to match system ── */
+  .search-input:focus, .btn:focus-visible, .btn-outline:focus-visible,
+  .nav-link:focus-visible, .theme-toggle:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 60%, transparent) !important;
+    outline-offset: 2px !important;
+  }
+
+  /* ── Ambient blobs: restrained, slower, less busy ──────────── */
+  .bg-blot { filter: blur(110px) !important; }
+  [data-theme="light"] .bg-blot { opacity: 0.22 !important; }
+  [data-theme="dark"] .bg-blot { opacity: 0.14 !important; }
+  .blot-a, .blot-b, .blot-c, .blot-d, .blot-e { animation-duration: 42s !important; }
+
+  /* ── Scrollbar: minimal, matches ink/bone system ───────────── */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
 </style>
 </head>
 <body>
