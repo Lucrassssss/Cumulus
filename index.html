@@ -3303,8 +3303,11 @@
   /* ─── LIGHT MODE SKY ─────────────────────────────────── */
   .cv-sky {
     position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 50% 38%,
-      #FFFFFF 0%, #EEF6FF 18%, #C5DDEF 46%, #95C0D8 75%, #72AACC 100%);
+    background:
+      radial-gradient(ellipse at 66% 22%, rgba(255,248,230,0.80) 0%, transparent 38%),
+      radial-gradient(ellipse at 50% 60%, rgba(255,255,255,0.30) 0%, transparent 55%),
+      linear-gradient(180deg,
+        #FDFCF8 0%, #EFF5FB 28%, #D4E8F5 58%, #BAD3E8 80%, #A8C5DC 100%);
   }
 
   /* ─── CLOUD LANES — parallax scrolling cloud layers ─────── */
@@ -3346,18 +3349,26 @@
   @media (max-width: 480px) {
     .cv-lane-3 { display: none; }
   }
-  /* Light: warm glow on upper cloud layers */
+  /* Light: pure white clouds with very soft warm bottom haze */
   .cv-lane-1 .cv-cloud,
-  .cv-lane-2 .cv-cloud { filter: drop-shadow(0 4px 22px rgba(255,255,255,0.45)); }
-  /* Dark: tint white clouds to stormy grey-blue; back layers softer */
-  [data-theme="dark"] .cv-cloud { filter: brightness(0.45) saturate(0.25) hue-rotate(205deg); opacity: 0.78; }
-  [data-theme="dark"] .cv-lane-1 .cv-cloud { filter: brightness(0.35) saturate(0.20) hue-rotate(210deg) blur(2px); opacity: 0.65; }
-  [data-theme="dark"] .cv-lane-2 .cv-cloud { filter: brightness(0.40) saturate(0.22) hue-rotate(208deg) blur(1px); opacity: 0.70; }
+  .cv-lane-2 .cv-cloud { filter: drop-shadow(0 6px 28px rgba(255,252,240,0.55)) brightness(1.04); }
+  .cv-lane-4 .cv-cloud,
+  .cv-lane-5 .cv-cloud { filter: brightness(0.97) saturate(0.92); opacity: 0.86; }
+  /* Dark: near-black storm clouds — no blue tint, just deep moody grey */
+  [data-theme="dark"] .cv-cloud { filter: brightness(0.18) saturate(0.05) contrast(0.85); opacity: 0.90; }
+  [data-theme="dark"] .cv-lane-1 .cv-cloud { filter: brightness(0.12) saturate(0.04) blur(3px); opacity: 0.75; }
+  [data-theme="dark"] .cv-lane-2 .cv-cloud { filter: brightness(0.15) saturate(0.04) blur(1.5px); opacity: 0.82; }
+  [data-theme="dark"] .cv-lane-3 .cv-cloud { filter: brightness(0.20) saturate(0.06); opacity: 0.88; }
+  [data-theme="dark"] .cv-lane-4 .cv-cloud { filter: brightness(0.22) saturate(0.07); opacity: 0.92; }
+  [data-theme="dark"] .cv-lane-5 .cv-cloud { filter: brightness(0.25) saturate(0.08); opacity: 0.95; }
 
   /* ─── DARK MODE SKY ───────────────────────────────────── */
   [data-theme="dark"] .cv-sky {
-    background: radial-gradient(ellipse at 50% 40%,
-      #1E1836 0%, #120F22 25%, #080514 55%, #030209 85%, #010106 100%);
+    background:
+      radial-gradient(ellipse at 40% 30%, rgba(60,58,50,0.55) 0%, transparent 45%),
+      radial-gradient(ellipse at 70% 70%, rgba(30,28,24,0.40) 0%, transparent 50%),
+      linear-gradient(180deg,
+        #0C0B09 0%, #111009 20%, #0D0C08 48%, #080705 78%, #050503 100%);
   }
 
   /* ─── STARS (dark mode only) ──────────────────────────── */
@@ -3391,48 +3402,54 @@
     pointer-events: none;
   }
 
-  /* ─── CITY GLOW (dark mode only) ─────────────────────── */
+  /* ─── CITY GLOW (dark mode only) — warm amber horizon ── */
   .cv-city-glow {
     position: absolute; bottom: 0; left: 0; right: 0;
-    height: 50%; opacity: 0; pointer-events: none;
+    height: 45%; opacity: 0; pointer-events: none;
     background:
-      radial-gradient(ellipse at 30% 100%, rgba(255,140,40,0.32) 0%, transparent 55%),
-      radial-gradient(ellipse at 70% 100%, rgba(255,180,30,0.24) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 100%, rgba(255,120,20,0.20) 0%, transparent 65%);
+      radial-gradient(ellipse at 28% 100%, rgba(240,160,40,0.22) 0%, transparent 50%),
+      radial-gradient(ellipse at 65% 100%, rgba(220,140,30,0.16) 0%, transparent 46%),
+      radial-gradient(ellipse at 50% 100%, rgba(200,120,20,0.12) 0%, transparent 60%),
+      linear-gradient(to top, rgba(80,60,20,0.18) 0%, transparent 100%);
   }
 
-  /* ─── SUN RAYS (light mode only) ─────────────────────── */
+  /* ─── SUN RAYS (light mode only) — thin elegant shafts ── */
   .cv-rays {
-    position: absolute; inset: -50%; width: 200%; height: 200%;
+    position: absolute; inset: 0;
     background: repeating-conic-gradient(
-      from 0deg at 50% 35%,
-      rgba(255,224,100,0.10) 0deg, rgba(255,224,100,0.10) 5deg,
-      transparent 5deg, transparent 16deg
+      from 0deg at 66% 22%,
+      rgba(255,246,225,0.055) 0deg 1.2deg,
+      transparent 1.2deg 7.8deg
     );
-    border-radius: 50%; opacity: 0; pointer-events: none;
-    transform-origin: 50% 35%;
+    opacity: 0; pointer-events: none;
+    transform-origin: 66% 22%;
   }
 
   /* ─── GLOW HALO ───────────────────────────────────────── */
   .cv-glow {
     position: absolute;
-    width: 65vmax; height: 65vmax;
-    top: 50%; left: 50%; transform: translate(-50%, -52%);
-    border-radius: 50%; filter: blur(24px);
+    width: 52vmax; height: 52vmax;
+    top: 22%; left: 66%; transform: translate(-50%, -50%);
+    border-radius: 50%; filter: blur(18px);
     opacity: 0; will-change: transform, opacity;
-    /* light mode: warm gold sun */
+    /* light mode: crisp warm sun */
     background: radial-gradient(circle,
       rgba(255,255,255,1) 0%,
-      rgba(255,248,210,0.82) 18%,
-      rgba(240,215,155,0.35) 45%,
-      transparent 70%);
+      rgba(255,252,235,0.90) 14%,
+      rgba(255,242,200,0.50) 32%,
+      rgba(255,235,175,0.18) 55%,
+      transparent 72%);
   }
   [data-theme="dark"] .cv-glow {
-    /* dark mode: cool silver moon */
+    /* dark mode: cool platinum moon — smaller, more defined */
+    top: 30%; left: 42%; transform: translate(-50%, -50%);
+    width: 38vmax; height: 38vmax;
+    filter: blur(10px);
     background: radial-gradient(circle,
-      rgba(230,235,255,1) 0%,
-      rgba(170,185,235,0.72) 20%,
-      rgba(90,110,200,0.22) 50%,
+      rgba(240,242,248,1) 0%,
+      rgba(210,218,238,0.80) 16%,
+      rgba(160,175,210,0.30) 38%,
+      rgba(100,120,170,0.08) 58%,
       transparent 72%);
   }
 
@@ -3456,45 +3473,45 @@
   }
 
   /* ─── CLOUD PARTING KEYFRAMES ─────────────────────────── */
-  /* subtle windup then sweep out */
   @keyframes cvPartL {
-    0%   { opacity: 1; transform: translateX(0); }
-    6%   { transform: translateX(10px); }
-    100% { opacity: 0; transform: translateX(-145%) scale(0.88); filter: blur(30px); }
+    0%   { opacity: 1; transform: translateX(0); filter: blur(0px); }
+    8%   { transform: translateX(6px); }
+    100% { opacity: 0; transform: translateX(-150%) scale(0.90); filter: blur(36px); }
   }
   @keyframes cvPartR {
-    0%   { opacity: 1; transform: translateX(0); }
-    6%   { transform: translateX(-10px); }
-    100% { opacity: 0; transform: translateX(145%) scale(0.88); filter: blur(30px); }
+    0%   { opacity: 1; transform: translateX(0); filter: blur(0px); }
+    8%   { transform: translateX(-6px); }
+    100% { opacity: 0; transform: translateX(150%) scale(0.90); filter: blur(36px); }
   }
   @keyframes cvPartCU {
-    0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
-    6%   { transform: translateX(-50%) translateY(8px); }
-    100% { opacity: 0; transform: translateX(-50%) translateY(-125%) scale(0.84); filter: blur(30px); }
+    0%   { opacity: 1; transform: translateX(-50%) translateY(0); filter: blur(0px); }
+    8%   { transform: translateX(-50%) translateY(5px); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-130%) scale(0.86); filter: blur(36px); }
   }
   @keyframes cvPartCD {
-    0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
-    6%   { transform: translateX(-50%) translateY(-8px); }
-    100% { opacity: 0; transform: translateX(-50%) translateY(125%) scale(0.84); filter: blur(30px); }
+    0%   { opacity: 1; transform: translateX(-50%) translateY(0); filter: blur(0px); }
+    8%   { transform: translateX(-50%) translateY(-5px); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(130%) scale(0.86); filter: blur(36px); }
   }
   @keyframes cvSkyFade {
     0%   { opacity: 1; }
-    28%  { opacity: 0.88; }
+    35%  { opacity: 0.92; }
+    70%  { opacity: 0.40; }
     100% { opacity: 0; }
   }
-  /* light mode: warm sun burst */
+  /* light mode: sun blooms and expands */
   @keyframes cvGlowBreak {
-    0%   { opacity: 0; transform: translate(-50%,-52%) scale(0.5); }
-    28%  { opacity: 0.95; }
-    62%  { opacity: 1; transform: translate(-50%,-52%) scale(1.15); }
-    100% { opacity: 0; transform: translate(-50%,-52%) scale(2.4); }
+    0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.4); }
+    22%  { opacity: 1; }
+    60%  { opacity: 1; transform: translate(-50%,-50%) scale(1.10); }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(2.2); filter: blur(28px); }
   }
-  /* dark mode: moon break */
+  /* dark mode: moon emerges */
   @keyframes cvMoonBreak {
-    0%   { opacity: 0; transform: translate(-50%,-52%) scale(0.4); }
-    30%  { opacity: 0.80; }
-    60%  { opacity: 1; transform: translate(-50%,-52%) scale(1.0); }
-    100% { opacity: 0; transform: translate(-50%,-52%) scale(1.8); }
+    0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.3); }
+    28%  { opacity: 0.85; }
+    58%  { opacity: 1; transform: translate(-50%,-50%) scale(1.0); }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(1.6); filter: blur(16px); }
   }
   /* stars fade in as clouds split */
   @keyframes cvStarsIn {
@@ -3509,29 +3526,31 @@
     75%  { opacity: 1; }
     100% { opacity: 0.65; }
   }
-  /* sun rays expand and fade */
+  /* sun rays bloom then dissolve */
   @keyframes cvRaysBurst {
-    0%   { opacity: 0; transform: scale(0.55) rotate(0deg); }
-    18%  { opacity: 0.90; }
-    55%  { opacity: 0.70; transform: scale(1.05) rotate(4deg); }
-    100% { opacity: 0; transform: scale(1.30) rotate(8deg); }
+    0%   { opacity: 0; transform: scale(0.6) rotate(0deg); }
+    15%  { opacity: 0.80; }
+    50%  { opacity: 0.60; transform: scale(1.0) rotate(3deg); }
+    100% { opacity: 0; transform: scale(1.2) rotate(6deg); }
   }
 
-  /* ─── EXIT TRANSITION — veil fades while clouds keep scrolling ── */
+  /* ─── EXIT TRANSITION — smooth cinematic dissolve ─────── */
   #cloud-veil.cv-phase-part {
-    animation: cvVeilFade 1.6s cubic-bezier(0.4,0,0.2,1) forwards;
+    animation: cvVeilFade 1.9s cubic-bezier(0.4,0,0.15,1) forwards;
   }
   @keyframes cvVeilFade {
     0%   { opacity: 1; }
+    30%  { opacity: 0.95; }
+    70%  { opacity: 0.35; }
     100% { opacity: 0; }
   }
   /* ─── LIGHT MODE EXTRAS ───────────────────────────────── */
-  [data-theme="light"] .cv-phase-part .cv-glow  { animation: cvGlowBreak 1.6s cubic-bezier(0.25,0.46,0.45,0.94) both; }
-  [data-theme="light"] .cv-phase-part .cv-rays  { animation: cvRaysBurst 1.6s cubic-bezier(0.25,0.46,0.45,0.94) both; animation-delay:0.1s; }
+  [data-theme="light"] .cv-phase-part .cv-glow  { animation: cvGlowBreak 1.9s cubic-bezier(0.22,1,0.36,1) both; }
+  [data-theme="light"] .cv-phase-part .cv-rays  { animation: cvRaysBurst 1.9s cubic-bezier(0.22,1,0.36,1) both; animation-delay:0.08s; }
   /* ─── DARK MODE EXTRAS ────────────────────────────────── */
-  [data-theme="dark"] .cv-phase-part .cv-glow      { animation: cvMoonBreak 1.6s cubic-bezier(0.25,0.46,0.45,0.94) both; }
-  [data-theme="dark"] .cv-phase-part .cv-stars     { animation: cvStarsIn   1.6s ease-out both; }
-  [data-theme="dark"] .cv-phase-part .cv-city-glow { animation: cvCityGlow  1.6s ease-out both; }
+  [data-theme="dark"] .cv-phase-part .cv-glow      { animation: cvMoonBreak 1.9s cubic-bezier(0.22,1,0.36,1) both; }
+  [data-theme="dark"] .cv-phase-part .cv-stars     { animation: cvStarsIn   1.9s ease-out both; }
+  [data-theme="dark"] .cv-phase-part .cv-city-glow { animation: cvCityGlow  1.9s ease-out both; }
 
   /* ════════════════════════════════════════════════════════════
      FLOATING AVATAR
@@ -3892,7 +3911,7 @@
   .mdot {
     width: 7px !important; height: 7px !important;
     border-radius: 50% !important;
-    box-shadow: 0 0 6px currentColor !important;
+    box-shadow: none !important;
     flex-shrink: 0 !important;
   }
 
@@ -4186,18 +4205,18 @@
   #cloud-veil.cv-active .cv-puff-g { animation: cvDriftL 8s ease-in-out infinite reverse; }
   #cloud-veil.cv-active .cv-puff-h { animation: cvDriftR 10s ease-in-out infinite reverse; }
 
-  /* Parting: override drift with sweep-out on cv-parting class */
-  #cloud-veil.cv-parting .cv-puff-a { animation: cvPartL 1.1s cubic-bezier(0.4,0,0.2,1) both !important; }
-  #cloud-veil.cv-parting .cv-puff-b { animation: cvPartR 1.1s cubic-bezier(0.4,0,0.2,1) both !important; }
-  #cloud-veil.cv-parting .cv-puff-c { animation: cvPartCU 1.15s cubic-bezier(0.4,0,0.2,1) both !important; }
-  #cloud-veil.cv-parting .cv-puff-d { animation: cvPartL 0.95s cubic-bezier(0.4,0,0.2,1) 0.04s both !important; }
-  #cloud-veil.cv-parting .cv-puff-e { animation: cvPartR 0.95s cubic-bezier(0.4,0,0.2,1) 0.04s both !important; }
-  #cloud-veil.cv-parting .cv-puff-f { animation: cvPartCD 1.2s cubic-bezier(0.4,0,0.2,1) both !important; }
-  #cloud-veil.cv-parting .cv-puff-g { animation: cvPartL 1.0s cubic-bezier(0.4,0,0.2,1) 0.06s both !important; }
-  #cloud-veil.cv-parting .cv-puff-h { animation: cvPartR 1.0s cubic-bezier(0.4,0,0.2,1) 0.06s both !important; }
-  #cloud-veil.cv-parting .cv-sky { animation: cvSkyFade 1.2s ease-out both !important; }
-  #cloud-veil.cv-parting .cv-glow { animation: cvGlowBreak 1.2s ease-out both !important; }
-  [data-theme="dark"] #cloud-veil.cv-parting .cv-glow { animation: cvMoonBreak 1.2s ease-out both !important; }
+  /* Parting: sweep-out on cv-parting class (also applied to cv-lane .cv-cloud) */
+  #cloud-veil.cv-parting .cv-puff-a { animation: cvPartL 1.3s cubic-bezier(0.4,0,0.15,1) both !important; }
+  #cloud-veil.cv-parting .cv-puff-b { animation: cvPartR 1.3s cubic-bezier(0.4,0,0.15,1) both !important; }
+  #cloud-veil.cv-parting .cv-puff-c { animation: cvPartCU 1.35s cubic-bezier(0.4,0,0.15,1) both !important; }
+  #cloud-veil.cv-parting .cv-puff-d { animation: cvPartL 1.1s cubic-bezier(0.4,0,0.15,1) 0.05s both !important; }
+  #cloud-veil.cv-parting .cv-puff-e { animation: cvPartR 1.1s cubic-bezier(0.4,0,0.15,1) 0.05s both !important; }
+  #cloud-veil.cv-parting .cv-puff-f { animation: cvPartCD 1.4s cubic-bezier(0.4,0,0.15,1) both !important; }
+  #cloud-veil.cv-parting .cv-puff-g { animation: cvPartL 1.2s cubic-bezier(0.4,0,0.15,1) 0.07s both !important; }
+  #cloud-veil.cv-parting .cv-puff-h { animation: cvPartR 1.2s cubic-bezier(0.4,0,0.15,1) 0.07s both !important; }
+  #cloud-veil.cv-parting .cv-sky { animation: cvSkyFade 1.5s ease-out both !important; }
+  #cloud-veil.cv-parting .cv-glow { animation: cvGlowBreak 1.5s ease-out both !important; }
+  [data-theme="dark"] #cloud-veil.cv-parting .cv-glow { animation: cvMoonBreak 1.5s ease-out both !important; }
 
   /* Stars fade in when entering dark cloud veil */
   [data-theme="dark"] #cloud-veil.cv-active .cv-stars {
@@ -4210,11 +4229,11 @@
     to { opacity: 1; }
   }
 
-  /* Sun rays slowly rotate in light mode */
+  /* Sun rays gently rotate in light mode */
   [data-theme="light"] #cloud-veil.cv-active .cv-rays {
-    animation: cvRaysSpin 0.4s ease-out 0.2s forwards, cvRaysRotate 40s linear 0.6s infinite;
+    animation: cvRaysSpin 0.8s ease-out 0.3s forwards, cvRaysRotate 60s linear 1.1s infinite;
   }
-  @keyframes cvRaysSpin { to { opacity: 0.7; } }
+  @keyframes cvRaysSpin { to { opacity: 0.90; } }
   @keyframes cvRaysRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
   /* ════════ SCROLLBARS ════════ */
