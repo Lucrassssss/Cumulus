@@ -6682,6 +6682,15 @@
   .prof-action-row.prof-action-danger .prof-action-label { color: #E06666 !important; }
   [data-theme="light"] .prof-action-row.prof-action-danger .prof-action-label { color: #C0392B !important; }
 
+  /* ── DESKTOP REFINEMENT — align top bar to content, tame search ── */
+  @media (min-width: 900px) {
+    .top-bar {
+      padding-left: max(20px, calc((100vw - 1120px) / 2 + 20px)) !important;
+      padding-right: max(20px, calc((100vw - 1120px) / 2 + 20px)) !important;
+    }
+    #search-input { max-width: 620px; }
+  }
+
   /* ── LANDING CTAs — flat, no glow, consistent radius ────── */
   .lp-hero-btn-primary, .lp-claim-btn, .lp-venues-cta, .lp-submit-btn {
     background: var(--accent) !important;
