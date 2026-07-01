@@ -839,44 +839,44 @@
 
   /* Palette — bone white + slate grey */
   [data-theme="light"] {
-    --bg: #F5F4F0;
-    --bg-2: #ECEAE4;
-    --surface: #FDFCF9;
-    --surface-2: #EEECEA;
-    --text: #1C1917;
-    --text-soft: #44403C;
-    --text-muted: #78716C;
-    --line: rgba(28,25,23,0.08);
-    --line-soft: rgba(28,25,23,0.04);
-    --accent: #475569;
-    --accent-deep: #334155;
-    --gold: #C4860A;
-    --gold-tint: rgba(196,134,10,0.10);
-    --shadow: rgba(28,25,23,0.08);
-    --scrim: rgba(245,244,240,0.92);
-    --mesh-a: rgba(100,116,139,0.06);
-    --mesh-b: rgba(180,83,9,0.04);
-    --mesh-c: rgba(100,116,139,0.04);
+    --bg: #F0EBE0;
+    --bg-2: #E8E2D4;
+    --surface: #FAF7F0;
+    --surface-2: #EDE7DB;
+    --text: #0A0A0A;
+    --text-soft: #262626;
+    --text-muted: #6B6560;
+    --line: rgba(10,10,10,0.10);
+    --line-soft: rgba(10,10,10,0.05);
+    --accent: #C8941C;
+    --accent-deep: #A87010;
+    --gold: #C8941C;
+    --gold-tint: rgba(200,148,28,0.10);
+    --shadow: rgba(10,10,10,0.10);
+    --scrim: rgba(240,235,224,0.92);
+    --mesh-a: rgba(200,148,28,0.05);
+    --mesh-b: rgba(168,112,16,0.03);
+    --mesh-c: rgba(200,148,28,0.03);
   }
   [data-theme="dark"] {
-    --bg: #0F0E0C;
-    --bg-2: #0A0908;
-    --surface: #1C1B17;
-    --surface-2: #25231E;
-    --text: #F5F4EF;
-    --text-soft: #C9C5BC;
-    --text-muted: #8C8680;
-    --line: rgba(245,244,239,0.08);
-    --line-soft: rgba(245,244,239,0.04);
-    --accent: #94A3B8;
-    --accent-deep: #64748B;
-    --gold: #F0B429;
-    --gold-tint: rgba(240,180,41,0.13);
-    --shadow: rgba(0,0,0,0.82);
-    --scrim: rgba(15,14,12,0.92);
-    --mesh-a: rgba(100,116,139,0.14);
-    --mesh-b: rgba(217,119,6,0.08);
-    --mesh-c: rgba(100,116,139,0.10);
+    --bg: #0A0A0A;
+    --bg-2: #050505;
+    --surface: #131313;
+    --surface-2: #1C1C1C;
+    --text: #F0EBE0;
+    --text-soft: #C8C2B4;
+    --text-muted: #787068;
+    --line: rgba(240,235,224,0.08);
+    --line-soft: rgba(240,235,224,0.04);
+    --accent: #E8B84B;
+    --accent-deep: #C8941C;
+    --gold: #E8B84B;
+    --gold-tint: rgba(232,184,75,0.13);
+    --shadow: rgba(0,0,0,0.92);
+    --scrim: rgba(10,10,10,0.92);
+    --mesh-a: rgba(232,184,75,0.04);
+    --mesh-b: rgba(200,148,28,0.03);
+    --mesh-c: rgba(232,184,75,0.03);
   }
 
   /* Three-point mesh gradient body */
@@ -896,19 +896,19 @@
   .blot-d { width: 460px; height: 320px; top: 52%; right: -90px; border-radius: 62% 38% 42% 58% / 44% 56% 52% 48%; animation: drift4 26s ease-in-out infinite alternate; }
   .blot-e { width: 380px; height: 260px; bottom: 110px; left: 30%; border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%; animation: drift1 22s ease-in-out infinite alternate-reverse; }
 
-  /* Light: warm neutral aurora */
-  [data-theme="light"] .blot-a { background: #CBD5E1; opacity: 0.40; }
-  [data-theme="light"] .blot-b { background: #E2D9C8; opacity: 0.30; }
-  [data-theme="light"] .blot-c { background: #D6C9B6; opacity: 0.24; }
-  [data-theme="light"] .blot-d { background: #C4B9A8; opacity: 0.20; }
-  [data-theme="light"] .blot-e { background: #F0B429; opacity: 0.12; }
+  /* Light: bone warm aurora */
+  [data-theme="light"] .blot-a { background: #D4C8A8; opacity: 0.40; }
+  [data-theme="light"] .blot-b { background: #E8D8A0; opacity: 0.28; }
+  [data-theme="light"] .blot-c { background: #D0C090; opacity: 0.24; }
+  [data-theme="light"] .blot-d { background: #C8B880; opacity: 0.18; }
+  [data-theme="light"] .blot-e { background: #E8B84B; opacity: 0.10; }
 
-  /* Dark: deep slate aurora */
-  [data-theme="dark"] .blot-a { background: #334155; opacity: 0.40; }
-  [data-theme="dark"] .blot-b { background: #3D3729; opacity: 0.32; }
-  [data-theme="dark"] .blot-c { background: #2D3748; opacity: 0.28; }
-  [data-theme="dark"] .blot-d { background: #44403C; opacity: 0.22; }
-  [data-theme="dark"] .blot-e { background: #92400E; opacity: 0.16; }
+  /* Dark: matte amber aurora — very subtle on black */
+  [data-theme="dark"] .blot-a { background: #2A2010; opacity: 0.30; }
+  [data-theme="dark"] .blot-b { background: #1C1C14; opacity: 0.22; }
+  [data-theme="dark"] .blot-c { background: #201808; opacity: 0.22; }
+  [data-theme="dark"] .blot-d { background: #1A1A0A; opacity: 0.15; }
+  [data-theme="dark"] .blot-e { background: #3C2800; opacity: 0.15; }
 
   /* Drift animations — gentle float with subtle rotation */
   @keyframes drift1 { 0% { transform: translate(0,0) rotate(0deg); } 100% { transform: translate(28px,16px) rotate(4deg); } }
@@ -5012,57 +5012,57 @@
 
   /* ── NEW COLOUR SYSTEM ───────────────────────────────────── */
   [data-theme="light"] {
-    --bg: #FFFFFF !important;
-    --bg-2: #F5F5FF !important;
-    --surface: #FFFFFF !important;
-    --surface-2: #F0F0FA !important;
-    --text: #09090F !important;
-    --text-soft: #52525B !important;
-    --text-muted: #71717A !important;
-    --line: rgba(9,9,15,0.08) !important;
-    --line-soft: rgba(9,9,15,0.04) !important;
-    --accent: #4F46E5 !important;
-    --accent-deep: #3730A3 !important;
-    --gold: #D97706 !important;
-    --gold-tint: rgba(217,119,6,0.10) !important;
-    --shadow: rgba(9,9,15,0.10) !important;
-    --scrim: rgba(255,255,255,0.94) !important;
-    --mesh-a: rgba(79,70,229,0.07) !important;
-    --mesh-b: rgba(217,119,6,0.04) !important;
-    --mesh-c: rgba(79,70,229,0.04) !important;
+    --bg: #F0EBE0 !important;
+    --bg-2: #E8E2D4 !important;
+    --surface: #FAF7F0 !important;
+    --surface-2: #EDE7DB !important;
+    --text: #0A0A0A !important;
+    --text-soft: #262626 !important;
+    --text-muted: #6B6560 !important;
+    --line: rgba(10,10,10,0.10) !important;
+    --line-soft: rgba(10,10,10,0.05) !important;
+    --accent: #C8941C !important;
+    --accent-deep: #A87010 !important;
+    --gold: #C8941C !important;
+    --gold-tint: rgba(200,148,28,0.10) !important;
+    --shadow: rgba(10,10,10,0.10) !important;
+    --scrim: rgba(240,235,224,0.92) !important;
+    --mesh-a: rgba(200,148,28,0.05) !important;
+    --mesh-b: rgba(168,112,16,0.03) !important;
+    --mesh-c: rgba(200,148,28,0.03) !important;
   }
   [data-theme="dark"] {
-    --bg: #07071A !important;
-    --bg-2: #0C0C24 !important;
-    --surface: #0F0F2A !important;
-    --surface-2: #18183A !important;
-    --text: #E8E8FF !important;
-    --text-soft: #9898C0 !important;
-    --text-muted: #5A5A80 !important;
-    --line: rgba(232,232,255,0.08) !important;
-    --line-soft: rgba(232,232,255,0.04) !important;
-    --accent: #818CF8 !important;
-    --accent-deep: #6366F1 !important;
-    --gold: #FBBF24 !important;
-    --gold-tint: rgba(251,191,36,0.12) !important;
-    --shadow: rgba(0,0,0,0.88) !important;
-    --scrim: rgba(7,7,26,0.94) !important;
-    --mesh-a: rgba(129,140,248,0.14) !important;
-    --mesh-b: rgba(251,191,36,0.06) !important;
-    --mesh-c: rgba(99,102,241,0.10) !important;
+    --bg: #0A0A0A !important;
+    --bg-2: #050505 !important;
+    --surface: #131313 !important;
+    --surface-2: #1C1C1C !important;
+    --text: #F0EBE0 !important;
+    --text-soft: #C8C2B4 !important;
+    --text-muted: #787068 !important;
+    --line: rgba(240,235,224,0.08) !important;
+    --line-soft: rgba(240,235,224,0.04) !important;
+    --accent: #E8B84B !important;
+    --accent-deep: #C8941C !important;
+    --gold: #E8B84B !important;
+    --gold-tint: rgba(232,184,75,0.13) !important;
+    --shadow: rgba(0,0,0,0.92) !important;
+    --scrim: rgba(10,10,10,0.92) !important;
+    --mesh-a: rgba(232,184,75,0.04) !important;
+    --mesh-b: rgba(200,148,28,0.03) !important;
+    --mesh-c: rgba(232,184,75,0.03) !important;
   }
 
-  /* ── AURORA BLOBS — indigo/violet palette ────────────────── */
-  [data-theme="light"] .blot-a { background: #C7D2FE !important; opacity: 0.60 !important; }
-  [data-theme="light"] .blot-b { background: #FDE68A !important; opacity: 0.28 !important; }
-  [data-theme="light"] .blot-c { background: #C4B5FD !important; opacity: 0.38 !important; }
-  [data-theme="light"] .blot-d { background: #A5B4FC !important; opacity: 0.22 !important; }
-  [data-theme="light"] .blot-e { background: #FCD34D !important; opacity: 0.16 !important; }
-  [data-theme="dark"] .blot-a  { background: #312E81 !important; opacity: 0.70 !important; }
-  [data-theme="dark"] .blot-b  { background: #1E1B4B !important; opacity: 0.55 !important; }
-  [data-theme="dark"] .blot-c  { background: #3730A3 !important; opacity: 0.45 !important; }
-  [data-theme="dark"] .blot-d  { background: #1E1B4B !important; opacity: 0.35 !important; }
-  [data-theme="dark"] .blot-e  { background: #92400E !important; opacity: 0.22 !important; }
+  /* ── AURORA BLOBS — amber/gold on black ─────────────────── */
+  [data-theme="light"] .blot-a { background: #D4C8A8 !important; opacity: 0.40 !important; }
+  [data-theme="light"] .blot-b { background: #E8D8A0 !important; opacity: 0.28 !important; }
+  [data-theme="light"] .blot-c { background: #D0C090 !important; opacity: 0.24 !important; }
+  [data-theme="light"] .blot-d { background: #C8B880 !important; opacity: 0.18 !important; }
+  [data-theme="light"] .blot-e { background: #E8B84B !important; opacity: 0.10 !important; }
+  [data-theme="dark"] .blot-a  { background: #2A2010 !important; opacity: 0.30 !important; }
+  [data-theme="dark"] .blot-b  { background: #1C1C14 !important; opacity: 0.22 !important; }
+  [data-theme="dark"] .blot-c  { background: #201808 !important; opacity: 0.22 !important; }
+  [data-theme="dark"] .blot-d  { background: #1A1A0A !important; opacity: 0.15 !important; }
+  [data-theme="dark"] .blot-e  { background: #3C2800 !important; opacity: 0.15 !important; }
 
   /* ── TOP BAR — refined glass ─────────────────────────────── */
   .top-bar {
@@ -5074,10 +5074,9 @@
     gap: 10px !important;
   }
   .logo {
-    background: linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent-deep) 80%, #7C3AED) 100%) !important;
-    -webkit-background-clip: text !important;
-    background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
+    background: none !important;
+    -webkit-text-fill-color: var(--accent) !important;
+    color: var(--accent) !important;
     font-size: 20px !important;
     font-weight: 900 !important;
     letter-spacing: -0.04em !important;
@@ -6366,6 +6365,189 @@
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent) !important;
   }
 
+  /* ═══════════════════════════════════════════════════════════
+     REDESIGN 4.0 — Matte Black + Bone White + Yellow
+     Purge all purple/indigo. Yellow is the only accent.
+     ═══════════════════════════════════════════════════════════ */
+
+  /* ── ACCENT BUTTONS — yellow needs dark text ─────────────── */
+  .btn { color: #0A0A0A !important; }
+  .btn-outline { color: var(--text) !important; background: transparent !important; }
+  .btn-text { color: var(--text-muted) !important; background: transparent !important; }
+  /* Landing nav button — dark text on yellow */
+  .lp-nav-btn { color: #0A0A0A !important; }
+  /* Primary CTA — solid yellow, dark text */
+  .lp-hero-btn-primary {
+    background: var(--accent) !important;
+    color: #0A0A0A !important;
+    box-shadow: none !important;
+  }
+  .lp-hero-btn-primary:hover {
+    background: var(--accent-deep) !important;
+    box-shadow: none !important;
+    filter: none !important;
+  }
+  /* Active states — dark text on yellow pill */
+  .interest-pill.active { color: #0A0A0A !important; }
+  .social-seg-btn.active { color: #0A0A0A !important; }
+  .mchip.active { color: #0A0A0A !important; }
+  [data-theme="dark"] .social-seg-btn.active { color: #0A0A0A !important; }
+  [data-theme="dark"] .lp-nav-btn { color: #0A0A0A !important; }
+  [data-theme="light"] .interest-pill.active { color: #0A0A0A !important; }
+
+  /* ── HERO TITLE GRADIENT — yellow, no purple ─────────────── */
+  .lp-hero-gradient {
+    background: none !important;
+    animation: none !important;
+    -webkit-text-fill-color: var(--accent) !important;
+    color: var(--accent) !important;
+  }
+
+  /* ── HERO BG — subtle amber top glow ────────────────────── */
+  .lp-hero-bg {
+    background: radial-gradient(ellipse 70% 50% at 50% -5%,
+      color-mix(in srgb, var(--accent) 10%, transparent),
+      transparent 60%) !important;
+  }
+  [data-theme="dark"] .lp-hero-bg {
+    background: radial-gradient(ellipse 70% 50% at 50% -5%,
+      color-mix(in srgb, var(--accent) 8%, transparent),
+      transparent 55%) !important;
+  }
+
+  /* ── LOGO — solid yellow, no gradient ───────────────────── */
+  .logo {
+    background: none !important;
+    -webkit-text-fill-color: var(--accent) !important;
+    color: var(--accent) !important;
+  }
+
+  /* ── VENUES DARK SECTION — true black ───────────────────── */
+  .lp-venues-section {
+    background: #050505 !important;
+  }
+  [data-theme="light"] .lp-venues-section {
+    background: #0A0A0A !important;
+  }
+  .lp-venues-section .lp-venues-eyebrow { color: var(--accent) !important; }
+  .lp-venues-section .lp-venues-title,
+  .lp-venues-section .lp-venues-sub,
+  .lp-venues-section .lp-venue-feat-title { color: #F0EBE0 !important; }
+  .lp-venues-section .lp-venue-feat-desc { color: rgba(240,235,224,0.60) !important; }
+  .lp-venues-section .lp-venues-cta {
+    background: var(--accent) !important;
+    color: #0A0A0A !important;
+  }
+
+  /* ── SOCIAL PROOF AVATARS — amber not indigo ────────────── */
+  .lp-proof-av, .lp-comm-av { background: var(--accent) !important; color: #0A0A0A !important; }
+  .lp-comm-dot { background: var(--accent) !important; }
+
+  /* ── LANDING HERO LP BLOBS — suppress ───────────────────── */
+  .lp-blob-a, .lp-blob-b, .lp-blob-c { display: none !important; }
+
+  /* ── PANEL ACCENT CORNER — yellow ───────────────────────── */
+  .panel::after { background: var(--accent) !important; }
+
+  /* ── SECTION TITLE — yellow dash + text ─────────────────── */
+  .section-title { color: var(--accent) !important; }
+  .section-title::before { background: var(--accent) !important; }
+
+  /* ── NAV ACTIVE INDICATOR ────────────────────────────────── */
+  .nav-link.active-cloud-tab { color: var(--accent) !important; }
+  .bottom-nav::after { background: var(--accent) !important; }
+
+  /* ── TRUST STRIP PILLS — bone/amber ─────────────────────── */
+  .lp-trust-strip span {
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent) !important;
+    background: color-mix(in srgb, var(--accent) 6%, transparent) !important;
+    color: var(--text-soft) !important;
+  }
+  [data-theme="dark"] .lp-trust-strip span {
+    background: rgba(232,184,75,0.06) !important;
+    border-color: rgba(232,184,75,0.18) !important;
+    color: rgba(240,235,224,0.70) !important;
+  }
+
+  /* ── SECONDARY CTA GHOST BUTTON ─────────────────────────── */
+  [data-theme="dark"] .lp-hero-btn-secondary {
+    border-color: rgba(240,235,224,0.22) !important;
+    color: rgba(240,235,224,0.85) !important;
+  }
+
+  /* ── FEATURE ICON BACKGROUND — amber tint ───────────────── */
+  .lp-feat-icon {
+    background: color-mix(in srgb, var(--accent) 10%, transparent) !important;
+    color: var(--accent) !important;
+  }
+
+  /* ── MAP CHIP FILTERS ────────────────────────────────────── */
+  .mchip { border-color: var(--line) !important; }
+  .mchip.active {
+    background: var(--accent) !important;
+    border-color: var(--accent) !important;
+    color: #0A0A0A !important;
+  }
+
+  /* ── KICKER BADGE ────────────────────────────────────────── */
+  .lp-hero-kicker {
+    border-color: color-mix(in srgb, var(--accent) 35%, transparent) !important;
+    background: color-mix(in srgb, var(--accent) 7%, transparent) !important;
+    color: var(--accent) !important;
+  }
+
+  /* ── STAT NUMBERS — yellow ───────────────────────────────── */
+  .pstat-num { color: var(--accent) !important; }
+  .lp-stat-num { color: var(--accent) !important; }
+
+  /* ── PROF ACH LEVEL — yellow ─────────────────────────────── */
+  .prof-ach-level { color: var(--accent) !important; }
+  .prof-ach-fill { background: var(--accent) !important; }
+  .prof-ach-cta { color: var(--accent) !important; }
+  .prof-about-label { color: var(--accent) !important; }
+
+  /* ── CONNECT HEADER BACK BTN — bone ─────────────────────── */
+  .back-btn {
+    background: var(--surface) !important;
+    border: 1.5px solid var(--line) !important;
+    color: var(--text) !important;
+  }
+  .back-btn:hover {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+  }
+
+  /* ── PURGE remaining purple gradients ───────────────────────── */
+  .lp-join-bg {
+    background:
+      radial-gradient(ellipse at 0% 60%, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 55%),
+      radial-gradient(ellipse at 100% 20%, color-mix(in srgb, var(--accent) 6%, transparent) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 100%, color-mix(in srgb, var(--accent-deep) 8%, transparent) 0%, transparent 45%) !important;
+  }
+  .lp-join-headline em {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    animation: none !important;
+  }
+  .lp-form-panel::before {
+    background: linear-gradient(90deg, var(--accent), var(--accent-deep), var(--accent)) !important;
+    animation: none !important;
+  }
+  .lp-float-line { background: var(--accent) !important; }
+  .lp-claim-btn {
+    background: var(--accent) !important;
+    color: #0A0A0A !important;
+    box-shadow: 0 8px 32px color-mix(in srgb, var(--accent) 40%, transparent) !important;
+  }
+  .lp-claim-btn:hover { background: var(--accent-deep) !important; }
+  .lp-venues-cta {
+    background: var(--accent) !important;
+    color: #0A0A0A !important;
+    box-shadow: 0 8px 28px color-mix(in srgb, var(--accent) 35%, transparent) !important;
+  }
+
 </style>
 </head>
 <body>
@@ -6540,9 +6722,9 @@ const EVENTS = EVENT_SEED.map(seed => ({
 }));
 
 const CATS = {
-  "Creative":{color:"#8B5CF6"}, "Gaming":{color:"#10B981"}, "Movie Nights":{color:"#F97316"},
+  "Creative":{color:"#E8B84B"}, "Gaming":{color:"#10B981"}, "Movie Nights":{color:"#F97316"},
   "Board Games":{color:"#06B6D4"}, "Meetups":{color:"#EC4899"}, "Food & Drink":{color:"#EF4444"},
-  "Live Music":{color:"#6366F1"}, "Wellness & Outdoors":{color:"#84CC16"}, "Tech & Talks":{color:"#3B82F6"}
+  "Live Music":{color:"#E8B84B"}, "Wellness & Outdoors":{color:"#84CC16"}, "Tech & Talks":{color:"#3B82F6"}
 };
 
 function eventStatus(ev){ const now=Date.now(); if(now>=ev.startsAt&&now<=ev.endsAt) return 'live'; if(now<ev.startsAt) return 'upcoming'; return 'past'; }
@@ -7091,7 +7273,7 @@ async function start(){
 const FEATURED_EVENTS = [
   {
     id:'f1', title:'Drum & Bass Warehouse Session',
-    category:'Live Music', categoryColor:'#6366F1',
+    category:'Live Music', categoryColor:'#E8B84B',
     venue:'Tobacco Dock', area:'Wapping, London E1W',
     date:'Sat 28 Jun', time:'10 PM – 4 AM',
     capacity:1200, attending:847,
@@ -7099,8 +7281,8 @@ const FEATURED_EVENTS = [
     badgeColor:'#E23B3B',
     desc:'Four rooms. Four sounds. One night that defines the summer.',
     icon:'🎶',
-    gradient:'linear-gradient(135deg,#1a0533 0%,#2d1060 40%,#6366F1 100%)',
-    accentColor:'#a5b4fc'
+    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#C8941C 100%)',
+    accentColor:'#E8B84B'
   },
   {
     id:'f2', title:'Open-Air Cinema — Kensington Palace',
@@ -7135,7 +7317,7 @@ const FEATURED_EVENTS = [
     date:'Sun 29 Jun', time:'12 PM – 8 PM',
     capacity:1500, attending:1201,
     price:'From £10', badge:'MAJOR EVENT',
-    badgeColor:'#8B5CF6',
+    badgeColor:'#C8941C',
     desc:'The biggest bracket London has ever seen. Bring your controller.',
     icon:'🎮',
     gradient:'linear-gradient(135deg,#001a0e 0%,#023d21 40%,#10B981 100%)',
@@ -8144,7 +8326,12 @@ async function loadAllRsvps(){
 async function loadFriends(){
   if(!state.userId) return;
   const {data}=await sb.from('friends').select('friend_name').eq('user_id',state.userId);
-  if(data) state.friends=data.map(f=>f.friend_name);
+  if(data){
+    const fromDb=data.map(f=>f.friend_name);
+    // Merge: keep in-session additions not yet in DB, avoid duplicates
+    const merged=[...new Set([...fromDb,...state.friends])];
+    state.friends=merged;
+  }
 }
 
 async function addFriend(friendName,friendUserId){
@@ -8492,11 +8679,11 @@ let htmlMarkerRefs = {};
 function updateClusterPaint(){
   if(!lmap||!lmap.getLayer('clusters')) return;
   const dk=state.theme==='dark';
-  const c0=dk?'#818CF8':'#4F46E5';
-  const c1=dk?'#6366F1':'#3730A3';
-  const c2=dk?'#4F46E5':'#312E81';
+  const c0=dk?'#E8B84B':'#C8941C';
+  const c1=dk?'#C8941C':'#A87010';
+  const c2=dk?'#A87010':'#8A5C0A';
   lmap.setPaintProperty('clusters','circle-color',['step',['get','point_count'],c0,10,c1,30,c2]);
-  lmap.setPaintProperty('clusters','circle-stroke-color',dk?'rgba(200,200,255,0.55)':'rgba(255,255,255,0.85)');
+  lmap.setPaintProperty('clusters','circle-stroke-color',dk?'rgba(232,184,75,0.55)':'rgba(255,255,255,0.85)');
 }
 
 function attachMapLayers(){
@@ -9960,7 +10147,7 @@ function renderConnect(id){
 function renderFriends(){
   const suggested=DEMO_PEOPLE.filter(p=>!state.friends.includes(p.name));
   const friendCards=state.friends.length?state.friends.map(n=>{ const p=personByName(n); const evs=p?p.events.map(id=>EVENTS.find(e=>e.id===id)).filter(Boolean):[]; return `<div class="panel friend-card" style="--corner:var(--gold);"><div class="fname"><span class="star">★</span> ${escapeHtml(n)}</div>${p?`<div class="fblurb">${escapeHtml(p.blurb)}</div>`:''}<div class="fgoing">${evs.length?`Going to: ${evs.map(e=>escapeHtml(e.title)).join(', ')}`:'No events listed'}</div><button class="btn btn-outline btn-small" style="width:100%" onclick="removeFriend('${escapeHtml(n).replace(/'/g,"\\'")}')">Remove</button></div>`; }).join(''):`<div style="color:var(--text-muted);font-size:13px;">No friends yet. Add a suggested person below to see starred friends on the map.</div>`;
-  const suggestedCards=suggested.map(p=>`<div class="panel friend-card" style="--corner:var(--accent);"><div class="fname">${escapeHtml(p.name)}</div><div class="fblurb">${escapeHtml(p.blurb)}</div><div class="fgoing">${p.events.length} event${p.events.length>1?'s':''} coming up</div><button class="btn btn-small" style="width:100%" onclick="addFriend('${escapeHtml(p.name).replace(/'/g,"\\'")}')">Add friend</button></div>`).join('');
+  const suggestedCards=suggested.map(p=>`<div class="panel friend-card" style="--corner:var(--accent);"><div class="fname">${escapeHtml(p.name)}</div><div class="fblurb">${escapeHtml(p.blurb)}</div><div class="fgoing">${p.events.length} event${p.events.length>1?'s':''} coming up</div><button class="btn btn-small" style="width:100%" onclick="addFriend('${escapeHtml(p.name).replace(/'/g,"\\'")}','${p.id}')">Add friend</button></div>`).join('');
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="connect-header"><h2>Friends</h2><p>Meet in person, connect on Cumulus</p></div>
     <div class="section-title">Your friend pass</div>
@@ -9988,15 +10175,20 @@ function renderFriends(){
     <div class="friends-grid list-item-stagger">${suggestedCards||'<div style="color:var(--text-muted);font-size:13px;">You\'ve added everyone!</div>'}</div>`;
 }
 
-async function addFriend(name){ if(!state.friends.includes(name)){ state.friends.push(name); await persistFriends(); renderView(); } }
-async function removeFriend(name){ state.friends=state.friends.filter(f=>f!==name); await persistFriends(); renderView(); }
+async function removeFriend(name){
+  state.friends=state.friends.filter(f=>f!==name);
+  if(state.userId){
+    await sb.from('friends').delete().eq('user_id',state.userId).eq('friend_name',name);
+  }
+  renderView();
+}
 async function addFriendByCode(){
   const input=document.getElementById('friend-code-input'); const code=(input?.value||'').trim();
   if(!code) return;
   const person=DEMO_PEOPLE.find(p=>p.code===code);
   if(!person){ showToast("Code not recognised. Check and try again.",'error'); return; }
   if(state.friends.includes(person.name)){ showToast(`${person.name} is already a friend.`); return; }
-  state.friends.push(person.name); await persistFriends(); input.value=''; renderView(); showToast(`Added ${person.name} as a friend!`,'success');
+  await addFriend(person.name, person.id); input.value=''; showToast(`Added ${person.name} as a friend!`,'success');
 }
 function buildFriendQR(){
   const el=document.getElementById('friend-qr'); if(!el) return;
@@ -10256,7 +10448,7 @@ function renderProfile(){
 
   // Recent events — last 4 only (not 12)
   const recentEvents=myEvents.slice(-4).reverse();
-  const MUTED_CATS={'Creative':'rgba(139,92,246,0.13)','Gaming':'rgba(16,185,129,0.12)','Movie Nights':'rgba(249,115,22,0.12)','Board Games':'rgba(6,182,212,0.12)','Meetups':'rgba(236,72,153,0.11)','Food & Drink':'rgba(239,68,68,0.11)','Live Music':'rgba(99,102,241,0.13)','Wellness & Outdoors':'rgba(132,204,22,0.12)','Tech & Talks':'rgba(59,130,246,0.12)'};
+  const MUTED_CATS={'Creative':'rgba(232,184,75,0.13)','Gaming':'rgba(16,185,129,0.12)','Movie Nights':'rgba(249,115,22,0.12)','Board Games':'rgba(6,182,212,0.12)','Meetups':'rgba(236,72,153,0.11)','Food & Drink':'rgba(239,68,68,0.11)','Live Music':'rgba(232,184,75,0.13)','Wellness & Outdoors':'rgba(132,204,22,0.12)','Tech & Talks':'rgba(59,130,246,0.12)'};
   const recentEvHtml=recentEvents.map(ev=>{
     const c2=CATS[ev.category]||{color:'#60A5FA'};
     const mutedBg=MUTED_CATS[ev.category]||'rgba(96,165,250,0.1)';
