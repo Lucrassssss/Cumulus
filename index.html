@@ -6835,13 +6835,18 @@
 
   /* ── MOBILE TOP BAR / HERO ──────────────────────────────── */
   @media (max-width: 600px) {
-    .lp-nav { padding-top: 11px !important; padding-bottom: 11px !important; }
+    /* Clear the notch / Dynamic Island — pad the nav down by the safe-area inset */
+    .lp-nav {
+      padding-top: calc(env(safe-area-inset-top, 0px) + 11px) !important;
+      padding-bottom: 11px !important;
+    }
     .lp-nav-logo { font-size: 17px !important; }
     .lp-nav-btn { padding: 8px 15px !important; font-size: 12.5px !important; white-space: nowrap; }
     /* Hero title: fit two clean lines, no orphan wraps */
     .lp-hero-title { font-size: 40px !important; letter-spacing: -1.4px !important; line-height: 1.06 !important; }
     .lp-hero-sub { font-size: 15px !important; }
-    .lp-hero { padding-top: 92px !important; }
+    /* Push hero content below the (now taller) fixed nav */
+    .lp-hero { padding-top: calc(env(safe-area-inset-top, 0px) + 96px) !important; }
     /* Hero buttons stretch to the gutter (align with the text edges) */
     .lp-hero-actions { width: 100% !important; }
     .lp-hero-btn-primary, .lp-hero-btn-secondary { max-width: none !important; width: 100% !important; }
@@ -6870,8 +6875,12 @@
   /* ── SIGN-UP MODAL — clean, modern, fixed margins ───────── */
   .lp-signup-modal { padding: 30px 26px 26px !important; border-radius: 24px !important; max-width: 440px !important; }
   @media (max-width: 600px) {
-    .lp-signup-overlay { padding: 14px !important; align-items: flex-end !important; }
-    .lp-signup-modal { padding: 24px 20px 22px !important; border-radius: 22px !important; max-height: 94dvh !important; }
+    /* Respect the notch (top) and home indicator (bottom) */
+    .lp-signup-overlay {
+      padding: calc(14px + env(safe-area-inset-top, 0px)) 14px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+      align-items: flex-end !important;
+    }
+    .lp-signup-modal { padding: 24px 20px 22px !important; border-radius: 22px !important; max-height: 90dvh !important; }
   }
   /* Tab selector — clean segmented control */
   .gate-type-sel {
