@@ -957,39 +957,39 @@
      INK SPLAT NODES — Splatoon-style accents
      ══════════════════════════════════════════ */
 
-  /* Section kicker → 24-point ink splat */
+  /* Section kicker — clean dot */
   .section-title::before {
-    width: 14px !important; height: 14px !important;
-    border-radius: 0 !important;
-    clip-path: polygon(50% 2%, 62% 14%, 78% 6%, 75% 24%, 92% 30%, 78% 40%, 94% 52%, 76% 56%, 85% 72%, 66% 68%, 65% 88%, 52% 72%, 48% 92%, 35% 72%, 32% 88%, 22% 68%, 14% 78%, 20% 56%, 6% 52%, 20% 40%, 8% 30%, 24% 24%, 22% 6%, 38% 14%) !important;
+    width: 6px !important; height: 6px !important;
+    border-radius: 50% !important;
+    clip-path: none !important;
     box-shadow: none !important;
-    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--accent) 45%, transparent));
-    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), filter 0.25s ease !important;
+    filter: none !important;
+    transition: none !important;
   }
   .section-title:hover::before {
-    transform: rotate(22deg) scale(1.55) !important;
-    filter: drop-shadow(0 0 8px var(--accent)) !important;
+    transform: none !important;
+    filter: none !important;
   }
 
-  /* Category chip dot → 5-point star */
+  /* Category chip dot — clean circle */
   .mdot {
-    width: 9px !important; height: 9px !important;
-    border-radius: 0 !important;
-    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%) !important;
+    width: 7px !important; height: 7px !important;
+    border-radius: 50% !important;
+    clip-path: none !important;
     box-shadow: none !important;
-    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1) !important;
+    transition: none !important;
   }
-  .mchip:hover .mdot { transform: rotate(144deg) scale(1.4) !important; }
-  .mchip.active .mdot { transform: rotate(72deg) scale(1.15) !important; }
+  .mchip:hover .mdot { transform: none !important; }
+  .mchip.active .mdot { transform: none !important; }
 
-  /* Nav active tab indicator → ink drip bar */
+  /* Nav active tab indicator — clean pill */
   .nav-link.active-cloud-tab::before {
-    width: 26px !important; height: 6px !important;
-    border-radius: 0 !important;
-    clip-path: polygon(0% 45%, 10% 0%, 22% 80%, 38% 15%, 50% 100%, 62% 15%, 78% 80%, 90% 0%, 100% 45%, 94% 100%, 72% 65%, 50% 100%, 28% 65%, 6% 100%) !important;
+    width: 20px !important; height: 3px !important;
+    border-radius: 99px !important;
+    clip-path: none !important;
     background: var(--accent) !important;
-    box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 65%, transparent) !important;
-    animation: inkDrip 0.45s cubic-bezier(.34,1.56,.64,1) both !important;
+    box-shadow: none !important;
+    animation: indicatorSlideIn 0.25s cubic-bezier(.34,1.56,.64,1) both !important;
   }
 
   @keyframes splatIdle {
