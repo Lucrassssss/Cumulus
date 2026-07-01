@@ -1521,7 +1521,7 @@
   }
   .cv2-photo-placeholder::after {
     content:''; position:absolute; inset:0;
-    background: linear-gradient(160deg, var(--cv2-accent-glow,rgba(96,165,250,0.18)) 0%, transparent 65%);
+    background: linear-gradient(160deg, var(--cv2-accent-glow,rgba(232,184,75,0.18)) 0%, transparent 65%);
   }
 
   /* Logo — now in dark body, flow element */
@@ -1834,7 +1834,7 @@
   }
   .lp-blob-a { width: 500px; height: 500px; background: var(--accent); top: -120px; left: -100px; animation-duration: 20s; }
   .lp-blob-b { width: 400px; height: 400px; background: var(--gold); bottom: -80px; right: -80px; animation-duration: 26s; animation-direction: alternate-reverse; }
-  .lp-blob-c { width: 320px; height: 320px; background: #8B5CF6; top: 40%; left: 60%; animation-duration: 22s; }
+  .lp-blob-c { width: 320px; height: 320px; background: #E8B84B; top: 40%; left: 60%; animation-duration: 22s; }
   @keyframes heroBlob { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(40px,30px) scale(1.12); } }
   [data-theme="dark"] .lp-blob { opacity: 0.18; }
 
@@ -1865,7 +1865,7 @@
     animation: heroFadeUp 0.6s 0.18s cubic-bezier(0.22,1,0.36,1) both;
   }
   .lp-hero-gradient {
-    background: linear-gradient(135deg, var(--accent) 0%, #8B5CF6 40%, var(--gold) 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #E8B84B 40%, var(--gold) 100%);
     background-size: 200% 100%;
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -1882,7 +1882,7 @@
   }
   .lp-hero-btn-primary {
     padding: 15px 32px !important; font-size: 16px !important;
-    background: linear-gradient(135deg, var(--accent), #8B5CF6) !important;
+    background: linear-gradient(135deg, var(--accent), #E8B84B) !important;
     box-shadow: 0 8px 30px color-mix(in srgb, var(--accent) 40%, transparent) !important;
   }
   .lp-hero-btn-secondary {
@@ -2043,7 +2043,7 @@
   .lp-venues-section::before {
     content: '';
     position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.15), transparent 60%),
+    background: radial-gradient(ellipse at 20% 50%, rgba(232,184,75,0.15), transparent 60%),
                 radial-gradient(ellipse at 80% 30%, rgba(217,165,46,0.1), transparent 50%);
   }
   .lp-venues-inner {
@@ -2061,9 +2061,9 @@
   .lp-feat-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 3px; }
   .lp-feat-desc { font-size: 12.5px; color: rgba(255,255,255,0.55); line-height: 1.55; }
   .lp-venues-cta {
-    background: linear-gradient(135deg, var(--accent), #8B5CF6) !important;
+    background: linear-gradient(135deg, var(--accent), #E8B84B) !important;
     padding: 14px 28px !important; font-size: 15px !important;
-    box-shadow: 0 8px 28px rgba(99,102,241,0.35) !important;
+    box-shadow: 0 8px 28px rgba(232,184,75,0.35) !important;
   }
   .lp-venues-stats {
     display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
@@ -2094,7 +2094,7 @@
     position: absolute; inset: 0; z-index: 0;
     background:
       radial-gradient(ellipse at 0% 60%, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 55%),
-      radial-gradient(ellipse at 100% 20%, color-mix(in srgb, #8B5CF6 10%, transparent) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 20%, color-mix(in srgb, #E8B84B 10%, transparent) 0%, transparent 50%),
       radial-gradient(ellipse at 60% 100%, color-mix(in srgb, var(--gold) 8%, transparent) 0%, transparent 45%);
   }
   .lp-join-grid {
@@ -2123,7 +2123,7 @@
   }
   .lp-join-headline em {
     font-style: normal;
-    background: linear-gradient(135deg, var(--accent) 0%, #8B5CF6 60%, var(--gold) 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #E8B84B 60%, var(--gold) 100%);
     background-size: 200% 100%;
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -2257,7 +2257,7 @@
   .lp-form-panel::before {
     content: ''; position: absolute;
     top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, var(--accent), #8B5CF6, var(--gold), var(--accent));
+    background: linear-gradient(90deg, var(--accent), #E8B84B, var(--gold), var(--accent));
     background-size: 300% 100%;
     animation: gradientShift 5s linear infinite;
   }
@@ -2300,7 +2300,7 @@
   .lp-float-line {
     position: absolute; bottom: 0; left: 0;
     height: 2px; width: 0; border-radius: 99px;
-    background: linear-gradient(90deg, var(--accent), #8B5CF6);
+    background: linear-gradient(90deg, var(--accent), #E8B84B);
     transition: width 0.3s cubic-bezier(0.22,1,0.36,1);
   }
   .lp-float-input:focus ~ .lp-float-label ~ .lp-float-line,
@@ -2311,7 +2311,7 @@
   /* Claim button */
   .lp-claim-btn {
     width: 100%; padding: 17px 24px;
-    background: linear-gradient(135deg, var(--accent) 0%, #8B5CF6 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #E8B84B 100%);
     border: none; border-radius: 14px;
     font-family: var(--font-sans); font-size: 16px; font-weight: 800;
     color: #fff; cursor: pointer; position: relative; overflow: hidden;
@@ -3740,8 +3740,8 @@
     background: transparent; color: var(--text-muted);
   }
   .gate-type-btn.active {
-    background: var(--accent); color: #fff;
-    box-shadow: 0 3px 14px rgba(62,124,184,0.30);
+    background: var(--accent); color: #0A0A0A;
+    box-shadow: none;
     transform: scale(1.02);
   }
   .gate-host-extra {
@@ -5342,7 +5342,7 @@
   .lp-event-card { border-radius: 20px !important; }
   .lp-event-card:hover { transform: translateY(-6px) !important; box-shadow: 0 32px 72px rgba(0,0,0,0.40) !important; }
   .lp-hero-gradient {
-    background: linear-gradient(135deg, var(--accent) 0%, #7C3AED 50%, var(--gold) 100%) !important;
+    background: linear-gradient(135deg, var(--accent) 0%, #E8B84B 50%, var(--gold) 100%) !important;
     -webkit-background-clip: text !important; background-clip: text !important;
   }
   .lp-hero-btn-primary {
@@ -5977,7 +5977,7 @@
     border-color: rgba(232,232,255,0.08) !important;
   }
   [data-theme="dark"] .panel:hover {
-    border-color: rgba(129,140,248,0.25) !important;
+    border-color: rgba(232,184,75,0.25) !important;
   }
 
   /* ── EVENT CARDS ────────────────────────────────────────── */
@@ -8932,7 +8932,7 @@ function attachMapLayers(){
     source:'events',
     filter:['has','point_count'],
     paint:{
-      'circle-color':['step',['get','point_count'],'#475569',10,'#334155',30,'#1e293b'],
+      'circle-color':['step',['get','point_count'],'#E8B84B',10,'#C8941C',30,'#A87010'],
       'circle-radius':['step',['get','point_count'],20,10,24,30,28],
       'circle-stroke-width':2,
       'circle-stroke-color':'rgba(255,255,255,0.85)',
@@ -10683,7 +10683,7 @@ function renderProfile(){
   const MUTED_CATS={'Creative':'rgba(232,184,75,0.10)','Gaming':'rgba(232,184,75,0.10)','Movie Nights':'rgba(232,184,75,0.10)','Board Games':'rgba(232,184,75,0.10)','Meetups':'rgba(232,184,75,0.10)','Food & Drink':'rgba(232,184,75,0.10)','Live Music':'rgba(232,184,75,0.10)','Wellness & Outdoors':'rgba(232,184,75,0.10)','Tech & Talks':'rgba(232,184,75,0.10)'};
   const recentEvHtml=recentEvents.map(ev=>{
     const c2=CATS[ev.category]||{color:'#E8B84B'};
-    const mutedBg=MUTED_CATS[ev.category]||'rgba(96,165,250,0.1)';
+    const mutedBg=MUTED_CATS[ev.category]||'rgba(232,184,75,0.1)';
     const shortTitle=ev.title.length>28?ev.title.substring(0,26)+'…':ev.title;
     const evDate=ev.startsAt?new Date(ev.startsAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
     const status=eventStatus(ev);
@@ -11371,7 +11371,7 @@ function renderTicketsTab(){
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:5px;">
               <span class="event-badge" style="background:${c.color};margin-bottom:0;">${ev.category}</span>
               ${status==='live'?`<span class="live-chip" style="margin-left:0;"><span class="dot"></span>Live</span>`:''}
-              ${chatOpen&&status!=='past'?`<span style="font-size:9.5px;font-weight:700;color:var(--accent);background:rgba(62,124,184,0.12);padding:2px 7px;border-radius:999px;border:1px solid var(--accent);">Chat open</span>`:''}
+              ${chatOpen&&status!=='past'?`<span style="font-size:9.5px;font-weight:700;color:var(--accent);background:rgba(232,184,75,0.12);padding:2px 7px;border-radius:999px;border:1px solid var(--accent);">Chat open</span>`:''}
             </div>
             <div style="font-size:15px;font-weight:700;line-height:1.2;margin-bottom:4px;">${escapeHtml(ev.title)}</div>
             <div style="font-size:12px;color:var(--text-muted);">${ev.date} · ${ev.time}</div>
@@ -11711,8 +11711,8 @@ window.addEventListener('load', () => {
 
       // Soft glow in top-left
       const glow = ctx.createRadialGradient(30, 30, 0, 60, 55, 120);
-      glow.addColorStop(0, 'rgba(96,165,250,0.28)');
-      glow.addColorStop(1, 'rgba(96,165,250,0)');
+      glow.addColorStop(0, 'rgba(232,184,75,0.28)');
+      glow.addColorStop(1, 'rgba(232,184,75,0)');
       ctx.fillStyle = glow;
       ctx.fill();
 
