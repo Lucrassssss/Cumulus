@@ -1683,7 +1683,7 @@
   .cv2-pass-band-label {
     font-size: 7.5px; font-weight: 800;
     letter-spacing: 2.8px; text-transform: uppercase;
-    color: var(--cv2-accent, #60A5FA); opacity: 0.72;
+    color: var(--cv2-accent, #E8B84B); opacity: 0.72;
     margin-bottom: 4px;
   }
   .cv2-pass-band-uid {
@@ -6613,6 +6613,172 @@
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+  /* ═══════════════════════════════════════════════════════════
+     REDESIGN 5.0 — MINIMALIST REFINE
+     Sleek · defined · minimal. Light = clean white + gold.
+     Dark = matte black + yellow. Flat surfaces, no glow,
+     neutral shadows, consistent radius, tighter rhythm.
+     ═══════════════════════════════════════════════════════════ */
+
+  /* ── REFINED TOKENS ─────────────────────────────────────── */
+  [data-theme="light"] {
+    --bg:#FCFBF8 !important; --bg-2:#F3F1EC !important;
+    --surface:#FFFFFF !important; --surface-2:#F6F4EF !important;
+    --text:#121110 !important; --text-soft:#46433D !important; --text-muted:#8B867D !important;
+    --line:rgba(18,17,16,0.09) !important; --line-soft:rgba(18,17,16,0.05) !important;
+    --accent:#CD9A16 !important; --accent-deep:#A97D0C !important; --gold:#CD9A16 !important;
+    --shadow:rgba(18,17,16,0.06) !important;
+    --mesh-a:rgba(205,154,22,0.022) !important; --mesh-b:rgba(205,154,22,0.012) !important; --mesh-c:rgba(205,154,22,0.018) !important;
+  }
+  [data-theme="dark"] {
+    --bg:#0A0A0A !important; --bg-2:#050505 !important;
+    --surface:#151515 !important; --surface-2:#1E1E1E !important;
+    --text:#F4F1EA !important; --text-soft:#B6B2A9 !important; --text-muted:#6F6B62 !important;
+    --line:rgba(244,241,234,0.08) !important; --line-soft:rgba(244,241,234,0.045) !important;
+    --accent:#EBBB4E !important; --accent-deep:#D4A017 !important; --gold:#EBBB4E !important;
+    --shadow:rgba(0,0,0,0.5) !important;
+    --mesh-a:rgba(232,184,75,0.03) !important; --mesh-b:rgba(200,148,28,0.02) !important; --mesh-c:rgba(232,184,75,0.022) !important;
+  }
+
+  /* ── PRIMARY BUTTONS — flat, defined, dark text, no glow ── */
+  .btn:not(.btn-outline):not(.btn-text) {
+    background: var(--accent) !important;
+    color: #0A0A0A !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.01em !important;
+    transition: background .15s ease, transform .15s ease !important;
+  }
+  .btn:not(.btn-outline):not(.btn-text):hover {
+    background: var(--accent-deep) !important;
+    box-shadow: none !important;
+    filter: none !important;
+    transform: translateY(-1px) !important;
+  }
+  .btn:not(.btn-outline):not(.btn-text):active { transform: translateY(0) !important; }
+  .btn-outline {
+    border-radius: 12px !important;
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    background: transparent !important;
+  }
+  .btn-outline:hover { background: color-mix(in srgb, var(--accent) 8%, transparent) !important; }
+
+  /* ── LANDING CTAs — flat, no glow, consistent radius ────── */
+  .lp-hero-btn-primary, .lp-claim-btn, .lp-venues-cta, .lp-submit-btn {
+    background: var(--accent) !important;
+    color: #0A0A0A !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 12px !important;
+  }
+  .lp-hero-btn-primary:hover, .lp-claim-btn:hover, .lp-venues-cta:hover, .lp-submit-btn:hover {
+    background: var(--accent-deep) !important;
+    box-shadow: none !important; filter: none !important;
+  }
+  .lp-hero-btn-secondary { border-radius: 12px !important; box-shadow: none !important; }
+  .lp-nav-btn {
+    background: var(--accent) !important; color: #0A0A0A !important;
+    box-shadow: none !important; border-radius: 10px !important;
+  }
+  .lp-nav-btn:hover { background: var(--accent-deep) !important; box-shadow: none !important; }
+
+  /* ── NEUTRAL SHADOWS — kill yellow glows on surfaces ────── */
+  .panel, .gate-card, .lp-feat-card, .prof-action-row,
+  .stat-box, .settings-row, .list-row, .review-card {
+    box-shadow: 0 1px 2px var(--shadow) !important;
+  }
+  [data-theme="dark"] .panel, [data-theme="dark"] .lp-feat-card,
+  [data-theme="dark"] .gate-card {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.45) !important;
+    border: 1px solid var(--line) !important;
+  }
+
+  /* ── INPUTS — clean 12px radius ─────────────────────────── */
+  .search-input, .lp-float-input,
+  input[type=text], input[type=email], input[type=tel], textarea, select {
+    border-radius: 12px !important;
+  }
+
+  /* ── ATMOSPHERE — dial down background noise ─────────────── */
+  .bg-blot { opacity: 0.045 !important; filter: blur(96px) !important; }
+
+  /* ── LANDING CLOUDS — faint, neutral, no blue hue ───────── */
+  .lp-cld { opacity: 0.07 !important; filter: brightness(1.04) saturate(0) !important; }
+  [data-theme="dark"] .lp-cld { opacity: 0.09 !important; filter: brightness(0.55) saturate(0) !important; }
+  .lp-blob { display: none !important; }
+  .lp-hero::after {
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 7%, transparent) 0%, transparent 70%) !important;
+    animation: none !important;
+  }
+
+  /* ── HERO BG — barely-there top glow ────────────────────── */
+  .lp-hero-bg {
+    background: radial-gradient(ellipse 60% 42% at 50% -8%,
+      color-mix(in srgb, var(--accent) 7%, transparent), transparent 62%) !important;
+  }
+  [data-theme="dark"] .lp-hero-bg {
+    background: radial-gradient(ellipse 60% 42% at 50% -8%,
+      color-mix(in srgb, var(--accent) 6%, transparent), transparent 58%) !important;
+  }
+
+  /* ── TYPE RHYTHM — tighten headings ─────────────────────── */
+  .social-seg-btn, .mchip, .interest-pill { letter-spacing: -0.005em !important; }
+
+  /* ── CATEGORY BADGE — subtle yellow-tint pill, no rainbow ─ */
+  .event-badge {
+    background: color-mix(in srgb, var(--accent) 14%, transparent) !important;
+    color: var(--accent) !important;
+    border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.4px !important;
+    text-transform: uppercase !important;
+    border-radius: 7px !important;
+    padding: 3px 9px !important;
+  }
+  [data-theme="dark"] .event-badge {
+    background: rgba(232,184,75,0.12) !important;
+    color: var(--accent) !important;
+    border-color: rgba(232,184,75,0.24) !important;
+  }
+
+  /* ── CALENDAR CHIPS — monochrome, yellow left-accent ────── */
+  .calendar-event-chip {
+    background: var(--surface-2) !important;
+    color: var(--text) !important;
+    border-left: 2px solid var(--accent) !important;
+    border-radius: 5px !important;
+    font-weight: 600 !important;
+    padding: 3px 6px !important;
+  }
+  .ev-plate { border-radius: 10px !important; }
+
+  /* ── CALENDAR — fitted month grid, dot markers ──────────── */
+  .calendar-scroll { overflow-x: visible !important; padding-bottom: 0 !important; }
+  .calendar-inner { min-width: 0 !important; width: 100% !important; }
+  .calendar-header-row, .calendar-grid {
+    grid-template-columns: repeat(7, 1fr) !important;
+    gap: 4px !important;
+  }
+  .calendar-weekday { font-size: 9px !important; padding: 2px 0 !important; }
+  .calendar-cell {
+    min-height: 0 !important;
+    aspect-ratio: 1 / 1 !important;
+    padding: 5px !important;
+    border-radius: 9px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    overflow: hidden !important;
+  }
+  .calendar-cell:hover { transform: none !important; }
+  .calendar-cell.has-events:hover { transform: translateY(-1px) !important; }
+  .calendar-day-num { font-size: 12px !important; margin-bottom: 4px !important; }
+  .cal-dots { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; margin-top: auto; }
+  .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); display: block; }
+  .cal-dot-more { font-size: 8px; font-weight: 700; color: var(--accent); line-height: 1; }
+  .calendar-cell.today { border-color: var(--accent) !important; background: color-mix(in srgb, var(--accent) 8%, var(--surface-2)) !important; }
 
 </style>
 </head>
@@ -6788,9 +6954,9 @@ const EVENTS = EVENT_SEED.map(seed => ({
 }));
 
 const CATS = {
-  "Creative":{color:"#E8B84B"}, "Gaming":{color:"#10B981"}, "Movie Nights":{color:"#F97316"},
-  "Board Games":{color:"#06B6D4"}, "Meetups":{color:"#EC4899"}, "Food & Drink":{color:"#EF4444"},
-  "Live Music":{color:"#E8B84B"}, "Wellness & Outdoors":{color:"#84CC16"}, "Tech & Talks":{color:"#3B82F6"}
+  "Creative":{color:"#E8B84B"}, "Gaming":{color:"#E8B84B"}, "Movie Nights":{color:"#E8B84B"},
+  "Board Games":{color:"#E8B84B"}, "Meetups":{color:"#E8B84B"}, "Food & Drink":{color:"#E8B84B"},
+  "Live Music":{color:"#E8B84B"}, "Wellness & Outdoors":{color:"#E8B84B"}, "Tech & Talks":{color:"#E8B84B"}
 };
 
 function eventStatus(ev){ const now=Date.now(); if(now>=ev.startsAt&&now<=ev.endsAt) return 'live'; if(now<ev.startsAt) return 'upcoming'; return 'past'; }
@@ -7041,12 +7207,12 @@ const CARD_THEMES = CARD_BG_STYLES.map(s => {
   const isDark = s.dark;
   return {
     id: s.id, name: s.name, bg: s.bg,
-    accent: '#60A5FA',
+    accent: '#E8B84B',
     text: isDark ? '#fff' : '#1e293b',
     textSoft: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(30,41,59,0.58)',
-    border: isDark ? 'rgba(96,165,250,0.25)' : 'rgba(37,99,235,0.18)',
+    border: isDark ? 'rgba(232,184,75,0.25)' : 'rgba(205,154,22,0.20)',
     pattern: 'lightning',
-    color: isDark ? '#60A5FA' : '#2563EB'
+    color: isDark ? '#E8B84B' : '#CD9A16'
   };
 });
 
@@ -7114,7 +7280,7 @@ let state={view:'browse',selectedEventId:null,selectedCategory:'all',calendarDay
   userId:null,
   profileName:'',profileEmail:'',profileId:null,specialBadges:[],theme:'light',
   editingProfile:false,myCard:null,rsvps:{},attendeeCards:{},chats:{},friends:[],friendsOnly:false,goingOpen:{},liveOnly:false,hotOnly:false};
-let cardDraft={theme:'midnight',bgStyle:'midnight',accentColor:'#60A5FA',pattern:'constellation',patternOpacity:0.35,bio:'',interests:'',fact:'',motto:'',photo:'',areas:[]};
+let cardDraft={theme:'obsidian',bgStyle:'obsidian',accentColor:'#E8B84B',pattern:'constellation',patternOpacity:0.35,bio:'',interests:'',fact:'',motto:'',photo:'',areas:[]};
 let cardEditorEventId=null;
 let lmap=null,lmapFitted=false;
 let hostMap=null,hostMarker=null;
@@ -7153,7 +7319,7 @@ function getBgStyle(id){ return CARD_BG_STYLES.find(s=>s.id===id)||CARD_BG_STYLE
 function getAccentColor(id){ return CARD_ACCENT_COLORS.find(c=>c.id===id); }
 function resolveCardColors(bgStyleId, accentHex){
   const style = getBgStyle(bgStyleId);
-  const acc = accentHex || '#60A5FA';
+  const acc = accentHex || '#E8B84B';
   const isDark = style.dark;
   return {
     bg: style.bg,
@@ -7344,7 +7510,7 @@ const FEATURED_EVENTS = [
     date:'Sat 28 Jun', time:'10 PM – 4 AM',
     capacity:1200, attending:847,
     price:'From £18', badge:'SOLD OUT SOON',
-    badgeColor:'#E23B3B',
+    badgeColor:'#C8941C',
     desc:'Four rooms. Four sounds. One night that defines the summer.',
     icon:'🎶',
     gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#C8941C 100%)',
@@ -7352,7 +7518,7 @@ const FEATURED_EVENTS = [
   },
   {
     id:'f2', title:'Open-Air Cinema — Kensington Palace',
-    category:'Movie Nights', categoryColor:'#F97316',
+    category:'Movie Nights', categoryColor:'#E8B84B',
     venue:'Kensington Palace Gardens', area:'Kensington, London W8',
     date:'Fri 27 Jun', time:'8:30 PM',
     capacity:800, attending:612,
@@ -7360,25 +7526,25 @@ const FEATURED_EVENTS = [
     badgeColor:'#D9A52E',
     desc:'Blankets on the lawn, the palace lit behind you. Cinema reimagined.',
     icon:'🎬',
-    gradient:'linear-gradient(135deg,#1c1200 0%,#3d2600 40%,#F97316 100%)',
-    accentColor:'#fdba74'
+    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#C8941C 100%)',
+    accentColor:'#E8B84B'
   },
   {
     id:'f3', title:'London Startup Pitch Finals',
-    category:'Tech & Talks', categoryColor:'#3B82F6',
+    category:'Tech & Talks', categoryColor:'#E8B84B',
     venue:'The Barbican Centre', area:'Barbican, London EC2Y',
     date:'Thu 26 Jun', time:'6 PM – 10 PM',
     capacity:500, attending:389,
     price:'Free', badge:'HIGH DEMAND',
-    badgeColor:'#10B981',
+    badgeColor:'#C8941C',
     desc:'Ten founders. Five minutes each. One city watching.',
     icon:'⚡',
-    gradient:'linear-gradient(135deg,#020d24 0%,#0c2a5e 40%,#3B82F6 100%)',
-    accentColor:'#93c5fd'
+    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#C8941C 100%)',
+    accentColor:'#E8B84B'
   },
   {
     id:'f4', title:'Smash Bros Championship — London',
-    category:'Gaming', categoryColor:'#10B981',
+    category:'Gaming', categoryColor:'#E8B84B',
     venue:'Copper Box Arena', area:'Olympic Park, London E20',
     date:'Sun 29 Jun', time:'12 PM – 8 PM',
     capacity:1500, attending:1201,
@@ -7386,21 +7552,21 @@ const FEATURED_EVENTS = [
     badgeColor:'#C8941C',
     desc:'The biggest bracket London has ever seen. Bring your controller.',
     icon:'🎮',
-    gradient:'linear-gradient(135deg,#001a0e 0%,#023d21 40%,#10B981 100%)',
-    accentColor:'#6ee7b7'
+    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#C8941C 100%)',
+    accentColor:'#E8B84B'
   },
   {
     id:'f5', title:'Grand Supper Club — Rooftop Edition',
-    category:'Food & Drink', categoryColor:'#EF4444',
+    category:'Food & Drink', categoryColor:'#E8B84B',
     venue:'Sky Garden', area:'Monument, London EC3M',
     date:'Wed 25 Jun', time:'7 PM – 11 PM',
     capacity:200, attending:176,
     price:'From £65', badge:'FEW LEFT',
-    badgeColor:'#E23B3B',
+    badgeColor:'#C8941C',
     desc:'Eight courses. 155 metres up. London laid out below you.',
     icon:'🍽',
-    gradient:'linear-gradient(135deg,#1a0000 0%,#450a0a 40%,#EF4444 100%)',
-    accentColor:'#fca5a5'
+    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#C8941C 100%)',
+    accentColor:'#E8B84B'
   }
 ];
 
@@ -7898,12 +8064,12 @@ function openCardEditor(eventId){
   try{ const r=localStorage.getItem('card_ext:'+state.profileName); if(r) ext=JSON.parse(r); }catch(e){}
   let savedPhoto='';
   try{ savedPhoto=localStorage.getItem('card_photo:'+state.profileName)||''; }catch(e){}
-  const savedBg=ext.bgStyle||ex?.theme||'midnight';
-  const savedAccent=ext.accentColor||ex?.accentColor||'#60A5FA';
+  const savedBg=ext.bgStyle||ex?.theme||'obsidian';
+  const savedAccent=ext.accentColor||ex?.accentColor||'#E8B84B';
   const savedOpacity=ext.patternOpacity!=null?ext.patternOpacity:0.35;
   cardDraft=ex
     ?{theme:savedBg,bgStyle:savedBg,accentColor:savedAccent,pattern:ext.pattern||'lightning',patternOpacity:savedOpacity,bio:ex.bio||'',interests:ex.interests||'',fact:ex.fact||'',motto:ext.motto||'',photo:savedPhoto,areas:ext.areas||[]}
-    :{theme:'midnight',bgStyle:'midnight',accentColor:'#60A5FA',pattern:'constellation',patternOpacity:0.35,bio:'',interests:'',fact:'',motto:'',photo:savedPhoto,areas:ext.areas||[]};
+    :{theme:'obsidian',bgStyle:'obsidian',accentColor:'#E8B84B',pattern:'constellation',patternOpacity:0.35,bio:'',interests:'',fact:'',motto:'',photo:savedPhoto,areas:ext.areas||[]};
   renderCardEditor();
 }
 function captureDraftFields(){
@@ -8316,7 +8482,7 @@ function switchCeTab(tab){
 }
 async function saveCard(){
   captureDraftFields();
-  const card={name:state.profileName,theme:cardDraft.bgStyle||cardDraft.theme,bgStyle:cardDraft.bgStyle||cardDraft.theme,accentColor:cardDraft.accentColor||'#60A5FA',bio:cardDraft.bio.trim(),interests:cardDraft.interests.trim(),fact:cardDraft.fact.trim()};
+  const card={name:state.profileName,theme:cardDraft.bgStyle||cardDraft.theme,bgStyle:cardDraft.bgStyle||cardDraft.theme,accentColor:cardDraft.accentColor||'#E8B84B',bio:cardDraft.bio.trim(),interests:cardDraft.interests.trim(),fact:cardDraft.fact.trim()};
   state.myCard=card;
   // Save extended fields to localStorage
   try{ localStorage.setItem('card_ext:'+state.profileName, JSON.stringify({pattern:cardDraft.pattern,patternOpacity:cardDraft.patternOpacity,motto:cardDraft.motto,areas:cardDraft.areas,accentColor:cardDraft.accentColor,bgStyle:cardDraft.bgStyle})); }catch(e){}
@@ -8661,9 +8827,9 @@ async function toggleRsvp(id){
 }
 function _buildChatMsgHtml(msg){
   const myCard=state.myCard;
-  let _myExt={bgStyle:'midnight',accentColor:'#60A5FA'};
+  let _myExt={bgStyle:'obsidian',accentColor:'#E8B84B'};
   try{ const r=localStorage.getItem('card_ext:'+state.profileName); if(r) _myExt={..._myExt,...JSON.parse(r)}; }catch(e){}
-  const _myCols=resolveCardColors(_myExt.bgStyle||myCard?.theme||'midnight',_myExt.accentColor||myCard?.accentColor||'#60A5FA');
+  const _myCols=resolveCardColors(_myExt.bgStyle||myCard?.theme||'obsidian',_myExt.accentColor||myCard?.accentColor||'#E8B84B');
   const isOwn=msg.name===state.profileName;
   const nameCol=isOwn?_myCols.accent:'var(--text-muted)';
   return `<div class="msg-row ${isOwn?'own':''}"><div class="msg-col ${isOwn?'own':''}">
@@ -10085,9 +10251,9 @@ function renderConnect(id){
   const ev=EVENTS.find(e=>e.id===id);
   if(!ev) return `<div class="empty-state">Event not found.</div>`;
   const c=CATS[ev.category]; const attendees=attendeesFor(id); const cardsMap=state.attendeeCards[id]||{}; const chat=state.chats[id]||[]; const myCard=state.myCard;
-  let _myExt={motto:'',pattern:'lines',areas:[],accentColor:'#60A5FA',bgStyle:'midnight'};
+  let _myExt={motto:'',pattern:'lines',areas:[],accentColor:'#E8B84B',bgStyle:'obsidian'};
   try{ const _r=localStorage.getItem('card_ext:'+state.profileName); if(_r) _myExt={..._myExt,...JSON.parse(_r)}; }catch(e){}
-  const _myCols=resolveCardColors(_myExt.bgStyle||myCard?.theme||'midnight',_myExt.accentColor||myCard?.accentColor||'#60A5FA');
+  const _myCols=resolveCardColors(_myExt.bgStyle||myCard?.theme||'obsidian',_myExt.accentColor||myCard?.accentColor||'#E8B84B');
   const _myAccent=_myCols.accent;
   const yourCardHtml=myCard
     ?`<div class="panel intro-card" style="--corner:${_myAccent};background:${_myCols.bg};border-color:${_myAccent}33;">
@@ -10289,13 +10455,13 @@ function initCardSheen(){
 function openExpandedCard(){
   const old=document.getElementById('card-xl-overlay'); if(old) old.remove();
   const card=state.myCard;
-  let cardExt={motto:'',pattern:'lines',areas:[],accentColor:'#60A5FA',bgStyle:'midnight'};
+  let cardExt={motto:'',pattern:'lines',areas:[],accentColor:'#E8B84B',bgStyle:'obsidian'};
   try{ const r=localStorage.getItem('card_ext:'+state.profileName); if(r) cardExt={...cardExt,...JSON.parse(r)}; }catch(e){}
   let cardPhoto='';
   try{ cardPhoto=localStorage.getItem('card_photo:'+state.profileName)||''; }catch(e){}
 
   const cardBg='#0A0A0B';
-  const accent=cardExt.accentColor||card?.accentColor||'#60A5FA';
+  const accent=cardExt.accentColor||card?.accentColor||'#E8B84B';
 
   // Map accent → v2 CSS vars
   const accentAlpha=(a,op)=>{ const m=a.match(/^#([0-9a-f]{6})$/i); if(!m) return `rgba(255,255,255,${op})`; const r2=parseInt(m[1].slice(0,2),16),g2=parseInt(m[1].slice(2,4),16),b2=parseInt(m[1].slice(4,6),16); return `rgba(${r2},${g2},${b2},${op})`; };
@@ -10442,7 +10608,7 @@ function renderProfile(){
   const card=state.myCard;
 
   // Extended card fields
-  let cardExt={motto:'',pattern:'lines',areas:[],accentColor:'#60A5FA',bgStyle:'midnight',patternOpacity:0.18};
+  let cardExt={motto:'',pattern:'lines',areas:[],accentColor:'#E8B84B',bgStyle:'obsidian',patternOpacity:0.18};
   try{ const r=localStorage.getItem('card_ext:'+state.profileName); if(r) cardExt={...cardExt,...JSON.parse(r)}; }catch(e){}
   let profilePhoto='';
   try{ profilePhoto=localStorage.getItem('card_photo:'+state.profileName)||''; }catch(e){}
@@ -10465,7 +10631,7 @@ function renderProfile(){
 
   // Card HTML (inline profile card)
   function profileCardHtml(c,ext){
-    const cols=resolveCardColors(ext.bgStyle||c?.theme||'midnight', ext.accentColor||c?.accentColor||'#60A5FA');
+    const cols=resolveCardColors(ext.bgStyle||c?.theme||'obsidian', ext.accentColor||c?.accentColor||'#E8B84B');
     const {bg,accent,text:textCol,textSoft}=cols;
     const pat=CARD_PATTERNS[ext.pattern||'lightning']||'';
     const tagBg=cols.dark?'rgba(255,255,255,0.14)':'rgba(0,0,0,0.08)';
@@ -10514,9 +10680,9 @@ function renderProfile(){
 
   // Recent events — last 4 only (not 12)
   const recentEvents=myEvents.slice(-4).reverse();
-  const MUTED_CATS={'Creative':'rgba(232,184,75,0.13)','Gaming':'rgba(16,185,129,0.12)','Movie Nights':'rgba(249,115,22,0.12)','Board Games':'rgba(6,182,212,0.12)','Meetups':'rgba(236,72,153,0.11)','Food & Drink':'rgba(239,68,68,0.11)','Live Music':'rgba(232,184,75,0.13)','Wellness & Outdoors':'rgba(132,204,22,0.12)','Tech & Talks':'rgba(59,130,246,0.12)'};
+  const MUTED_CATS={'Creative':'rgba(232,184,75,0.10)','Gaming':'rgba(232,184,75,0.10)','Movie Nights':'rgba(232,184,75,0.10)','Board Games':'rgba(232,184,75,0.10)','Meetups':'rgba(232,184,75,0.10)','Food & Drink':'rgba(232,184,75,0.10)','Live Music':'rgba(232,184,75,0.10)','Wellness & Outdoors':'rgba(232,184,75,0.10)','Tech & Talks':'rgba(232,184,75,0.10)'};
   const recentEvHtml=recentEvents.map(ev=>{
-    const c2=CATS[ev.category]||{color:'#60A5FA'};
+    const c2=CATS[ev.category]||{color:'#E8B84B'};
     const mutedBg=MUTED_CATS[ev.category]||'rgba(96,165,250,0.1)';
     const shortTitle=ev.title.length>28?ev.title.substring(0,26)+'…':ev.title;
     const evDate=ev.startsAt?new Date(ev.startsAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
@@ -10666,18 +10832,18 @@ function renderAchievements(){
 
   // Full event history (all events)
   const allEvents=myEvents.slice().reverse();
-  const MUTED_CATS_A={'Creative':'rgba(139,92,246,0.13)','Gaming':'rgba(16,185,129,0.12)','Movie Nights':'rgba(249,115,22,0.12)','Board Games':'rgba(6,182,212,0.12)','Meetups':'rgba(236,72,153,0.11)','Food & Drink':'rgba(239,68,68,0.11)','Live Music':'rgba(99,102,241,0.13)','Wellness & Outdoors':'rgba(132,204,22,0.12)','Tech & Talks':'rgba(59,130,246,0.12)'};
+  const MUTED_CATS_A={'Creative':'rgba(232,184,75,0.10)','Gaming':'rgba(232,184,75,0.10)','Movie Nights':'rgba(232,184,75,0.10)','Board Games':'rgba(232,184,75,0.10)','Meetups':'rgba(232,184,75,0.10)','Food & Drink':'rgba(232,184,75,0.10)','Live Music':'rgba(232,184,75,0.10)','Wellness & Outdoors':'rgba(232,184,75,0.10)','Tech & Talks':'rgba(232,184,75,0.10)'};
   const evTilesHtml=allEvents.length
     ? allEvents.map(ev=>{
-        const c2=CATS[ev.category]||{color:'#60A5FA'};
+        const c2=CATS[ev.category]||{color:'#E8B84B'};
         const shortTitle=ev.title.length>28?ev.title.substring(0,26)+'…':ev.title;
         const evDate=ev.startsAt?new Date(ev.startsAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
         const status=eventStatus(ev);
         const statusDot=status==='live'?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-right:4px;box-shadow:0 0 5px #22c55e88;"></span>`:status==='upcoming'?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c2.color};margin-right:4px;opacity:0.7;"></span>`:'';
-        return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:${MUTED_CATS_A[ev.category]||'rgba(96,165,250,0.1)'};border:1px solid ${c2.color}28;">
+        return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:var(--surface-2);border:1px solid var(--line);border-left:2px solid var(--accent);">
           <div style="font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;">${escapeHtml(shortTitle)}</div>
           <div style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;">${statusDot}${escapeHtml(ev.category)}</div>
-          ${evDate?`<div style="font-size:10px;color:${c2.color};font-weight:600;margin-top:4px;">${evDate}</div>`:''}
+          ${evDate?`<div style="font-size:10px;color:var(--accent);font-weight:600;margin-top:4px;">${evDate}</div>`:''}
         </div>`;
       }).join('')
     : `<div style="color:var(--text-muted);font-size:13px;padding:4px 0;">No events yet — browse and RSVP to get started.</div>`;
@@ -10767,9 +10933,9 @@ function renderCalendar(){
   const cellsHtml=weeks.map(week=>week.map(day=>{
     if(!day) return `<div class="calendar-cell empty"></div>`;
     const dayEvents=eventsByDay[day]||[]; const isToday=day===todayDay;
-    const chips=dayEvents.slice(0,3).map(ev=>{ const c=CATS[ev.category]; return `<span class="calendar-event-chip" style="background:${c.color};" onclick="openEvent(${ev.id})">${ev.title}</span>`; }).join('');
-    const more=dayEvents.length>3?`<div style="font-size:9px;color:var(--text-muted);margin-top:2px;">+${dayEvents.length-3} more</div>`:'';
-    return `<div class="calendar-cell ${isToday?'today':''} ${dayEvents.length?'has-events':''} pointer" onclick="openCalendarDay(${day})" style="cursor:pointer;"><div class="calendar-day-num">${day}</div>${chips}${more}</div>`;
+    const dotN=Math.min(dayEvents.length,4);
+    const dots=dayEvents.length?`<div class="cal-dots">${Array.from({length:dotN},()=>`<span class="cal-dot"></span>`).join('')}${dayEvents.length>4?`<span class="cal-dot-more">+${dayEvents.length-4}</span>`:''}</div>`:'';
+    return `<div class="calendar-cell ${isToday?'today':''} ${dayEvents.length?'has-events':''} pointer" onclick="openCalendarDay(${day})" style="cursor:pointer;"><div class="calendar-day-num">${day}</div>${dots}</div>`;
   }).join('')).join('');
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="connect-header"><h2>${MONTH_NAMES[CALENDAR_MONTH]} ${CALENDAR_YEAR}</h2><p>What's on this month</p></div>
