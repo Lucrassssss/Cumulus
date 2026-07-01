@@ -10,8 +10,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Cumulus">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#090A0C" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#3E7CB8">
+<meta name="theme-color" content="#0F0E0C" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F5F4F0" media="(prefers-color-scheme: light)">
 
 <!-- Instant theme: read saved pref or fall back to OS setting, runs before any CSS paints -->
 <script>
@@ -46,7 +46,7 @@
     --safe-bot: env(safe-area-inset-bottom, 0px);
     --safe-left: env(safe-area-inset-left, 0px);
     --safe-right: env(safe-area-inset-right, 0px);
-    --top-h: calc(56px + env(safe-area-inset-top, 0px));
+    --top-h: calc(60px + env(safe-area-inset-top, 0px));
     --bot-h: calc(62px + env(safe-area-inset-bottom, 0px));
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -810,46 +810,46 @@
      Professional · Welcoming · Spectacular
      ══════════════════════════════════════════ */
 
-  /* Palette */
+  /* Palette — bone white + slate grey */
   [data-theme="light"] {
-    --bg: #F7F6FF;
-    --bg-2: #ECEAFB;
-    --surface: #FFFFFF;
-    --surface-2: #F1F0FC;
-    --text: #18171F;
-    --text-soft: #3D3A50;
-    --text-muted: #8A88A2;
-    --line: rgba(24,23,31,0.08);
-    --line-soft: rgba(24,23,31,0.04);
-    --accent: #5E54F0;
-    --accent-deep: #4338CA;
+    --bg: #F5F4F0;
+    --bg-2: #ECEAE4;
+    --surface: #FDFCF9;
+    --surface-2: #EEECEA;
+    --text: #1C1917;
+    --text-soft: #44403C;
+    --text-muted: #78716C;
+    --line: rgba(28,25,23,0.08);
+    --line-soft: rgba(28,25,23,0.04);
+    --accent: #475569;
+    --accent-deep: #334155;
     --gold: #C4860A;
     --gold-tint: rgba(196,134,10,0.10);
-    --shadow: rgba(18,16,48,0.09);
-    --scrim: rgba(238,237,255,0.90);
-    --mesh-a: rgba(94,84,240,0.10);
-    --mesh-b: rgba(196,134,10,0.08);
-    --mesh-c: rgba(59,52,180,0.07);
+    --shadow: rgba(28,25,23,0.08);
+    --scrim: rgba(245,244,240,0.92);
+    --mesh-a: rgba(100,116,139,0.06);
+    --mesh-b: rgba(180,83,9,0.04);
+    --mesh-c: rgba(100,116,139,0.04);
   }
   [data-theme="dark"] {
-    --bg: #07070F;
-    --bg-2: #040409;
-    --surface: #0E0E1A;
-    --surface-2: #161624;
-    --text: #ECEDF8;
-    --text-soft: #AEACCC;
-    --text-muted: #6B6882;
-    --line: rgba(236,237,248,0.08);
-    --line-soft: rgba(236,237,248,0.04);
-    --accent: #7B72FF;
-    --accent-deep: #5E54F0;
+    --bg: #0F0E0C;
+    --bg-2: #0A0908;
+    --surface: #1C1B17;
+    --surface-2: #25231E;
+    --text: #F5F4EF;
+    --text-soft: #C9C5BC;
+    --text-muted: #8C8680;
+    --line: rgba(245,244,239,0.08);
+    --line-soft: rgba(245,244,239,0.04);
+    --accent: #94A3B8;
+    --accent-deep: #64748B;
     --gold: #F0B429;
     --gold-tint: rgba(240,180,41,0.13);
     --shadow: rgba(0,0,0,0.82);
-    --scrim: rgba(4,4,12,0.90);
-    --mesh-a: rgba(94,84,240,0.24);
-    --mesh-b: rgba(240,180,41,0.10);
-    --mesh-c: rgba(79,70,229,0.20);
+    --scrim: rgba(15,14,12,0.92);
+    --mesh-a: rgba(100,116,139,0.14);
+    --mesh-b: rgba(217,119,6,0.08);
+    --mesh-c: rgba(100,116,139,0.10);
   }
 
   /* Three-point mesh gradient body */
@@ -869,19 +869,19 @@
   .blot-d { width: 460px; height: 320px; top: 52%; right: -90px; border-radius: 62% 38% 42% 58% / 44% 56% 52% 48%; animation: drift4 26s ease-in-out infinite alternate; }
   .blot-e { width: 380px; height: 260px; bottom: 110px; left: 30%; border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%; animation: drift1 22s ease-in-out infinite alternate-reverse; }
 
-  /* Light: soft pastel aurora */
-  [data-theme="light"] .blot-a { background: #818CF8; opacity: 0.32; }
-  [data-theme="light"] .blot-b { background: #38BDF8; opacity: 0.22; }
-  [data-theme="light"] .blot-c { background: #FB7185; opacity: 0.18; }
-  [data-theme="light"] .blot-d { background: #34D399; opacity: 0.16; }
-  [data-theme="light"] .blot-e { background: #FBBF24; opacity: 0.20; }
+  /* Light: warm neutral aurora */
+  [data-theme="light"] .blot-a { background: #CBD5E1; opacity: 0.40; }
+  [data-theme="light"] .blot-b { background: #E2D9C8; opacity: 0.30; }
+  [data-theme="light"] .blot-c { background: #D6C9B6; opacity: 0.24; }
+  [data-theme="light"] .blot-d { background: #C4B9A8; opacity: 0.20; }
+  [data-theme="light"] .blot-e { background: #F0B429; opacity: 0.12; }
 
-  /* Dark: deep aurora */
-  [data-theme="dark"] .blot-a { background: #4F46E5; opacity: 0.28; }
-  [data-theme="dark"] .blot-b { background: #0EA5E9; opacity: 0.22; }
-  [data-theme="dark"] .blot-c { background: #E879A0; opacity: 0.16; }
-  [data-theme="dark"] .blot-d { background: #059669; opacity: 0.14; }
-  [data-theme="dark"] .blot-e { background: #D97706; opacity: 0.14; }
+  /* Dark: deep slate aurora */
+  [data-theme="dark"] .blot-a { background: #334155; opacity: 0.40; }
+  [data-theme="dark"] .blot-b { background: #3D3729; opacity: 0.32; }
+  [data-theme="dark"] .blot-c { background: #2D3748; opacity: 0.28; }
+  [data-theme="dark"] .blot-d { background: #44403C; opacity: 0.22; }
+  [data-theme="dark"] .blot-e { background: #92400E; opacity: 0.16; }
 
   /* Drift animations — gentle float with subtle rotation */
   @keyframes drift1 { 0% { transform: translate(0,0) rotate(0deg); } 100% { transform: translate(28px,16px) rotate(4deg); } }
@@ -3724,8 +3724,10 @@
 
   /* ════════ TOP BAR ════════ */
   .top-bar {
-    height: 60px !important;
-    padding: 0 20px !important;
+    height: calc(60px + env(safe-area-inset-top, 0px)) !important;
+    padding: env(safe-area-inset-top, 0px) 20px 0 !important;
+    align-items: flex-end !important;
+    padding-bottom: 8px !important;
     gap: 12px !important;
     background: color-mix(in srgb, var(--surface) 82%, transparent) !important;
     backdrop-filter: blur(32px) saturate(2.2) !important;
@@ -3738,7 +3740,7 @@
     font-size: 18px !important;
     font-weight: 900 !important;
     letter-spacing: -0.04em !important;
-    background: linear-gradient(118deg, var(--text) 30%, var(--accent) 100%) !important;
+    background: var(--text) !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     background-clip: text !important;
@@ -4470,18 +4472,18 @@
 
   /* ── 1. COLOR PALETTE — semantic tokens ─────────────────────── */
   [data-theme="light"] {
-    --ch-divider:    rgba(24,23,31,0.10);
-    --ch-date-bg:    rgba(94,84,240,0.07);
-    --ch-meta-icon:  rgba(24,23,31,0.30);
-    --ch-panel-bg:   #FAFAFE;
-    --ch-input-bg:   #F4F3FD;
+    --ch-divider:    rgba(28,25,23,0.10);
+    --ch-date-bg:    rgba(71,85,105,0.07);
+    --ch-meta-icon:  rgba(28,25,23,0.30);
+    --ch-panel-bg:   #FDFCF9;
+    --ch-input-bg:   #EEECEA;
   }
   [data-theme="dark"] {
-    --ch-divider:    rgba(236,237,248,0.10);
-    --ch-date-bg:    rgba(123,114,255,0.10);
-    --ch-meta-icon:  rgba(236,237,248,0.28);
-    --ch-panel-bg:   #0F0F1C;
-    --ch-input-bg:   #1A1A2C;
+    --ch-divider:    rgba(245,244,239,0.10);
+    --ch-date-bg:    rgba(148,163,184,0.10);
+    --ch-meta-icon:  rgba(245,244,239,0.28);
+    --ch-panel-bg:   #1C1B17;
+    --ch-input-bg:   #25231E;
   }
 
   /* ── 2. PANEL — refined card base ───────────────────────────── */
