@@ -1593,6 +1593,83 @@
     cursor:pointer; letter-spacing:0.06em;
   }
 
+  /* ── Holographic sheen overlay — gyro/mouse driven ────── */
+  .cv2-sheen {
+    position: absolute; inset: 0; border-radius: inherit;
+    pointer-events: none; z-index: 15; overflow: hidden;
+    background: radial-gradient(ellipse 80% 60% at 50% 35%,
+      rgba(255,255,255,0.20) 0%,
+      rgba(255,255,255,0.07) 38%,
+      transparent 68%);
+    mix-blend-mode: screen;
+    will-change: transform;
+    transform: translate(0px, 0px);
+    transition: transform 0.10s linear;
+  }
+
+  /* ── QR wrapper on expanded card ──────────────────────── */
+  .cv2-qr-wrap {
+    position: relative; flex-shrink: 0;
+    background: #fff; border-radius: 16px; padding: 12px;
+    width: 192px; height: 192px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.12),
+      0 2px 8px rgba(0,0,0,0.30),
+      0 10px 36px rgba(0,0,0,0.45);
+  }
+  .cv2-qr-inner {
+    width: 164px; height: 164px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 4px; overflow: hidden;
+  }
+  .cv2-qr-inner canvas, .cv2-qr-inner img { border-radius: 4px; }
+  /* Moving highlight on the QR face */
+  .cv2-qr-gloss {
+    position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: linear-gradient(135deg,
+      rgba(255,255,255,0.22) 0%,
+      rgba(255,255,255,0.06) 40%,
+      transparent 65%);
+  }
+  .cv2-scan-label {
+    font-size: 8px; font-weight: 800; letter-spacing: 2.2px;
+    text-transform: uppercase;
+  }
+
+  /* ── CUMULUS PASS footer band ─────────────────────────── */
+  .cv2-pass-band {
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 20px 18px;
+  }
+  .cv2-pass-band-label {
+    font-size: 7.5px; font-weight: 800;
+    letter-spacing: 2.8px; text-transform: uppercase;
+    color: var(--cv2-accent, #60A5FA); opacity: 0.72;
+    margin-bottom: 4px;
+  }
+  .cv2-pass-band-uid {
+    font-family: 'DM Mono', 'Menlo', 'Courier New', monospace;
+    font-size: 10px; font-weight: 500;
+    color: rgba(255,255,255,0.26); letter-spacing: 0.8px;
+  }
+  .cv2-pass-mark {
+    width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.85;
+  }
+  .cv2-pass-mark svg { width: 15px; height: 15px; fill: #fff; }
+  /* Perforated separator above pass band */
+  .cv2-pass-sep {
+    height: 1px; margin: 0 20px;
+    background: repeating-linear-gradient(
+      to right,
+      rgba(255,255,255,0.12) 0px, rgba(255,255,255,0.12) 6px,
+      transparent 6px, transparent 10px
+    );
+  }
+
   /* Close X — outside the card, top-right corner of the overlay's content area */
   .card-xl-outer { width:100%; max-width:420px; position:relative; height:min(88dvh,760px); }
   .card-xl-close {
@@ -8481,6 +8558,30 @@ function buildFriendQR(){
   try{ new QRCode(el,{text:myFriendCode(),width:128,height:128,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M}); }catch(e){ el.innerHTML=`<div style="font-size:11px;color:var(--text-muted);word-break:break-all;">${myFriendCode()}</div>`; }
 }
 
+let _sheenHandler=null, _sheenMouseHandler=null, _sheenCard=null;
+
+function initCardSheen(){
+  const sheen=document.getElementById('card-xl-sheen');
+  if(!sheen) return;
+  const card=document.querySelector('.card-xl-v2');
+  if(!card) return;
+  _sheenCard=card;
+  function applySheen(sx,sy){ sheen.style.transform=`translate(${sx}px,${sy}px)`; }
+  _sheenHandler=(e)=>{
+    const g=Math.max(-50,Math.min(50,e.gamma||0));
+    const b=Math.max(-40,Math.min(40,(e.beta||15)-15));
+    applySheen((g/50)*65,(b/40)*50);
+  };
+  _sheenMouseHandler=(e)=>{
+    const r=card.getBoundingClientRect();
+    const x=((e.clientX-r.left)/r.width-0.5)*2;
+    const y=((e.clientY-r.top)/r.height-0.5)*2;
+    applySheen(x*65,y*50);
+  };
+  window.addEventListener('deviceorientation',_sheenHandler);
+  card.addEventListener('mousemove',_sheenMouseHandler);
+}
+
 function openExpandedCard(){
   const old=document.getElementById('card-xl-overlay'); if(old) old.remove();
   const card=state.myCard;
@@ -8538,7 +8639,7 @@ function openExpandedCard(){
              </div>`}
 
         <!-- Dark body — logo, name, stats, then big QR -->
-        <div class="cv2-body">
+        <div class="cv2-body" style="bottom:62px;padding-bottom:8px;">
 
           <!-- Header row: Cumulus logo | level badge -->
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -8569,16 +8670,35 @@ function openExpandedCard(){
           <div style="flex:1;min-height:16px;"></div>
 
           <!-- QR — big, centred at bottom -->
-          <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding-bottom:4px;">
-            <div style="font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:${accentAlpha(accent,0.75)};">Scan to add me on Cumulus</div>
-            <div id="card-xl-qr-el" style="background:#fff;border-radius:12px;padding:10px;width:200px;height:200px;display:flex;align-items:center;justify-content:center;"></div>
-            <div style="font-size:9px;color:rgba(255,255,255,0.22);letter-spacing:0.8px;font-weight:600;">${uid}${areas?` · ${escapeHtml(areas)}`:''}</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding-bottom:8px;">
+            <div class="cv2-scan-label" style="color:${accentAlpha(accent,0.75)};">Scan to add me on Cumulus</div>
+            <div class="cv2-qr-wrap">
+              <div class="cv2-qr-inner" id="card-xl-qr-el"></div>
+              <div class="cv2-qr-gloss"></div>
+            </div>
           </div>
 
         </div>
 
-        <!-- Bottom accent line -->
-        <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:${edgeGrad};z-index:20;"></div>
+        <!-- Perforated separator — sits above pass band -->
+        <div class="cv2-pass-sep" style="position:absolute;bottom:62px;left:0;right:0;margin:0;z-index:10;"></div>
+
+        <!-- CUMULUS PASS footer band -->
+        <div class="cv2-pass-band" style="position:absolute;bottom:0;left:0;right:0;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:10;background:${accentAlpha(accent,0.06)};">
+          <div>
+            <div class="cv2-pass-band-label">Cumulus Pass</div>
+            <div class="cv2-pass-band-uid">${uid}${areas?` · ${escapeHtml(areas)}`:''}</div>
+          </div>
+          <div class="cv2-pass-mark" style="background:${accentAlpha(accent,0.22)};">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="5"/><ellipse cx="12" cy="19" rx="8" ry="4"/></svg>
+          </div>
+        </div>
+
+        <!-- Holographic sheen overlay -->
+        <div class="cv2-sheen" id="card-xl-sheen"></div>
+
+        <!-- Bottom accent stripe -->
+        <div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:${edgeGrad};border-radius:0 0 28px 28px;z-index:20;"></div>
       </div>
     </div>
   </div>`;
@@ -8590,9 +8710,10 @@ function openExpandedCard(){
       ov.classList.add('open');
       const qrEl=document.getElementById('card-xl-qr-el');
       if(qrEl){
-        try{ new QRCode(qrEl,{text:myFriendCode(),width:180,height:180,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M}); }
+        try{ new QRCode(qrEl,{text:myFriendCode(),width:160,height:160,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M}); }
         catch(e){ qrEl.innerHTML=`<div style="font-size:7px;padding:4px;word-break:break-all;color:#000;">${myFriendCode()}</div>`; }
       }
+      initCardSheen();
     });
   });
 }
@@ -8600,6 +8721,8 @@ function openExpandedCard(){
 function closeExpandedCard(){
   const ov=document.getElementById('card-xl-overlay');
   if(!ov) return;
+  if(_sheenHandler){ window.removeEventListener('deviceorientation',_sheenHandler); _sheenHandler=null; }
+  if(_sheenMouseHandler&&_sheenCard){ _sheenCard.removeEventListener('mousemove',_sheenMouseHandler); _sheenMouseHandler=null; _sheenCard=null; }
   ov.classList.remove('open');
   setTimeout(()=>{ if(ov.parentNode) ov.remove(); }, 320);
 }
