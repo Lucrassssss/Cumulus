@@ -6806,6 +6806,180 @@
   .cal-dot-more { font-size: 8px; font-weight: 700; color: var(--accent); line-height: 1; }
   .calendar-cell.today { border-color: var(--accent) !important; background: color-mix(in srgb, var(--accent) 8%, var(--surface-2)) !important; }
 
+  /* ═══════════════════════════════════════════════════════════
+     REDESIGN 6.0 — Landing gutters, top bar, clouds, signup rework,
+     fly-through loading. Fixed margins everywhere.
+     ═══════════════════════════════════════════════════════════ */
+
+  :root { --lp-gutter: 22px; }
+
+  /* ── CONSISTENT LANDING GUTTERS ─────────────────────────── */
+  .lp-nav { padding-left: var(--lp-gutter) !important; padding-right: var(--lp-gutter) !important; }
+  .lp-hero { padding-left: var(--lp-gutter) !important; padding-right: var(--lp-gutter) !important; }
+  .lp-features, .lp-footer { padding-left: var(--lp-gutter) !important; padding-right: var(--lp-gutter) !important; }
+  .lp-nav-inner { max-width: 1160px !important; }
+
+  /* ── MOBILE TOP BAR — balanced, not edge-hugging ────────── */
+  @media (max-width: 600px) {
+    :root { --lp-gutter: 18px; }
+    .lp-nav { padding-top: 11px !important; padding-bottom: 11px !important; }
+    .lp-nav-logo { font-size: 17px !important; }
+    .lp-nav-btn { padding: 8px 15px !important; font-size: 12.5px !important; white-space: nowrap; }
+    /* Hero title: fit two clean lines, no orphan wraps */
+    .lp-hero-title { font-size: 40px !important; letter-spacing: -1.4px !important; line-height: 1.06 !important; }
+    .lp-hero-sub { font-size: 15px !important; }
+    .lp-hero { padding-top: 92px !important; }
+  }
+  @media (max-width: 380px) {
+    .lp-hero-title { font-size: 35px !important; }
+  }
+
+  /* ── LANDING CLOUDS — bigger, softer, more flowing ──────── */
+  .lp-cld {
+    width: 92vw !important;
+    opacity: 0.16 !important;
+    filter: brightness(1.05) saturate(0) blur(1px) !important;
+    animation-duration: calc(26s * var(--ci, 1)) !important;
+  }
+  [data-theme="dark"] .lp-cld {
+    opacity: 0.12 !important;
+    filter: brightness(0.6) saturate(0) blur(1px) !important;
+  }
+  .lp-cld:nth-child(1) { top: 8% !important; }
+  .lp-cld:nth-child(2) { top: 30% !important; }
+  .lp-cld:nth-child(3) { top: 52% !important; }
+  .lp-cld:nth-child(4) { top: 68% !important; }
+  .lp-cld:nth-child(5) { top: 82% !important; }
+
+  /* ── SIGN-UP MODAL — clean, modern, fixed margins ───────── */
+  .lp-signup-modal { padding: 30px 26px 26px !important; border-radius: 24px !important; max-width: 440px !important; }
+  @media (max-width: 600px) {
+    .lp-signup-overlay { padding: 14px !important; align-items: flex-end !important; }
+    .lp-signup-modal { padding: 24px 20px 22px !important; border-radius: 22px !important; max-height: 94dvh !important; }
+  }
+  /* Tab selector — clean segmented control */
+  .gate-type-sel {
+    display: flex !important; gap: 6px !important; padding: 5px !important;
+    background: var(--surface-2) !important; border: 1px solid var(--line) !important;
+    border-radius: 14px !important; margin: 4px 0 20px !important;
+  }
+  .gate-type-btn {
+    flex: 1 !important; padding: 11px 8px !important; border-radius: 10px !important;
+    font-size: 13px !important; font-weight: 700 !important; border: none !important;
+    background: transparent !important; color: var(--text-muted) !important; cursor: pointer !important;
+    transition: background .15s ease, color .15s ease !important; white-space: nowrap !important;
+  }
+  .gate-type-btn.active { background: var(--accent) !important; color: #0A0A0A !important; box-shadow: none !important; transform: none !important; }
+  /* Compact pass preview */
+  .lp-pass-card { padding: 20px !important; min-height: 168px !important; border-radius: 18px !important; }
+  .lp-pass-preview { margin-bottom: 18px !important; }
+  .lp-pass-caption { font-size: 11px !important; margin-top: 9px !important; }
+  /* Header spacing */
+  .lp-form-eyebrow { margin-bottom: 7px !important; }
+  .lp-form-title { font-size: 23px !important; margin-bottom: 6px !important; }
+  .lp-form-sub { margin-bottom: 20px !important; font-size: 13px !important; }
+  /* Clean boxed labeled fields */
+  .gate-field { margin-bottom: 15px !important; }
+  .gate-label {
+    display: block; font-size: 12px; font-weight: 700; color: var(--text-soft);
+    margin-bottom: 7px; letter-spacing: 0.01em;
+  }
+  .gate-input {
+    width: 100%; box-sizing: border-box;
+    background: var(--surface-2);
+    border: 1.5px solid var(--line);
+    border-radius: 12px; padding: 13px 15px;
+    font-family: var(--font-sans); font-size: 15px; font-weight: 500;
+    color: var(--text); outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .gate-input::placeholder { color: var(--text-muted); font-weight: 400; }
+  .gate-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+    background: var(--surface);
+  }
+  textarea.gate-input { resize: vertical; min-height: 74px; line-height: 1.5; }
+  .gate-field-group-label {
+    font-size: 11px; font-weight: 800; color: var(--text-soft);
+    text-transform: uppercase; letter-spacing: 0.07em; margin: 16px 0 8px;
+  }
+  .lp-claim-btn { border-radius: 13px !important; margin-top: 6px !important; }
+
+  /* ── LOADING — FLY-THROUGH THE CLOUDS ───────────────────── */
+  /* Idle: gentle forward breathing so it feels alive while loading */
+  #cloud-veil.cv-active .cv-cloud { animation: cvScroll var(--spd, 35s) linear infinite, cvBreathe 7s ease-in-out infinite; }
+  @keyframes cvBreathe {
+    0%,100% { scale: 1; }
+    50%     { scale: 1.06; }
+  }
+  /* Exit: clouds rush toward + past the viewer (parting up/down) as veil clears */
+  #cloud-veil.cv-phase-part .cv-lane-1 .cv-cloud,
+  #cloud-veil.cv-phase-part .cv-lane-2 .cv-cloud {
+    animation: cvFlyUp 1.5s cubic-bezier(0.45,0,0.2,1) forwards !important;
+  }
+  #cloud-veil.cv-phase-part .cv-lane-3 .cv-cloud {
+    animation: cvFlyThru 1.5s cubic-bezier(0.45,0,0.2,1) forwards !important;
+  }
+  #cloud-veil.cv-phase-part .cv-lane-4 .cv-cloud,
+  #cloud-veil.cv-phase-part .cv-lane-5 .cv-cloud {
+    animation: cvFlyDown 1.5s cubic-bezier(0.45,0,0.2,1) forwards !important;
+  }
+  @keyframes cvFlyThru {
+    0%   { transform: scale(1);   filter: blur(0);    opacity: 0.95; }
+    55%  { opacity: 0.85; }
+    100% { transform: scale(3.4); filter: blur(16px); opacity: 0; }
+  }
+  @keyframes cvFlyUp {
+    0%   { transform: translateY(0) scale(1);            filter: blur(0);    opacity: 0.9; }
+    55%  { opacity: 0.8; }
+    100% { transform: translateY(-46vh) scale(2.9);      filter: blur(15px); opacity: 0; }
+  }
+  @keyframes cvFlyDown {
+    0%   { transform: translateY(0) scale(1);            filter: blur(0);    opacity: 0.9; }
+    55%  { opacity: 0.8; }
+    100% { transform: translateY(46vh) scale(2.9);       filter: blur(15px); opacity: 0; }
+  }
+
+  /* Loading sky — on palette, NO blue. Warm bone (light) / matte black (dark) */
+  .cv-sky {
+    background:
+      radial-gradient(ellipse at 58% 20%, rgba(255,250,235,0.85) 0%, transparent 42%),
+      linear-gradient(180deg, #FCFBF8 0%, #F5F0E4 42%, #ECE4D2 76%, #E4DAC2 100%) !important;
+  }
+  [data-theme="dark"] .cv-sky {
+    background:
+      radial-gradient(ellipse at 55% 26%, rgba(70,58,28,0.55) 0%, transparent 46%),
+      linear-gradient(180deg, #0B0A08 0%, #0F0D07 28%, #0A0906 62%, #050504 100%) !important;
+  }
+  /* Break-of-light glow as clouds part — warm gold, not blue */
+  .cv-glow {
+    background: radial-gradient(circle,
+      rgba(255,255,250,1) 0%, rgba(255,244,214,0.85) 16%,
+      rgba(232,184,75,0.34) 44%, rgba(232,184,75,0.10) 62%, transparent 74%) !important;
+  }
+  [data-theme="dark"] .cv-glow {
+    background: radial-gradient(circle,
+      rgba(255,246,220,0.95) 0%, rgba(232,184,75,0.55) 22%,
+      rgba(200,148,28,0.18) 48%, transparent 70%) !important;
+  }
+  .cv-rays {
+    background: repeating-conic-gradient(from 0deg at 58% 20%,
+      rgba(232,184,75,0.07) 0deg 1.2deg, transparent 1.2deg 7.8deg) !important;
+  }
+  /* Dark clouds visible (moonlit grey) while loading so you SEE them to travel through.
+     No !important on filter → fly-through keyframe blur still animates on exit. */
+  [data-theme="dark"] #cloud-veil .cv-cloud,
+  [data-theme="dark"] #cloud-veil .cv-lane-1 .cv-cloud,
+  [data-theme="dark"] #cloud-veil .cv-lane-2 .cv-cloud,
+  [data-theme="dark"] #cloud-veil .cv-lane-3 .cv-cloud,
+  [data-theme="dark"] #cloud-veil .cv-lane-4 .cv-cloud,
+  [data-theme="dark"] #cloud-veil .cv-lane-5 .cv-cloud {
+    filter: brightness(0.5) saturate(0) contrast(0.95);
+    opacity: 0.82;
+  }
+  [data-theme="light"] #cloud-veil .cv-cloud { filter: brightness(1.02) saturate(0); opacity: 0.95; }
+
 </style>
 </head>
 <body>
@@ -6839,15 +7013,15 @@
   <div class="cv-lane cv-lane-3">
     <div class="cv-cloud" style="--spd:35s;--dly:-5s"></div>
     <div class="cv-cloud" style="--spd:35s;--dly:-23s"></div>
-  </div>v>
+  </div>
   <div class="cv-lane cv-lane-4">
     <div class="cv-cloud" style="--spd:28s;--dly:-11s"></div>
     <div class="cv-cloud" style="--spd:28s;--dly:-25s"></div>
-  </div>v>
+  </div>
   <div class="cv-lane cv-lane-5">
     <div class="cv-cloud" style="--spd:22s;--dly:-6s"></div>
     <div class="cv-cloud" style="--spd:22s;--dly:-17s"></div>
-  </div>v>
+  </div>
 </div>
 
 <div id="gate-root"></div>
@@ -7789,10 +7963,10 @@ function renderGate(prefillName,prefillEmail){
         <!-- Type selector: Attendee vs Host -->
         <div class="gate-type-sel">
           <button class="gate-type-btn active" id="gt-attendee" onclick="switchSignupType('attendee')">
-            👥 Join as Attendee
+            Join as attendee
           </button>
           <button class="gate-type-btn" id="gt-host" onclick="switchSignupType('host')">
-            🎪 Become a Host
+            Become a host
           </button>
         </div>
 
@@ -7824,32 +7998,33 @@ function renderGate(prefillName,prefillEmail){
         <h3 class="lp-form-title" id="gate-form-title">Claim your pass</h3>
         <p class="lp-form-sub" id="gate-form-sub">One profile. Every event in London. Your community, waiting.</p>
 
-        <div class="lp-float-field">
-          <input id="gate-name" class="lp-float-input" placeholder=" " value="${escapeHtml(prefillName||'')}" autocomplete="name" oninput="lpUpdatePassName(this.value)"/>
-          <label class="lp-float-label">Your full name</label>
-          <div class="lp-float-line"></div>
+        <div class="gate-field">
+          <label class="gate-label" for="gate-name">Full name</label>
+          <input id="gate-name" class="gate-input" placeholder="e.g. Alex Rivera" value="${escapeHtml(prefillName||'')}" autocomplete="name" oninput="lpUpdatePassName(this.value)"/>
         </div>
-        <div class="lp-float-field">
-          <input id="gate-email" class="lp-float-input" type="email" placeholder=" " value="${escapeHtml(prefillEmail||'')}" autocomplete="email"/>
-          <label class="lp-float-label">Email address</label>
-          <div class="lp-float-line"></div>
+        <div class="gate-field">
+          <label class="gate-label" for="gate-email">Email address</label>
+          <input id="gate-email" class="gate-input" type="email" placeholder="you@email.com" value="${escapeHtml(prefillEmail||'')}" autocomplete="email"/>
         </div>
 
         <!-- Host-only extra fields -->
         <div id="gate-host-fields" style="display:none;" class="gate-host-extra">
-          <div class="lp-float-field" style="margin-top:4px;">
-            <input id="gate-biz-name" class="lp-float-input" placeholder=" " autocomplete="organization"/>
-            <label class="lp-float-label">Venue or business name</label>
-            <div class="lp-float-line"></div>
+          <div class="gate-field">
+            <label class="gate-label" for="gate-biz-name">Venue or business name</label>
+            <input id="gate-biz-name" class="gate-input" placeholder="e.g. The Sketch House" autocomplete="organization"/>
           </div>
-          <div style="margin:12px 0 4px;font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.07em;">Event types you'd host</div>
+          <div class="gate-field-group-label">Event types you'd host</div>
           <div class="host-cat-grid" id="host-cat-grid">
             ${['Creative','Gaming','Movie Nights','Board Games','Meetups','Food &amp; Drink','Live Music','Wellness &amp; Outdoors','Tech &amp; Talks'].map(c=>`<button class="host-cat-chip" data-hostcat="${escapeHtml(c.replace(/&amp;/g,'&'))}" onclick="toggleHostCat('${escapeHtml(c.replace(/&amp;/g,'&'))}')">${c}</button>`).join('')}
           </div>
-          <div style="margin:12px 0 4px;font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.07em;">About your events</div>
-          <textarea id="gate-host-desc" class="lp-float-textarea" placeholder="What kind of events do you run? Describe the vibe, size, and frequency…" rows="3" maxlength="400"></textarea>
-          <div style="margin:12px 0 4px;font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.07em;">Why do you want to host on Cumulus?</div>
-          <textarea id="gate-why-host" class="lp-float-textarea" placeholder="Tell us what you're hoping to achieve…" rows="2" maxlength="300"></textarea>
+          <div class="gate-field" style="margin-top:15px;">
+            <label class="gate-label" for="gate-host-desc">About your events</label>
+            <textarea id="gate-host-desc" class="gate-input" placeholder="What kind of events do you run? Describe the vibe, size, and frequency…" rows="3" maxlength="400"></textarea>
+          </div>
+          <div class="gate-field">
+            <label class="gate-label" for="gate-why-host">Why host on Cumulus?</label>
+            <textarea id="gate-why-host" class="gate-input" placeholder="Tell us what you're hoping to achieve…" rows="2" maxlength="300"></textarea>
+          </div>
         </div>
 
         <p id="gate-field-error" class="gate-field-error"></p>
