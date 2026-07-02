@@ -7023,6 +7023,22 @@
   }
   [data-theme="light"] #cloud-veil .cv-cloud { filter: brightness(1.02) saturate(0); opacity: 0.95; }
 
+  /* ── CUMULUS PASS — tap to spin 360° (TF2 level-icon gimmick) ── */
+  .prof-card-section { perspective: 1200px; }
+  .profile-id-card {
+    cursor: pointer !important;
+    transform-style: preserve-3d;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .profile-id-card.pass-spin {
+    animation: passSpin 0.8s cubic-bezier(0.4, 0.15, 0.2, 1) !important;
+  }
+  @keyframes passSpin {
+    from { transform: rotateY(0deg); }
+    to   { transform: rotateY(360deg); }
+  }
+
 </style>
 </head>
 <body>
@@ -10924,6 +10940,16 @@ function badgeCellHtml(name,desc,glyph,color,earned,progressText){ return `<div 
 function trophyHtml(glyph,metal,glow,earned){ if(!earned) return `<div class="trophy-wrap"><div class="trophy-coin locked"><span>${glyph}</span><span class="trophy-lock">${LOCK_SVG}</span></div><div class="trophy-stand locked"></div></div>`; return `<div class="trophy-wrap"><div class="trophy-coin" style="background:radial-gradient(circle at 32% 28%,rgba(255,255,255,0.65),rgba(255,255,255,0) 40%),${metal};box-shadow:0 8px 18px rgba(0,0,0,0.3),0 0 14px ${hexToRgba(glow,0.4)},inset 0 -5px 8px rgba(0,0,0,0.2),inset 0 3px 6px rgba(255,255,255,0.35);"><span class="trophy-shine"></span><span style="position:relative;color:#1B1D21;">${glyph}</span></div><div class="trophy-stand" style="background:${glow};filter:brightness(0.65);"></div></div>`; }
 function trophyCellHtml(name,desc,glyph,metal,glow,tier,earned,progressText){ return `<div class="panel badge-cell ${earned?'earned':'locked'}" style="--corner:${earned?glow:'var(--line)'};">${trophyHtml(glyph,metal,glow,earned)}${tier?`<div class="trophy-tier" style="color:${earned?glow:'var(--text-muted)'};">${tier}</div>`:''}<div class="badge-name">${name}</div><div class="badge-desc">${desc}</div>${(!earned&&progressText)?`<div class="badge-progress">${progressText}</div>`:''}</div>`; }
 
+// Fun gimmick: tap the Cumulus Pass to spin it a full 360° (TF2 level-icon style)
+function spinPass(el){
+  if(!el || el.classList.contains('pass-spin')) return; // ignore taps mid-spin
+  el.classList.add('pass-spin');
+  el.addEventListener('animationend', function done(){
+    el.classList.remove('pass-spin');
+    el.removeEventListener('animationend', done);
+  });
+}
+
 function renderProfile(){
   const myEvents=getMyEvents(); const myCats=getMyCategories(); const count=myEvents.length;
   const card=state.myCard;
@@ -10964,7 +10990,7 @@ function renderProfile(){
     const photoSticker=profilePhoto
       ?`<div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid ${accent};flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><img src="${profilePhoto}" style="width:100%;height:100%;object-fit:cover;display:block;"/></div>`
       :`<div style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${accent}22;border:2px solid ${accent}55;flex-shrink:0;font-size:18px;font-weight:800;color:${accent};">${initStr}</div>`;
-    return `<div class="id-card profile-id-card prof-avatar-float" style="background:${bg};border:${borderStyle};box-shadow:${shadowStyle};">
+    return `<div class="id-card profile-id-card prof-avatar-float" onclick="spinPass(this)" title="Tap to spin" style="background:${bg};border:${borderStyle};box-shadow:${shadowStyle};">
       <div style="position:absolute;inset:0;pointer-events:none;color:${accent};opacity:${ext.patternOpacity||0.35};">${pat}</div>
       <div class="ce-card-shine"></div>
       <div style="position:relative;z-index:2;display:flex;flex-direction:column;height:100%;">
@@ -11026,8 +11052,7 @@ function renderProfile(){
     ? `${earnedCount} badge${earnedCount!==1?'s':''} earned · ${nextLv.min-earnedCount} more to reach ${nextLv.title}`
     : '✦ Max rank achieved';
 
-  return `<button class="back-btn" onclick="goBack()">←</button>
-
+  return `
     <!-- Card -->
     <div class="prof-card-section">
       ${profileCardHtml(card,cardExt)}
@@ -11272,7 +11297,7 @@ function renderCalendar(){
     const dots=dayEvents.length?`<div class="cal-dots">${dayEvents.slice(0,dotN).map(ev=>{const cc=(CATS[ev.category]||{color:'var(--accent)'}).color;return `<span class="cal-dot" style="background:${cc};"></span>`;}).join('')}${dayEvents.length>4?`<span class="cal-dot-more">+${dayEvents.length-4}</span>`:''}</div>`:'';
     return `<div class="calendar-cell ${isToday?'today':''} ${dayEvents.length?'has-events':''} pointer" onclick="openCalendarDay(${day})" style="cursor:pointer;"><div class="calendar-day-num">${day}</div>${dots}</div>`;
   }).join('')).join('');
-  return `<button class="back-btn" onclick="goBack()">←</button>
+  return `
     <div class="connect-header"><h2>${MONTH_NAMES[CALENDAR_MONTH]} ${CALENDAR_YEAR}</h2><p>What's on this month</p></div>
     <div class="calendar-scroll"><div class="calendar-inner">
       <div class="calendar-header-row">${WEEKDAY_LABELS.map(d=>`<div class="calendar-weekday">${d}</div>`).join('')}</div>
