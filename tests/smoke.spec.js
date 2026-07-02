@@ -33,12 +33,12 @@ async function setView(page, view) {
 
 test.describe('Cumulus smoke', () => {
 
-  test('landing renders with hero + separate nav auth (Log in / Sign up)', async ({ page }) => {
+  test('landing renders with hero + separate nav auth (Log in / Request Access)', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('.lp-hero-title')).toContainText('Find your people');
     const nav = page.locator('.lp-nav');
     await expect(nav.getByRole('button', { name: 'Log in', exact: true })).toBeVisible();
-    await expect(nav.getByRole('button', { name: 'Sign up', exact: true })).toBeVisible();
+    await expect(nav.getByRole('button', { name: 'Request Access', exact: true })).toBeVisible();
     await expect(page.locator('.lp-nav-auth button')).toHaveCount(2);
     await expect(page.locator('.lp-hero-actions .lp-hero-btn-primary')).toBeVisible();
   });
@@ -75,6 +75,27 @@ test.describe('Cumulus smoke', () => {
     await expect(page.locator('#gate-form-title')).toHaveText(/Log in/i);
     await page.evaluate(() => switchAuthMode('signup'));
     await expect(page.locator('#gate-name-field')).toBeVisible();
+  });
+
+  test('members-only: curator code gates new attendee sign-up', async ({ page }) => {
+    await page.goto('/');
+    await page.evaluate(() => showLpSignup());
+    // Curator field shows for attendee sign-up, hides on Log in / Host
+    await expect(page.locator('#gate-curator-field')).toBeVisible();
+    await page.evaluate(() => switchAuthMode('login'));
+    await expect(page.locator('#gate-curator-field')).toBeHidden();
+    await page.evaluate(() => { switchAuthMode('signup'); switchSignupType('host'); });
+    await expect(page.locator('#gate-curator-field')).toBeHidden();
+    await page.evaluate(() => switchSignupType('attendee'));
+    await expect(page.locator('#gate-curator-field')).toBeVisible();
+    // Bad / empty code is rejected with a curator error
+    await page.fill('#gate-name', 'Nova');
+    await page.fill('#gate-email', 'nova@example.com');
+    await page.evaluate(() => submitGate());
+    await expect(page.locator('#gate-field-error')).toContainText(/curator code/i);
+    // A well-formed code clears the gate (validateCuratorCode returns valid offline)
+    const passed = await page.evaluate(async () => (await validateCuratorCode('CUR-AB12-CD34')).valid);
+    expect(passed).toBeTruthy();
   });
 
   test('enter app → 4-tab bottom nav', async ({ page }) => {

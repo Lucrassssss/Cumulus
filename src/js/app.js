@@ -462,7 +462,8 @@ const EMAIL_PATTERN=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 let state={view:'browse',selectedEventId:null,selectedCategory:'all',calendarDay:null,
   userId:null,
   profileName:'',profileEmail:'',profileId:null,specialBadges:[],theme:'light',
-  editingProfile:false,myCard:null,rsvps:{},attendeeCards:{},chats:{},friends:[],friendsOnly:false,goingOpen:{},liveOnly:false,hotOnly:false};
+  editingProfile:false,myCard:null,rsvps:{},attendeeCards:{},chats:{},friends:[],friendsOnly:false,goingOpen:{},liveOnly:false,hotOnly:false,
+  curatorVerified:false,curatorCode:null,curatorTier:null,checkedInEventId:null};
 let cardDraft={theme:'obsidian',bgStyle:'obsidian',accentColor:'#CBA43A',pattern:'constellation',patternOpacity:0.35,bio:'',interests:'',fact:'',motto:'',photo:'',areas:[]};
 let cardEditorEventId=null;
 let lmap=null,lmapFitted=false;
@@ -782,7 +783,7 @@ function renderGate(prefillName,prefillEmail){
         </div>
         <div class="lp-nav-auth">
           <button class="lp-nav-login" onclick="showLpLogin()">Log in</button>
-          <button class="btn lp-nav-btn" onclick="showLpSignup()">Sign up</button>
+          <button class="btn lp-nav-btn" onclick="showLpSignup()">Request Access</button>
         </div>
       </div>
     </nav>
@@ -811,19 +812,19 @@ function renderGate(prefillName,prefillEmail){
       <div class="lp-hero-content">
         <div class="lp-hero-kicker">
           <span class="lp-live-dot"></span>
-          London's community events platform
+          London · Invite-only social club
         </div>
-        <h1 class="lp-hero-title">Find your people.<br><span class="lp-hero-gradient">Know your city.</span></h1>
-        <p class="lp-hero-sub">Cumulus is where Londoners discover what's happening in their neighbourhood, meet their people in person, and build real connections — one shared evening at a time.</p>
+        <h1 class="lp-hero-title">Find your people.<br><span class="lp-hero-gradient">Unlock the city.</span></h1>
+        <p class="lp-hero-sub">Cumulus is London's members-only social club — a live map of the city's best-kept events. Every pin is visible; the perks behind them (guestlists, complimentary drinks, secret rooms) unlock with a curator code or a check-in at the door.</p>
         <div class="lp-hero-actions">
-          <button class="btn lp-hero-btn-primary" onclick="showLpSignup()">Get your free pass →</button>
-          <button class="btn btn-outline lp-hero-btn-secondary" onclick="document.getElementById('lp-features-anchor').scrollIntoView({behavior:'smooth'})">See how it works ↓</button>
+          <button class="btn lp-hero-btn-primary" onclick="showLpSignup()">Unlock the Map →</button>
+          <button class="btn btn-outline lp-hero-btn-secondary" onclick="document.getElementById('lp-features-anchor').scrollIntoView({behavior:'smooth'})">How it works ↓</button>
         </div>
         <div class="lp-trust-strip">
-          <span>Digital pass</span>
-          <span>Find your crowd</span>
-          <span>Pre-event chats</span>
-          <span>Friend tracking</span>
+          <span>Invite only</span>
+          <span>Curator codes</span>
+          <span>Secret guestlists</span>
+          <span>Members' perks</span>
         </div>
       </div>
       <div class="lp-hero-scroll-hint" onclick="document.getElementById('lp-features-anchor').scrollIntoView({behavior:'smooth'})">
@@ -962,7 +963,7 @@ function renderGate(prefillName,prefillEmail){
 
         <!-- Auth mode: Sign up vs Log in -->
         <div class="auth-mode-sel">
-          <button class="auth-mode-btn active" id="am-signup" onclick="switchAuthMode('signup')">Sign up</button>
+          <button class="auth-mode-btn active" id="am-signup" onclick="switchAuthMode('signup')">Request Access</button>
           <button class="auth-mode-btn" id="am-login" onclick="switchAuthMode('login')">Log in</button>
         </div>
 
@@ -1000,9 +1001,9 @@ function renderGate(prefillName,prefillEmail){
           <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">Tell us about your venue or events. Applications are reviewed by our team — approved hosts can post public events, sell tickets, and access host analytics.</div>
         </div>
 
-        <div class="lp-form-eyebrow" id="gate-form-eyebrow">Free · Takes 20 seconds</div>
-        <h3 class="lp-form-title" id="gate-form-title">Claim your pass</h3>
-        <p class="lp-form-sub" id="gate-form-sub">One profile. Every event in London. Your community, waiting.</p>
+        <div class="lp-form-eyebrow" id="gate-form-eyebrow">Invite only · Takes 20 seconds</div>
+        <h3 class="lp-form-title" id="gate-form-title">Request your access</h3>
+        <p class="lp-form-sub" id="gate-form-sub">Cumulus is members-only. Enter your curator code to unlock the map — or check in at any venue to earn one.</p>
 
         <div class="gate-field" id="gate-name-field">
           <label class="gate-label" for="gate-name">Full name</label>
@@ -1011,6 +1012,11 @@ function renderGate(prefillName,prefillEmail){
         <div class="gate-field">
           <label class="gate-label" for="gate-email">Email address</label>
           <input id="gate-email" class="gate-input" type="email" placeholder="you@email.com" value="${escapeHtml(prefillEmail||'')}" autocomplete="email"/>
+        </div>
+        <div class="gate-field" id="gate-curator-field">
+          <label class="gate-label" for="gate-curator">Curator code</label>
+          <input id="gate-curator" class="gate-input gate-curator-input" placeholder="CUR-XXXX-XXXX" autocomplete="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()"/>
+          <p class="gate-fineprint">A code from a Cumulus curator or venue host. No code yet? Check in at any listed venue to receive one.</p>
         </div>
 
         <!-- Host-only extra fields -->
@@ -1035,16 +1041,16 @@ function renderGate(prefillName,prefillEmail){
 
         <p id="gate-field-error" class="gate-field-error"></p>
         <button class="lp-claim-btn" onclick="submitGate()">
-          <span class="lp-claim-btn-text" id="gate-claim-label">Join the community →</span>
+          <span class="lp-claim-btn-text" id="gate-claim-label">Unlock the map →</span>
           <div class="lp-claim-shimmer"></div>
         </button>
 
         <div class="lp-form-trust" id="gate-trust-strip">
-          <span>No spam, ever</span>
+          <span>Discreet, always</span>
           <span>·</span>
-          <span>Free forever</span>
+          <span>Members keep 100%</span>
           <span>·</span>
-          <span>Delete anytime</span>
+          <span>Leave anytime</span>
         </div>
       </div>
     </div>
@@ -1091,6 +1097,7 @@ function switchAuthMode(mode) {
   hide('gate-attendee-preview', isLogin || _signupType === 'host');
   hide('gate-host-preview', isLogin || _signupType !== 'host');
   hide('gate-host-fields', isLogin || _signupType !== 'host');
+  _updateCuratorVisibility();
   const eyebrow = document.getElementById('gate-form-eyebrow');
   const title   = document.getElementById('gate-form-title');
   const sub     = document.getElementById('gate-form-sub');
@@ -1108,6 +1115,14 @@ function switchAuthMode(mode) {
   }
 }
 
+// The curator code is required only when a NEW member is requesting access
+// as an attendee — not on login, and not on a host application (hosts are
+// vetted through the review queue instead).
+function _updateCuratorVisibility() {
+  const el = document.getElementById('gate-curator-field');
+  if (el) el.style.display = (_authMode === 'signup' && _signupType === 'attendee') ? '' : 'none';
+}
+
 function switchSignupType(type) {
   _signupType = type;
   _hostCats = [];
@@ -1116,6 +1131,7 @@ function switchSignupType(type) {
   document.getElementById('gate-attendee-preview').style.display = type === 'attendee' ? '' : 'none';
   document.getElementById('gate-host-preview').style.display = type === 'host' ? '' : 'none';
   document.getElementById('gate-host-fields').style.display = type === 'host' ? '' : 'none';
+  _updateCuratorVisibility();
   const eyebrow = document.getElementById('gate-form-eyebrow');
   const title   = document.getElementById('gate-form-title');
   const sub     = document.getElementById('gate-form-sub');
@@ -1128,11 +1144,11 @@ function switchSignupType(type) {
     if (label)   label.textContent   = 'Submit application →';
     if (trust)   trust.innerHTML     = '<span>Free to apply</span><span>·</span><span>Reviewed within 48 hrs</span><span>·</span><span>No lock-in</span>';
   } else {
-    if (eyebrow) eyebrow.textContent = 'Free · Takes 20 seconds';
-    if (title)   title.textContent   = 'Claim your pass';
-    if (sub)     sub.textContent     = 'One profile. Every event in London. Your community, waiting.';
-    if (label)   label.textContent   = 'Join the community →';
-    if (trust)   trust.innerHTML     = '<span>No spam, ever</span><span>·</span><span>Free forever</span><span>·</span><span>Delete anytime</span>';
+    if (eyebrow) eyebrow.textContent = 'Invite only · Takes 20 seconds';
+    if (title)   title.textContent   = 'Request your access';
+    if (sub)     sub.textContent     = 'Cumulus is members-only. Enter your curator code to unlock the map — or check in at any venue to earn one.';
+    if (label)   label.textContent   = 'Unlock the map →';
+    if (trust)   trust.innerHTML     = '<span>Discreet, always</span><span>·</span><span>Members keep 100%</span><span>·</span><span>Leave anytime</span>';
   }
   // Reset chip selections
   document.querySelectorAll('.host-cat-chip').forEach(c => c.classList.remove('active'));
@@ -1208,6 +1224,11 @@ async function submitGate(){
     if(!hostDesc){ gateErr('Please add a brief description of your events.'); return; }
   }
 
+  // Curator code — read here, validated below only once we know this is a
+  // brand-new attendee (existing members logging back in don't need one).
+  const curatorCode = (!isLogin && _signupType==='attendee')
+    ? (document.getElementById('gate-curator')?.value||'').trim() : '';
+
   // Show loading state
   const btn=document.querySelector('.lp-claim-btn');
   const resetBtn=(labelText)=>{ if(btn){ btn.disabled=false; btn.querySelector('#gate-claim-label').textContent=labelText; } };
@@ -1231,6 +1252,21 @@ async function submitGate(){
     _restoreUserFromRow(existing);
     showToast('Welcome back — you already have an account','info');
   } else {
+    // NEW member — members-only gate: a new attendee needs a valid curator
+    // code (a venue check-in is the alternative way in, handled in-app).
+    if(_signupType==='attendee'){
+      const cur = await validateCuratorCode(curatorCode);
+      if(!cur.valid){
+        resetBtn('Unlock the map →');
+        gateErr(cur.reason==='inactive'
+          ? 'That curator code is no longer active — ask your host for a current one.'
+          : 'Enter a valid curator code (CUR-XXXX-XXXX), or check in at a venue to receive one.');
+        return;
+      }
+      state.curatorVerified = true;
+      state.curatorCode = cur.code;
+      state.curatorTier = cur.tier || 'standard';
+    }
     // NEW user — create in Supabase
     state.profileName=name;
     state.profileEmail=email;
@@ -1244,7 +1280,7 @@ async function submitGate(){
       if(created) state.userId=created.id;
     }catch(e){
       console.error('Sign up failed:',e);
-      resetBtn('Join the community →');
+      resetBtn('Unlock the map →');
       gateErr('Could not create your account — please try again.');
       return;
     }
