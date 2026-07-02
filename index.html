@@ -2925,7 +2925,7 @@
   .section-title::before { width: 5px; height: 5px; }
 
   /* Profile card: static, no hover lift (View + QR buttons handle it) */
-  .profile-id-card:hover:not(.pass-spin) { transform: none !important; box-shadow: inherit !important; }
+  .profile-id-card:hover { transform: none !important; box-shadow: inherit !important; }
 
   /* Stat boxes: less aggressive colour on numbers */
   .stat-num { font-size: 26px; font-weight: 700; color: var(--text); }
@@ -7023,24 +7023,118 @@
   }
   [data-theme="light"] #cloud-veil .cv-cloud { filter: brightness(1.02) saturate(0); opacity: 0.95; }
 
-  /* ── CUMULUS PASS — tap to spin 360° (TF2 level-icon gimmick) ── */
-  .prof-card-section { perspective: 1200px; }
-  .profile-id-card {
-    cursor: pointer !important;
-    transform-style: preserve-3d;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
+  /* ═══════════════════════════════════════════════════════════
+     CUMULUS PASS — flagship membership card (cpass) + badge picker
+     ═══════════════════════════════════════════════════════════ */
+  .cpass-card {
+    position: relative; width: 100%; height: 100%;
+    border-radius: 26px; overflow: hidden;
+    background:
+      radial-gradient(120% 78% at 50% -12%, var(--acc-soft), transparent 55%),
+      linear-gradient(180deg, #151515 0%, #0C0C0C 44%, #070707 100%);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06);
+    display: flex; flex-direction: column; gap: 13px;
+    padding: 20px 20px calc(15px + env(safe-area-inset-bottom,0px));
+    color: #F4F1EA; isolation: isolate;
   }
-  .profile-id-card.pass-spin {
-    /* one continuous, GPU-composited rotation — fast + buttery, no mid stops */
-    animation: passSpin 0.42s cubic-bezier(0.16, 0.84, 0.3, 1) both !important;
-    will-change: transform;
-    transform: translateZ(0);        /* own compositor layer → 60fps */
-    backface-visibility: visible;
+  .cpass-ambient {
+    position: absolute; top: -30%; left: 50%; transform: translateX(-50%);
+    width: 130%; height: 60%; pointer-events: none; z-index: 0;
+    background: radial-gradient(circle, var(--acc-glow), transparent 62%); opacity: 0.7;
   }
-  @keyframes passSpin {
-    from { transform: translateZ(0) rotateY(0deg); }
-    to   { transform: translateZ(0) rotateY(360deg); }
+  .cpass-card > *:not(.cpass-ambient):not(.cpass-sheen) { position: relative; z-index: 1; }
+
+  .cpass-head { display: flex; align-items: center; justify-content: space-between; padding-right: 44px; }
+  .cpass-logo { display: flex; align-items: center; gap: 8px; }
+  .cpass-logo-mark { width: 24px; height: 24px; border-radius: 7px; display:flex; align-items:center; justify-content:center; }
+  .cpass-logo-mark svg { width: 15px; height: 15px; fill: #0A0A0A; }
+  .cpass-logo-text { font-size: 16px; font-weight: 900; letter-spacing: -0.02em; }
+  .cpass-tier { display:inline-flex; align-items:center; gap:6px; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; padding: 5px 11px; border-radius: 999px; border: 1px solid; }
+  .cpass-tier-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  .cpass-id { display: flex; align-items: center; gap: 13px; }
+  .cpass-avatar { width: 54px; height: 54px; border-radius: 50%; overflow: hidden; border: 2px solid; flex-shrink: 0; display:flex; align-items:center; justify-content:center; }
+  .cpass-avatar img { width:100%; height:100%; object-fit: cover; }
+  .cpass-avatar-mono { font-size: 20px; font-weight: 800; }
+  .cpass-id-text { min-width: 0; }
+  .cpass-name { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cpass-sub { font-size: 12.5px; color: rgba(244,241,234,0.55); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .cpass-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 11px; }
+  .cpass-section-label { font-size: 10.5px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(244,241,234,0.5); }
+  .cpass-edit { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); color: var(--acc); font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+  .cpass-edit:hover { background: rgba(255,255,255,0.12); }
+  .cpass-badges { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  .cpass-badge { display: flex; flex-direction: column; align-items: center; gap: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 14px 6px 11px; cursor: pointer; transition: transform .15s ease, background .15s ease, border-color .15s ease; }
+  .cpass-badge:hover { transform: translateY(-2px); background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.16); }
+  .cpass-coin { width: 52px; height: 52px; border-radius: 50%; display:flex; align-items:center; justify-content:center; position: relative;
+    background: radial-gradient(circle at 33% 27%, rgba(255,255,255,0.78), rgba(255,255,255,0) 46%), var(--bc);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.45), inset 0 -4px 8px rgba(0,0,0,0.28), inset 0 3px 6px rgba(255,255,255,0.4), 0 0 20px var(--bcg);
+    border: 1.5px solid rgba(255,255,255,0.35); }
+  .cpass-coin-glyph { position: relative; font-size: 23px; font-weight: 800; color: #0A0A0A; line-height: 1; }
+  .cpass-coin-shine { position:absolute; inset:0; border-radius:50%; background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, transparent 42%); pointer-events:none; }
+  .cpass-badge-name { font-size: 10px; font-weight: 700; color: rgba(244,241,234,0.82); text-align: center; line-height: 1.15; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cpass-badge-empty { border-style: dashed; border-color: rgba(255,255,255,0.16); background: transparent; }
+  .cpass-coin-empty { width: 52px; height: 52px; border-radius: 50%; display:flex; align-items:center; justify-content:center; font-size: 26px; font-weight: 300; color: rgba(244,241,234,0.4); border: 1.5px dashed rgba(255,255,255,0.2); }
+  .cpass-badge-empty .cpass-badge-name { color: rgba(244,241,234,0.45); }
+
+  .cpass-stats { display: flex; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; }
+  .cpass-stat { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; padding: 11px 4px; border-right: 1px solid rgba(255,255,255,0.07); }
+  .cpass-stat:last-child { border-right: none; }
+  .cpass-stat-num { font-size: 19px; font-weight: 800; color: #F4F1EA; }
+  .cpass-stat-label { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(244,241,234,0.5); }
+
+  .cpass-qr-block { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: auto; }
+  .cpass-qr-frame { background: #fff; border-radius: 16px; padding: 11px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); line-height: 0; }
+  .cpass-qr { width: 150px; height: 150px; }
+  .cpass-qr img, .cpass-qr canvas { display:block; width:150px !important; height:150px !important; }
+  .cpass-qr-label { font-size: 11.5px; font-weight: 600; color: rgba(244,241,234,0.6); }
+
+  .cpass-foot { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .cpass-foot-label { font-size: 11px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(244,241,234,0.9); }
+  .cpass-foot-uid { font-size: 10.5px; color: rgba(244,241,234,0.45); font-family: ui-monospace,monospace; margin-top: 2px; }
+  .cpass-foot-mark { width: 30px; height: 30px; border-radius: 9px; display:flex; align-items:center; justify-content:center; }
+  .cpass-foot-mark svg { width: 17px; height: 17px; fill: currentColor; }
+
+  .cpass-sheen { position:absolute; inset:-40%; z-index: 3; pointer-events:none; opacity: 0.45; mix-blend-mode: overlay;
+    background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.5) 48%, rgba(255,255,255,0.1) 54%, transparent 62%);
+    transition: transform 0.1s linear; }
+  .cpass-edge { position:absolute; bottom:0; left:0; right:0; height: 4px; z-index: 4; }
+
+  /* Badge picker sheet */
+  .cpass-picker-overlay { position: fixed; inset: 0; z-index: 10050; background: rgba(0,0,0,0.6); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+  .cpass-picker-overlay.open { opacity: 1; pointer-events: all; }
+  .cpass-picker { width: 100%; max-width: 480px; max-height: 82dvh; background: var(--surface); border: 1px solid var(--line); border-radius: 24px 24px 0 0; display: flex; flex-direction: column; padding: 20px 18px calc(16px + env(safe-area-inset-bottom,0px)); transform: translateY(18px); transition: transform .24s cubic-bezier(0.22,1,0.36,1); }
+  .cpass-picker-overlay.open .cpass-picker { transform: translateY(0); }
+  @media (min-width: 600px){ .cpass-picker-overlay { align-items: center; } .cpass-picker { border-radius: 24px; } }
+  .bpick-head { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom: 16px; }
+  .bpick-title { font-size: 18px; font-weight: 800; color: var(--text); }
+  .bpick-help { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+  .bpick-close { width:30px; height:30px; border-radius:50%; background: var(--surface-2); border:1px solid var(--line); color: var(--text-muted); font-size:15px; cursor:pointer; flex-shrink:0; }
+  .bpick-scroll { overflow-y: auto; flex: 1; margin: 0 -4px; padding: 0 4px; }
+  .bpick-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  .bpick-locked-label { font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin: 18px 4px 10px; }
+  .bpick-cell { position: relative; display:flex; flex-direction:column; align-items:center; gap:6px; background: var(--surface-2); border: 1.5px solid var(--line); border-radius: 14px; padding: 13px 6px 10px; cursor: pointer; transition: border-color .15s, background .15s, transform .12s; }
+  .bpick-cell:hover:not(.locked) { transform: translateY(-2px); }
+  .bpick-cell.chosen { border-color: var(--bc); background: color-mix(in srgb, var(--bc) 13%, transparent); }
+  .bpick-cell.locked { opacity: 0.4; cursor: not-allowed; }
+  .bpick-coin { width: 46px; height: 46px; border-radius: 50%; display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(circle at 33% 27%, rgba(255,255,255,0.7), rgba(255,255,255,0) 46%), var(--bc);
+    box-shadow: inset 0 -3px 6px rgba(0,0,0,0.25), inset 0 2px 4px rgba(255,255,255,0.4); border: 1.5px solid rgba(255,255,255,0.3); }
+  .bpick-coin-glyph { font-size: 20px; font-weight: 800; color: #0A0A0A; }
+  .bpick-name { font-size: 11px; font-weight: 700; color: var(--text); text-align:center; line-height: 1.2; }
+  .bpick-kind { font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+  .bpick-check { position:absolute; top: 7px; right: 7px; width: 18px; height: 18px; border-radius: 50%; background: var(--bc); color: #0A0A0A; font-size: 11px; font-weight: 800; display:flex; align-items:center; justify-content:center; }
+  .bpick-lock { position:absolute; top: 7px; right: 7px; font-size: 11px; }
+  .bpick-empty { grid-column: 1/-1; text-align:center; color: var(--text-muted); font-size: 13px; padding: 24px 0; }
+  .bpick-done { width: 100%; margin-top: 16px; }
+
+  /* Short screens: keep the whole pass on one screen */
+  @media (max-height: 720px) {
+    .cpass-qr { width: 122px; height: 122px; }
+    .cpass-qr img, .cpass-qr canvas { width:122px !important; height:122px !important; }
+    .cpass-card { gap: 10px; }
   }
 
 </style>
@@ -10774,7 +10868,7 @@ let _sheenHandler=null, _sheenMouseHandler=null, _sheenCard=null;
 function initCardSheen(){
   const sheen=document.getElementById('card-xl-sheen');
   if(!sheen) return;
-  const card=document.querySelector('.card-xl-v2');
+  const card=document.querySelector('.cpass-card');
   if(!card) return;
   _sheenCard=card;
   function applySheen(sx,sy){ sheen.style.transform=`translate(${sx}px,${sy}px)`; }
@@ -10793,6 +10887,30 @@ function initCardSheen(){
   card.addEventListener('mousemove',_sheenMouseHandler);
 }
 
+// ── Badges: unified list + earned status + chosen "featured" set ──────────
+function getAllBadges(){
+  const myEvents=getMyEvents(); const myCats=getMyCategories();
+  const list=[];
+  MILESTONE_BADGES.forEach(b=>list.push({id:b.id,name:b.name,glyph:b.glyph,desc:b.desc,color:b.metal,earned:myEvents.length>=b.need,kind:'Milestone'}));
+  CATEGORY_BADGES.forEach(b=>list.push({id:b.id,name:b.name,glyph:b.glyph,desc:b.desc,color:(CATS[b.cat]||{color:'#E8B84B'}).color,earned:myCats.has(b.cat),kind:'Category'}));
+  SPECIAL_BADGES.forEach(b=>list.push({id:b.id,name:b.name,glyph:b.glyph,desc:b.desc,color:'#E8B84B',earned:state.specialBadges.includes(b.id),kind:'Special'}));
+  return list;
+}
+function getBadgeById(id){ return getAllBadges().find(b=>b.id===id); }
+function getCardExt(){
+  let ext={motto:'',pattern:'lines',areas:[],accentColor:'#E8B84B',bgStyle:'obsidian',badges:[]};
+  try{ const r=localStorage.getItem('card_ext:'+state.profileName); if(r) ext={...ext,...JSON.parse(r)}; }catch(e){}
+  if(!Array.isArray(ext.badges)) ext.badges=[];
+  return ext;
+}
+function saveCardExt(ext){ try{ localStorage.setItem('card_ext:'+state.profileName, JSON.stringify(ext)); }catch(e){} }
+// Chosen badges that are actually earned (max 3), in the user's chosen order
+function getFeaturedBadges(){
+  const ext=getCardExt();
+  const all=getAllBadges();
+  return ext.badges.map(id=>all.find(b=>b.id===id&&b.earned)).filter(Boolean).slice(0,3);
+}
+
 function openExpandedCard(){
   const old=document.getElementById('card-xl-overlay'); if(old) old.remove();
   const card=state.myCard;
@@ -10801,115 +10919,101 @@ function openExpandedCard(){
   let cardPhoto='';
   try{ cardPhoto=localStorage.getItem('card_photo:'+state.profileName)||''; }catch(e){}
 
-  const cardBg='#0A0A0B';
   const accent=cardExt.accentColor||card?.accentColor||'#E8B84B';
-
-  // Map accent → v2 CSS vars
   const accentAlpha=(a,op)=>{ const m=a.match(/^#([0-9a-f]{6})$/i); if(!m) return `rgba(255,255,255,${op})`; const r2=parseInt(m[1].slice(0,2),16),g2=parseInt(m[1].slice(2,4),16),b2=parseInt(m[1].slice(4,6),16); return `rgba(${r2},${g2},${b2},${op})`; };
-  const accentText='#fff';
 
   const myEvents=getMyEvents(); const myCats=getMyCategories();
-  let earnedCount=0;
-  MILESTONE_BADGES.forEach(b=>{ if(myEvents.length>=b.need) earnedCount++; });
-  CATEGORY_BADGES.forEach(b=>{ if(myCats.has(b.cat)) earnedCount++; });
-  if(myCats.size>=TOTAL_CATEGORIES) earnedCount++;
-  earnedCount+=state.specialBadges.length;
-  const lv=getLevel(earnedCount);
+  const earnedTotal=getAllBadges().filter(b=>b.earned).length;
+  const lv=getLevel(earnedTotal);
 
   const uid='CU·'+btoa(state.profileName||'anon').replace(/[^A-Z0-9]/gi,'').substring(0,8).toUpperCase();
   const areas=cardExt.areas&&cardExt.areas.length?cardExt.areas.join(' · '):'';
-  const motto=cardExt.motto?`"${escapeHtml(cardExt.motto)}"`:escapeHtml(card&&card.bio?card.bio:'');
+  const motto=cardExt.motto?`${escapeHtml(cardExt.motto)}`:escapeHtml(card&&card.bio?card.bio:'');
+  const initStr=((card?card.name:state.profileName)||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
 
-  // Interest tags — first 2 "active" (accent coloured), rest dimmed
-  const tagItems=card&&card.interests?card.interests.split(',').map(s=>s.trim()).filter(Boolean).slice(0,6):[];
-  const tagsHtml=tagItems.map((s,i)=>`<span class="cv2-tag${i<2?' active':''}">${escapeHtml(s)}</span>`).join('');
+  const avatar = cardPhoto
+    ? `<div class="cpass-avatar" style="border-color:${accent};"><img src="${cardPhoto}" alt=""/></div>`
+    : `<div class="cpass-avatar cpass-avatar-mono" style="border-color:${accentAlpha(accent,0.55)};background:${accentAlpha(accent,0.16)};color:${accent};">${initStr}</div>`;
 
-  // Edge gradient uses accent colour
-  const edgeGrad=`linear-gradient(90deg, ${accentAlpha(accent,0.7)} 0%, ${accent} 50%, ${accentAlpha(accent,0.7)} 100%)`;
+  // Featured badges — the hero. 3 slots: chosen earned badge, or an "add" placeholder.
+  const featured=getFeaturedBadges();
+  const slotsHtml=[0,1,2].map(i=>{
+    const b=featured[i];
+    if(b){
+      return `<button class="cpass-badge" onclick="openBadgePicker()" title="${escapeHtml(b.name)}" style="--bc:${b.color};--bcg:${accentAlpha(b.color,0.55)};">
+        <span class="cpass-coin"><span class="cpass-coin-shine"></span><span class="cpass-coin-glyph">${b.glyph}</span></span>
+        <span class="cpass-badge-name">${escapeHtml(b.name)}</span>
+      </button>`;
+    }
+    return `<button class="cpass-badge cpass-badge-empty" onclick="openBadgePicker()" title="Add a badge">
+      <span class="cpass-coin-empty">+</span>
+      <span class="cpass-badge-name">Add</span>
+    </button>`;
+  }).join('');
 
   const html=`<div class="card-xl-overlay" id="card-xl-overlay" onclick="if(event.target===this)closeExpandedCard()">
     <div class="card-xl-outer">
       <button class="card-xl-close" onclick="closeExpandedCard()" aria-label="Close">✕</button>
-      <div class="card-xl-v2" style="
-        --cv2-bg:${cardBg};
-        --cv2-accent:${accent};
-        --cv2-accent-glow:${accentAlpha(accent,0.2)};
-        --cv2-accent-text:${accentText};
-        background:${cardBg};">
+      <div class="cpass-card" id="cpass-card" style="--acc:${accent};--acc-glow:${accentAlpha(accent,0.30)};--acc-soft:${accentAlpha(accent,0.14)};">
+        <div class="cpass-ambient"></div>
 
-        <!-- Photo — top 38%, full bleed -->
-        ${cardPhoto
-          ? `<div class="cv2-photo">
-               <img src="${cardPhoto}" alt="" style="object-position:center 20%;"/>
-               <div class="cv2-photo-fade" style="background:linear-gradient(to bottom,transparent 0%,transparent 30%,rgba(0,0,0,0.5) 65%,${cardBg} 100%);"></div>
-             </div>`
-          : `<div class="cv2-photo-placeholder" style="background:linear-gradient(160deg,${accentAlpha(accent,0.28)} 0%,${cardBg} 55%);">
-               <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.06;">
-                 <svg width="120" height="120" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-               </div>
-             </div>`}
-
-        <!-- Dark body — logo, name, stats, then big QR -->
-        <div class="cv2-body" style="bottom:62px;padding-bottom:8px;">
-
-          <!-- Header row: Cumulus logo | level badge -->
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <div class="cv2-logo">
-              <div class="cv2-logo-mark" style="background:${accent};">
-                <svg viewBox="0 0 10 10"><circle cx="5" cy="4" r="2.5"/><ellipse cx="5" cy="7.5" rx="3.5" ry="1.5"/></svg>
-              </div>
-              <span class="cv2-logo-text">Cumulus</span>
-            </div>
-            <div class="cv2-badge" style="border:1px solid ${accentAlpha(accent,0.4)};background:${accentAlpha(accent,0.14)};color:${accent};">${lv.title}</div>
+        <!-- Header: wordmark + tier -->
+        <div class="cpass-head">
+          <div class="cpass-logo">
+            <span class="cpass-logo-mark" style="background:${accent};"><svg viewBox="0 0 10 10"><circle cx="5" cy="4" r="2.5"/><ellipse cx="5" cy="7.5" rx="3.5" ry="1.5"/></svg></span>
+            <span class="cpass-logo-text">Cumulus</span>
           </div>
-
-          <!-- Name + motto -->
-          <div class="cv2-name">${escapeHtml(card?card.name:state.profileName)}</div>
-          ${motto?`<div class="cv2-bio">${motto}</div>`:''}
-
-          <!-- Stats -->
-          <div class="cv2-divider" style="margin-top:10px;"></div>
-          <div class="cv2-stats" style="margin-bottom:10px;">
-            <div class="cv2-stat"><span class="cv2-stat-num">${myEvents.length}</span><span class="cv2-stat-label">Events</span></div>
-            <div class="cv2-stat"><span class="cv2-stat-num">${state.friends.length}</span><span class="cv2-stat-label">Friends</span></div>
-            <div class="cv2-stat"><span class="cv2-stat-num">${earnedCount}</span><span class="cv2-stat-label">Badges</span></div>
+          <div class="cpass-tier" style="border-color:${accentAlpha(accent,0.45)};background:${accentAlpha(accent,0.14)};color:${accent};">
+            <span class="cpass-tier-dot" style="background:${accent};"></span>${lv.title}
           </div>
-
-          ${tagsHtml?`<div class="cv2-tags" style="--cv2-accent-text:${accent};margin-bottom:0;">${tagsHtml}</div>`:''}
-
-          <!-- Spacer pushes QR to bottom -->
-          <div style="flex:1;min-height:16px;"></div>
-
-          <!-- QR — big, centred at bottom -->
-          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding-bottom:8px;">
-            <div class="cv2-scan-label" style="color:${accentAlpha(accent,0.75)};">Scan to add me on Cumulus</div>
-            <div class="cv2-qr-wrap">
-              <div class="cv2-qr-inner" id="card-xl-qr-el"></div>
-              <div class="cv2-qr-gloss"></div>
-            </div>
-          </div>
-
         </div>
 
-        <!-- Perforated separator — sits above pass band -->
-        <div class="cv2-pass-sep" style="position:absolute;bottom:62px;left:0;right:0;margin:0;z-index:10;"></div>
-
-        <!-- CUMULUS PASS footer band -->
-        <div class="cv2-pass-band" style="position:absolute;bottom:0;left:0;right:0;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:10;background:${accentAlpha(accent,0.06)};">
-          <div>
-            <div class="cv2-pass-band-label">Cumulus Pass</div>
-            <div class="cv2-pass-band-uid">${uid}${areas?` · ${escapeHtml(areas)}`:''}</div>
+        <!-- Identity -->
+        <div class="cpass-id">
+          ${avatar}
+          <div class="cpass-id-text">
+            <div class="cpass-name">${escapeHtml(card?card.name:state.profileName)}</div>
+            <div class="cpass-sub">${motto?escapeHtml(cardExt.motto||(card&&card.bio)||''):'London Community Member'}</div>
           </div>
-          <div class="cv2-pass-mark" style="background:${accentAlpha(accent,0.22)};">
+        </div>
+
+        <!-- FEATURED BADGES — the hero -->
+        <div class="cpass-badges-section">
+          <div class="cpass-section-head">
+            <span class="cpass-section-label">Featured badges</span>
+            <button class="cpass-edit" onclick="openBadgePicker()">Edit</button>
+          </div>
+          <div class="cpass-badges">${slotsHtml}</div>
+        </div>
+
+        <!-- Stats -->
+        <div class="cpass-stats">
+          <div class="cpass-stat"><span class="cpass-stat-num">${myEvents.length}</span><span class="cpass-stat-label">Events</span></div>
+          <div class="cpass-stat"><span class="cpass-stat-num">${state.friends.length}</span><span class="cpass-stat-label">Friends</span></div>
+          <div class="cpass-stat"><span class="cpass-stat-num">${earnedTotal}</span><span class="cpass-stat-label">Badges</span></div>
+        </div>
+
+        <!-- QR to add friend -->
+        <div class="cpass-qr-block">
+          <div class="cpass-qr-frame">
+            <div class="cpass-qr" id="cpass-qr-el"></div>
+          </div>
+          <div class="cpass-qr-label">Scan to add me on Cumulus</div>
+        </div>
+
+        <!-- Footer pass band -->
+        <div class="cpass-foot">
+          <div>
+            <div class="cpass-foot-label">Cumulus Pass</div>
+            <div class="cpass-foot-uid">${uid}${areas?` · ${escapeHtml(areas)}`:''}</div>
+          </div>
+          <div class="cpass-foot-mark" style="background:${accentAlpha(accent,0.20)};color:${accent};">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="5"/><ellipse cx="12" cy="19" rx="8" ry="4"/></svg>
           </div>
         </div>
 
-        <!-- Holographic sheen overlay -->
-        <div class="cv2-sheen" id="card-xl-sheen"></div>
-
-        <!-- Bottom accent stripe -->
-        <div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:${edgeGrad};border-radius:0 0 28px 28px;z-index:20;"></div>
+        <div class="cpass-sheen" id="card-xl-sheen"></div>
+        <div class="cpass-edge" style="background:linear-gradient(90deg,${accentAlpha(accent,0.6)},${accent},${accentAlpha(accent,0.6)});"></div>
       </div>
     </div>
   </div>`;
@@ -10919,14 +11023,79 @@ function openExpandedCard(){
     const ov=document.getElementById('card-xl-overlay');
     if(ov) requestAnimationFrame(()=>{
       ov.classList.add('open');
-      const qrEl=document.getElementById('card-xl-qr-el');
+      const qrEl=document.getElementById('cpass-qr-el');
       if(qrEl){
-        try{ new QRCode(qrEl,{text:myFriendCode(),width:160,height:160,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M}); }
+        try{ new QRCode(qrEl,{text:myFriendCode(),width:150,height:150,colorDark:'#0A0A0A',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M}); }
         catch(e){ qrEl.innerHTML=`<div style="font-size:7px;padding:4px;word-break:break-all;color:#000;">${myFriendCode()}</div>`; }
       }
+      const sheenCard=document.getElementById('cpass-card');
+      if(sheenCard){ window.__cpassCard=sheenCard; }
       initCardSheen();
     });
   });
+}
+
+// ── Badge picker — choose up to 3 earned badges to feature on the pass ──────
+function openBadgePicker(){
+  const old=document.getElementById('cpass-picker-overlay'); if(old) old.remove();
+  const ext=getCardExt();
+  const chosen=ext.badges.slice(0,3);
+  const all=getAllBadges();
+  const earned=all.filter(b=>b.earned);
+  const locked=all.filter(b=>!b.earned);
+  const cell=(b,isChosen,isLocked)=>`
+    <button class="bpick-cell${isChosen?' chosen':''}${isLocked?' locked':''}" ${isLocked?'disabled':`onclick="toggleFeaturedBadge('${b.id}')"`} style="--bc:${b.color};">
+      <span class="bpick-coin"><span class="bpick-coin-glyph">${b.glyph}</span></span>
+      <span class="bpick-name">${escapeHtml(b.name)}</span>
+      <span class="bpick-kind">${b.kind}</span>
+      ${isChosen?`<span class="bpick-check">✓</span>`:''}
+      ${isLocked?`<span class="bpick-lock">🔒</span>`:''}
+    </button>`;
+  const earnedHtml=earned.length?earned.map(b=>cell(b,chosen.includes(b.id),false)).join(''):`<div class="bpick-empty">No badges yet — RSVP to events to start earning them.</div>`;
+  const lockedHtml=locked.map(b=>cell(b,false,true)).join('');
+  const html=`<div class="cpass-picker-overlay" id="cpass-picker-overlay" onclick="if(event.target===this)closeBadgePicker()">
+    <div class="cpass-picker">
+      <div class="bpick-head">
+        <div>
+          <div class="bpick-title">Featured badges</div>
+          <div class="bpick-help" id="bpick-help">Choose up to 3 to show on your pass · <b id="bpick-count">${chosen.length}</b>/3</div>
+        </div>
+        <button class="bpick-close" onclick="closeBadgePicker()" aria-label="Close">✕</button>
+      </div>
+      <div class="bpick-scroll">
+        <div class="bpick-grid">${earnedHtml}</div>
+        ${locked.length?`<div class="bpick-locked-label">Locked</div><div class="bpick-grid">${lockedHtml}</div>`:''}
+      </div>
+      <button class="btn bpick-done" onclick="closeBadgePicker()">Done</button>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  requestAnimationFrame(()=>{ const ov=document.getElementById('cpass-picker-overlay'); if(ov) requestAnimationFrame(()=>ov.classList.add('open')); });
+}
+function toggleFeaturedBadge(id){
+  const ext=getCardExt();
+  let arr=ext.badges.filter(x=>getBadgeById(x)); // prune stale
+  const i=arr.indexOf(id);
+  if(i>=0){ arr.splice(i,1); }
+  else { if(arr.length>=3){ showToast('You can feature up to 3 badges','info'); return; } arr.push(id); }
+  ext.badges=arr; saveCardExt(ext);
+  // update cells + count without full re-render
+  document.querySelectorAll('.bpick-cell').forEach(c=>{});
+  const cnt=document.getElementById('bpick-count'); if(cnt) cnt.textContent=arr.length;
+  document.querySelectorAll('.bpick-cell').forEach(cell=>{
+    const oc=cell.getAttribute('onclick')||''; const m=oc.match(/'([^']+)'/); if(!m) return;
+    const chosen=arr.includes(m[1]);
+    cell.classList.toggle('chosen',chosen);
+    let chk=cell.querySelector('.bpick-check');
+    if(chosen&&!chk){ chk=document.createElement('span'); chk.className='bpick-check'; chk.textContent='✓'; cell.appendChild(chk); }
+    else if(!chosen&&chk){ chk.remove(); }
+  });
+}
+function closeBadgePicker(){
+  const ov=document.getElementById('cpass-picker-overlay');
+  if(ov){ ov.classList.remove('open'); setTimeout(()=>ov.remove(),220); }
+  // rebuild the pass so featured badges reflect the new choice
+  if(document.getElementById('card-xl-overlay')) openExpandedCard();
 }
 
 function closeExpandedCard(){
@@ -10943,16 +11112,6 @@ function medallionHtml(glyph,color,earned){ const ring=earned?color:'var(--line)
 function badgeCellHtml(name,desc,glyph,color,earned,progressText){ return `<div class="panel badge-cell ${earned?'earned':'locked'}" style="--corner:${earned?color:'var(--line)'};">${medallionHtml(glyph,color,earned)}<div class="badge-name">${name}</div><div class="badge-desc">${desc}</div>${(!earned&&progressText)?`<div class="badge-progress">${progressText}</div>`:''}</div>`; }
 function trophyHtml(glyph,metal,glow,earned){ if(!earned) return `<div class="trophy-wrap"><div class="trophy-coin locked"><span>${glyph}</span><span class="trophy-lock">${LOCK_SVG}</span></div><div class="trophy-stand locked"></div></div>`; return `<div class="trophy-wrap"><div class="trophy-coin" style="background:radial-gradient(circle at 32% 28%,rgba(255,255,255,0.65),rgba(255,255,255,0) 40%),${metal};box-shadow:0 8px 18px rgba(0,0,0,0.3),0 0 14px ${hexToRgba(glow,0.4)},inset 0 -5px 8px rgba(0,0,0,0.2),inset 0 3px 6px rgba(255,255,255,0.35);"><span class="trophy-shine"></span><span style="position:relative;color:#1B1D21;">${glyph}</span></div><div class="trophy-stand" style="background:${glow};filter:brightness(0.65);"></div></div>`; }
 function trophyCellHtml(name,desc,glyph,metal,glow,tier,earned,progressText){ return `<div class="panel badge-cell ${earned?'earned':'locked'}" style="--corner:${earned?glow:'var(--line)'};">${trophyHtml(glyph,metal,glow,earned)}${tier?`<div class="trophy-tier" style="color:${earned?glow:'var(--text-muted)'};">${tier}</div>`:''}<div class="badge-name">${name}</div><div class="badge-desc">${desc}</div>${(!earned&&progressText)?`<div class="badge-progress">${progressText}</div>`:''}</div>`; }
-
-// Fun gimmick: tap the Cumulus Pass to spin it a full 360° (TF2 level-icon style)
-function spinPass(el){
-  if(!el || el.classList.contains('pass-spin')) return; // ignore taps mid-spin
-  el.classList.add('pass-spin');
-  el.addEventListener('animationend', function done(){
-    el.classList.remove('pass-spin');
-    el.removeEventListener('animationend', done);
-  });
-}
 
 function renderProfile(){
   const myEvents=getMyEvents(); const myCats=getMyCategories(); const count=myEvents.length;
@@ -10994,7 +11153,7 @@ function renderProfile(){
     const photoSticker=profilePhoto
       ?`<div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid ${accent};flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><img src="${profilePhoto}" style="width:100%;height:100%;object-fit:cover;display:block;"/></div>`
       :`<div style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${accent}22;border:2px solid ${accent}55;flex-shrink:0;font-size:18px;font-weight:800;color:${accent};">${initStr}</div>`;
-    return `<div class="id-card profile-id-card prof-avatar-float" onclick="spinPass(this)" title="Tap to spin" style="background:${bg};border:${borderStyle};box-shadow:${shadowStyle};">
+    return `<div class="id-card profile-id-card prof-avatar-float" style="background:${bg};border:${borderStyle};box-shadow:${shadowStyle};">
       <div style="position:absolute;inset:0;pointer-events:none;color:${accent};opacity:${ext.patternOpacity||0.35};">${pat}</div>
       <div class="ce-card-shine"></div>
       <div style="position:relative;z-index:2;display:flex;flex-direction:column;height:100%;">
