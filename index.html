@@ -6882,6 +6882,24 @@
     }
     .lp-signup-modal { padding: 24px 20px 22px !important; border-radius: 22px !important; max-height: 90dvh !important; }
   }
+  /* Auth mode tabs — Sign up | Log in (underlined header) */
+  .auth-mode-sel {
+    display: flex; gap: 26px; margin: 2px 0 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .auth-mode-btn {
+    background: none; border: none; padding: 0 0 12px; cursor: pointer;
+    font-family: var(--font-sans); font-size: 15.5px; font-weight: 700;
+    color: var(--text-muted); position: relative; transition: color .15s ease;
+  }
+  .auth-mode-btn.active { color: var(--text); }
+  .auth-mode-btn.active::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+    background: var(--accent); border-radius: 2px;
+  }
+  /* Hidden sign-up-only sections in login mode (higher specificity beats
+     .gate-type-sel's display:flex !important regardless of source order) */
+  .lp-signup-modal .auth-hidden, .auth-hidden { display: none !important; }
   /* Tab selector — clean segmented control */
   .gate-type-sel {
     display: flex !important; gap: 6px !important; padding: 5px !important;
@@ -7815,7 +7833,7 @@ function renderGate(prefillName,prefillEmail){
         <div class="lp-nav-links hide-mobile">
           <a href="#" onclick="document.getElementById('lp-features-anchor').scrollIntoView({behavior:'smooth'});return false;">Features</a>
           <a href="#" onclick="document.getElementById('lp-venues-anchor').scrollIntoView({behavior:'smooth'});return false;">For Venues</a>
-          <a href="#" onclick="showLpSignup();return false;">Sign Up</a>
+          <a href="#" onclick="showLpLogin();return false;">Log in</a>
         </div>
         <button class="btn lp-nav-btn" onclick="showLpSignup()">Get Access →</button>
       </div>
@@ -7985,8 +8003,14 @@ function renderGate(prefillName,prefillEmail){
       <div class="lp-signup-modal">
         <button class="lp-signup-close" onclick="closeLpSignup()" aria-label="Close">✕</button>
 
-        <!-- Type selector: Attendee vs Host -->
-        <div class="gate-type-sel">
+        <!-- Auth mode: Sign up vs Log in -->
+        <div class="auth-mode-sel">
+          <button class="auth-mode-btn active" id="am-signup" onclick="switchAuthMode('signup')">Sign up</button>
+          <button class="auth-mode-btn" id="am-login" onclick="switchAuthMode('login')">Log in</button>
+        </div>
+
+        <!-- Type selector: Attendee vs Host (sign up only) -->
+        <div class="gate-type-sel" id="gate-type-sel">
           <button class="gate-type-btn active" id="gt-attendee" onclick="switchSignupType('attendee')">
             Join as attendee
           </button>
@@ -8023,7 +8047,7 @@ function renderGate(prefillName,prefillEmail){
         <h3 class="lp-form-title" id="gate-form-title">Claim your pass</h3>
         <p class="lp-form-sub" id="gate-form-sub">One profile. Every event in London. Your community, waiting.</p>
 
-        <div class="gate-field">
+        <div class="gate-field" id="gate-name-field">
           <label class="gate-label" for="gate-name">Full name</label>
           <input id="gate-name" class="gate-input" placeholder="e.g. Alex Rivera" value="${escapeHtml(prefillName||'')}" autocomplete="name" oninput="lpUpdatePassName(this.value)"/>
         </div>
@@ -8096,6 +8120,36 @@ function renderGate(prefillName,prefillEmail){
 
 let _signupType = 'attendee';
 let _hostCats = [];
+let _authMode = 'signup'; // 'signup' | 'login'
+
+function switchAuthMode(mode) {
+  _authMode = mode;
+  const isLogin = mode === 'login';
+  document.getElementById('am-signup')?.classList.toggle('active', !isLogin);
+  document.getElementById('am-login')?.classList.toggle('active', isLogin);
+  // Sign-up-only sections (class beats CSS !important display via source order)
+  const hide = (id, cond) => { const el = document.getElementById(id); if (el) el.classList.toggle('auth-hidden', cond); };
+  hide('gate-type-sel', isLogin);
+  hide('gate-name-field', isLogin);
+  hide('gate-attendee-preview', isLogin || _signupType === 'host');
+  hide('gate-host-preview', isLogin || _signupType !== 'host');
+  hide('gate-host-fields', isLogin || _signupType !== 'host');
+  const eyebrow = document.getElementById('gate-form-eyebrow');
+  const title   = document.getElementById('gate-form-title');
+  const sub     = document.getElementById('gate-form-sub');
+  const label   = document.getElementById('gate-claim-label');
+  const trust   = document.getElementById('gate-trust-strip');
+  if (isLogin) {
+    if (eyebrow) eyebrow.textContent = 'Welcome back';
+    if (title)   title.textContent   = 'Log in';
+    if (sub)     sub.textContent     = 'Enter your email to pick up right where you left off.';
+    if (label)   label.textContent   = 'Log in →';
+    if (trust)   trust.innerHTML     = '<span>No password needed</span><span>·</span><span>Just your email</span>';
+  } else {
+    // Restore sign-up copy for the current attendee/host type
+    switchSignupType(_signupType);
+  }
+}
 
 function switchSignupType(type) {
   _signupType = type;
@@ -8138,10 +8192,12 @@ function toggleHostCat(cat) {
   }
 }
 
-function showLpSignup(){
+function showLpSignup(mode){
   const ov=document.getElementById('lp-signup-overlay');
   if(ov){ ov.classList.add('open'); document.body.style.overflow='hidden'; }
+  switchAuthMode(mode==='login'?'login':'signup');
 }
+function showLpLogin(){ showLpSignup('login'); }
 function closeLpSignup(){
   const ov=document.getElementById('lp-signup-overlay');
   if(ov){ ov.classList.remove('open'); document.body.style.overflow=''; }
@@ -8151,17 +8207,31 @@ function lpUpdatePassName(val){
   if(el) el.textContent=val.trim()||'Your name here';
 }
 function gateErr(msg){ const el=document.getElementById('gate-field-error'); if(el){el.textContent=msg;el.classList.add('show');} }
+function _restoreUserFromRow(existing){
+  state.userId=existing.id;
+  state.profileId=existing.profile_id||generateUniqueId();
+  state.profileName=existing.name;
+  state.profileEmail=existing.email;
+  state.specialBadges=existing.special_badges||[];
+  state.theme=existing.theme||'light';
+  applyTheme();
+  if(existing.card_bio||existing.card_theme){
+    state.myCard={name:existing.name,theme:existing.card_theme||'crimson',bio:existing.card_bio||'',interests:existing.card_interests||'',fact:existing.card_fact||''};
+  }
+}
+
 async function submitGate(){
-  const name=(document.getElementById('gate-name').value||'').trim();
+  const isLogin = _authMode === 'login';
   const email=(document.getElementById('gate-email').value||'').trim();
+  const name=isLogin ? '' : (document.getElementById('gate-name').value||'').trim();
   const errEl=document.getElementById('gate-field-error');
   if(errEl) errEl.classList.remove('show');
-  if(!name){ gateErr('Please add your name.'); return; }
+  if(!isLogin && !name){ gateErr('Please add your name.'); return; }
   if(!EMAIL_PATTERN.test(email)){ gateErr('Please enter a valid email address.'); return; }
 
-  // Host-specific validation
+  // Host-specific validation (sign up only)
   let bizName='', hostDesc='', whyHost='';
-  if(_signupType==='host'){
+  if(!isLogin && _signupType==='host'){
     bizName=(document.getElementById('gate-biz-name')?.value||'').trim();
     hostDesc=(document.getElementById('gate-host-desc')?.value||'').trim();
     whyHost=(document.getElementById('gate-why-host')?.value||'').trim();
@@ -8172,41 +8242,52 @@ async function submitGate(){
 
   // Show loading state
   const btn=document.querySelector('.lp-claim-btn');
-  if(btn){ btn.disabled=true; btn.querySelector('#gate-claim-label').textContent='Setting up…'; }
+  const resetBtn=(labelText)=>{ if(btn){ btn.disabled=false; btn.querySelector('#gate-claim-label').textContent=labelText; } };
+  if(btn){ btn.disabled=true; btn.querySelector('#gate-claim-label').textContent=isLogin?'Logging in…':'Setting up…'; }
 
-  // Check if user already exists in Supabase
-  const {data:existing}=await sb.from('users').select('*').eq('email',email).single();
+  // Look up the account by email
+  let existing=null;
+  try{ const r=await sb.from('users').select('*').eq('email',email).single(); existing=r.data; }
+  catch(e){ existing=null; }
 
-  if(existing&&existing.name){
-    // Returning user — restore everything
-    state.userId=existing.id;
-    state.profileId=existing.profile_id||generateUniqueId();
-    state.profileName=existing.name;
-    state.profileEmail=existing.email;
-    state.specialBadges=existing.special_badges||[];
-    state.theme=existing.theme||'light';
-    applyTheme();
-    if(existing.card_bio||existing.card_theme){
-      state.myCard={name:existing.name,theme:existing.card_theme||'crimson',bio:existing.card_bio||'',interests:existing.card_interests||'',fact:existing.card_fact||''};
+  if(isLogin){
+    // LOGIN — account must already exist
+    if(!(existing&&existing.name)){
+      resetBtn('Log in →');
+      gateErr('No account found for that email. Switch to Sign up to create one.');
+      return;
     }
+    _restoreUserFromRow(existing);
+  } else if(existing&&existing.name){
+    // SIGN UP with an email that already has an account — just log them back in
+    _restoreUserFromRow(existing);
+    showToast('Welcome back — you already have an account','info');
   } else {
-    // New user — create in Supabase
+    // NEW user — create in Supabase
     state.profileName=name;
     state.profileEmail=email;
     state.specialBadges=[];
     state.profileId=generateUniqueId();
-    const {data:created}=await sb.from('users').insert({
-      name,email,profile_id:state.profileId,special_badges:[],theme:'light'
-    }).select().single();
-    if(created) state.userId=created.id;
+    try{
+      const {data:created,error}=await sb.from('users').insert({
+        name,email,profile_id:state.profileId,special_badges:[],theme:'light'
+      }).select().single();
+      if(error) throw error;
+      if(created) state.userId=created.id;
+    }catch(e){
+      console.error('Sign up failed:',e);
+      resetBtn('Join the community →');
+      gateErr('Could not create your account — please try again.');
+      return;
+    }
   }
 
   // Cache email locally
   await localSet('cumulus_email',email);
   await localSet('prefs',JSON.stringify({theme:state.theme}));
 
-  // Host application flow
-  if(_signupType==='host'){
+  // Host application flow (sign up only)
+  if(!isLogin && _signupType==='host'){
     await _submitHostApplication({name,email,bizName,hostDesc,whyHost});
     return;
   }
@@ -9555,6 +9636,25 @@ async function clearAllTestData(confirmed){
   }catch(err){
     console.error('Wipe failed:',err);
     showToast('Wipe failed — check console','error');
+  }
+}
+
+// Admin: clear ONLY the users table (all accounts / emails). Events & other
+// test data are left intact. Owner-only, test-environment convenience.
+async function clearAllUsers(confirmed){
+  if(state.profileEmail!=='gondoxml@gmail.com'){ showToast('Owner only','error'); return; }
+  if(!confirmed){
+    if(!confirm('Delete ALL user accounts (every email) from the users table? Events and other data are kept. This cannot be undone.')) return;
+  }
+  showToast('Clearing user accounts…','info');
+  try{
+    const {error}=await sb.from('users').delete().not('id','is',null);
+    if(error) throw error;
+    showToast('All user accounts cleared. Signing out…','success');
+    setTimeout(()=>resetProfile(true),1200);
+  }catch(err){
+    console.error('Clear users failed:',err);
+    showToast('Clear failed — check console','error');
   }
 }
 
@@ -10985,8 +11085,12 @@ function renderProfile(){
           <span class="prof-action-label">Host applications<span class="prof-action-sub">Review &amp; approve hosts</span></span>
           <span class="prof-action-right">›</span>
         </button>
+        <button class="prof-action-row prof-action-danger" onclick="clearAllUsers()">
+          <span class="prof-action-label">Clear all users<span class="prof-action-sub">Delete every account &amp; email (keeps events)</span></span>
+          <span class="prof-action-right">›</span>
+        </button>
         <button class="prof-action-row prof-action-danger" onclick="if(confirm('Delete ALL rows in users, events, rsvps, tickets, chat_messages, friends? This cannot be undone.')){clearAllTestData(true)}">
-          <span class="prof-action-label">Wipe all test data</span>
+          <span class="prof-action-label">Wipe all test data<span class="prof-action-sub">Users + events + everything</span></span>
           <span class="prof-action-right">›</span>
         </button>
       </div>
