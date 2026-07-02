@@ -5,15 +5,15 @@
       <stop offset="1" stop-color="#1B1710"/>
     </linearGradient>
     <radialGradient id="cglow" cx="50%" cy="88%" r="72%">
-      <stop offset="0" stop-color="#E8B84B" stop-opacity="0.34"/>
-      <stop offset="1" stop-color="#E8B84B" stop-opacity="0"/>
+      <stop offset="0" stop-color="#CBA43A" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#CBA43A" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <rect width="800" height="400" fill="url(#csky)"/>
   <rect width="800" height="400" fill="url(#cglow)"/>
   <!-- string lights -->
   <path d="M0 54 Q 400 110 800 54" stroke="#3A3327" stroke-width="2" fill="none"/>
-  <g fill="#FFE9A6">
+  <g fill="#F0DEA6">
     <circle cx="90"  cy="72"  r="5"/>
     <circle cx="200" cy="86"  r="5"/>
     <circle cx="320" cy="96"  r="5"/>
@@ -22,14 +22,14 @@
     <circle cx="680" cy="80"  r="5"/>
     <circle cx="770" cy="66"  r="5"/>
   </g>
-  <g fill="#E8B84B" opacity="0.3">
+  <g fill="#CBA43A" opacity="0.3">
     <circle cx="90"  cy="72"  r="12"/>
     <circle cx="320" cy="96"  r="12"/>
     <circle cx="560" cy="92"  r="12"/>
     <circle cx="770" cy="66"  r="12"/>
   </g>
   <!-- ground glow -->
-  <ellipse cx="400" cy="392" rx="360" ry="30" fill="#E8B84B" opacity="0.12"/>
+  <ellipse cx="400" cy="392" rx="360" ry="30" fill="#CBA43A" opacity="0.12"/>
   <!-- people, silhouettes with warm rim light -->
   <g>
     <!-- back row (dimmer) -->
@@ -52,18 +52,18 @@
       <rect x="362" y="216" width="76" height="174" rx="34"/>
     </g>
     <!-- rim highlights -->
-    <g fill="none" stroke="#E8B84B" stroke-width="3" opacity="0.8">
+    <g fill="none" stroke="#CBA43A" stroke-width="3" opacity="0.8">
       <path d="M372 170 a34 34 0 0 1 22 -20"/>
       <path d="M266 186 a30 30 0 0 1 20 -18"/>
       <path d="M486 186 a30 30 0 0 1 20 -18"/>
     </g>
-    <g fill="none" stroke="#C8941C" stroke-width="2.5" opacity="0.55">
+    <g fill="none" stroke="#A8841F" stroke-width="2.5" opacity="0.55">
       <path d="M130 204 a26 26 0 0 1 18 -15"/>
       <path d="M630 204 a26 26 0 0 1 18 -15"/>
     </g>
   </g>
   <!-- floating spark hearts of connection -->
-  <g fill="#E8B84B" opacity="0.85">
+  <g fill="#CBA43A" opacity="0.85">
     <path d="M400 120 c-6 -8 -20 -3 -20 8 c0 8 20 18 20 18 c0 0 20 -10 20 -18 c0 -11 -14 -16 -20 -8 z"/>
   </g>
 </svg>

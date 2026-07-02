@@ -6,14 +6,14 @@
       <stop offset="1"    stop-color="#20190F"/>
     </linearGradient>
     <radialGradient id="hsun" cx="70%" cy="26%" r="52%">
-      <stop offset="0"   stop-color="#E8B84B" stop-opacity="0.5"/>
-      <stop offset="0.5" stop-color="#E8B84B" stop-opacity="0.13"/>
-      <stop offset="1"   stop-color="#E8B84B" stop-opacity="0"/>
+      <stop offset="0"   stop-color="#CBA43A" stop-opacity="0.5"/>
+      <stop offset="0.5" stop-color="#CBA43A" stop-opacity="0.13"/>
+      <stop offset="1"   stop-color="#CBA43A" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="hband" cx="50%" cy="100%" r="78%">
-      <stop offset="0"    stop-color="#E8B84B" stop-opacity="0.42"/>
-      <stop offset="0.45" stop-color="#C8941C" stop-opacity="0.18"/>
-      <stop offset="1"    stop-color="#E8B84B" stop-opacity="0"/>
+      <stop offset="0"    stop-color="#CBA43A" stop-opacity="0.42"/>
+      <stop offset="0.45" stop-color="#A8841F" stop-opacity="0.18"/>
+      <stop offset="1"    stop-color="#CBA43A" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="hcloud" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#F4EDDD"/>
@@ -29,7 +29,7 @@
   <rect width="1600" height="900" fill="url(#hsky)"/>
   <rect width="1600" height="900" fill="url(#hsun)"/>
   <!-- sun disc -->
-  <circle cx="1120" cy="230" r="66" fill="#E8B84B" opacity="0.5"/>
+  <circle cx="1120" cy="230" r="66" fill="#CBA43A" opacity="0.5"/>
   <circle cx="1120" cy="230" r="40" fill="#F4EDDD" opacity="0.85"/>
 
   <!-- soft cumulus, kept high so the skyline reads -->
@@ -188,9 +188,9 @@
   </g>
 
   <!-- ============ LIT WINDOWS ============ -->
-  <g fill="#E8B84B">
+  <g fill="#CBA43A">
     <!-- Big Ben clock face (glows) -->
-    <circle cx="519" cy="612" r="12" fill="#FFE9A6"/>
+    <circle cx="519" cy="612" r="12" fill="#F0DEA6"/>
     <!-- Elizabeth Tower windows -->
     <rect x="510" y="648" width="8" height="12" opacity="0.7"/>
     <rect x="522" y="648" width="8" height="12" opacity="0.55"/>
@@ -235,11 +235,11 @@
     <rect x="668" y="656" width="7" height="12" opacity="0.5"/>
   </g>
   <!-- aircraft warning light atop Canary Wharf -->
-  <circle cx="1468" cy="486" r="4" fill="#FFE9A6"/>
+  <circle cx="1468" cy="486" r="4" fill="#F0DEA6"/>
 
   <!-- ============ THAMES + REFLECTIONS ============ -->
   <rect x="0" y="816" width="1600" height="84" fill="url(#hwater)"/>
-  <g fill="#E8B84B" opacity="0.22">
+  <g fill="#CBA43A" opacity="0.22">
     <rect x="516" y="816" width="8" height="60"/>
     <rect x="862" y="816" width="7" height="52"/>
     <rect x="964" y="816" width="7" height="52"/>

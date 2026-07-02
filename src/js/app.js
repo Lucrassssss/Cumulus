@@ -117,7 +117,7 @@ const EVENTS = EVENT_SEED.map(seed => ({
 // Used only as scannability accents (dots, badges, markers, borders);
 // all interactive chrome (buttons/nav/CTAs) stays yellow.
 const CATS = {
-  "Creative":{color:"#E8B84B"},            // gold
+  "Creative":{color:"#CBA43A"},            // gold
   "Gaming":{color:"#35C98A"},              // emerald
   "Movie Nights":{color:"#F0913E"},        // orange
   "Board Games":{color:"#2FB6C4"},         // teal
@@ -390,12 +390,12 @@ const CARD_THEMES = CARD_BG_STYLES.map(s => {
   const isDark = s.dark;
   return {
     id: s.id, name: s.name, bg: s.bg,
-    accent: '#E8B84B',
+    accent: '#CBA43A',
     text: isDark ? '#fff' : '#1e293b',
     textSoft: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(30,41,59,0.58)',
     border: isDark ? 'rgba(232,184,75,0.25)' : 'rgba(205,154,22,0.20)',
     pattern: 'lightning',
-    color: isDark ? '#E8B84B' : '#CD9A16'
+    color: isDark ? '#CBA43A' : '#A8841F'
   };
 });
 
@@ -463,7 +463,7 @@ let state={view:'browse',selectedEventId:null,selectedCategory:'all',calendarDay
   userId:null,
   profileName:'',profileEmail:'',profileId:null,specialBadges:[],theme:'light',
   editingProfile:false,myCard:null,rsvps:{},attendeeCards:{},chats:{},friends:[],friendsOnly:false,goingOpen:{},liveOnly:false,hotOnly:false};
-let cardDraft={theme:'obsidian',bgStyle:'obsidian',accentColor:'#E8B84B',pattern:'constellation',patternOpacity:0.35,bio:'',interests:'',fact:'',motto:'',photo:'',areas:[]};
+let cardDraft={theme:'obsidian',bgStyle:'obsidian',accentColor:'#CBA43A',pattern:'constellation',patternOpacity:0.35,bio:'',interests:'',fact:'',motto:'',photo:'',areas:[]};
 let cardEditorEventId=null;
 let lmap=null,lmapFitted=false;
 let hostMap=null,hostMarker=null;
@@ -501,7 +501,7 @@ function getTheme(id){ return CARD_THEMES.find(t=>t.id===id)||CARD_THEMES[0]; }
 function getBgStyle(id){ return CARD_BG_STYLES.find(s=>s.id===id)||CARD_BG_STYLES[0]; }
 function resolveCardColors(bgStyleId, accentHex){
   const style = getBgStyle(bgStyleId);
-  const acc = accentHex || '#E8B84B';
+  const acc = accentHex || '#CBA43A';
   const isDark = style.dark;
   return {
     bg: style.bg,
@@ -703,20 +703,20 @@ async function start(){
 const FEATURED_EVENTS = [
   {
     id:'f1', title:'Drum & Bass Warehouse Session',
-    category:'Live Music', categoryColor:'#E8B84B',
+    category:'Live Music', categoryColor:'#CBA43A',
     venue:'Tobacco Dock', area:'Wapping, London E1W',
     date:'Sat 28 Jun', time:'10 PM – 4 AM',
     capacity:1200, attending:847,
     price:'From £18', badge:'SOLD OUT SOON',
-    badgeColor:'#C8941C',
+    badgeColor:'#A8841F',
     desc:'Four rooms. Four sounds. One night that defines the summer.',
     icon:'🎶',
-    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#C8941C 100%)',
-    accentColor:'#E8B84B'
+    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#A8841F 100%)',
+    accentColor:'#CBA43A'
   },
   {
     id:'f2', title:'Open-Air Cinema — Kensington Palace',
-    category:'Movie Nights', categoryColor:'#E8B84B',
+    category:'Movie Nights', categoryColor:'#CBA43A',
     venue:'Kensington Palace Gardens', area:'Kensington, London W8',
     date:'Fri 27 Jun', time:'8:30 PM',
     capacity:800, attending:612,
@@ -724,47 +724,47 @@ const FEATURED_EVENTS = [
     badgeColor:'#D9A52E',
     desc:'Blankets on the lawn, the palace lit behind you. Cinema reimagined.',
     icon:'🎬',
-    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#C8941C 100%)',
-    accentColor:'#E8B84B'
+    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#A8841F 100%)',
+    accentColor:'#CBA43A'
   },
   {
     id:'f3', title:'London Startup Pitch Finals',
-    category:'Tech & Talks', categoryColor:'#E8B84B',
+    category:'Tech & Talks', categoryColor:'#CBA43A',
     venue:'The Barbican Centre', area:'Barbican, London EC2Y',
     date:'Thu 26 Jun', time:'6 PM – 10 PM',
     capacity:500, attending:389,
     price:'Free', badge:'HIGH DEMAND',
-    badgeColor:'#C8941C',
+    badgeColor:'#A8841F',
     desc:'Ten founders. Five minutes each. One city watching.',
     icon:'⚡',
-    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#C8941C 100%)',
-    accentColor:'#E8B84B'
+    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#A8841F 100%)',
+    accentColor:'#CBA43A'
   },
   {
     id:'f4', title:'Smash Bros Championship — London',
-    category:'Gaming', categoryColor:'#E8B84B',
+    category:'Gaming', categoryColor:'#CBA43A',
     venue:'Copper Box Arena', area:'Olympic Park, London E20',
     date:'Sun 29 Jun', time:'12 PM – 8 PM',
     capacity:1500, attending:1201,
     price:'From £10', badge:'MAJOR EVENT',
-    badgeColor:'#C8941C',
+    badgeColor:'#A8841F',
     desc:'The biggest bracket London has ever seen. Bring your controller.',
     icon:'🎮',
-    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#C8941C 100%)',
-    accentColor:'#E8B84B'
+    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#A8841F 100%)',
+    accentColor:'#CBA43A'
   },
   {
     id:'f5', title:'Grand Supper Club — Rooftop Edition',
-    category:'Food & Drink', categoryColor:'#E8B84B',
+    category:'Food & Drink', categoryColor:'#CBA43A',
     venue:'Sky Garden', area:'Monument, London EC3M',
     date:'Wed 25 Jun', time:'7 PM – 11 PM',
     capacity:200, attending:176,
     price:'From £65', badge:'FEW LEFT',
-    badgeColor:'#C8941C',
+    badgeColor:'#A8841F',
     desc:'Eight courses. 155 metres up. London laid out below you.',
     icon:'🍽',
-    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#C8941C 100%)',
-    accentColor:'#E8B84B'
+    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#A8841F 100%)',
+    accentColor:'#CBA43A'
   }
 ];
 
@@ -1328,11 +1328,11 @@ function openCardEditor(eventId){
   let savedPhoto='';
   try{ savedPhoto=localStorage.getItem('card_photo:'+state.profileName)||''; }catch(e){}
   const savedBg=ext.bgStyle||ex?.theme||'obsidian';
-  const savedAccent=ext.accentColor||ex?.accentColor||'#E8B84B';
+  const savedAccent=ext.accentColor||ex?.accentColor||'#CBA43A';
   const savedOpacity=ext.patternOpacity!=null?ext.patternOpacity:0.35;
   cardDraft=ex
     ?{theme:savedBg,bgStyle:savedBg,accentColor:savedAccent,pattern:ext.pattern||'lightning',patternOpacity:savedOpacity,bio:ex.bio||'',interests:ex.interests||'',fact:ex.fact||'',motto:ext.motto||'',photo:savedPhoto,areas:ext.areas||[]}
-    :{theme:'obsidian',bgStyle:'obsidian',accentColor:'#E8B84B',pattern:'constellation',patternOpacity:0.35,bio:'',interests:'',fact:'',motto:'',photo:savedPhoto,areas:ext.areas||[]};
+    :{theme:'obsidian',bgStyle:'obsidian',accentColor:'#CBA43A',pattern:'constellation',patternOpacity:0.35,bio:'',interests:'',fact:'',motto:'',photo:savedPhoto,areas:ext.areas||[]};
   renderCardEditor();
 }
 function captureDraftFields(){
@@ -1745,7 +1745,7 @@ function switchCeTab(tab){
 }
 async function saveCard(){
   captureDraftFields();
-  const card={name:state.profileName,theme:cardDraft.bgStyle||cardDraft.theme,bgStyle:cardDraft.bgStyle||cardDraft.theme,accentColor:cardDraft.accentColor||'#E8B84B',bio:cardDraft.bio.trim(),interests:cardDraft.interests.trim(),fact:cardDraft.fact.trim()};
+  const card={name:state.profileName,theme:cardDraft.bgStyle||cardDraft.theme,bgStyle:cardDraft.bgStyle||cardDraft.theme,accentColor:cardDraft.accentColor||'#CBA43A',bio:cardDraft.bio.trim(),interests:cardDraft.interests.trim(),fact:cardDraft.fact.trim()};
   state.myCard=card;
   // Save extended fields to localStorage
   try{ localStorage.setItem('card_ext:'+state.profileName, JSON.stringify({pattern:cardDraft.pattern,patternOpacity:cardDraft.patternOpacity,motto:cardDraft.motto,areas:cardDraft.areas,accentColor:cardDraft.accentColor,bgStyle:cardDraft.bgStyle})); }catch(e){}
@@ -2071,9 +2071,9 @@ async function uploadNightShot(evId,input){
 
 function _buildChatMsgHtml(msg){
   const myCard=state.myCard;
-  let _myExt={bgStyle:'obsidian',accentColor:'#E8B84B'};
+  let _myExt={bgStyle:'obsidian',accentColor:'#CBA43A'};
   try{ const r=localStorage.getItem('card_ext:'+state.profileName); if(r) _myExt={..._myExt,...JSON.parse(r)}; }catch(e){}
-  const _myCols=resolveCardColors(_myExt.bgStyle||myCard?.theme||'obsidian',_myExt.accentColor||myCard?.accentColor||'#E8B84B');
+  const _myCols=resolveCardColors(_myExt.bgStyle||myCard?.theme||'obsidian',_myExt.accentColor||myCard?.accentColor||'#CBA43A');
   const isOwn=msg.name===state.profileName;
   const nameCol=isOwn?_myCols.accent:'var(--text-muted)';
   return `<div class="msg-row ${isOwn?'own':''}"><div class="msg-col ${isOwn?'own':''}">
@@ -2155,9 +2155,9 @@ let htmlMarkerRefs = {};
 function updateClusterPaint(){
   if(!lmap||!lmap.getLayer('clusters')) return;
   const dk=state.theme==='dark';
-  const c0=dk?'#E8B84B':'#C8941C';
-  const c1=dk?'#C8941C':'#A87010';
-  const c2=dk?'#A87010':'#8A5C0A';
+  const c0=dk?'#CBA43A':'#A8841F';
+  const c1=dk?'#A8841F':'#7E6210';
+  const c2=dk?'#7E6210':'#8A5C0A';
   lmap.setPaintProperty('clusters','circle-color',['step',['get','point_count'],c0,10,c1,30,c2]);
   lmap.setPaintProperty('clusters','circle-stroke-color',dk?'rgba(232,184,75,0.55)':'rgba(255,255,255,0.85)');
 }
@@ -2176,7 +2176,7 @@ function attachMapLayers(){
     source:'events',
     filter:['has','point_count'],
     paint:{
-      'circle-color':['step',['get','point_count'],'#E8B84B',10,'#C8941C',30,'#A87010'],
+      'circle-color':['step',['get','point_count'],'#CBA43A',10,'#A8841F',30,'#7E6210'],
       'circle-radius':['step',['get','point_count'],20,10,24,30,28],
       'circle-stroke-width':2,
       'circle-stroke-color':'rgba(255,255,255,0.85)',
@@ -3613,9 +3613,9 @@ function renderConnect(id){
   const ev=EVENTS.find(e=>e.id===id);
   if(!ev) return `<div class="empty-state">Event not found.</div>`;
   const c=CATS[ev.category]; const attendees=attendeesFor(id); const cardsMap=state.attendeeCards[id]||{}; const chat=state.chats[id]||[]; const myCard=state.myCard;
-  let _myExt={motto:'',pattern:'lines',areas:[],accentColor:'#E8B84B',bgStyle:'obsidian'};
+  let _myExt={motto:'',pattern:'lines',areas:[],accentColor:'#CBA43A',bgStyle:'obsidian'};
   try{ const _r=localStorage.getItem('card_ext:'+state.profileName); if(_r) _myExt={..._myExt,...JSON.parse(_r)}; }catch(e){}
-  const _myCols=resolveCardColors(_myExt.bgStyle||myCard?.theme||'obsidian',_myExt.accentColor||myCard?.accentColor||'#E8B84B');
+  const _myCols=resolveCardColors(_myExt.bgStyle||myCard?.theme||'obsidian',_myExt.accentColor||myCard?.accentColor||'#CBA43A');
   const _myAccent=_myCols.accent;
   const yourCardHtml=myCard
     ?`<div class="panel intro-card" style="--corner:${_myAccent};background:${_myCols.bg};border-color:${_myAccent}33;">
@@ -3776,13 +3776,13 @@ function getAllBadges(){
   const myEvents=getMyEvents(); const myCats=getMyCategories();
   const list=[];
   MILESTONE_BADGES.forEach(b=>list.push({id:b.id,name:b.name,glyph:b.glyph,desc:b.desc,color:b.metal,earned:myEvents.length>=b.need,kind:'Milestone'}));
-  CATEGORY_BADGES.forEach(b=>list.push({id:b.id,name:b.name,glyph:b.glyph,desc:b.desc,color:(CATS[b.cat]||{color:'#E8B84B'}).color,earned:myCats.has(b.cat),kind:'Category'}));
-  SPECIAL_BADGES.forEach(b=>list.push({id:b.id,name:b.name,glyph:b.glyph,desc:b.desc,color:'#E8B84B',earned:state.specialBadges.includes(b.id),kind:'Special'}));
+  CATEGORY_BADGES.forEach(b=>list.push({id:b.id,name:b.name,glyph:b.glyph,desc:b.desc,color:(CATS[b.cat]||{color:'#CBA43A'}).color,earned:myCats.has(b.cat),kind:'Category'}));
+  SPECIAL_BADGES.forEach(b=>list.push({id:b.id,name:b.name,glyph:b.glyph,desc:b.desc,color:'#CBA43A',earned:state.specialBadges.includes(b.id),kind:'Special'}));
   return list;
 }
 function getBadgeById(id){ return getAllBadges().find(b=>b.id===id); }
 function getCardExt(){
-  let ext={motto:'',pattern:'lines',areas:[],accentColor:'#E8B84B',bgStyle:'obsidian',badges:[]};
+  let ext={motto:'',pattern:'lines',areas:[],accentColor:'#CBA43A',bgStyle:'obsidian',badges:[]};
   try{ const r=localStorage.getItem('card_ext:'+state.profileName); if(r) ext={...ext,...JSON.parse(r)}; }catch(e){}
   if(!Array.isArray(ext.badges)) ext.badges=[];
   return ext;
@@ -3798,12 +3798,12 @@ function getFeaturedBadges(){
 function openExpandedCard(){
   const old=document.getElementById('card-xl-overlay'); if(old) old.remove();
   const card=state.myCard;
-  let cardExt={motto:'',pattern:'lines',areas:[],accentColor:'#E8B84B',bgStyle:'obsidian'};
+  let cardExt={motto:'',pattern:'lines',areas:[],accentColor:'#CBA43A',bgStyle:'obsidian'};
   try{ const r=localStorage.getItem('card_ext:'+state.profileName); if(r) cardExt={...cardExt,...JSON.parse(r)}; }catch(e){}
   let cardPhoto='';
   try{ cardPhoto=localStorage.getItem('card_photo:'+state.profileName)||''; }catch(e){}
 
-  const accent=cardExt.accentColor||card?.accentColor||'#E8B84B';
+  const accent=cardExt.accentColor||card?.accentColor||'#CBA43A';
   const accentAlpha=(a,op)=>{ const m=a.match(/^#([0-9a-f]{6})$/i); if(!m) return `rgba(255,255,255,${op})`; const r2=parseInt(m[1].slice(0,2),16),g2=parseInt(m[1].slice(2,4),16),b2=parseInt(m[1].slice(4,6),16); return `rgba(${r2},${g2},${b2},${op})`; };
 
   const myEvents=getMyEvents(); const myCats=getMyCategories();
@@ -4002,7 +4002,7 @@ function renderProfile(){
   const card=state.myCard;
 
   // Extended card fields
-  let cardExt={motto:'',pattern:'lines',areas:[],accentColor:'#E8B84B',bgStyle:'obsidian',patternOpacity:0.18};
+  let cardExt={motto:'',pattern:'lines',areas:[],accentColor:'#CBA43A',bgStyle:'obsidian',patternOpacity:0.18};
   try{ const r=localStorage.getItem('card_ext:'+state.profileName); if(r) cardExt={...cardExt,...JSON.parse(r)}; }catch(e){}
   let profilePhoto='';
   try{ profilePhoto=localStorage.getItem('card_photo:'+state.profileName)||''; }catch(e){}
@@ -4025,7 +4025,7 @@ function renderProfile(){
 
   // Card HTML (inline profile card)
   function profileCardHtml(c,ext){
-    const cols=resolveCardColors(ext.bgStyle||c?.theme||'obsidian', ext.accentColor||c?.accentColor||'#E8B84B');
+    const cols=resolveCardColors(ext.bgStyle||c?.theme||'obsidian', ext.accentColor||c?.accentColor||'#CBA43A');
     const {bg,accent,text:textCol,textSoft}=cols;
     const pat=CARD_PATTERNS[ext.pattern||'lightning']||'';
     const tagBg=cols.dark?'rgba(255,255,255,0.14)':'rgba(0,0,0,0.08)';
@@ -4076,7 +4076,7 @@ function renderProfile(){
   const recentEvents=myEvents.slice(-4).reverse();
   const MUTED_CATS={'Creative':'rgba(232,184,75,0.10)','Gaming':'rgba(232,184,75,0.10)','Movie Nights':'rgba(232,184,75,0.10)','Board Games':'rgba(232,184,75,0.10)','Meetups':'rgba(232,184,75,0.10)','Food & Drink':'rgba(232,184,75,0.10)','Live Music':'rgba(232,184,75,0.10)','Wellness & Outdoors':'rgba(232,184,75,0.10)','Tech & Talks':'rgba(232,184,75,0.10)'};
   const recentEvHtml=recentEvents.map(ev=>{
-    const c2=CATS[ev.category]||{color:'#E8B84B'};
+    const c2=CATS[ev.category]||{color:'#CBA43A'};
     const mutedBg=hexToRgba(c2.color,0.09);
     const shortTitle=ev.title.length>28?ev.title.substring(0,26)+'…':ev.title;
     const evDate=ev.startsAt?new Date(ev.startsAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
@@ -4246,7 +4246,7 @@ function renderAchievements(){
   const MUTED_CATS_A={'Creative':'rgba(232,184,75,0.10)','Gaming':'rgba(232,184,75,0.10)','Movie Nights':'rgba(232,184,75,0.10)','Board Games':'rgba(232,184,75,0.10)','Meetups':'rgba(232,184,75,0.10)','Food & Drink':'rgba(232,184,75,0.10)','Live Music':'rgba(232,184,75,0.10)','Wellness & Outdoors':'rgba(232,184,75,0.10)','Tech & Talks':'rgba(232,184,75,0.10)'};
   const evTilesHtml=allEvents.length
     ? allEvents.map(ev=>{
-        const c2=CATS[ev.category]||{color:'#E8B84B'};
+        const c2=CATS[ev.category]||{color:'#CBA43A'};
         const shortTitle=ev.title.length>28?ev.title.substring(0,26)+'…':ev.title;
         const evDate=ev.startsAt?new Date(ev.startsAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
         const status=eventStatus(ev);

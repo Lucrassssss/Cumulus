@@ -5,8 +5,8 @@
       <stop offset="1" stop-color="#1B1710"/>
     </linearGradient>
     <radialGradient id="dglow" cx="50%" cy="118%" r="70%">
-      <stop offset="0" stop-color="#E8B84B" stop-opacity="0.34"/>
-      <stop offset="1" stop-color="#E8B84B" stop-opacity="0"/>
+      <stop offset="0" stop-color="#CBA43A" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#CBA43A" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <rect width="800" height="400" fill="url(#dsky)"/>
@@ -19,11 +19,11 @@
     <path d="M0 62 Q 200 96 400 62 T 800 62"/>
   </g>
   <g>
-    <polygon points="70,72 92,72 81,92" fill="#E8B84B"/>
+    <polygon points="70,72 92,72 81,92" fill="#CBA43A"/>
     <polygon points="200,80 222,80 211,100" fill="#EADFC8"/>
-    <polygon points="330,74 352,74 341,94" fill="#E8B84B"/>
+    <polygon points="330,74 352,74 341,94" fill="#CBA43A"/>
     <polygon points="470,74 492,74 481,94" fill="#EADFC8"/>
-    <polygon points="600,80 622,80 611,100" fill="#E8B84B"/>
+    <polygon points="600,80 622,80 611,100" fill="#CBA43A"/>
     <polygon points="720,72 742,72 731,92" fill="#EADFC8"/>
   </g>
   <!-- terraced houses -->
@@ -53,7 +53,7 @@
       <rect x="700" y="184" width="16" height="24"/>
     </g>
     <!-- lit windows -->
-    <g fill="#E8B84B">
+    <g fill="#CBA43A">
       <rect x="28"  y="250" width="26" height="34" rx="2"/>
       <rect x="96"  y="250" width="26" height="34" rx="2" opacity="0.65"/>
       <rect x="192" y="224" width="26" height="34" rx="2"/>
@@ -66,7 +66,7 @@
       <rect x="742" y="252" width="26" height="34" rx="2"/>
     </g>
     <!-- warm doorways -->
-    <g fill="#C8941C">
+    <g fill="#A8841F">
       <rect x="60"  y="330" width="30" height="70" rx="3" opacity="0.85"/>
       <rect x="222" y="300" width="30" height="100" rx="3" opacity="0.85"/>
       <rect x="540" y="296" width="30" height="104" rx="3" opacity="0.85"/>
@@ -75,7 +75,7 @@
   <!-- street lamp -->
   <g>
     <rect x="392" y="250" width="6" height="150" fill="#2C261D"/>
-    <circle cx="395" cy="248" r="9" fill="#FFE9A6"/>
-    <circle cx="395" cy="248" r="22" fill="#E8B84B" opacity="0.25"/>
+    <circle cx="395" cy="248" r="9" fill="#F0DEA6"/>
+    <circle cx="395" cy="248" r="22" fill="#CBA43A" opacity="0.25"/>
   </g>
 </svg>

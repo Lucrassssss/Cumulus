@@ -3,14 +3,14 @@
        Same geometry as skyline-light.svg; night colourway. -->
   <defs>
     <linearGradient id="cityglow" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#C9A961" stop-opacity="0"/>
-      <stop offset="0.75" stop-color="#C9A961" stop-opacity="0.10"/>
+      <stop offset="0" stop-color="#B69233" stop-opacity="0"/>
+      <stop offset="0.75" stop-color="#B69233" stop-opacity="0.10"/>
       <stop offset="1" stop-color="#D9995C" stop-opacity="0.16"/>
     </linearGradient>
     <radialGradient id="benface" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#F4DFA0" stop-opacity="0.95"/>
-      <stop offset="0.8" stop-color="#E8C87A" stop-opacity="0.85"/>
-      <stop offset="1" stop-color="#E8C87A" stop-opacity="0.4"/>
+      <stop offset="0" stop-color="#E4CE88" stop-opacity="0.95"/>
+      <stop offset="0.8" stop-color="#D6B45E" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#D6B45E" stop-opacity="0.4"/>
     </radialGradient>
   </defs>
 
@@ -38,7 +38,7 @@
     <rect x="1414" y="230" width="26" height="70"/>
   </g>
   <!-- sparse distant windows -->
-  <g fill="#E8C87A" opacity="0.28">
+  <g fill="#D6B45E" opacity="0.28">
     <rect x="14" y="252" width="2.4" height="3.6"/><rect x="30" y="264" width="2.4" height="3.6"/>
     <rect x="122" y="256" width="2.4" height="3.6"/><rect x="246" y="248" width="2.4" height="3.6"/>
     <rect x="318" y="262" width="2.4" height="3.6"/><rect x="462" y="244" width="2.4" height="3.6"/>
@@ -134,7 +134,7 @@
   </g>
 
   <!-- ── LIT WINDOWS — warm scattered lights ── -->
-  <g fill="#E8C87A">
+  <g fill="#D6B45E">
     <!-- Big Ben clock faces (lit) -->
     <circle cx="163" cy="154" r="7.5" fill="url(#benface)"/>
     <!-- Parliament windows -->
@@ -206,13 +206,13 @@
   </g>
 
   <!-- ── Aviation beacons — slow red pulse (SMIL; degrades to static dots) ── -->
-  <circle cx="911" cy="82" r="2.6" fill="#E8B84B">
+  <circle cx="911" cy="82" r="2.6" fill="#CBA43A">
     <animate attributeName="opacity" values="1;0.12;1" dur="2.8s" repeatCount="indefinite"/>
   </circle>
-  <circle cx="1268" cy="120" r="2.6" fill="#E8B84B">
+  <circle cx="1268" cy="120" r="2.6" fill="#CBA43A">
     <animate attributeName="opacity" values="0.12;1;0.12" dur="3.4s" repeatCount="indefinite"/>
   </circle>
-  <circle cx="82" cy="116" r="2.2" fill="#E8B84B">
+  <circle cx="82" cy="116" r="2.2" fill="#CBA43A">
     <animate attributeName="opacity" values="1;0.15;1" dur="3.1s" repeatCount="indefinite"/>
   </circle>
 </svg>

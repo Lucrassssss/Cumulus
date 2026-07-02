@@ -807,9 +807,9 @@
     --text-muted: #6B6560;
     --line: rgba(10,10,10,0.10);
     --line-soft: rgba(10,10,10,0.05);
-    --accent: #C8941C;
-    --accent-deep: #A87010;
-    --gold: #C8941C;
+    --accent: #A8841F;
+    --accent-deep: #7E6210;
+    --gold: #A8841F;
     --gold-tint: rgba(200,148,28,0.10);
     --shadow: rgba(10,10,10,0.10);
     --scrim: rgba(240,235,224,0.92);
@@ -827,9 +827,9 @@
     --text-muted: #787068;
     --line: rgba(240,235,224,0.08);
     --line-soft: rgba(240,235,224,0.04);
-    --accent: #E8B84B;
-    --accent-deep: #C8941C;
-    --gold: #E8B84B;
+    --accent: #CBA43A;
+    --accent-deep: #A8841F;
+    --gold: #CBA43A;
     --gold-tint: rgba(232,184,75,0.13);
     --shadow: rgba(0,0,0,0.92);
     --scrim: rgba(10,10,10,0.92);
@@ -860,7 +860,7 @@
   [data-theme="light"] .blot-b { background: #E8D8A0; opacity: 0.28; }
   [data-theme="light"] .blot-c { background: #D0C090; opacity: 0.24; }
   [data-theme="light"] .blot-d { background: #C8B880; opacity: 0.18; }
-  [data-theme="light"] .blot-e { background: #E8B84B; opacity: 0.10; }
+  [data-theme="light"] .blot-e { background: #CBA43A; opacity: 0.10; }
 
   /* Dark: matte amber aurora — very subtle on black */
   [data-theme="dark"] .blot-a { background: #2A2010; opacity: 0.30; }
@@ -1642,7 +1642,7 @@
   .cv2-pass-band-label {
     font-size: 7.5px; font-weight: 800;
     letter-spacing: 2.8px; text-transform: uppercase;
-    color: var(--cv2-accent, #E8B84B); opacity: 0.72;
+    color: var(--cv2-accent, #CBA43A); opacity: 0.72;
     margin-bottom: 4px;
   }
   .cv2-pass-band-uid {
@@ -1800,7 +1800,7 @@
   }
   .lp-blob-a { width: 500px; height: 500px; background: var(--accent); top: -120px; left: -100px; animation-duration: 20s; }
   .lp-blob-b { width: 400px; height: 400px; background: var(--gold); bottom: -80px; right: -80px; animation-duration: 26s; animation-direction: alternate-reverse; }
-  .lp-blob-c { width: 320px; height: 320px; background: #E8B84B; top: 40%; left: 60%; animation-duration: 22s; }
+  .lp-blob-c { width: 320px; height: 320px; background: #CBA43A; top: 40%; left: 60%; animation-duration: 22s; }
   @keyframes heroBlob { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(40px,30px) scale(1.12); } }
   [data-theme="dark"] .lp-blob { opacity: 0.18; }
 
@@ -1831,7 +1831,7 @@
     animation: heroFadeUp 0.6s 0.18s cubic-bezier(0.22,1,0.36,1) both;
   }
   .lp-hero-gradient {
-    background: linear-gradient(135deg, var(--accent) 0%, #E8B84B 40%, var(--gold) 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #CBA43A 40%, var(--gold) 100%);
     background-size: 200% 100%;
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -1848,7 +1848,7 @@
   }
   .lp-hero-btn-primary {
     padding: 15px 32px !important; font-size: 16px !important;
-    background: linear-gradient(135deg, var(--accent), #E8B84B) !important;
+    background: linear-gradient(135deg, var(--accent), #CBA43A) !important;
     box-shadow: 0 8px 30px color-mix(in srgb, var(--accent) 40%, transparent) !important;
   }
   .lp-hero-btn-secondary {
@@ -2027,7 +2027,7 @@
   .lp-feat-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 3px; }
   .lp-feat-desc { font-size: 12.5px; color: rgba(255,255,255,0.55); line-height: 1.55; }
   .lp-venues-cta {
-    background: linear-gradient(135deg, var(--accent), #E8B84B) !important;
+    background: linear-gradient(135deg, var(--accent), #CBA43A) !important;
     padding: 14px 28px !important; font-size: 15px !important;
     box-shadow: 0 8px 28px rgba(232,184,75,0.35) !important;
   }
@@ -2060,7 +2060,7 @@
     position: absolute; inset: 0; z-index: 0;
     background:
       radial-gradient(ellipse at 0% 60%, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 55%),
-      radial-gradient(ellipse at 100% 20%, color-mix(in srgb, #E8B84B 10%, transparent) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 20%, color-mix(in srgb, #CBA43A 10%, transparent) 0%, transparent 50%),
       radial-gradient(ellipse at 60% 100%, color-mix(in srgb, var(--gold) 8%, transparent) 0%, transparent 45%);
   }
   .lp-join-grid {
@@ -2089,7 +2089,7 @@
   }
   .lp-join-headline em {
     font-style: normal;
-    background: linear-gradient(135deg, var(--accent) 0%, #E8B84B 60%, var(--gold) 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #CBA43A 60%, var(--gold) 100%);
     background-size: 200% 100%;
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -2223,7 +2223,7 @@
   .lp-form-panel::before {
     content: ''; position: absolute;
     top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, var(--accent), #E8B84B, var(--gold), var(--accent));
+    background: linear-gradient(90deg, var(--accent), #CBA43A, var(--gold), var(--accent));
     background-size: 300% 100%;
     animation: gradientShift 5s linear infinite;
   }
@@ -2266,7 +2266,7 @@
   .lp-float-line {
     position: absolute; bottom: 0; left: 0;
     height: 2px; width: 0; border-radius: 99px;
-    background: linear-gradient(90deg, var(--accent), #E8B84B);
+    background: linear-gradient(90deg, var(--accent), #CBA43A);
     transition: width 0.3s cubic-bezier(0.22,1,0.36,1);
   }
   .lp-float-input:focus ~ .lp-float-label ~ .lp-float-line,
@@ -2277,7 +2277,7 @@
   /* Claim button */
   .lp-claim-btn {
     width: 100%; padding: 17px 24px;
-    background: linear-gradient(135deg, var(--accent) 0%, #E8B84B 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #CBA43A 100%);
     border: none; border-radius: 14px;
     font-family: var(--font-sans); font-size: 16px; font-weight: 800;
     color: #fff; cursor: pointer; position: relative; overflow: hidden;
@@ -4625,9 +4625,9 @@
     --text-muted: #6B6560 !important;
     --line: rgba(10,10,10,0.10) !important;
     --line-soft: rgba(10,10,10,0.05) !important;
-    --accent: #C8941C !important;
-    --accent-deep: #A87010 !important;
-    --gold: #C8941C !important;
+    --accent: #A8841F !important;
+    --accent-deep: #7E6210 !important;
+    --gold: #A8841F !important;
     --gold-tint: rgba(200,148,28,0.10) !important;
     --shadow: rgba(10,10,10,0.10) !important;
     --scrim: rgba(240,235,224,0.92) !important;
@@ -4645,9 +4645,9 @@
     --text-muted: #787068 !important;
     --line: rgba(240,235,224,0.08) !important;
     --line-soft: rgba(240,235,224,0.04) !important;
-    --accent: #E8B84B !important;
-    --accent-deep: #C8941C !important;
-    --gold: #E8B84B !important;
+    --accent: #CBA43A !important;
+    --accent-deep: #A8841F !important;
+    --gold: #CBA43A !important;
     --gold-tint: rgba(232,184,75,0.13) !important;
     --shadow: rgba(0,0,0,0.92) !important;
     --scrim: rgba(10,10,10,0.92) !important;
@@ -4661,7 +4661,7 @@
   [data-theme="light"] .blot-b { background: #E8D8A0 !important; opacity: 0.28 !important; }
   [data-theme="light"] .blot-c { background: #D0C090 !important; opacity: 0.24 !important; }
   [data-theme="light"] .blot-d { background: #C8B880 !important; opacity: 0.18 !important; }
-  [data-theme="light"] .blot-e { background: #E8B84B !important; opacity: 0.10 !important; }
+  [data-theme="light"] .blot-e { background: #CBA43A !important; opacity: 0.10 !important; }
   [data-theme="dark"] .blot-a  { background: #2A2010 !important; opacity: 0.30 !important; }
   [data-theme="dark"] .blot-b  { background: #1C1C14 !important; opacity: 0.22 !important; }
   [data-theme="dark"] .blot-c  { background: #201808 !important; opacity: 0.22 !important; }
@@ -4946,7 +4946,7 @@
   .lp-event-card { border-radius: 20px !important; }
   .lp-event-card:hover { transform: translateY(-6px) !important; box-shadow: 0 32px 72px rgba(0,0,0,0.40) !important; }
   .lp-hero-gradient {
-    background: linear-gradient(135deg, var(--accent) 0%, #E8B84B 50%, var(--gold) 100%) !important;
+    background: linear-gradient(135deg, var(--accent) 0%, #CBA43A 50%, var(--gold) 100%) !important;
     -webkit-background-clip: text !important; background-clip: text !important;
   }
   .lp-hero-btn-primary {
@@ -6186,24 +6186,35 @@
      neutral shadows, consistent radius, tighter rhythm.
      ═══════════════════════════════════════════════════════════ */
 
-  /* ── REFINED TOKENS ─────────────────────────────────────── */
+  /* ── SECRET SOCIAL CLUB TOKENS ──────────────────────────────
+     Deep charcoal + slate surfaces, metallic gold primary accent,
+     silver secondary accent. Dark is the flagship (members' vibe);
+     light is an elegant stone-and-gold daytime counterpart. */
   [data-theme="light"] {
-    --bg:#FCFBF8 !important; --bg-2:#F3F1EC !important;
-    --surface:#FFFFFF !important; --surface-2:#F6F4EF !important;
-    --text:#121110 !important; --text-soft:#46433D !important; --text-muted:#8B867D !important;
-    --line:rgba(18,17,16,0.09) !important; --line-soft:rgba(18,17,16,0.05) !important;
-    --accent:#CD9A16 !important; --accent-deep:#A97D0C !important; --gold:#CD9A16 !important;
-    --shadow:rgba(18,17,16,0.06) !important;
-    --mesh-a:rgba(205,154,22,0.022) !important; --mesh-b:rgba(205,154,22,0.012) !important; --mesh-c:rgba(205,154,22,0.018) !important;
+    --bg:#ECEAE4 !important; --bg-2:#E1DED6 !important;
+    --surface:#F7F6F2 !important; --surface-2:#EBE8E1 !important;
+    --text:#191A1C !important; --text-soft:#45474C !important; --text-muted:#7C7A73 !important;
+    --line:rgba(25,26,28,0.10) !important; --line-soft:rgba(25,26,28,0.05) !important;
+    --accent:#9C7B18 !important; --accent-deep:#7E6210 !important; --gold:#9C7B18 !important;
+    --gold-tint:rgba(156,123,24,0.10) !important;
+    --silver:#7E848C !important; --silver-deep:#5E636B !important;
+    --grad-gold: linear-gradient(145deg,#C9A227 0%,#A8841F 50%,#846814 100%) !important;
+    --grad-silver: linear-gradient(145deg,#AEB3BA 0%,#8B9098 50%,#6B7079 100%) !important;
+    --shadow:rgba(25,26,28,0.08) !important;
+    --mesh-a:rgba(156,123,24,0.022) !important; --mesh-b:rgba(156,123,24,0.012) !important; --mesh-c:rgba(140,146,153,0.02) !important;
   }
   [data-theme="dark"] {
-    --bg:#0A0A0A !important; --bg-2:#050505 !important;
-    --surface:#151515 !important; --surface-2:#1E1E1E !important;
-    --text:#F4F1EA !important; --text-soft:#B6B2A9 !important; --text-muted:#6F6B62 !important;
-    --line:rgba(244,241,234,0.08) !important; --line-soft:rgba(244,241,234,0.045) !important;
-    --accent:#EBBB4E !important; --accent-deep:#D4A017 !important; --gold:#EBBB4E !important;
-    --shadow:rgba(0,0,0,0.5) !important;
-    --mesh-a:rgba(232,184,75,0.03) !important; --mesh-b:rgba(200,148,28,0.02) !important; --mesh-c:rgba(232,184,75,0.022) !important;
+    --bg:#0D0E10 !important; --bg-2:#08090A !important;
+    --surface:#16181B !important; --surface-2:#1F2226 !important;
+    --text:#ECE9E1 !important; --text-soft:#B4B0A7 !important; --text-muted:#7A776F !important;
+    --line:rgba(236,233,225,0.09) !important; --line-soft:rgba(236,233,225,0.05) !important;
+    --accent:#CBA43A !important; --accent-deep:#A8841F !important; --gold:#CBA43A !important;
+    --gold-tint:rgba(203,164,58,0.13) !important;
+    --silver:#C6CAD1 !important; --silver-deep:#9AA0A8 !important;
+    --grad-gold: linear-gradient(145deg,#E7C766 0%,#C9A227 42%,#9C7B18 100%) !important;
+    --grad-silver: linear-gradient(145deg,#EDEFF2 0%,#C6CAD1 45%,#9AA0A8 100%) !important;
+    --shadow:rgba(0,0,0,0.6) !important;
+    --mesh-a:rgba(203,164,58,0.03) !important; --mesh-b:rgba(168,132,31,0.02) !important; --mesh-c:rgba(198,202,209,0.02) !important;
   }
 
   /* ── PRIMARY BUTTONS — flat, defined, dark text, no glow ── */
@@ -6728,7 +6739,7 @@
   .lp-hero-scroll-hint span { color: rgba(247,245,240,.7) !important; }
   /* Light theme: dark copy over the bright day sky */
   [data-theme="light"] .lp-hero-title { color: var(--text) !important; text-shadow: 0 1px 2px rgba(255,255,255,.55) !important; }
-  [data-theme="light"] .lp-hero-gradient { -webkit-text-fill-color: #C8941C !important; color: #C8941C !important; }
+  [data-theme="light"] .lp-hero-gradient { -webkit-text-fill-color: #A8841F !important; color: #A8841F !important; }
   [data-theme="light"] .lp-hero-sub { color: rgba(28,24,18,.82) !important; }
   [data-theme="light"] .lp-hero-kicker {
     background: rgba(24,20,14,.06) !important; border-color: rgba(24,20,14,.14) !important; color: var(--text) !important;
