@@ -4,7 +4,7 @@ Cumulus is a **static, client-only PWA**: vanilla JS + Supabase (data) + Mapbox
 (maps), served as plain files with **no build step and no server**. That single
 fact drives every architectural decision below.
 
-## Current structure (after Phase 1)
+## Current structure
 
 ```
 /
@@ -13,15 +13,18 @@ fact drives every architectural decision below.
 │   ├── css/styles.css    # all styles (single cascade, load-ordered)
 │   └── js/
 │       ├── config.js     # runtime config + Supabase client (`sb`)
-│       └── app.js         # all application logic
+│       ├── services.js   # data-access + business logic (referral codes, perk gating)
+│       └── app.js        # UI rendering, state, Mapbox logic
 ├── assets/
-│   └── cloud.png         # cloud image (extracted from a 670 KB base64 blob)
+│   ├── clouds/           # cloud1–5.webp — drifting hero clouds
+│   ├── skyline/          # skyline-light.svg / skyline-dark.svg — hero skyline
+│   └── img/              # feature-card + hero illustrations
+├── tests/smoke.spec.js   # Playwright smoke suite (mobile + desktop)
 ├── .env.example          # config reference + security guidance
 └── .gitignore
 ```
 
-`index.html` went from **~1.3 MB (one file)** to **~4 KB**; the 670 KB inline
-base64 cloud is now a cacheable 492 KB static asset.
+`index.html` went from **~1.3 MB (one file)** to a **~3 KB** shell.
 
 ## Script loading & the "everything is global" contract
 
@@ -34,12 +37,44 @@ script**, not an ES module:
   lexical scope, so top-level `function foo(){}` stays reachable from
   `onclick="foo()"`. `defer` makes it non-render-blocking and preserves order.
 - Load order (all `defer`, executed in document order after parse):
-  `supabase-js` → `config.js` (creates `sb`) → `mapbox-gl` → `qrcode` → `app.js`.
+  `supabase-js` → `config.js` (creates `sb`) → `services.js` → `mapbox-gl`
+  → `qrcode` → `app.js`.
 - The tiny inline theme script in `<head>` is intentionally **not** deferred —
   it must set `data-theme` before first paint to avoid a flash.
 
 > Converting `app.js` to real ES modules (`import`/`export`) would put functions
 > in module scope and **break every inline handler**. See Phase 2.
+
+## Services layer & data flow
+
+`services.js` is the seam between the UI and the backend. It is loaded as a
+classic deferred script (same global-scope rule as above) **after** `config.js`
+so it can use `sb`, and **before** `app.js` so the UI can call it.
+
+```
+ UI (app.js)                services.js                 backend
+ ───────────                ───────────                 ───────
+ onclick / render  ──call──▶ validateCuratorCode()  ──▶ sb → curator_codes
+                            isPerkUnlocked(state)         (Supabase / RLS)
+                            canCheckInAt(a,b,r)      ──▶ geolocation math
+        ◀── structured result (never throws) ──────
+```
+
+Rules for this layer:
+
+- **Pure / side-effect-free where possible.** No DOM, no rendering — it answers
+  questions and moves data; the UI decides what to show.
+- **Degrade gracefully.** A missing table or offline network returns a
+  structured result (e.g. `{ valid, unverified:true }`), never an unhandled
+  throw, so the app renders even with the backend unreachable.
+- **`sb` is used at call-time only**, never at parse-time, so a blocked
+  Supabase CDN can't break script evaluation.
+
+Current contents: curator/referral-code validation (`validateCuratorCode`) and
+WCAG-safe **perk gating** (`isPerkUnlocked`, `distanceMeters`, `canCheckInAt`) —
+perks lock/unlock, but event pins and details are never hidden. Migrating the
+~40 inline `sb.from(...)` calls in `app.js` into this layer is the incremental
+path in Phase 2 item 2.
 
 ## Security model (important)
 
@@ -82,5 +117,7 @@ per step, rather than in one mechanical sweep.
    repo-wide with a linter/formatter (ESLint + Stylelint + Prettier) so it is
    mechanical and reviewable, not hand-done.
 
-5. **Testing.** Add Playwright smoke tests for the core flows (boot, sign-up,
-   log-in, RSVP, pass) so the refactors above can be done safely.
+5. **Testing.** ✅ Done — `tests/smoke.spec.js` runs a Playwright smoke suite
+   (mobile + desktop) over the core flows (boot, landing, sign-up/log-in
+   toggle, 4-tab nav, core views, Cumulus Pass, theme toggle, local assets).
+   Extend it as the refactors above land.
