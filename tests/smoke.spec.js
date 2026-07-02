@@ -50,7 +50,8 @@ test.describe('Cumulus smoke', () => {
     await page.waitForTimeout(400);
     expect(failed, 'no failed local requests').toEqual([]);
     // Deterministic: fetch each split asset directly.
-    for (const path of ['/src/css/styles.css', '/src/js/app.js', '/src/js/config.js', '/assets/cloud.png']) {
+    for (const path of ['/src/css/styles.css', '/src/js/app.js', '/src/js/config.js',
+                         '/assets/clouds/cloud1.webp', '/assets/skyline/skyline-dark.svg', '/assets/skyline/skyline-light.svg']) {
       const res = await page.request.get(path);
       expect(res.status(), `${path} served`).toBe(200);
     }

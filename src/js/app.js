@@ -789,24 +789,20 @@ function renderGate(prefillName,prefillEmail){
 
     <!-- ── HERO ── -->
     <section class="lp-hero">
-      <div class="lp-hero-photo" aria-hidden="true"></div>
-      <div class="lp-hero-bg"></div>
+      <div class="lp-hero-sky" aria-hidden="true"></div>
       <div class="lp-cloud-layer" aria-hidden="true">
-        <!-- far wisps — small, soft, slow -->
-        <div class="lp-cld" style="top:5%;width:44vw;opacity:0.34;--dur:118s;--dly:-8s;--blur:3.5px"></div>
-        <div class="lp-cld" style="top:17%;width:38vw;opacity:0.28;--dur:132s;--dly:-74s;--blur:4px"></div>
-        <div class="lp-cld" style="top:29%;width:48vw;opacity:0.30;--dur:104s;--dly:-42s;--blur:3px"></div>
-        <!-- mid layer -->
-        <div class="lp-cld" style="top:11%;width:64vw;opacity:0.50;--dur:84s;--dly:-56s;--blur:1.6px"></div>
-        <div class="lp-cld" style="top:39%;width:70vw;opacity:0.52;--dur:74s;--dly:-18s;--blur:1.4px"></div>
-        <div class="lp-cld" style="top:54%;width:60vw;opacity:0.46;--dur:90s;--dly:-64s;--blur:1.9px"></div>
-        <!-- near — big fluffy cumulus banked low -->
-        <div class="lp-cld" style="top:60%;width:106vw;opacity:0.70;--dur:56s;--dly:-31s;--blur:0.5px"></div>
-        <div class="lp-cld" style="top:71%;width:124vw;opacity:0.82;--dur:48s;--dly:-9s;--blur:0px"></div>
-        <div class="lp-cld" style="top:81%;width:98vw;opacity:0.74;--dur:62s;--dly:-45s;--blur:0.7px"></div>
-        <div class="lp-cld" style="top:89%;width:132vw;opacity:0.80;--dur:52s;--dly:-24s;--blur:0px"></div>
+        <!-- Real cumulus photos drifting across the sky at staggered speeds/heights.
+             Slow durations = calm, natural movement. Behind the skyline (z-order). -->
+        <div class="lp-cld" style="top:6%; width:58vw;opacity:0.92;--dur:158s;--dly:-20s; --ar:2019/447; background-image:url('assets/clouds/cloud2.webp')"></div>
+        <div class="lp-cld" style="top:19%;width:46vw;opacity:0.80;--dur:196s;--dly:-120s;--ar:1951/583; background-image:url('assets/clouds/cloud1.webp')"></div>
+        <div class="lp-cld" style="top:11%;width:72vw;opacity:0.96;--dur:126s;--dly:-72s; --ar:2049/815; background-image:url('assets/clouds/cloud5.webp')"></div>
+        <div class="lp-cld" style="top:33%;width:60vw;opacity:0.88;--dur:170s;--dly:-42s; --ar:2049/701; background-image:url('assets/clouds/cloud4.webp')"></div>
+        <div class="lp-cld" style="top:45%;width:52vw;opacity:0.70;--dur:214s;--dly:-150s;--ar:2049/1152;background-image:url('assets/clouds/cloud3.webp')"></div>
+        <div class="lp-cld" style="top:27%;width:80vw;opacity:0.90;--dur:138s;--dly:-98s; --ar:2019/447; background-image:url('assets/clouds/cloud2.webp')"></div>
+        <div class="lp-cld" style="top:55%;width:68vw;opacity:0.82;--dur:182s;--dly:-14s; --ar:2049/815; background-image:url('assets/clouds/cloud5.webp')"></div>
       </div>
-      <div class="lp-cloud-scrim" aria-hidden="true"></div>
+      <div class="lp-skyline" aria-hidden="true"></div>
+      <div class="lp-hero-scrim" aria-hidden="true"></div>
       <div class="lp-hero-blobs">
         <div class="lp-blob lp-blob-a"></div>
         <div class="lp-blob lp-blob-b"></div>

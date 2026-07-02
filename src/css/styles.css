@@ -6618,26 +6618,25 @@
   .lp-cloud-layer { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
   .lp-cld {
     position: absolute;
-    aspect-ratio: 2049 / 815;
-    background-image: var(--cloud-png);
+    aspect-ratio: var(--ar, 2049 / 815);
     background-size: 100% 100%;
     background-repeat: no-repeat;
     will-change: transform;
-    transform: translate3d(-95vw, 0, 0);
-    animation: lpCldDrift var(--dur, 70s) linear infinite;
+    transform: translate3d(-110vw, 0, 0);
+    animation: lpCldDrift var(--dur, 160s) linear infinite;
     animation-delay: var(--dly, 0s);
     /* light mode: soft near-white cumulus with gentle definition */
-    filter: blur(var(--blur, 0px)) brightness(1.02) saturate(0.16) contrast(1.02)
-            drop-shadow(0 10px 22px rgba(120,120,130,0.12));
+    filter: brightness(1.04) saturate(0.14) contrast(1.02)
+            drop-shadow(0 12px 26px rgba(120,116,104,0.14));
   }
   [data-theme="dark"] .lp-cld {
     /* dark mode: luminous white cumulus glowing over matte black */
-    filter: blur(var(--blur, 0px)) brightness(1.35) saturate(0) contrast(1.06)
-            drop-shadow(0 0 26px rgba(255,255,255,0.10));
+    filter: brightness(1.06) saturate(0) contrast(1.05)
+            drop-shadow(0 0 30px rgba(255,255,255,0.10));
   }
   @keyframes lpCldDrift {
-    from { transform: translate3d(-95vw, 0, 0); }
-    to   { transform: translate3d(195vw, 0, 0); }
+    from { transform: translate3d(-110vw, 0, 0); }
+    to   { transform: translate3d(210vw, 0, 0); }
   }
   /* Legibility scrim — softly settles the sky behind the hero copy */
   .lp-cloud-scrim {
@@ -6664,6 +6663,13 @@
     --ease-spring: cubic-bezier(.34,1.56,.64,1);
     --r-xl: 28px; --r-lg: 22px; --r-md: 16px; --r-sm: 12px;
     --hero-img: url('../../assets/img/hero-rooftops.svg');
+    /* Landing hero sky + London skyline — theme-swapped */
+    --hero-sky: linear-gradient(180deg, #FBF8F1 0%, #F4EDDE 44%, #ECE1CC 80%, #E6D8BE 100%);
+    --skyline-img: url('../../assets/skyline/skyline-light.svg');
+  }
+  [data-theme="dark"]{
+    --hero-sky: linear-gradient(180deg, #0C0B08 0%, #14100A 42%, #0E0B07 76%, #080706 100%);
+    --skyline-img: url('../../assets/skyline/skyline-dark.svg');
   }
 
   /* ── Display typography — DM Sans, confident + tight ──────── */
@@ -6683,20 +6689,26 @@
     display: flex !important; align-items: center !important;
     border-radius: 0 0 var(--r-xl) var(--r-xl) !important;
   }
-  .lp-hero-photo {
+  /* Layered sky: gradient → drifting cloud photos → static London skyline → scrim */
+  .lp-hero-sky {
     position: absolute !important; inset: 0 !important; z-index: 0 !important;
-    background-image: var(--hero-img) !important;
-    background-size: cover !important; background-position: center 42% !important;
-    transform: scale(1.04); animation: heroKen 24s ease-in-out infinite alternate;
+    background: var(--hero-sky) !important;
   }
-  @keyframes heroKen { from{ transform: scale(1.04) translateY(0);} to{ transform: scale(1.11) translateY(-10px);} }
-  .lp-hero-photo::after {
-    content:''; position:absolute; inset:0;
-    background:
-      linear-gradient(180deg, rgba(8,8,8,.58) 0%, rgba(8,8,8,.30) 34%, rgba(8,8,8,.80) 100%),
-      radial-gradient(ellipse 78% 60% at 50% 18%, rgba(232,184,75,.16), transparent 62%);
+  .lp-cloud-layer { z-index: 1 !important; }
+  .lp-skyline {
+    position: absolute !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+    height: 44% !important; z-index: 2 !important; pointer-events: none !important;
+    background: var(--skyline-img) bottom center / contain no-repeat !important;
   }
-  .lp-hero-content { position: relative !important; z-index: 2 !important; }
+  /* Soft legibility scrim (theme bg colour) lifts the sky behind the copy */
+  .lp-hero-scrim {
+    position: absolute !important; inset: 0 !important; z-index: 2 !important; pointer-events: none !important;
+    background: radial-gradient(ellipse 74% 52% at 50% 40%,
+      var(--bg) 0%, color-mix(in srgb, var(--bg) 42%, transparent) 46%, transparent 74%) !important;
+    opacity: 0.5 !important;
+  }
+  .lp-hero-content { position: relative !important; z-index: 3 !important; }
+  /* Dark theme: white copy over the night sky */
   .lp-hero-title { color:#fff !important; text-shadow: 0 2px 40px rgba(0,0,0,.45) !important; }
   .lp-hero-gradient { -webkit-text-fill-color: var(--gold) !important; color: var(--gold) !important; }
   .lp-hero-sub { color: rgba(247,245,240,.84) !important; }
@@ -6714,7 +6726,22 @@
   }
   .lp-hero-btn-secondary:hover { background: rgba(255,255,255,.15) !important; }
   .lp-hero-scroll-hint span { color: rgba(247,245,240,.7) !important; }
-  .lp-cloud-layer, .lp-hero-blobs, .lp-hero-bg { display:none !important; }
+  /* Light theme: dark copy over the bright day sky */
+  [data-theme="light"] .lp-hero-title { color: var(--text) !important; text-shadow: 0 1px 2px rgba(255,255,255,.55) !important; }
+  [data-theme="light"] .lp-hero-gradient { -webkit-text-fill-color: #C8941C !important; color: #C8941C !important; }
+  [data-theme="light"] .lp-hero-sub { color: rgba(28,24,18,.82) !important; }
+  [data-theme="light"] .lp-hero-kicker {
+    background: rgba(24,20,14,.06) !important; border-color: rgba(24,20,14,.14) !important; color: var(--text) !important;
+  }
+  [data-theme="light"] .lp-trust-strip span {
+    background: rgba(24,20,14,.05) !important; border-color: rgba(24,20,14,.12) !important; color: rgba(28,24,18,.86) !important;
+  }
+  [data-theme="light"] .lp-hero-btn-secondary {
+    border-color: rgba(24,20,14,.26) !important; color: var(--text) !important; background: rgba(24,20,14,.04) !important;
+  }
+  [data-theme="light"] .lp-hero-btn-secondary:hover { background: rgba(24,20,14,.09) !important; }
+  [data-theme="light"] .lp-hero-scroll-hint span { color: rgba(28,24,18,.6) !important; }
+  .lp-hero-blobs, .lp-hero-bg { display:none !important; }
 
   /* ── Landing nav — glass ──────────────────────────────────── */
   .lp-nav {
@@ -6816,14 +6843,7 @@
   @media (max-width: 640px){
     .lp-hero { min-height: 82vh !important; }
     .lp-feat-photo { height: 150px; }
-    /* A cover-crop of the wide skyline zooms into a single tower on a
-       tall portrait viewport — instead sit the whole silhouette along
-       the bottom as a horizon band, its dark sky blending into the hero. */
-    .lp-hero-photo {
-      background-size: 168% auto !important;
-      background-position: center bottom !important;
-      background-repeat: no-repeat !important;
-      background-color: #100D09 !important;
-      animation: none !important; transform: none !important;
-    }
+    /* Skyline sits a touch shorter on tall portrait screens so the
+       drifting clouds stay the focal point above the copy. */
+    .lp-skyline { height: 30% !important; }
   }
