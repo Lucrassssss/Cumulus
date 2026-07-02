@@ -499,7 +499,6 @@ function showConfirm(title, body, confirmLabel, dangerFnName){
 }
 function getTheme(id){ return CARD_THEMES.find(t=>t.id===id)||CARD_THEMES[0]; }
 function getBgStyle(id){ return CARD_BG_STYLES.find(s=>s.id===id)||CARD_BG_STYLES[0]; }
-function getAccentColor(id){ return CARD_ACCENT_COLORS.find(c=>c.id===id); }
 function resolveCardColors(bgStyleId, accentHex){
   const style = getBgStyle(bgStyleId);
   const acc = accentHex || '#E8B84B';
@@ -566,7 +565,6 @@ function geocodeBannerHtml(){
   return `<div class="map-caption" style="bottom:auto;top:calc(var(--top-h) + 10px);right:12px;left:auto;transform:none;font-size:10.5px;">${geocodeProgress.done}/${geocodeProgress.total} placed</div>`;
 }
 function updateGeocodeBanner(){ const el=document.getElementById('geocode-banner'); if(el) el.innerHTML=geocodeBannerHtml(); }
-function geocodeBannerWrap(){ return `<div id="geocode-banner">${geocodeBannerHtml()}</div>`; }
 const AREA_FALLBACK_CENTER={lat:51.5072,lon:-0.1276};
 async function resolveEventLocations(){
   if(geocodingInProgress||!mapboxConfigured()) return;
@@ -630,9 +628,6 @@ async function persistProfile(){
   if(state.userId) payload.id=state.userId;
   const {data,error}=await sb.from('users').upsert(payload,{onConflict:'email'}).select().single();
   if(data&&data.id) state.userId=data.id;
-}
-async function persistFriends(){
-  // Friends are written individually via addFriend() — this is a no-op kept for compatibility
 }
 function computeEventDates(ev){
   const st=new Date(ev.startTime),et=new Date(ev.endTime);
@@ -1315,7 +1310,6 @@ async function _submitHostApplication({name,email,bizName,hostDesc,whyHost}){
   }
 }
 // Cloud loading transition removed — enter the app directly.
-function showCloudTransition() {}
 
 function enterApp() {
   const app = document.getElementById('app');
@@ -1903,16 +1897,6 @@ function renderNav(){
 }
 
 function onSearchInput(){ if(state.view!=='browse'){ state.view='browse'; state.selectedEventId=null; } renderView(); }
-function cancelEditProfile(){ state.editingProfile=false; renderNav(); }
-async function saveProfile(){
-  const name=(document.getElementById('profile-name-input')?.value||'').trim();
-  const email=(document.getElementById('profile-email-input')?.value||'').trim();
-  if(!name){ showToast('Please add your name.','error'); return; }
-  if(!EMAIL_PATTERN.test(email)){ showToast('Please enter a valid email address.','error'); return; }
-  state.profileName=name; state.profileEmail=email; state.editingProfile=false;
-  await persistProfile(); renderNav(); renderView();
-  showToast('Profile saved.','success');
-}
 function destroyMainMap(){
   if(lmap){
     try{
@@ -2016,7 +2000,6 @@ async function loadConnectData(id){
       .subscribe();
   }
 }
-async function refreshConnect(id){ await loadConnectData(id); markSocialSeen(id); renderView(); }
 
 function peekAttendee(evId, name){
   const cardsMap=state.attendeeCards[evId]||{};
@@ -2090,18 +2073,6 @@ async function uploadNightShot(evId,input){
   reader.readAsDataURL(file);
 }
 
-async function toggleRsvp(id){
-  const list=state.rsvps[id]||[];
-  const alreadyRsvpd=list.includes(state.profileName);
-  if(alreadyRsvpd){
-    await sb.from('rsvps').delete().eq('event_id',id).eq('user_id',state.userId);
-    state.rsvps[id]=list.filter(n=>n!==state.profileName);
-  } else {
-    await sb.from('rsvps').insert({event_id:id,user_id:state.userId,user_name:state.profileName});
-    state.rsvps[id]=[...list,state.profileName];
-  }
-  renderView();
-}
 function _buildChatMsgHtml(msg){
   const myCard=state.myCard;
   let _myExt={bgStyle:'obsidian',accentColor:'#E8B84B'};
@@ -3771,36 +3742,6 @@ function renderConnect(id){
   `;
 }
 
-function renderFriends(){
-  const suggested=DEMO_PEOPLE.filter(p=>!state.friends.includes(p.name));
-  const friendCards=state.friends.length?state.friends.map(n=>{ const p=personByName(n); const evs=p?p.events.map(id=>EVENTS.find(e=>e.id===id)).filter(Boolean):[]; return `<div class="panel friend-card" style="--corner:var(--gold);"><div class="fname"><span class="star">★</span> ${escapeHtml(n)}</div>${p?`<div class="fblurb">${escapeHtml(p.blurb)}</div>`:''}<div class="fgoing">${evs.length?`Going to: ${evs.map(e=>escapeHtml(e.title)).join(', ')}`:'No events listed'}</div><button class="btn btn-outline btn-small" style="width:100%" onclick="removeFriend('${escapeHtml(n).replace(/'/g,"\\'")}')">Remove</button></div>`; }).join(''):`<div style="color:var(--text-muted);font-size:13px;">No friends yet. Add a suggested person below to see starred friends on the map.</div>`;
-  const suggestedCards=suggested.map(p=>`<div class="panel friend-card" style="--corner:var(--accent);"><div class="fname">${escapeHtml(p.name)}</div><div class="fblurb">${escapeHtml(p.blurb)}</div><div class="fgoing">${p.events.length} event${p.events.length>1?'s':''} coming up</div><button class="btn btn-small" style="width:100%" onclick="addFriend('${escapeHtml(p.name).replace(/'/g,"\\'")}','${p.id}')">Add friend</button></div>`).join('');
-  return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>Friends</h2><p>Meet in person, connect on Cumulus</p></div>
-    <div class="section-title">Your friend pass</div>
-    <div class="panel intro-card" style="--corner:var(--accent);">
-      <div style="display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center;">
-        <div id="friend-qr" class="qr-box"></div>
-        <div style="width:100%;">
-          <div style="font-weight:700;color:var(--text);margin-bottom:5px;">Show this to someone you meet</div>
-          <div style="font-size:12.5px;color:var(--text-muted);line-height:1.6;">When they scan your QR, you'll connect as friends — then you'll see each other starred on shared events.</div>
-          <div class="friend-code">${escapeHtml(myFriendCode())}</div>
-        </div>
-      </div>
-    </div>
-    <div class="section-title">Add a friend by code</div>
-    <div class="panel intro-form" style="--corner:var(--accent);">
-      <div style="display:flex;gap:8px;flex-direction:column;">
-        <input id="friend-code-input" class="gate-input" placeholder="Paste a CUMULUS-FRIEND:: code" autocomplete="off"/>
-        <button class="btn" style="width:100%;" onclick="addFriendByCode()">Add Friend</button>
-      </div>
-      <div style="font-size:11.5px;color:var(--text-muted);margin-top:10px;text-align:center;">Tip: try a code from the people below to see starring in action.</div>
-    </div>
-    <div class="section-title">Your friends (${state.friends.length})</div>
-    <div class="friends-grid list-item-stagger">${friendCards}</div>
-    <div class="section-title">People you've met</div>
-    <div class="friends-grid list-item-stagger">${suggestedCards||'<div style="color:var(--text-muted);font-size:13px;">You\'ve added everyone!</div>'}</div>`;
-}
 
 async function removeFriend(name){
   state.friends=state.friends.filter(f=>f!==name);
@@ -3808,19 +3749,6 @@ async function removeFriend(name){
     await sb.from('friends').delete().eq('user_id',state.userId).eq('friend_name',name);
   }
   renderView();
-}
-async function addFriendByCode(){
-  const input=document.getElementById('friend-code-input'); const code=(input?.value||'').trim();
-  if(!code) return;
-  const person=DEMO_PEOPLE.find(p=>p.code===code);
-  if(!person){ showToast("Code not recognised. Check and try again.",'error'); return; }
-  if(state.friends.includes(person.name)){ showToast(`${person.name} is already a friend.`); return; }
-  await addFriend(person.name, person.id); input.value=''; showToast(`Added ${person.name} as a friend!`,'success');
-}
-function buildFriendQR(){
-  const el=document.getElementById('friend-qr'); if(!el) return;
-  el.innerHTML='';
-  try{ new QRCode(el,{text:myFriendCode(),width:128,height:128,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M}); }catch(e){ el.innerHTML=`<div style="font-size:11px;color:var(--text-muted);word-break:break-all;">${myFriendCode()}</div>`; }
 }
 
 let _sheenHandler=null, _sheenMouseHandler=null, _sheenCard=null;
@@ -4461,10 +4389,6 @@ async function loadMyTickets(){
     pricePerTicket:t.price_per_ticket, total:t.total,
     purchaserName:t.purchaser_name, purchasedAt:new Date(t.purchased_at).getTime()
   }));
-}
-async function saveMyTickets(){
-  // Tickets are written individually in registerFree() and processPayment()
-  // This stub is kept so any legacy calls don't error
 }
 async function _insertTickets(tickets){
   if(!state.userId) return;
