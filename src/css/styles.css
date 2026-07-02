@@ -7255,4 +7255,14 @@
   @media (max-width: 640px){
     .lp-hero { min-height: 82vh !important; }
     .lp-feat-photo { height: 150px; }
+    /* A cover-crop of the wide skyline zooms into a single tower on a
+       tall portrait viewport — instead sit the whole silhouette along
+       the bottom as a horizon band, its dark sky blending into the hero. */
+    .lp-hero-photo {
+      background-size: 168% auto !important;
+      background-position: center bottom !important;
+      background-repeat: no-repeat !important;
+      background-color: #100D09 !important;
+      animation: none !important; transform: none !important;
+    }
   }

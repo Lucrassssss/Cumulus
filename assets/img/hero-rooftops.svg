@@ -1,96 +1,254 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="London rooftops and chimneys under soft cumulus clouds at golden hour">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A detailed silhouette of the London skyline at golden hour — the London Eye, Big Ben and the Houses of Parliament, St Paul's Cathedral, the Gherkin, Tower Bridge, the Shard, the Walkie-Talkie, the Cheesegrater and Canary Wharf">
   <defs>
     <linearGradient id="hsky" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0"    stop-color="#0E0C08"/>
-      <stop offset="0.55" stop-color="#181410"/>
-      <stop offset="1"    stop-color="#221B12"/>
+      <stop offset="0.5"  stop-color="#181410"/>
+      <stop offset="1"    stop-color="#20190F"/>
     </linearGradient>
-    <radialGradient id="hsun" cx="72%" cy="30%" r="55%">
+    <radialGradient id="hsun" cx="70%" cy="26%" r="52%">
       <stop offset="0"   stop-color="#E8B84B" stop-opacity="0.5"/>
-      <stop offset="0.5" stop-color="#E8B84B" stop-opacity="0.14"/>
+      <stop offset="0.5" stop-color="#E8B84B" stop-opacity="0.13"/>
       <stop offset="1"   stop-color="#E8B84B" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="hband" cx="50%" cy="100%" r="78%">
+      <stop offset="0"    stop-color="#E8B84B" stop-opacity="0.42"/>
+      <stop offset="0.45" stop-color="#C8941C" stop-opacity="0.18"/>
+      <stop offset="1"    stop-color="#E8B84B" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="hcloud" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#F4EDDD"/>
       <stop offset="1" stop-color="#D8C79E"/>
     </linearGradient>
+    <linearGradient id="hwater" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1A1610"/>
+      <stop offset="1" stop-color="#0C0A06"/>
+    </linearGradient>
   </defs>
+
+  <!-- sky -->
   <rect width="1600" height="900" fill="url(#hsky)"/>
   <rect width="1600" height="900" fill="url(#hsun)"/>
   <!-- sun disc -->
-  <circle cx="1150" cy="270" r="70" fill="#E8B84B" opacity="0.55"/>
-  <circle cx="1150" cy="270" r="42" fill="#F4EDDD" opacity="0.85"/>
-  <!-- big soft cumulus clouds -->
-  <g fill="url(#hcloud)" opacity="0.92">
-    <g transform="translate(240 210)">
-      <ellipse cx="0"   cy="40" rx="130" ry="60"/>
-      <ellipse cx="110" cy="20" rx="120" ry="72"/>
-      <ellipse cx="230" cy="46" rx="130" ry="58"/>
-      <ellipse cx="120" cy="70" rx="200" ry="52"/>
+  <circle cx="1120" cy="230" r="66" fill="#E8B84B" opacity="0.5"/>
+  <circle cx="1120" cy="230" r="40" fill="#F4EDDD" opacity="0.85"/>
+
+  <!-- soft cumulus, kept high so the skyline reads -->
+  <g fill="url(#hcloud)" opacity="0.9">
+    <g transform="translate(250 150)">
+      <ellipse cx="0"   cy="34" rx="120" ry="52"/>
+      <ellipse cx="100" cy="16" rx="112" ry="64"/>
+      <ellipse cx="210" cy="40" rx="120" ry="50"/>
+      <ellipse cx="105" cy="60" rx="185" ry="46"/>
     </g>
-    <g transform="translate(900 120)" opacity="0.85">
-      <ellipse cx="0"   cy="40" rx="110" ry="52"/>
-      <ellipse cx="95"  cy="22" rx="105" ry="64"/>
-      <ellipse cx="200" cy="44" rx="115" ry="50"/>
-      <ellipse cx="100" cy="66" rx="175" ry="46"/>
-    </g>
-  </g>
-  <g fill="#E8B84B" opacity="0.14">
-    <g transform="translate(560 430)">
-      <ellipse cx="0"   cy="30" rx="120" ry="46"/>
-      <ellipse cx="100" cy="14" rx="110" ry="56"/>
-      <ellipse cx="205" cy="34" rx="120" ry="44"/>
+    <g transform="translate(880 96)" opacity="0.82">
+      <ellipse cx="0"  cy="34" rx="100" ry="46"/>
+      <ellipse cx="88" cy="18" rx="96"  ry="58"/>
+      <ellipse cx="184" cy="38" rx="104" ry="44"/>
+      <ellipse cx="92" cy="56" rx="160" ry="40"/>
     </g>
   </g>
-  <!-- distant skyline -->
-  <g fill="#1A160F" opacity="0.7">
-    <rect x="0"    y="560" width="120" height="340"/>
-    <rect x="140"  y="600" width="90"  height="300"/>
-    <rect x="250"  y="540" width="70"  height="360"/>
-    <rect x="1180" y="560" width="110" height="340"/>
-    <rect x="1310" y="590" width="90"  height="310"/>
-    <rect x="1420" y="540" width="180" height="360"/>
+
+  <!-- warm dusk backlight behind the skyline -->
+  <rect x="0" y="470" width="1600" height="360" fill="url(#hband)"/>
+
+  <!-- ============ DISTANT SKYLINE (soft, low contrast) ============ -->
+  <g fill="#16110A" opacity="0.85">
+    <rect x="60"   y="700" width="46" height="102"/>
+    <rect x="118"  y="672" width="34" height="130"/>
+    <rect x="470"  y="712" width="40" height="90"/>
+    <rect x="640"  y="694" width="30" height="108"/>
+    <rect x="762"  y="716" width="44" height="86"/>
+    <rect x="1140" y="690" width="34" height="112"/>
+    <rect x="1188" y="712" width="26" height="90"/>
+    <rect x="1548" y="700" width="52" height="102"/>
+    <rect x="8"    y="726" width="40" height="76"/>
   </g>
-  <!-- terraced rooftops (foreground) -->
-  <g fill="#241F18">
-    <rect x="0"    y="660" width="220" height="240"/>
-    <rect x="230"  y="620" width="220" height="280"/>
-    <rect x="460"  y="672" width="230" height="228"/>
-    <rect x="700"  y="628" width="230" height="272"/>
-    <rect x="940"  y="668" width="230" height="232"/>
-    <rect x="1180" y="620" width="230" height="280"/>
-    <rect x="1420" y="666" width="200" height="234"/>
+
+  <!-- ============ MAIN LONDON SILHOUETTE ============ -->
+  <g fill="#0C0A06">
+
+    <!-- London Eye -->
+    <g stroke="#0C0A06" stroke-width="6" fill="none">
+      <circle cx="150" cy="648" r="112"/>
+    </g>
+    <g stroke="#0C0A06" stroke-width="2.5" fill="none" opacity="0.95">
+      <line x1="150" y1="648" x2="262" y2="648"/>
+      <line x1="150" y1="648" x2="247" y2="592"/>
+      <line x1="150" y1="648" x2="206" y2="551"/>
+      <line x1="150" y1="648" x2="150" y2="536"/>
+      <line x1="150" y1="648" x2="94"  y2="551"/>
+      <line x1="150" y1="648" x2="53"  y2="592"/>
+      <line x1="150" y1="648" x2="38"  y2="648"/>
+      <line x1="150" y1="648" x2="53"  y2="704"/>
+      <line x1="150" y1="648" x2="94"  y2="745"/>
+      <line x1="150" y1="648" x2="150" y2="760"/>
+      <line x1="150" y1="648" x2="206" y2="745"/>
+      <line x1="150" y1="648" x2="247" y2="704"/>
+    </g>
+    <circle cx="150" cy="648" r="13" fill="#0C0A06"/>
+    <!-- passenger capsules -->
+    <g fill="#0C0A06">
+      <circle cx="262" cy="648" r="7"/><circle cx="247" cy="592" r="7"/>
+      <circle cx="206" cy="551" r="7"/><circle cx="150" cy="536" r="7"/>
+      <circle cx="94"  cy="551" r="7"/><circle cx="53"  cy="592" r="7"/>
+      <circle cx="38"  cy="648" r="7"/><circle cx="53"  cy="704" r="7"/>
+      <circle cx="94"  cy="745" r="7"/><circle cx="206" cy="745" r="7"/>
+      <circle cx="247" cy="704" r="7"/>
+    </g>
+    <!-- support legs + base -->
+    <path d="M150 690 L112 802 L128 802 L150 705 L172 802 L188 802 Z"/>
+    <rect x="120" y="720" width="60" height="8"/>
+
+    <!-- Houses of Parliament + Big Ben (Elizabeth Tower) -->
+    <!-- Victoria Tower (square, left) -->
+    <rect x="300" y="628" width="46" height="174"/>
+    <path d="M300 628 h46 v-10 h-4 v-8 h-8 v8 h-8 v-8 h-6 v8 h-8 v-8 h-4 Z"/>
+    <!-- Parliament body with pinnacles -->
+    <rect x="346" y="700" width="150" height="102"/>
+    <g>
+      <rect x="356" y="682" width="6" height="18"/><polygon points="353,682 365,682 359,668"/>
+      <rect x="388" y="682" width="6" height="18"/><polygon points="385,682 397,682 391,668"/>
+      <rect x="420" y="682" width="6" height="18"/><polygon points="417,682 429,682 423,668"/>
+      <rect x="452" y="682" width="6" height="18"/><polygon points="449,682 461,682 455,668"/>
+    </g>
+    <!-- Elizabeth Tower (Big Ben) -->
+    <rect x="496" y="574" width="46" height="228"/>
+    <polygon points="496,574 542,574 536,556 502,556"/>
+    <polygon points="502,556 536,556 519,498"/>
+    <rect x="506" y="486" width="4" height="14"/><rect x="528" y="486" width="4" height="14"/>
+
+    <!-- St Paul's Cathedral -->
+    <rect x="600" y="708" width="120" height="94"/>
+    <!-- west towers -->
+    <rect x="596" y="662" width="20" height="46"/><polygon points="596,662 616,662 606,644"/>
+    <rect x="704" y="662" width="20" height="46"/><polygon points="704,662 724,662 714,644"/>
+    <!-- drum + dome -->
+    <rect x="636" y="642" width="48" height="66"/>
+    <path d="M636 642 Q636 588 660 582 Q684 588 684 642 Z"/>
+    <!-- lantern + cross -->
+    <rect x="652" y="558" width="16" height="26"/>
+    <circle cx="660" cy="552" r="6"/>
+    <rect x="658" y="532" width="4" height="16"/><rect x="652" y="538" width="16" height="4"/>
+
+    <!-- The Gherkin (30 St Mary Axe) -->
+    <path d="M672 802 Q660 662 692 566 Q700 546 708 566 Q740 662 728 802 Z"/>
+
+    <!-- Tower Bridge -->
+    <rect x="790" y="786" width="252" height="16"/>
+    <!-- piers -->
+    <rect x="842" y="770" width="46" height="32"/><rect x="944" y="770" width="46" height="32"/>
+    <!-- north tower -->
+    <rect x="842" y="628" width="46" height="150"/>
+    <rect x="838" y="628" width="8" height="150"/><rect x="884" y="628" width="8" height="150"/>
+    <polygon points="838,628 892,628 865,584"/>
+    <polygon points="838,628 846,628 842,606"/><polygon points="884,628 892,628 888,606"/>
+    <!-- south tower -->
+    <rect x="944" y="628" width="46" height="150"/>
+    <rect x="940" y="628" width="8" height="150"/><rect x="986" y="628" width="8" height="150"/>
+    <polygon points="940,628 994,628 967,584"/>
+    <polygon points="940,628 948,628 944,606"/><polygon points="986,628 994,628 990,606"/>
+    <!-- high walkways -->
+    <rect x="888" y="640" width="58" height="12"/><rect x="888" y="658" width="58" height="9"/>
+    <!-- suspension chains -->
+    <g stroke="#0C0A06" stroke-width="5" fill="none">
+      <path d="M842 668 Q812 762 790 786"/>
+      <path d="M990 668 Q1020 762 1042 786"/>
+      <path d="M888 672 Q917 712 946 672"/>
+    </g>
+
+    <!-- The Shard -->
+    <polygon points="1058,802 1080,470 1096,470 1118,802"/>
+    <!-- fragmented spikes -->
+    <polygon points="1080,470 1074,432 1084,466"/>
+    <polygon points="1088,470 1088,424 1095,468"/>
+    <polygon points="1096,470 1102,438 1091,468"/>
+
+    <!-- Walkie-Talkie (20 Fenchurch Street) -->
+    <path d="M1180 802 Q1170 700 1172 624 L1244 624 Q1246 700 1236 802 Z"/>
+    <rect x="1170" y="616" width="76" height="10"/>
+
+    <!-- Cheesegrater (Leadenhall Building) -->
+    <polygon points="1300,802 1300,540 1348,662 1348,802"/>
+
+    <!-- Canary Wharf cluster -->
+    <rect x="1398" y="612" width="38" height="190"/>
+    <rect x="1500" y="596" width="40" height="206"/>
+    <!-- One Canada Square with pyramidion -->
+    <rect x="1442" y="524" width="52" height="278"/>
+    <polygon points="1442,524 1494,524 1468,486"/>
+
+    <!-- ground / embankment -->
+    <rect x="0" y="800" width="1600" height="16"/>
   </g>
-  <g fill="#161209">
-    <polygon points="0,660 110,596 220,660"/>
-    <polygon points="230,620 340,556 450,620"/>
-    <polygon points="460,672 575,608 690,672"/>
-    <polygon points="700,628 815,564 930,628"/>
-    <polygon points="940,668 1055,604 1170,668"/>
-    <polygon points="1180,620 1295,556 1410,620"/>
-    <polygon points="1420,666 1520,606 1620,666"/>
+
+  <!-- Gherkin diagrid texture -->
+  <g stroke="#221A0F" stroke-width="1.4" fill="none" opacity="0.8">
+    <path d="M676 760 L724 700"/><path d="M676 700 L722 640"/><path d="M680 640 L716 596"/>
+    <path d="M724 760 L676 700"/><path d="M722 700 L678 640"/><path d="M716 640 L684 596"/>
   </g>
-  <!-- chimneys -->
-  <g fill="#2C261D">
-    <rect x="70"   y="600" width="34" height="60"/>
-    <rect x="300"  y="560" width="34" height="60"/>
-    <rect x="535"  y="612" width="34" height="60"/>
-    <rect x="775"  y="568" width="34" height="60"/>
-    <rect x="1015" y="608" width="34" height="60"/>
-    <rect x="1255" y="560" width="34" height="60"/>
-  </g>
-  <!-- lit windows -->
+
+  <!-- ============ LIT WINDOWS ============ -->
   <g fill="#E8B84B">
-    <rect x="50"   y="720" width="34" height="46" rx="3"/>
-    <rect x="130"  y="720" width="34" height="46" rx="3" opacity="0.6"/>
-    <rect x="290"  y="686" width="34" height="46" rx="3" opacity="0.75"/>
-    <rect x="370"  y="686" width="34" height="46" rx="3"/>
-    <rect x="520"  y="732" width="34" height="46" rx="3" opacity="0.65"/>
-    <rect x="760"  y="694" width="34" height="46" rx="3"/>
-    <rect x="840"  y="694" width="34" height="46" rx="3" opacity="0.55"/>
-    <rect x="1000" y="730" width="34" height="46" rx="3" opacity="0.7"/>
-    <rect x="1240" y="686" width="34" height="46" rx="3"/>
-    <rect x="1320" y="686" width="34" height="46" rx="3" opacity="0.6"/>
-    <rect x="1480" y="728" width="34" height="46" rx="3" opacity="0.7"/>
+    <!-- Big Ben clock face (glows) -->
+    <circle cx="519" cy="612" r="12" fill="#FFE9A6"/>
+    <!-- Elizabeth Tower windows -->
+    <rect x="510" y="648" width="8" height="12" opacity="0.7"/>
+    <rect x="522" y="648" width="8" height="12" opacity="0.55"/>
+    <rect x="510" y="686" width="8" height="12" opacity="0.6"/>
+    <!-- Parliament -->
+    <rect x="360" y="724" width="7" height="12" opacity="0.7"/>
+    <rect x="382" y="724" width="7" height="12" opacity="0.5"/>
+    <rect x="410" y="724" width="7" height="12" opacity="0.65"/>
+    <rect x="440" y="724" width="7" height="12" opacity="0.55"/>
+    <rect x="466" y="724" width="7" height="12" opacity="0.7"/>
+    <rect x="316" y="700" width="7" height="12" opacity="0.6"/>
+    <!-- Tower Bridge tower windows -->
+    <rect x="856" y="672" width="8" height="14" opacity="0.75"/>
+    <rect x="856" y="704" width="8" height="14" opacity="0.55"/>
+    <rect x="958" y="672" width="8" height="14" opacity="0.7"/>
+    <rect x="958" y="704" width="8" height="14" opacity="0.5"/>
+    <!-- Shard scattered lights -->
+    <rect x="1084" y="560" width="6" height="9" opacity="0.7"/>
+    <rect x="1082" y="612" width="7" height="9" opacity="0.55"/>
+    <rect x="1086" y="664" width="8" height="9" opacity="0.7"/>
+    <rect x="1080" y="716" width="9" height="10" opacity="0.5"/>
+    <!-- Walkie-Talkie -->
+    <rect x="1186" y="660" width="9" height="12" opacity="0.65"/>
+    <rect x="1210" y="660" width="9" height="12" opacity="0.5"/>
+    <rect x="1188" y="708" width="9" height="12" opacity="0.6"/>
+    <rect x="1214" y="708" width="9" height="12" opacity="0.7"/>
+    <!-- Cheesegrater floor lights -->
+    <rect x="1308" y="612" width="8" height="9" opacity="0.6"/>
+    <rect x="1308" y="660" width="8" height="9" opacity="0.5"/>
+    <rect x="1308" y="708" width="8" height="9" opacity="0.65"/>
+    <!-- Canary Wharf -->
+    <rect x="1452" y="560" width="9" height="12" opacity="0.7"/>
+    <rect x="1474" y="560" width="9" height="12" opacity="0.5"/>
+    <rect x="1452" y="612" width="9" height="12" opacity="0.6"/>
+    <rect x="1474" y="612" width="9" height="12" opacity="0.7"/>
+    <rect x="1452" y="672" width="9" height="12" opacity="0.55"/>
+    <rect x="1474" y="672" width="9" height="12" opacity="0.65"/>
+    <rect x="1408" y="640" width="8" height="11" opacity="0.6"/>
+    <rect x="1510" y="628" width="8" height="11" opacity="0.55"/>
+    <!-- St Paul's drum lights -->
+    <rect x="644" y="656" width="7" height="12" opacity="0.6"/>
+    <rect x="668" y="656" width="7" height="12" opacity="0.5"/>
+  </g>
+  <!-- aircraft warning light atop Canary Wharf -->
+  <circle cx="1468" cy="486" r="4" fill="#FFE9A6"/>
+
+  <!-- ============ THAMES + REFLECTIONS ============ -->
+  <rect x="0" y="816" width="1600" height="84" fill="url(#hwater)"/>
+  <g fill="#E8B84B" opacity="0.22">
+    <rect x="516" y="816" width="8" height="60"/>
+    <rect x="862" y="816" width="7" height="52"/>
+    <rect x="964" y="816" width="7" height="52"/>
+    <rect x="1085" y="816" width="7" height="70"/>
+    <rect x="1200" y="816" width="8" height="46"/>
+    <rect x="1465" y="816" width="9" height="64"/>
+    <rect x="150" y="816" width="6" height="40"/>
+  </g>
+  <g fill="#F4EDDD" opacity="0.10">
+    <rect x="0" y="820" width="1600" height="2"/>
   </g>
 </svg>
