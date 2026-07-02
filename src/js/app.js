@@ -2493,8 +2493,32 @@ async function submitHostEvent(){
   if(stDate>=enDate){ showToast('End time must be after start time.','error'); return; }
 
   if(_hostType==='public'){
-    showToast('Submitted for review. We\'ll be in touch within 24 hours.','success');
-    state.view='browse'; renderNav(); renderView();
+    // Public events don't go live immediately — they queue for owner approval.
+    const pubAddress=document.getElementById('host-address-search')?.value||'';
+    const pending={
+      title, category:cat,
+      host_id:state.userId||null, host_name:state.profileName||'', host_email:state.profileEmail||'',
+      venue, area:areaName||'London', address:pubAddress,
+      lat:newEventLat, lon:newEventLon,
+      start_time:stDate.toISOString(), end_time:enDate.toISOString(),
+      description:desc, capacity:parseInt(capStr,10), price:priceVal,
+      status:'pending', created_at:new Date().toISOString()
+    };
+    const pbtn=document.getElementById('host-submit-btn');
+    if(pbtn){ pbtn.disabled=true; pbtn.textContent='Submitting…'; }
+    let saved=false;
+    try{ const {error}=await sb.from('pending_events').insert(pending); if(!error) saved=true; }catch(e){}
+    if(!saved){
+      try{
+        const arr=JSON.parse(localStorage.getItem('pending_events_local')||'[]');
+        arr.push({...pending, id:'local_'+Date.now()});
+        localStorage.setItem('pending_events_local',JSON.stringify(arr));
+        saved=true;
+      }catch(e){}
+    }
+    if(pbtn){ pbtn.disabled=false; pbtn.textContent='Submit for review →'; }
+    showToast(saved?'Submitted for review — we\'ll approve it shortly.':'Could not submit — please try again.', saved?'success':'error');
+    if(saved){ state.view='browse'; renderNav(); renderView(); }
     return;
   }
 
@@ -3244,59 +3268,24 @@ function renderOwnerDash(){
 // HOST PAYOUTS PANEL
 // ═══════════════════════════════════════════════════════
 function renderHostPayoutsPanel(){
-  const tiers=[
-    {range:'Free',fee:0,label:'Free event',badge:'#22C55E',desc:'No fee added. Free events are zero-cost for everyone.'},
-    {range:'£1–£15',fee:1.50,tier:1,badge:'#5B9FD9',vet:'Instant publish. 48hr escrow hold.',vetCls:'t1'},
-    {range:'£16–£40',fee:2.50,tier:2,badge:'#22C55E',vet:'Social graph verification required.',vetCls:'t2'},
-    {range:'£41–£71',fee:3.50,tier:3,badge:'#E0B23C',vet:'Queue pause — 4hr review target.',vetCls:'t3'},
-    {range:'£72+',fee:4.50,tier:4,badge:'#AFA9EC',vet:'Full venue docs required.',vetCls:'t3'},
-  ];
-  const tierRows=tiers.map(t=>`
-    <div class="hp-tier-row">
-      <span class="hp-tier-label">${t.range}</span>
-      <span class="hp-tier-fee" style="color:${t.badge}">${t.fee===0?'No fee':'+ £'+t.fee.toFixed(2)+' Cumulus fee'}</span>
-    </div>`).join('');
-
+  // Host-facing only. The per-ticket platform fee schedule is company-internal
+  // (see the owner Finances dashboard) and is deliberately NOT shown here.
   return `
   <div class="hp-panel">
     <div class="hp-title">💸 Your payouts explained</div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">You set the ticket price. Cumulus adds a flat, transparent platform fee to the buyer only. You keep 100% of your price — always.</div>
-    ${tierRows}
-    <div style="margin-top:14px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Fee calculator</div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <span style="font-size:12px;color:var(--text-muted);">Your price: £</span>
-        <input id="hp-price-input" type="number" min="0" step="0.01" placeholder="e.g. 12" class="gate-input" style="max-width:120px;margin:0;" oninput="updateHostPayouts()"/>
-      </div>
-      <div id="hp-breakdown-result" class="hp-breakdown" style="display:none;"></div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">You set the ticket price and <strong style="color:var(--text);">keep 100% of it</strong> — always. Buyers pay a small platform fee at checkout that covers card processing and running Cumulus. It's added on top of your price, so it never comes out of your earnings.</div>
+    <div class="hp-tier-row">
+      <span class="hp-tier-label">Your ticket price</span>
+      <span class="hp-tier-fee" style="color:#22C55E">You keep 100%</span>
+    </div>
+    <div class="hp-tier-row">
+      <span class="hp-tier-label">Platform fee</span>
+      <span class="hp-tier-fee" style="color:var(--text-muted)">Added at checkout · paid by the buyer</span>
     </div>
     <div style="margin-top:12px;padding:10px 12px;background:var(--surface-2);border-radius:10px;font-size:11px;color:var(--text-muted);line-height:1.6;">
-      <strong style="color:var(--text);">Payout timeline:</strong> Funds held in escrow until 48 hours after your event ends, then released directly to your Stripe account. Graduated hosts (3+ events, zero disputes) get all friction removed.
+      <strong style="color:var(--text);">Payout timeline:</strong> Funds are held in escrow until 48 hours after your event ends, then released directly to your Stripe account. Graduated hosts (3+ events, zero disputes) get all friction removed.
     </div>
   </div>`;
-}
-
-function updateHostPayouts(){
-  const input=document.getElementById('hp-price-input');
-  const result=document.getElementById('hp-breakdown-result');
-  if(!input||!result) return;
-  const price=parseFloat(input.value)||0;
-  if(price<=0){ result.style.display='none'; return; }
-  const fee=getCumulusFee(price);
-  const buyerTotal=price+fee;
-  const stripeCost=buyerTotal*0.015+0.20;
-  const tierNum=price<=15?1:price<=40?2:price<=71?3:4;
-  const vetMsg=price<20?'Instant publish — Tier 1 pricing.'
-    :price<50?'Requires social verification (Instagram/website).'
-    :'Queue pause — submit venue or justification docs.';
-  result.style.display='block';
-  result.innerHTML=`
-    <div class="hp-line"><span>Your ticket price</span><span class="hp-val">£${price.toFixed(2)}</span></div>
-    <div class="hp-line host-keep"><span>You receive (100% of your price)</span><span class="hp-val" style="color:#22C55E">£${price.toFixed(2)}</span></div>
-    <div class="hp-line"><span>Cumulus fee (Tier ${tierNum}) — paid by buyer</span><span class="hp-val" style="color:var(--accent)">+ £${fee.toFixed(2)}</span></div>
-    <div class="hp-line"><span>Buyer pays total</span><span class="hp-val">£${buyerTotal.toFixed(2)}</span></div>
-    <div class="hp-line"><span style="font-size:10px;opacity:0.6">Stripe processing (absorbed by Cumulus)</span><span class="hp-val" style="font-size:10px;opacity:0.6">£${stripeCost.toFixed(2)}</span></div>
-    <div style="margin-top:8px;padding:8px 0;font-size:11px;color:var(--text-muted);">📋 ${vetMsg}</div>`;
 }
 
 function openOwnerDash(){ pushNav(); state.view='owner-dash'; renderNav(); renderView(); window.scrollTo({top:0,behavior:'smooth'}); }
@@ -3404,6 +3393,124 @@ async function reviewHost(appId, email, decision){
   await loadAndRenderReview();
 }
 
+/* ══════════════════════════════════════════════════
+   EVENT APPROVALS — admin only. Public events submitted by hosts
+   queue here for review before they are published to the map.
+   ══════════════════════════════════════════════════ */
+function openEventApprovals(){ pushNav(); state.view='event-approvals'; renderNav(); renderView(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+function renderEventApprovals(){
+  const container=document.getElementById('view-container');
+  container.innerHTML=`
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="connect-header">
+      <h2>Event Approvals</h2>
+      <p>Public events awaiting review before they go live</p>
+    </div>
+    <div id="evapp-content">
+      <div class="review-empty"><div class="review-empty-icon">📋</div><div>Loading events…</div></div>
+    </div>`;
+  setTimeout(loadAndRenderEventApprovals,0);
+}
+
+function _pendingEventKey(e){ return e.id!=null ? String(e.id) : (e.title||'')+'|'+(e.created_at||''); }
+
+async function loadAndRenderEventApprovals(){
+  const content=document.getElementById('evapp-content');
+  if(!content) return;
+  let evs=[];
+  try{
+    const {data,error}=await sb.from('pending_events').select('*').order('created_at',{ascending:false});
+    if(!error&&data) evs=[...evs,...data];
+  }catch(e){}
+  try{
+    const local=JSON.parse(localStorage.getItem('pending_events_local')||'[]');
+    const keys=new Set(evs.map(_pendingEventKey));
+    evs=[...evs,...local.filter(e=>!keys.has(_pendingEventKey(e)))];
+  }catch(e){}
+
+  if(!evs.length){
+    content.innerHTML=`<div class="review-empty"><div class="review-empty-icon">✅</div><div style="font-weight:700;margin-bottom:4px;">All clear</div><div>No public events awaiting approval.</div></div>`;
+    return;
+  }
+  const pending=evs.filter(e=>e.status==='pending');
+  const reviewed=evs.filter(e=>e.status!=='pending');
+  content.innerHTML=`
+    ${pending.length?`<div class="review-section-hd">Pending (${pending.length})</div>${pending.map(_buildEventApprovalCard).join('')}`:''}
+    ${reviewed.length?`<div class="review-section-hd" style="margin-top:${pending.length?'20px':'0'};">Reviewed (${reviewed.length})</div>${reviewed.map(_buildEventApprovalCard).join('')}`:''}`;
+}
+
+function _buildEventApprovalCard(ev){
+  const id=escapeHtml(String(ev.id!=null?ev.id:''));
+  const when=ev.start_time?new Date(ev.start_time).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+  const isPending=ev.status==='pending';
+  const priceLbl=Number(ev.price)>0?`£${Number(ev.price).toFixed(2)}`:'Free';
+  return `<div class="review-card list-item-stagger">
+    <div class="review-card-top">
+      <div>
+        <div class="review-card-name">${escapeHtml(ev.title||'Untitled event')}</div>
+        <div class="review-card-email">${escapeHtml(ev.host_name||'Unknown host')}${ev.host_email?' · '+escapeHtml(ev.host_email):''}</div>
+      </div>
+      <span class="review-status-badge ${escapeHtml(ev.status||'pending')}">${escapeHtml(ev.status||'pending')}</span>
+    </div>
+    ${ev.category?`<div class="review-detail"><div class="review-detail-lbl">Category</div><div class="review-detail-val">${escapeHtml(ev.category)}</div></div>`:''}
+    ${when?`<div class="review-detail"><div class="review-detail-lbl">When</div><div class="review-detail-val">${when}</div></div>`:''}
+    ${ev.venue?`<div class="review-detail"><div class="review-detail-lbl">Venue</div><div class="review-detail-val">${escapeHtml(ev.venue)}${ev.area?', '+escapeHtml(ev.area):''}</div></div>`:''}
+    <div class="review-detail"><div class="review-detail-lbl">Capacity · Ticket price</div><div class="review-detail-val">${ev.capacity!=null?escapeHtml(String(ev.capacity)):'—'} · ${priceLbl}</div></div>
+    ${ev.description?`<div class="review-detail"><div class="review-detail-lbl">Description</div><div class="review-detail-val">${escapeHtml(ev.description)}</div></div>`:''}
+    ${isPending?`<div class="review-actions">
+      <button class="btn btn-small review-approve-btn" style="flex:1;" onclick="decideEvent('${id}','approved')">Approve &amp; publish</button>
+      <button class="btn btn-outline btn-small review-reject-btn" style="flex:1;" onclick="decideEvent('${id}','rejected')">Reject</button>
+    </div>`:''}
+  </div>`;
+}
+
+async function decideEvent(pendingId, decision){
+  // Locate the pending record — Supabase first, then the local fallback store.
+  let rec=null;
+  try{ const {data}=await sb.from('pending_events').select('*').eq('id',pendingId).single(); rec=data; }catch(e){}
+  if(!rec){
+    try{ const arr=JSON.parse(localStorage.getItem('pending_events_local')||'[]'); rec=arr.find(e=>String(e.id)===String(pendingId))||null; }catch(e){}
+  }
+  if(decision==='approved' && rec) await _publishApprovedEvent(rec);
+  // Record the decision (both stores, whichever exists)
+  try{ await sb.from('pending_events').update({status:decision}).eq('id',pendingId); }catch(e){}
+  try{
+    let arr=JSON.parse(localStorage.getItem('pending_events_local')||'[]');
+    arr=arr.map(e=>String(e.id)===String(pendingId)?{...e,status:decision}:e);
+    localStorage.setItem('pending_events_local',JSON.stringify(arr));
+  }catch(e){}
+  showToast(decision==='approved'?'Event approved & published':'Event rejected','success');
+  await loadAndRenderEventApprovals();
+}
+
+async function _publishApprovedEvent(rec){
+  let inserted=null;
+  try{
+    const {data,error}=await sb.from('events').insert({
+      title:rec.title, category:rec.category,
+      host_id:rec.host_id, host_name:rec.host_name,
+      venue:rec.venue, area:rec.area||'London', address:rec.address||'',
+      lat:rec.lat, lon:rec.lon,
+      start_time:rec.start_time, end_time:rec.end_time,
+      description:rec.description, capacity:rec.capacity, price:rec.price||0
+    }).select().single();
+    if(!error) inserted=data;
+  }catch(e){}
+  const src=inserted||rec;
+  const newEvent={
+    id: inserted?inserted.id : ('local_ev_'+Date.now()),
+    title:src.title, category:src.category,
+    host:src.host_name, hostId:src.host_id,
+    venue:src.venue, area:src.area||'London', address:src.address||'',
+    lat:src.lat, lon:src.lon,
+    startTime:src.start_time, endTime:src.end_time,
+    desc:src.description, capacity:src.capacity, price:src.price||0
+  };
+  computeEventDates(newEvent);
+  if(!EVENTS.some(e=>String(e.id)===String(newEvent.id))) EVENTS.push(newEvent);
+}
+
 function renderView(){
   const app=document.getElementById('app'); const container=document.getElementById('view-container');
   if(state.view!=='host') destroyHostMap();
@@ -3435,6 +3542,7 @@ function renderView(){
   else if(state.view==='social'){ container.innerHTML=renderSocialTab(); }
   else if(state.view==='owner-dash'){ container.innerHTML=renderOwnerDash(); setTimeout(initOwnerDash,0); }
   else if(state.view==='review'){ renderReview(); return; }
+  else if(state.view==='event-approvals'){ renderEventApprovals(); return; }
   const cm=document.getElementById('chat-messages'); if(cm) cm.scrollTop=cm.scrollHeight;
 }
 
@@ -4123,6 +4231,10 @@ function renderProfile(){
         </button>
         <button class="prof-action-row" onclick="openReview()">
           <span class="prof-action-label">Host applications<span class="prof-action-sub">Review &amp; approve hosts</span></span>
+          <span class="prof-action-right">›</span>
+        </button>
+        <button class="prof-action-row" onclick="openEventApprovals()">
+          <span class="prof-action-label">Event approvals<span class="prof-action-sub">Review &amp; publish public events</span></span>
           <span class="prof-action-right">›</span>
         </button>
         <button class="prof-action-row prof-action-danger" onclick="clearAllUsers()">
