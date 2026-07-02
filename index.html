@@ -7088,6 +7088,9 @@
     .cpass-card { gap: 10px; }
   }
 
+  /* Loading cloud transition removed entirely — never render the veil */
+  #cloud-veil, #cloud-veil.cv-active, #cloud-veil.cv-phase-part { display: none !important; }
+
   /* ═══════════════════════════════════════════════════════════
      REDESIGN 8.0 — CLOUDS AS THE FOCAL POINT
      Big fluffy cumulus, layered parallax, smooth continuous drift.
@@ -7850,9 +7853,6 @@ async function start(){
           fact:profile.card_fact||''
         };
       }
-      // Raise the veil before enterApp renders — no flash from auth page to map
-      const veil=document.getElementById('cloud-veil');
-      if(veil) veil.classList.add('cv-active');
       enterApp();
       return;
     }
@@ -8410,8 +8410,6 @@ async function submitGate(){
 
   document.body.style.overflow='';
   document.getElementById('gate-root').innerHTML='';
-  const _sv=document.getElementById('cloud-veil');
-  if(_sv) _sv.classList.add('cv-active');
   enterApp();
 }
 
@@ -8450,40 +8448,21 @@ async function _submitHostApplication({name,email,bizName,hostDesc,whyHost}){
         <div class="gate-host-success-icon">🎉</div>
         <div class="gate-host-success-title">Application submitted!</div>
         <div class="gate-host-success-sub">Thanks ${escapeHtml(name)} — we'll review your application and get back to you within 48 hours. In the meantime, you can explore Cumulus as an attendee.</div>
-        <button class="btn" style="width:100%;margin-top:24px;" onclick="document.body.style.overflow='';document.getElementById('gate-root').innerHTML='';const _hv=document.getElementById('cloud-veil');if(_hv)_hv.classList.add('cv-active');enterApp();">Explore Cumulus →</button>
+        <button class="btn" style="width:100%;margin-top:24px;" onclick="document.body.style.overflow='';document.getElementById('gate-root').innerHTML='';enterApp();">Explore Cumulus →</button>
       </div>`;
   }
 }
-function showCloudTransition() {
-  const veil = document.getElementById('cloud-veil');
-  if (!veil) return;
-  const isDark = state.theme === 'dark';
-  if (isDark) {
-    veil.classList.add('cv-lightning-flash');
-    setTimeout(() => veil.classList.remove('cv-lightning-flash'), 600);
-  }
-  setTimeout(() => {
-    veil.classList.add('cv-phase-part');
-    setTimeout(() => {
-      veil.classList.remove('cv-active', 'cv-phase-part');
-      veil.style.opacity = '';
-    }, 1700);
-  }, isDark ? 150 : 0);
-}
+// Cloud loading transition removed — enter the app directly.
+function showCloudTransition() {}
 
 function enterApp() {
-  const veil = document.getElementById('cloud-veil');
-  if (veil) veil.classList.add('cv-active'); // safety: ensure veil is up
   const app = document.getElementById('app');
   app.style.display = '';
   // Always boot to the map — never restore a stale tab from memory
   state.view = 'browse';
-  // Render synchronously with seed data so the map is painted under the veil
   EVENTS.forEach(ev => computeEventDates(ev));
   renderNav();
   renderView();
-  // Start parting after two frames (gives browser time to paint the map)
-  requestAnimationFrame(() => requestAnimationFrame(showCloudTransition));
   // Load real data in the background without blocking
   initApp();
 }
