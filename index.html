@@ -7032,17 +7032,15 @@
     user-select: none;
   }
   .profile-id-card.pass-spin {
-    animation: passSpin 0.62s both !important;
-    will-change: transform;                 /* promote to GPU layer for 60fps */
+    /* one continuous, GPU-composited rotation — fast + buttery, no mid stops */
+    animation: passSpin 0.42s cubic-bezier(0.16, 0.84, 0.3, 1) both !important;
+    will-change: transform;
+    transform: translateZ(0);        /* own compositor layer → 60fps */
     backface-visibility: visible;
-    transform: translateZ(0);               /* own compositor layer, no jank */
   }
   @keyframes passSpin {
-    /* fast lean-in punch → smooth decelerate → slight overshoot → settle */
-    0%   { transform: rotateY(0deg)   scale(1);    animation-timing-function: cubic-bezier(0.45, 0, 0.35, 1); }
-    52%  { transform: rotateY(215deg) scale(1.09); animation-timing-function: cubic-bezier(0.25, 0.55, 0.2, 1); }
-    82%  { transform: rotateY(372deg) scale(1.02); }
-    100% { transform: rotateY(360deg) scale(1); }
+    from { transform: translateZ(0) rotateY(0deg); }
+    to   { transform: translateZ(0) rotateY(360deg); }
   }
 
 </style>
