@@ -2925,7 +2925,7 @@
   .section-title::before { width: 5px; height: 5px; }
 
   /* Profile card: static, no hover lift (View + QR buttons handle it) */
-  .profile-id-card:hover { transform: none !important; box-shadow: inherit !important; }
+  .profile-id-card:hover:not(.pass-spin) { transform: none !important; box-shadow: inherit !important; }
 
   /* Stat boxes: less aggressive colour on numbers */
   .stat-num { font-size: 26px; font-weight: 700; color: var(--text); }
