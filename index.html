@@ -4387,32 +4387,7 @@
     overflow: hidden;
     pointer-events: none;
   }
-  .lp-cld {
-    position: absolute;
-    width: 55vw;
-    aspect-ratio: 2049/815;
-    background-image: var(--cloud-png);
-    background-size: 100% 100%;
-    background-repeat: no-repeat;
-    opacity: 0.55;
-    animation: lpCldDrift calc(14s * var(--ci, 1)) linear infinite;
-    will-change: transform;
-    filter: brightness(1.08) saturate(0.7);
-  }
-  [data-theme="dark"] .lp-cld {
-    opacity: 0.22;
-    filter: brightness(0.45) saturate(0.25) hue-rotate(205deg);
-  }
-  @keyframes lpCldDrift {
-    0%   { transform: translateX(0vw); }
-    100% { transform: translateX(160vw); }
-  }
-  /* Stagger start positions so they don't all begin at the same point */
-  .lp-cld:nth-child(1) { animation-delay: 0s; }
-  .lp-cld:nth-child(2) { animation-delay: calc(-14s * 0.3); }
-  .lp-cld:nth-child(3) { animation-delay: calc(-14s * 0.6); }
-  .lp-cld:nth-child(4) { animation-delay: calc(-14s * 0.15); }
-  .lp-cld:nth-child(5) { animation-delay: calc(-14s * 0.45); }
+  /* base cloud styles live in the REDESIGN 8.0 block at end of stylesheet */
 
   /* ════════ HERO & LANDING LAYOUT POLISH ════════ */
   .lp-hero {
@@ -6104,10 +6079,6 @@
   [data-theme="dark"] .blot-b  { opacity: 0.40 !important; }
   [data-theme="dark"] .blot-c  { opacity: 0.35 !important; }
 
-  /* ── LANDING HERO CLOUD LAYER — remove on desktop ───────── */
-  @media (min-width: 768px) {
-    .lp-cloud-layer { display: none !important; }
-  }
 
   /* ══════════════════════════════════════════════════════════
      REDESIGN 3.1 — Interior App Polish
@@ -6730,9 +6701,6 @@
   /* ── ATMOSPHERE — dial down background noise ─────────────── */
   .bg-blot { opacity: 0.045 !important; filter: blur(96px) !important; }
 
-  /* ── LANDING CLOUDS — faint, neutral, no blue hue ───────── */
-  .lp-cld { opacity: 0.07 !important; filter: brightness(1.04) saturate(0) !important; }
-  [data-theme="dark"] .lp-cld { opacity: 0.09 !important; filter: brightness(0.55) saturate(0) !important; }
   .lp-blob { display: none !important; }
   .lp-hero::after {
     background: radial-gradient(circle, color-mix(in srgb, var(--accent) 7%, transparent) 0%, transparent 70%) !important;
@@ -6854,23 +6822,6 @@
   @media (max-width: 380px) {
     .lp-hero-title { font-size: 35px !important; }
   }
-
-  /* ── LANDING CLOUDS — bigger, softer, more flowing ──────── */
-  .lp-cld {
-    width: 92vw !important;
-    opacity: 0.16 !important;
-    filter: brightness(1.05) saturate(0) blur(1px) !important;
-    animation-duration: calc(26s * var(--ci, 1)) !important;
-  }
-  [data-theme="dark"] .lp-cld {
-    opacity: 0.12 !important;
-    filter: brightness(0.6) saturate(0) blur(1px) !important;
-  }
-  .lp-cld:nth-child(1) { top: 8% !important; }
-  .lp-cld:nth-child(2) { top: 30% !important; }
-  .lp-cld:nth-child(3) { top: 52% !important; }
-  .lp-cld:nth-child(4) { top: 68% !important; }
-  .lp-cld:nth-child(5) { top: 82% !important; }
 
   /* ── SIGN-UP MODAL — clean, modern, fixed margins ───────── */
   .lp-signup-modal { padding: 30px 26px 26px !important; border-radius: 24px !important; max-width: 440px !important; }
@@ -7135,6 +7086,48 @@
     .cpass-qr { width: 122px; height: 122px; }
     .cpass-qr img, .cpass-qr canvas { width:122px !important; height:122px !important; }
     .cpass-card { gap: 10px; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     REDESIGN 8.0 — CLOUDS AS THE FOCAL POINT
+     Big fluffy cumulus, layered parallax, smooth continuous drift.
+     ═══════════════════════════════════════════════════════════ */
+  .lp-cloud-layer { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
+  .lp-cld {
+    position: absolute;
+    aspect-ratio: 2049 / 815;
+    background-image: var(--cloud-png);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    will-change: transform;
+    transform: translate3d(-95vw, 0, 0);
+    animation: lpCldDrift var(--dur, 70s) linear infinite;
+    animation-delay: var(--dly, 0s);
+    /* light mode: soft near-white cumulus with gentle definition */
+    filter: blur(var(--blur, 0px)) brightness(1.02) saturate(0.16) contrast(1.02)
+            drop-shadow(0 10px 22px rgba(120,120,130,0.12));
+  }
+  [data-theme="dark"] .lp-cld {
+    /* dark mode: luminous white cumulus glowing over matte black */
+    filter: blur(var(--blur, 0px)) brightness(1.35) saturate(0) contrast(1.06)
+            drop-shadow(0 0 26px rgba(255,255,255,0.10));
+  }
+  @keyframes lpCldDrift {
+    from { transform: translate3d(-95vw, 0, 0); }
+    to   { transform: translate3d(195vw, 0, 0); }
+  }
+  /* Legibility scrim — softly settles the sky behind the hero copy */
+  .lp-cloud-scrim {
+    position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    background: radial-gradient(ellipse 82% 46% at 50% 40%, var(--bg) 0%, color-mix(in srgb, var(--bg) 45%, transparent) 42%, transparent 72%);
+    opacity: 0.62;
+  }
+  [data-theme="dark"] .lp-cloud-scrim { opacity: 0.55; }
+  /* Keep hero copy above the sky */
+  .lp-hero-content { position: relative; z-index: 3; }
+  .lp-hero-bg { z-index: 0 !important; }
+  @media (prefers-reduced-motion: reduce) {
+    .lp-cld { animation: none; transform: translate3d(30vw, 0, 0); }
   }
 
 </style>
@@ -7957,12 +7950,21 @@ function renderGate(prefillName,prefillEmail){
     <section class="lp-hero">
       <div class="lp-hero-bg"></div>
       <div class="lp-cloud-layer" aria-hidden="true">
-        <div class="lp-cld" style="--ci:1;bottom:2%;left:-20%"></div>
-        <div class="lp-cld" style="--ci:2;bottom:18%;left:-30%"></div>
-        <div class="lp-cld" style="--ci:3;bottom:6%;left:-25%"></div>
-        <div class="lp-cld" style="--ci:4;bottom:28%;left:-15%"></div>
-        <div class="lp-cld" style="--ci:5;bottom:12%;left:-22%"></div>
+        <!-- far wisps — small, soft, slow -->
+        <div class="lp-cld" style="top:5%;width:44vw;opacity:0.34;--dur:118s;--dly:-8s;--blur:3.5px"></div>
+        <div class="lp-cld" style="top:17%;width:38vw;opacity:0.28;--dur:132s;--dly:-74s;--blur:4px"></div>
+        <div class="lp-cld" style="top:29%;width:48vw;opacity:0.30;--dur:104s;--dly:-42s;--blur:3px"></div>
+        <!-- mid layer -->
+        <div class="lp-cld" style="top:11%;width:64vw;opacity:0.50;--dur:84s;--dly:-56s;--blur:1.6px"></div>
+        <div class="lp-cld" style="top:39%;width:70vw;opacity:0.52;--dur:74s;--dly:-18s;--blur:1.4px"></div>
+        <div class="lp-cld" style="top:54%;width:60vw;opacity:0.46;--dur:90s;--dly:-64s;--blur:1.9px"></div>
+        <!-- near — big fluffy cumulus banked low -->
+        <div class="lp-cld" style="top:60%;width:106vw;opacity:0.70;--dur:56s;--dly:-31s;--blur:0.5px"></div>
+        <div class="lp-cld" style="top:71%;width:124vw;opacity:0.82;--dur:48s;--dly:-9s;--blur:0px"></div>
+        <div class="lp-cld" style="top:81%;width:98vw;opacity:0.74;--dur:62s;--dly:-45s;--blur:0.7px"></div>
+        <div class="lp-cld" style="top:89%;width:132vw;opacity:0.80;--dur:52s;--dly:-24s;--blur:0px"></div>
       </div>
+      <div class="lp-cloud-scrim" aria-hidden="true"></div>
       <div class="lp-hero-blobs">
         <div class="lp-blob lp-blob-a"></div>
         <div class="lp-blob lp-blob-b"></div>
