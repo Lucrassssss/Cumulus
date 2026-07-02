@@ -784,9 +784,11 @@ function renderGate(prefillName,prefillEmail){
         <div class="lp-nav-links hide-mobile">
           <a href="#" onclick="document.getElementById('lp-features-anchor').scrollIntoView({behavior:'smooth'});return false;">Features</a>
           <a href="#" onclick="document.getElementById('lp-venues-anchor').scrollIntoView({behavior:'smooth'});return false;">For Venues</a>
-          <a href="#" onclick="showLpLogin();return false;">Log in</a>
         </div>
-        <button class="btn lp-nav-btn" onclick="showLpSignup()">Get Access →</button>
+        <div class="lp-nav-auth">
+          <button class="lp-nav-login" onclick="showLpLogin()">Log in</button>
+          <button class="btn lp-nav-btn" onclick="showLpSignup()">Sign up</button>
+        </div>
       </div>
     </nav>
 

@@ -33,10 +33,13 @@ async function setView(page, view) {
 
 test.describe('Cumulus smoke', () => {
 
-  test('landing renders with hero + primary CTAs', async ({ page }) => {
+  test('landing renders with hero + separate nav auth (Log in / Sign up)', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('.lp-hero-title')).toContainText('Find your people');
-    await expect(page.getByRole('button', { name: /Get Access/i })).toBeVisible();
+    const nav = page.locator('.lp-nav');
+    await expect(nav.getByRole('button', { name: 'Log in', exact: true })).toBeVisible();
+    await expect(nav.getByRole('button', { name: 'Sign up', exact: true })).toBeVisible();
+    await expect(page.locator('.lp-nav-auth button')).toHaveCount(2);
     await expect(page.locator('.lp-hero-actions .lp-hero-btn-primary')).toBeVisible();
   });
 
