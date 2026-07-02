@@ -1,0 +1,19 @@
+# ── Environment / secrets — NEVER commit these ──────────────────────────────
+.env
+.env.local
+.env.*.local
+src/js/env.js
+
+# ── Dependencies / build output ──────────────────────────────────────────────
+node_modules/
+dist/
+
+# ── OS / editor noise ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+.idea/
+.vscode/
+*.log
