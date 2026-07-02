@@ -1,0 +1,19 @@
+# Secrets / local overrides
+.env
+.env.local
+src/js/config.local.js
+
+# Dependencies (if a build step is added later)
+node_modules/
+dist/
+.cache/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Logs
+*.log
