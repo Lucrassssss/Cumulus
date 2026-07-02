@@ -7102,7 +7102,7 @@
     --ease-out: cubic-bezier(.22,1,.36,1);
     --ease-spring: cubic-bezier(.34,1.56,.64,1);
     --r-xl: 28px; --r-lg: 22px; --r-md: 16px; --r-sm: 12px;
-    --hero-img: url('https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1900&q=75&auto=format&fit=crop');
+    --hero-img: url('../../assets/img/hero-rooftops.svg');
   }
 
   /* ── Display typography — DM Sans, confident + tight ──────── */
@@ -7195,8 +7195,8 @@
   /* ── Venue section — real venue backdrop, stays dark ──────── */
   .lp-venues-section {
     background:
-      linear-gradient(rgba(6,6,6,.84), rgba(6,6,6,.93)),
-      url('https://images.unsplash.com/photo-1543007630-9710e4a00a20?w=1600&q=72&auto=format&fit=crop') center/cover no-repeat !important;
+      linear-gradient(rgba(6,6,6,.80), rgba(6,6,6,.90)),
+      url('../../assets/img/hero-rooftops.svg') center/cover no-repeat !important;
   }
   .lp-venues-stats { gap: 14px !important; }
   .lp-vstat {

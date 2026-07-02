@@ -824,19 +824,19 @@ function renderGate(prefillName,prefillEmail){
       </div>
       <div class="lp-features-grid">
         <div class="lp-feat-card">
-          <div class="lp-feat-photo" style="background-image:url('https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&q=72&auto=format&fit=crop')"></div>
+          <div class="lp-feat-photo" style="background-image:url('assets/img/discover.svg')"></div>
           <div class="lp-feat-card-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg></div>
           <div class="lp-feat-card-title">Discover locally</div>
           <div class="lp-feat-card-desc">Browse events happening in your neighbourhood — from jazz nights and gallery openings to supper clubs and community walks.</div>
         </div>
         <div class="lp-feat-card">
-          <div class="lp-feat-photo" style="background-image:url('https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=72&auto=format&fit=crop')"></div>
+          <div class="lp-feat-photo" style="background-image:url('assets/img/pass.svg')"></div>
           <div class="lp-feat-card-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg></div>
           <div class="lp-feat-card-title">Your digital pass</div>
           <div class="lp-feat-card-desc">A personalised card you carry to every event. Share your QR code to connect instantly with people you meet in person.</div>
         </div>
         <div class="lp-feat-card">
-          <div class="lp-feat-photo" style="background-image:url('https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&q=72&auto=format&fit=crop')"></div>
+          <div class="lp-feat-photo" style="background-image:url('assets/img/connect.svg')"></div>
           <div class="lp-feat-card-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
           <div class="lp-feat-card-title">Real connections</div>
           <div class="lp-feat-card-desc">See who's going before you arrive. Meet people who share your interests. Build friendships that last beyond the event.</div>

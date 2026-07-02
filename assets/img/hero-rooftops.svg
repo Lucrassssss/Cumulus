@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="London rooftops and chimneys under soft cumulus clouds at golden hour">
+  <defs>
+    <linearGradient id="hsky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#0E0C08"/>
+      <stop offset="0.55" stop-color="#181410"/>
+      <stop offset="1"    stop-color="#221B12"/>
+    </linearGradient>
+    <radialGradient id="hsun" cx="72%" cy="30%" r="55%">
+      <stop offset="0"   stop-color="#E8B84B" stop-opacity="0.5"/>
+      <stop offset="0.5" stop-color="#E8B84B" stop-opacity="0.14"/>
+      <stop offset="1"   stop-color="#E8B84B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="hcloud" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4EDDD"/>
+      <stop offset="1" stop-color="#D8C79E"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#hsky)"/>
+  <rect width="1600" height="900" fill="url(#hsun)"/>
+  <!-- sun disc -->
+  <circle cx="1150" cy="270" r="70" fill="#E8B84B" opacity="0.55"/>
+  <circle cx="1150" cy="270" r="42" fill="#F4EDDD" opacity="0.85"/>
+  <!-- big soft cumulus clouds -->
+  <g fill="url(#hcloud)" opacity="0.92">
+    <g transform="translate(240 210)">
+      <ellipse cx="0"   cy="40" rx="130" ry="60"/>
+      <ellipse cx="110" cy="20" rx="120" ry="72"/>
+      <ellipse cx="230" cy="46" rx="130" ry="58"/>
+      <ellipse cx="120" cy="70" rx="200" ry="52"/>
+    </g>
+    <g transform="translate(900 120)" opacity="0.85">
+      <ellipse cx="0"   cy="40" rx="110" ry="52"/>
+      <ellipse cx="95"  cy="22" rx="105" ry="64"/>
+      <ellipse cx="200" cy="44" rx="115" ry="50"/>
+      <ellipse cx="100" cy="66" rx="175" ry="46"/>
+    </g>
+  </g>
+  <g fill="#E8B84B" opacity="0.14">
+    <g transform="translate(560 430)">
+      <ellipse cx="0"   cy="30" rx="120" ry="46"/>
+      <ellipse cx="100" cy="14" rx="110" ry="56"/>
+      <ellipse cx="205" cy="34" rx="120" ry="44"/>
+    </g>
+  </g>
+  <!-- distant skyline -->
+  <g fill="#1A160F" opacity="0.7">
+    <rect x="0"    y="560" width="120" height="340"/>
+    <rect x="140"  y="600" width="90"  height="300"/>
+    <rect x="250"  y="540" width="70"  height="360"/>
+    <rect x="1180" y="560" width="110" height="340"/>
+    <rect x="1310" y="590" width="90"  height="310"/>
+    <rect x="1420" y="540" width="180" height="360"/>
+  </g>
+  <!-- terraced rooftops (foreground) -->
+  <g fill="#241F18">
+    <rect x="0"    y="660" width="220" height="240"/>
+    <rect x="230"  y="620" width="220" height="280"/>
+    <rect x="460"  y="672" width="230" height="228"/>
+    <rect x="700"  y="628" width="230" height="272"/>
+    <rect x="940"  y="668" width="230" height="232"/>
+    <rect x="1180" y="620" width="230" height="280"/>
+    <rect x="1420" y="666" width="200" height="234"/>
+  </g>
+  <g fill="#161209">
+    <polygon points="0,660 110,596 220,660"/>
+    <polygon points="230,620 340,556 450,620"/>
+    <polygon points="460,672 575,608 690,672"/>
+    <polygon points="700,628 815,564 930,628"/>
+    <polygon points="940,668 1055,604 1170,668"/>
+    <polygon points="1180,620 1295,556 1410,620"/>
+    <polygon points="1420,666 1520,606 1620,666"/>
+  </g>
+  <!-- chimneys -->
+  <g fill="#2C261D">
+    <rect x="70"   y="600" width="34" height="60"/>
+    <rect x="300"  y="560" width="34" height="60"/>
+    <rect x="535"  y="612" width="34" height="60"/>
+    <rect x="775"  y="568" width="34" height="60"/>
+    <rect x="1015" y="608" width="34" height="60"/>
+    <rect x="1255" y="560" width="34" height="60"/>
+  </g>
+  <!-- lit windows -->
+  <g fill="#E8B84B">
+    <rect x="50"   y="720" width="34" height="46" rx="3"/>
+    <rect x="130"  y="720" width="34" height="46" rx="3" opacity="0.6"/>
+    <rect x="290"  y="686" width="34" height="46" rx="3" opacity="0.75"/>
+    <rect x="370"  y="686" width="34" height="46" rx="3"/>
+    <rect x="520"  y="732" width="34" height="46" rx="3" opacity="0.65"/>
+    <rect x="760"  y="694" width="34" height="46" rx="3"/>
+    <rect x="840"  y="694" width="34" height="46" rx="3" opacity="0.55"/>
+    <rect x="1000" y="730" width="34" height="46" rx="3" opacity="0.7"/>
+    <rect x="1240" y="686" width="34" height="46" rx="3"/>
+    <rect x="1320" y="686" width="34" height="46" rx="3" opacity="0.6"/>
+    <rect x="1480" y="728" width="34" height="46" rx="3" opacity="0.7"/>
+  </g>
+</svg>
