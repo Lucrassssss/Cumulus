@@ -494,7 +494,7 @@ function showConfirm(title, body, confirmLabel, dangerFnName){
   const ov=document.createElement('div');
   ov.className='cu-confirm-overlay';
   ov.setAttribute('id','cu-confirm-overlay');
-  ov.innerHTML=`<div class="cu-confirm-sheet" role="dialog" aria-modal="true"><div class="cu-confirm-title">${escapeHtml(title)}</div><div class="cu-confirm-body">${escapeHtml(body)}</div><div class="cu-confirm-actions"><button class="btn btn-cancel" onclick="document.getElementById('cu-confirm-overlay')?.remove()">Cancel</button><button class="btn" onclick="document.getElementById('cu-confirm-overlay')?.remove();window[${JSON.stringify(dangerFnName)}](true)">${escapeHtml(confirmLabel)}</button></div></div>`;
+  ov.innerHTML=`<div class="cu-confirm-sheet" role="dialog" aria-modal="true"><div class="cu-confirm-title">${escapeHtml(title)}</div><div class="cu-confirm-body">${escapeHtml(body)}</div><div class="cu-confirm-actions"><button class="btn btn-cancel" onclick="document.getElementById('cu-confirm-overlay')?.remove()">Cancel</button><button class="btn" onclick="document.getElementById('cu-confirm-overlay')?.remove();window['${dangerFnName}'](true)">${escapeHtml(confirmLabel)}</button></div></div>`;
   document.body.appendChild(ov);
 }
 function getTheme(id){ return CARD_THEMES.find(t=>t.id===id)||CARD_THEMES[0]; }
@@ -651,10 +651,14 @@ async function start(){
   applyTheme();
   MAPBOX_TOKEN=DEFAULT_MAPBOX_TOKEN;
 
-  // Check if we have a cached email to try loading from Supabase
+  // Check if we have a cached email to try loading from Supabase. Any failure
+  // here (network blip, Supabase unreachable) must never blank the app — fall
+  // through to the cached-session restore, then to the gate.
   const cachedEmail=await localGet('cumulus_email');
   if(cachedEmail){
-    const {data:profile}=await sb.from('users').select('*').eq('email',cachedEmail).single();
+    let profile=null;
+    try{ const r=await sb.from('users').select('*').eq('email',cachedEmail).single(); profile=r.data; }
+    catch(e){ profile=null; }
     if(profile&&profile.name){
       state.userId=profile.id;
       state.profileId=profile.profile_id||generateUniqueId();
@@ -674,9 +678,28 @@ async function start(){
           fact:profile.card_fact||''
         };
       }
+      _cacheSession();
       enterApp();
       return;
     }
+    // Supabase didn't answer but we have a cached snapshot — restore offline.
+    // Fresh data loads in the background once initApp() reaches the network.
+    try{
+      const raw=await localGet('cumulus_session');
+      if(raw){
+        const s=JSON.parse(raw);
+        if(s&&s.email===cachedEmail&&s.name){
+          state.userId=s.userId;
+          state.profileId=s.profileId||generateUniqueId();
+          state.profileName=s.name;
+          state.profileEmail=s.email;
+          state.specialBadges=s.specialBadges||[];
+          if(s.theme){ state.theme=s.theme; applyTheme(); }
+          enterApp();
+          return;
+        }
+      }
+    }catch(e){}
   }
   // No cached session — show the gate
   renderGate();
@@ -1148,6 +1171,17 @@ function lpUpdatePassName(val){
   if(el) el.textContent=val.trim()||'Your name here';
 }
 function gateErr(msg){ const el=document.getElementById('gate-field-error'); if(el){el.textContent=msg;el.classList.add('show');} }
+// Persist a lightweight session snapshot so a reload can restore instantly and
+// still boot the app if Supabase is momentarily unreachable.
+function _cacheSession(){
+  try{
+    localStorage.setItem('cumulus_session', JSON.stringify({
+      userId: state.userId, profileId: state.profileId,
+      name: state.profileName, email: state.profileEmail,
+      specialBadges: state.specialBadges||[], theme: state.theme
+    }));
+  }catch(e){}
+}
 function _restoreUserFromRow(existing){
   state.userId=existing.id;
   state.profileId=existing.profile_id||generateUniqueId();
@@ -1223,9 +1257,10 @@ async function submitGate(){
     }
   }
 
-  // Cache email locally
+  // Cache session locally (email + lightweight snapshot for offline restore)
   await localSet('cumulus_email',email);
   await localSet('prefs',JSON.stringify({theme:state.theme}));
+  _cacheSession();
 
   // Host application flow (sign up only)
   if(!isLogin && _signupType==='host'){
@@ -1891,15 +1926,21 @@ function destroyMainMap(){
 }
 function destroyHostMap(){ if(hostMap){ try{ hostMap.remove(); }catch(e){} hostMap=null; hostMarker=null; } }
 
-async function resetProfile(confirmed){
-  if(!confirmed){ showConfirm('Sign out?','You\'ll return to the welcome screen. Your data is saved.','Sign out','resetProfile'); return; }
+// Dedicated sign-out — tears the session down cleanly and returns to the gate.
+// Confirms first unless called with confirmed=true (e.g. from clearAllUsers).
+async function signOut(confirmed){
+  if(!confirmed){ showConfirm('Sign out?','You\'ll return to the welcome screen. Your data is saved.','Sign out','signOut'); return; }
+  // Clear any Supabase auth session (defensive — harmless if none is active,
+  // and future-proofs a move to real sb.auth without leaving a token behind).
+  try{ await sb.auth.signOut(); }catch(e){}
   // Clear local session cache
   try{ localStorage.removeItem('cumulus_email'); }catch(e){}
+  try{ localStorage.removeItem('cumulus_session'); }catch(e){}
   try{ localStorage.removeItem('prefs'); }catch(e){}
   // Unsubscribe from all realtime channels
   Object.values(chatSubscriptions).forEach(sub=>{ try{ sb.removeChannel(sub); }catch(e){} });
   Object.keys(chatSubscriptions).forEach(k=>delete chatSubscriptions[k]);
-  // Reset state
+  // Reset in-memory state
   state.userId=null; state.profileName=''; state.profileEmail=''; state.profileId=null;
   state.specialBadges=[]; state.myCard=null; state.friends=[]; state.editingProfile=false;
   state.view='browse'; state.rsvps={}; state.chats={}; myTickets=[];
@@ -1908,6 +1949,8 @@ async function resetProfile(confirmed){
   document.getElementById('nav-container').innerHTML=''; document.getElementById('view-container').innerHTML='';
   renderGate();
 }
+// Back-compat alias — older call sites referenced resetProfile by name.
+function resetProfile(confirmed){ return signOut(confirmed); }
 
 let navStack = [];
 function pushNav(){ navStack.push({view:state.view, selectedEventId:state.selectedEventId}); }
@@ -4063,7 +4106,7 @@ function renderProfile(){
         <span class="prof-action-label">Edit name &amp; email</span>
         <span class="prof-action-right">›</span>
       </button>
-      <button class="prof-action-row prof-action-signout" onclick="resetProfile(true)">
+      <button class="prof-action-row prof-action-signout" onclick="signOut()">
         <span class="prof-action-label">Sign out</span>
         <span class="prof-action-right">›</span>
       </button>
@@ -4918,7 +4961,8 @@ function renderSocialTab(){
     ${past.length?`<div class="section-title">Past</div>${past.map(renderEvCard).join('')}`:''}`;
 }
 
-start();
+// Boot. Never let an unexpected rejection leave the user on a blank screen.
+start().catch(e=>{ console.error('Boot failed, showing gate:',e); try{ renderGate(); }catch(_){} });
 
 // ══════════════════════════════════════════════
 // PROFESSIONAL POLISH — PHASE II JAVASCRIPT
