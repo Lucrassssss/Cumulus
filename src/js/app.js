@@ -3605,6 +3605,63 @@ function pinTooltipHtml(ev){
 }
 
 
+// ── Members' perks (WCAG-safe gating) ─────────────────────────────────────
+// The event and its details are always fully visible. Only the *perks* are
+// gated: they unlock once the member is curator-verified or has checked in at
+// the venue. isPerkUnlocked / canCheckInAt live in the services layer.
+const MEMBER_PERKS = [
+  ['🥂', 'Welcome drink', "A drink on the house when you arrive"],
+  ['✦', 'Priority guestlist', "Skip the queue — your name's on the door"],
+  ['🗝', 'The back room', "Access to members-only spaces at the venue"],
+];
+function renderPerkPanel(ev){
+  if(isPerkUnlocked(state)){
+    return `<div class="perk-panel unlocked">
+      <div class="perk-head"><span class="perk-badge">✦ Members' perks</span><span class="perk-status ok">Unlocked</span></div>
+      <div class="perk-list">${MEMBER_PERKS.map(p=>`<div class="perk-row"><span class="perk-ic">${p[0]}</span><div><div class="perk-name">${p[1]}</div><div class="perk-sub">${p[2]}</div></div></div>`).join('')}</div>
+    </div>`;
+  }
+  return `<div class="perk-panel locked">
+    <div class="perk-head"><span class="perk-badge">🔒 Members' perks</span><span class="perk-status">Locked</span></div>
+    <div class="perk-blurb">This event carries members-only perks — guestlist, a welcome drink, and the back room. Unlock them with a curator code, or check in at the venue when you arrive.</div>
+    <div class="perk-actions">
+      <button class="btn perk-btn-primary" onclick="promptCuratorUnlock()">Enter curator code</button>
+      <button class="btn btn-outline perk-btn-secondary" onclick="checkInToEvent(${ev.id})">Check in at the door</button>
+    </div>
+  </div>`;
+}
+async function promptCuratorUnlock(){
+  const code = prompt('Enter your curator code (CUR-XXXX-XXXX):');
+  if(code===null) return;
+  const res = await validateCuratorCode(code);
+  if(res.valid){
+    state.curatorVerified = true; state.curatorCode = res.code; state.curatorTier = res.tier||'standard';
+    showToast('Curator code accepted — perks unlocked','success');
+    renderView();
+  } else {
+    showToast(res.reason==='inactive' ? 'That code is no longer active' : "That doesn't look like a valid curator code",'error');
+  }
+}
+function checkInToEvent(id){
+  const ev=EVENTS.find(e=>e.id===id); if(!ev) return;
+  if(!navigator.geolocation){ showToast("Location isn't available on this device",'error'); return; }
+  showToast('Checking you in…','info');
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      const here={lat:pos.coords.latitude, lon:pos.coords.longitude};
+      if(ev.lat!=null && ev.lon!=null && canCheckInAt(here,{lat:ev.lat,lon:ev.lon},200)){
+        state.checkedInEventId=id;
+        showToast('Checked in — perks unlocked','success');
+        renderView();
+      } else {
+        showToast('You need to be at the venue to check in','error');
+      }
+    },
+    ()=>showToast("Couldn't get your location",'error'),
+    {enableHighAccuracy:true, timeout:8000}
+  );
+}
+
 function renderDetail(id){
   const ev=EVENTS.find(e=>e.id===id);
   if(!ev) return `<div class="empty-state">Event not found.</div>`;
@@ -3637,6 +3694,7 @@ function renderDetail(id){
       <div class="detail-meta-row"><span>${ev.venue}${ev.area?`, ${ev.area}`:''}</span><span>By ${escapeHtml(ev.host)}</span></div>
       <div class="detail-desc">${ev.desc}</div>
       ${bookBtn}
+      ${renderPerkPanel(ev)}
       <div class="attendee-section">
         <h3>${attendees.length} going${ev.capacity?` (Limit ${ev.capacity})`:''}${friendsGoing.length?` · <span class="star">★</span> ${friendsGoing.length} friend${friendsGoing.length>1?'s':''}`:''}</h3>
         <div class="attendee-list">${attendees.length?attendees.map(n=>{ const fr=isFriend(n); return `<div class="attendee-chip ${fr?'friend':''}"><div class="avatar" style="margin-left:0">${initials(n)}</div><span>${fr?'<span class="star">★</span> ':''}${escapeHtml(n)}</span></div>`; }).join(''):`<span style="color:var(--text-muted);font-size:13px;">No bookings yet.</span>`}</div>

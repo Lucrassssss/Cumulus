@@ -133,6 +133,25 @@ test.describe('Cumulus smoke', () => {
     await expect(page.locator('.cpass-picker')).toBeVisible();
   });
 
+  test('perk gating: event visible, perks lock/unlock (WCAG-safe)', async ({ page }) => {
+    await page.goto('/');
+    await enterApp(page);
+    await page.evaluate(() => {
+      state.view = 'detail'; state.selectedEventId = EVENTS[0].id;
+      state.curatorVerified = false; state.checkedInEventId = null;
+      renderNav(); renderView();
+    });
+    // Event fully visible AND perks locked (content never hidden by the gate)
+    await expect(page.locator('.detail-title')).toBeVisible();
+    await expect(page.locator('.perk-panel.locked')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Enter curator code/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Check in at the door/i })).toBeVisible();
+    // Once verified, perks unlock
+    await page.evaluate(() => { state.curatorVerified = true; renderView(); });
+    await expect(page.locator('.perk-panel.unlocked')).toBeVisible();
+    await expect(page.locator('.perk-row')).toHaveCount(3);
+  });
+
   test('theme toggle flips data-theme', async ({ page }) => {
     await page.goto('/');
     await enterApp(page);
