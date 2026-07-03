@@ -1,0 +1,51 @@
+# Durable GitHub Pages deploy with a concurrency guard.
+#
+# WHY: the built-in "pages build and deployment" (Source = "Deploy from a
+# branch") starts a fresh deployment on every push. Rapid pushes collide and
+# GitHub returns "Deployment failed, try again later" — the recurring red ✗.
+# This workflow serialises deployments (concurrency group below) so pushes
+# queue instead of colliding.
+#
+# ── ACTIVATION (one-time, avoids any failing runs) ──────────────────────────
+#   1. Repo Settings → Pages → Build and deployment → Source → "GitHub Actions".
+#   2. Then change the trigger below from `workflow_dispatch` to:
+#          on:
+#            push: { branches: [main] }
+#            workflow_dispatch:
+#      (or just tell me and I'll flip it). It is dispatch-only for now so it
+#      never runs — and never fails — while the source is still "branch".
+# ────────────────────────────────────────────────────────────────────────────
+
+name: Deploy to GitHub Pages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; queue (don't cancel) so a run is never left half-done.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact (static site — repo root)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
