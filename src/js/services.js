@@ -23,10 +23,11 @@
  * A curator code is issued by a venue or host and unlocks *perks*
  * (guestlists, complimentary drinks) for the bearer. This is the
  * validation entry point. Format: CUR-XXXX-XXXX.
- * Validation is format-first, then an optional Supabase lookup against a
- * `curator_codes` table; if that table doesn't exist yet or the network
- * is down, it returns `unverified:true` rather than failing, so the
- * caller (onboarding UI) can decide how strict to be. */
+ * Validation is format-first, then a server check via the SECURITY DEFINER
+ * RPC `validate_curator_code` (so the `curator_codes` table is never exposed
+ * to the anon key). If that function doesn't exist yet or the network is down,
+ * it returns `unverified:true` rather than failing, so the caller (onboarding
+ * UI) can decide how strict to be. See supabase/migrations/. */
 const CURATOR_CODE_RE = /^CUR-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
 
 async function validateCuratorCode(rawCode) {
@@ -34,24 +35,22 @@ async function validateCuratorCode(rawCode) {
   if (!CURATOR_CODE_RE.test(code)) {
     return { valid: false, reason: 'format', code };
   }
-  // Optional server check. The table may not exist yet — treat any failure
-  // as "format valid but unverified" instead of throwing.
+  // Server check via a SECURITY DEFINER RPC so the `curator_codes` table is
+  // NOT exposed to the anon key (no dumping valid codes). The function returns
+  // the curator row only for an active code, and nothing otherwise.
+  //   • rows returned  → valid
+  //   • ran, no rows   → unknown/inactive code → reject
+  //   • call errored (function absent / offline) → lenient format-only fallback
   try {
-    const { data, error } = await sb
-      .from('curator_codes')
-      .select('code,curator_name,tier,active')
-      .eq('code', code)
-      .single();
-    if (!error && data) {
-      return {
-        valid: !!data.active,
-        reason: data.active ? 'ok' : 'inactive',
-        code,
-        curator: data.curator_name || null,
-        tier: data.tier || 'standard',
-      };
+    const { data, error } = await sb.rpc('validate_curator_code', { p_code: code });
+    if (!error && data !== null && data !== undefined) {
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row) {
+        return { valid: true, reason: 'ok', code, curator: row.curator_name || null, tier: row.tier || 'standard' };
+      }
+      return { valid: false, reason: 'unknown', code };
     }
-  } catch (e) { /* offline / table absent — fall through to format-only */ }
+  } catch (e) { /* offline / function absent — fall through to format-only */ }
   return { valid: true, reason: 'format-only', code, curator: null, tier: 'standard', unverified: true };
 }
 

@@ -1272,8 +1272,8 @@ async function submitGate(){
       const cur = await validateCuratorCode(curatorCode);
       if(!cur.valid){
         resetBtn('Unlock the map →');
-        gateErr(cur.reason==='inactive'
-          ? 'That curator code is no longer active — ask your host for a current one.'
+        gateErr(cur.reason==='inactive' ? 'That curator code is no longer active — ask your host for a current one.'
+          : cur.reason==='unknown' ? "We don't recognise that curator code. Check it, or check in at a venue to receive one."
           : 'Enter a valid curator code (CUR-XXXX-XXXX), or check in at a venue to receive one.');
         return;
       }
@@ -3653,7 +3653,9 @@ async function promptCuratorUnlock(){
     showToast('Curator code accepted — perks unlocked','success');
     renderView();
   } else {
-    showToast(res.reason==='inactive' ? 'That code is no longer active' : "That doesn't look like a valid curator code",'error');
+    showToast(res.reason==='inactive' ? 'That code is no longer active'
+      : res.reason==='unknown' ? "We don't recognise that code"
+      : "That doesn't look like a valid curator code",'error');
   }
 }
 function checkInToEvent(id){
