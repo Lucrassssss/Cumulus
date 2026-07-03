@@ -96,6 +96,17 @@ only checks until they exist): `curator_codes` (code, curator_name, tier,
 active), `pending_events`, alongside the existing `users`, `events`, `rsvps`,
 `tickets`, `chat_messages`, `friends`, `host_applications`.
 
+**Admin boundary (real auth).** Event approvals and curator-code management are
+gated **server-side** by RLS, not just the client-side owner-email check. An
+`admins` table + `is_admin()` back policies that require a Supabase **Auth**
+session; the owner obtains one via `promptAdminSignIn()` → `adminSendCode` /
+`adminVerifyCode` (email OTP). `pending_events` allows anyone to INSERT (submit)
+but only an admin to SELECT/UPDATE (review/approve). Everything falls back to the
+local flow when Auth isn't configured, so the app runs before go-live. Migration:
+`supabase/migrations/20260703000000_secret_club.sql`. Go-live: enable Email auth
+in Supabase, apply the migration, sign in once as the owner, then add that
+`auth.users` row to `public.admins`.
+
 ## Security model (important)
 
 There is no server to hide keys behind, so the keys in `config.js` are the

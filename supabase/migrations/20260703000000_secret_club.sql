@@ -11,6 +11,34 @@
 -- their reference shape is documented at the bottom for verification only.
 -- ============================================================================
 
+-- ── admin identity (real auth boundary) ─────────────────────────────────────
+-- Owners sign in via Supabase Auth; their auth.users.id is added here to grant
+-- admin rights. is_admin() is the single check every admin-only policy uses.
+create table if not exists public.admins (
+  user_id  uuid primary key references auth.users(id) on delete cascade,
+  email    text,
+  added_at timestamptz not null default now()
+);
+alter table public.admins enable row level security;
+
+drop policy if exists admins_self_read on public.admins;
+create policy admins_self_read on public.admins
+  for select to authenticated using (user_id = auth.uid());
+
+create or replace function public.is_admin()
+returns boolean
+language sql stable security definer set search_path = public
+as $$
+  select exists (select 1 from public.admins a where a.user_id = auth.uid());
+$$;
+grant execute on function public.is_admin() to anon, authenticated;
+
+-- After the owner signs in once (Supabase Auth), promote them by email:
+--   insert into public.admins (user_id, email)
+--   select id, email from auth.users where email = 'gondoxml@gmail.com'
+--   on conflict (user_id) do nothing;
+
+
 -- ── curator_codes ──────────────────────────────────────────────────────────
 create table if not exists public.curator_codes (
   code         text primary key,                    -- e.g. CUR-AB12-CD34 (upper)
@@ -22,10 +50,13 @@ create table if not exists public.curator_codes (
 
 alter table public.curator_codes enable row level security;
 
--- No policies for anon/authenticated on purpose: the anon key must NOT be able
--- to read this table directly (that would let anyone dump valid codes).
--- All validation flows through validate_curator_code() below.
--- (An admin using the service_role key bypasses RLS to manage codes.)
+-- No anon read policy: the anon key must NOT be able to read this table
+-- directly (that would let anyone dump valid codes). Validation flows only
+-- through validate_curator_code() below. Admins (see is_admin()) may manage
+-- codes with their authenticated session.
+drop policy if exists curator_codes_admin_all on public.curator_codes;
+create policy curator_codes_admin_all on public.curator_codes
+  for all to authenticated using (public.is_admin()) with check (public.is_admin());
 
 -- Validate a code without exposing the table. Returns the curator row only for
 -- an ACTIVE code; returns no rows otherwise. Client calls:
@@ -77,22 +108,22 @@ create table if not exists public.pending_events (
 
 alter table public.pending_events enable row level security;
 
--- Mirrors the existing host_applications posture: the anon client submits and
--- the owner reviews in-app. NOTE: approval is currently gated CLIENT-SIDE by the
--- owner's email — see the security note in the review. For a hardened setup,
--- replace the select/update policies below with an is_admin() check (JWT claim)
--- or move approvals behind the service_role key.
+-- Hardened (option B): anyone may SUBMIT a public event, but only an
+-- authenticated ADMIN can read the queue or approve/reject. This is enforced
+-- server-side by RLS — the client-side owner-email check is now just UX.
 drop policy if exists pending_events_insert on public.pending_events;
 create policy pending_events_insert on public.pending_events
   for insert to anon, authenticated with check (true);
 
-drop policy if exists pending_events_select on public.pending_events;
-create policy pending_events_select on public.pending_events
-  for select to anon, authenticated using (true);
+drop policy if exists pending_events_select on public.pending_events;      -- remove any old permissive policy
+drop policy if exists pending_events_select_admin on public.pending_events;
+create policy pending_events_select_admin on public.pending_events
+  for select to authenticated using (public.is_admin());
 
-drop policy if exists pending_events_update on public.pending_events;
-create policy pending_events_update on public.pending_events
-  for update to anon, authenticated using (true) with check (true);
+drop policy if exists pending_events_update on public.pending_events;       -- remove any old permissive policy
+drop policy if exists pending_events_update_admin on public.pending_events;
+create policy pending_events_update_admin on public.pending_events
+  for update to authenticated using (public.is_admin()) with check (public.is_admin());
 
 -- ============================================================================
 -- REFERENCE ONLY — shape the client already expects for existing tables.

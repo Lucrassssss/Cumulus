@@ -3416,6 +3416,25 @@ async function reviewHost(appId, email, decision){
    ══════════════════════════════════════════════════ */
 function openEventApprovals(){ pushNav(); state.view='event-approvals'; renderNav(); renderView(); window.scrollTo({top:0,behavior:'smooth'}); }
 
+// Owner admin sign-in via Supabase Auth (option B). Obtains the JWT that RLS
+// checks with is_admin(), so approvals/curator management are enforced
+// server-side, not just by the client-side owner-email gate. Degrades
+// gracefully when Auth isn't configured (the app keeps its local fallback).
+async function promptAdminSignIn(){
+  const email = (prompt('Admin email (owner):', state.profileEmail||'')||'').trim();
+  if(!email) return;
+  showToast('Sending a one-time code…','info');
+  const sent = await adminSendCode(email);
+  if(!sent.ok){ showToast(sent.error==='unavailable'?'Auth unavailable right now':('Could not send code — '+(sent.error||'error')),'error'); return; }
+  const code = (prompt('Enter the 6-digit code sent to '+email+':')||'').trim();
+  if(!code) return;
+  const res = await adminVerifyCode(email, code);
+  const sub=document.getElementById('admin-auth-sub');
+  if(res.ok && res.isAdmin){ showToast('Admin verified — approvals unlocked','success'); if(sub) sub.textContent='Verified admin session active'; }
+  else if(res.ok){ showToast('Signed in, but this account is not an admin','error'); }
+  else { showToast('Verification failed — '+(res.error||'error'),'error'); }
+}
+
 function renderEventApprovals(){
   const container=document.getElementById('view-container');
   container.innerHTML=`
@@ -4259,6 +4278,10 @@ function renderProfile(){
     <div class="prof-admin-section">
       <div class="prof-admin-label">Admin &amp; Finances</div>
       <div class="prof-action-list">
+        <button class="prof-action-row" onclick="promptAdminSignIn()">
+          <span class="prof-action-label">Admin sign-in<span class="prof-action-sub" id="admin-auth-sub">Verify with a one-time code to approve events</span></span>
+          <span class="prof-action-right">›</span>
+        </button>
         <button class="prof-action-row" onclick="openOwnerDash()">
           <span class="prof-action-label">Finances<span class="prof-action-sub">Live revenue &amp; payouts</span></span>
           <span class="prof-action-right">›</span>

@@ -80,3 +80,28 @@ function distanceMeters(a, b) {
 function canCheckInAt(userLatLon, venueLatLon, radiusM) {
   return distanceMeters(userLatLon, venueLatLon) <= (radiusM || 150);
 }
+
+/* ── Admin auth (option B — real server-side boundary) ─────────
+ * Owner-only. Supabase Auth email OTP yields a JWT; RLS then enforces
+ * admin-only reads/writes on pending_events and curator_codes via is_admin().
+ * The owner must be listed in public.admins (see the migration). Everything
+ * degrades gracefully if Auth isn't configured yet, so the app still runs. */
+async function adminSendCode(email) {
+  try {
+    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+    return { ok: !error, error: error ? error.message : null };
+  } catch (e) { return { ok: false, error: 'unavailable' }; }
+}
+async function adminVerifyCode(email, token) {
+  try {
+    const { error } = await sb.auth.verifyOtp({ email, token, type: 'email' });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, isAdmin: await isAdminSession() };
+  } catch (e) { return { ok: false, error: 'unavailable' }; }
+}
+/* Is the CURRENT Supabase Auth session an admin? RLS-backed, so it can't be
+ * spoofed client-side. Returns false when unauthenticated or unconfigured. */
+async function isAdminSession() {
+  try { const { data, error } = await sb.rpc('is_admin'); if (!error) return !!data; } catch (e) {}
+  return false;
+}
