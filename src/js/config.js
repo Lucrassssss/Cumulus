@@ -23,4 +23,4 @@ window.CUMULUS_CONFIG = Object.assign({
 
 const SUPABASE_URL      = window.CUMULUS_CONFIG.SUPABASE_URL;
 const SUPABASE_ANON_KEY = window.CUMULUS_CONFIG.SUPABASE_ANON_KEY;
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+export const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

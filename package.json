@@ -4,6 +4,8 @@
   "private": true,
   "description": "Cumulus — London community events PWA (static, no build step)",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
     "serve": "python3 -m http.server 3457",
     "test": "playwright test",
     "test:headed": "playwright test --headed",
@@ -11,6 +13,7 @@
     "test:desktop": "playwright test --project=desktop"
   },
   "devDependencies": {
-    "@playwright/test": "1.56.1"
+    "@playwright/test": "1.56.1",
+    "vite": "^8.1.3"
   }
 }

@@ -6693,11 +6693,12 @@
     --r-xl: 28px; --r-lg: 22px; --r-md: 16px; --r-sm: 12px;
     --hero-img: url('../../assets/img/hero-rooftops.svg');
     /* Landing hero sky + London skyline — theme-swapped */
-    --hero-sky: linear-gradient(180deg, #FBF8F1 0%, #F4EDDE 44%, #ECE1CC 80%, #E6D8BE 100%);
+    --hero-sky: linear-gradient(180deg, #38BDF8 0%, #BAE6FD 40%, #FDE047 75%, #FB923C 100%);
     --skyline-img: url('../../assets/skyline/skyline-light.svg');
   }
   [data-theme="dark"]{
-    --hero-sky: linear-gradient(180deg, #0C0B08 0%, #14100A 42%, #0E0B07 76%, #080706 100%);
+    --hero-sky: linear-gradient(180deg, #020617 0%, #0F172A 40%, #1E1B4B 75%, #312E81 100%);
+    --skyline-filter: drop-shadow(0 -15px 45px rgba(251, 191, 36, 0.35)) brightness(1.2);
     --skyline-img: url('../../assets/skyline/skyline-dark.svg');
   }
 
@@ -6725,6 +6726,7 @@
   }
   .lp-cloud-layer { z-index: 1 !important; }
   .lp-skyline {
+    filter: var(--skyline-filter, none);
     position: absolute !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
     height: 44% !important; z-index: 2 !important; pointer-events: none !important;
     background: var(--skyline-img) bottom center / contain no-repeat !important;

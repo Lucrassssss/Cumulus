@@ -515,20 +515,7 @@ function resolveCardColors(bgStyleId, accentHex){
 }
 function applyTheme(){ document.documentElement.setAttribute('data-theme',state.theme); }
 
-// Follow OS theme changes in real-time — only when the user hasn't pinned a preference
-try {
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-    try {
-      const p = JSON.parse(localStorage.getItem('prefs')||'{}');
-      if(p.theme) return; // user chose manually — don't override
-      state.theme = e.matches ? 'dark' : 'light';
-      applyTheme();
-      const tcMeta = document.querySelector('meta[name="theme-color"]:not([media])');
-      if(tcMeta) tcMeta.setAttribute('content', state.theme==='dark'?'#090A0C':'#3E7CB8');
-      try{ renderNav(); }catch(err){}
-    } catch(err) {}
-  });
-} catch(e) {}
+// OS theme listener removed for day/night cycle
 
 
 // ---- MAPBOX TOKEN ----
@@ -607,26 +594,7 @@ function attendeesFor(id){ const out=DEMO_PEOPLE.filter(p=>p.events.includes(id)
 function isFriend(name){ return state.friends.includes(name); }
 function myFriendCode(){ return codeFor(state.profileName||'ME',state.profileId||'000000'); }
 
-async function toggleTheme(){
-  state.theme=state.theme==='light'?'dark':'light';
-  applyTheme();
-  // Persist locally so the choice survives sessions / logged-out use
-  try{ const p=JSON.parse(localStorage.getItem('prefs')||'{}'); p.theme=state.theme; localStorage.setItem('prefs',JSON.stringify(p)); }catch(e){}
-  // Update browser chrome colour
-  const tcMeta=document.querySelector('meta[name="theme-color"]:not([media])');
-  if(tcMeta) tcMeta.setAttribute('content', state.theme==='dark'?'#090A0C':'#3E7CB8');
-  if(state.userId){
-    await sb.from('users').update({theme:state.theme}).eq('id',state.userId);
-  }
-  renderNav();
-  if(lmap && lmap.isStyleLoaded()) {
-    applyMapChrome(lmap, true);
-    updateClusterPaint();
-  }
-  if(hostMap && hostMap.isStyleLoaded()) {
-    applyMapChrome(hostMap, false);
-  }
-}
+/* toggleTheme removed */
 async function persistProfile(){
   if(!state.profileId) state.profileId=generateUniqueId();
   const payload={
@@ -1915,7 +1883,7 @@ function renderNav(){
       <div class="top-bar">
         <div class="logo-wrap" onclick="goBrowse()">${BLOT_SVG}<span class="logo hide-mobile">Cumulus</span></div>
         <input id="search-input" class="search-input" placeholder="Search events..." oninput="onSearchInput()" autocomplete="off"/>
-        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" title="${state.theme==='dark'?'Switch to light mode':'Switch to dark mode'}">${state.theme==='dark'?'☀':'🌙'}</button>
+        
       </div>
       <div class="bottom-nav">
         ${NAV_TABS.map(({label,v,action})=>`

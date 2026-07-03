@@ -1,3 +1,5 @@
+import { sb } from './config.js';
+
 /* ─────────────────────────────────────────────────────────────
  * Cumulus — services layer (data access + business logic)
  *
@@ -30,7 +32,7 @@
  * UI) can decide how strict to be. See supabase/migrations/. */
 const CURATOR_CODE_RE = /^CUR-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
 
-async function validateCuratorCode(rawCode) {
+export async function validateCuratorCode(rawCode) {
   const code = (rawCode || '').trim().toUpperCase();
   if (!CURATOR_CODE_RE.test(code)) {
     return { valid: false, reason: 'format', code };
@@ -60,13 +62,13 @@ async function validateCuratorCode(rawCode) {
  * access, either with a validated curator code or a geolocated check-in
  * at the venue. These are pure predicates; the UI calls them to decide
  * whether to show a perk as unlocked. */
-function isPerkUnlocked(state) {
+export function isPerkUnlocked(state) {
   const s = state || {};
   return !!(s.curatorVerified || s.checkedInEventId);
 }
 
 /* Great-circle distance in metres between two {lat, lon} points. */
-function distanceMeters(a, b) {
+export function distanceMeters(a, b) {
   if (!a || !b) return Infinity;
   const R = 6371000, toRad = d => d * Math.PI / 180;
   const dLat = toRad(b.lat - a.lat), dLon = toRad(b.lon - a.lon);
@@ -77,7 +79,7 @@ function distanceMeters(a, b) {
 
 /* True when the user is within `radiusM` of the venue — the basis for a
  * geolocated check-in that unlocks perks without ever hiding the event. */
-function canCheckInAt(userLatLon, venueLatLon, radiusM) {
+export function canCheckInAt(userLatLon, venueLatLon, radiusM) {
   return distanceMeters(userLatLon, venueLatLon) <= (radiusM || 150);
 }
 
@@ -86,13 +88,13 @@ function canCheckInAt(userLatLon, venueLatLon, radiusM) {
  * admin-only reads/writes on pending_events and curator_codes via is_admin().
  * The owner must be listed in public.admins (see the migration). Everything
  * degrades gracefully if Auth isn't configured yet, so the app still runs. */
-async function adminSendCode(email) {
+export async function adminSendCode(email) {
   try {
     const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
     return { ok: !error, error: error ? error.message : null };
   } catch (e) { return { ok: false, error: 'unavailable' }; }
 }
-async function adminVerifyCode(email, token) {
+export async function adminVerifyCode(email, token) {
   try {
     const { error } = await sb.auth.verifyOtp({ email, token, type: 'email' });
     if (error) return { ok: false, error: error.message };
@@ -101,7 +103,7 @@ async function adminVerifyCode(email, token) {
 }
 /* Is the CURRENT Supabase Auth session an admin? RLS-backed, so it can't be
  * spoofed client-side. Returns false when unauthenticated or unconfigured. */
-async function isAdminSession() {
+export async function isAdminSession() {
   try { const { data, error } = await sb.rpc('is_admin'); if (!error) return !!data; } catch (e) {}
   return false;
 }
