@@ -1887,20 +1887,6 @@
     border-radius: 999px; padding: 6px 14px;
     box-shadow: 0 2px 8px var(--shadow);
   }
-  .lp-hero-scroll-hint {
-    position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
-    font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
-    color: var(--text-muted); cursor: pointer; z-index: 1;
-    animation: heroFadeUp 0.6s 0.6s cubic-bezier(0.22,1,0.36,1) both;
-  }
-  .lp-scroll-arrow {
-    width: 24px; height: 24px; border-right: 2px solid var(--text-muted);
-    border-bottom: 2px solid var(--text-muted);
-    transform: rotate(45deg); margin-top: -6px;
-    animation: scrollBounce 1.8s ease-in-out infinite;
-  }
-  @keyframes scrollBounce { 0%,100%{transform:rotate(45deg) translate(0,0);}50%{transform:rotate(45deg) translate(4px,4px);} }
   @keyframes heroFadeUp { from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);} }
 
   /* ── Events Section ── */
@@ -5201,9 +5187,6 @@
     filter: none !important;
   }
 
-  /* Scroll hint — hidden, clutter */
-  .lp-hero-scroll-hint { display: none !important; }
-
   /* ── LANDING NAV ────────────────────────────────────────── */
   .lp-nav {
     border-bottom: 1px solid var(--line) !important;
@@ -6692,14 +6675,11 @@
     --ease-spring: cubic-bezier(.34,1.56,.64,1);
     --r-xl: 28px; --r-lg: 22px; --r-md: 16px; --r-sm: 12px;
     --hero-img: url('../../assets/img/hero-rooftops.svg');
-    /* Landing hero sky + London skyline — theme-swapped */
-    --hero-sky: linear-gradient(180deg, #38BDF8 0%, #BAE6FD 40%, #FDE047 75%, #FB923C 100%);
-    --skyline-img: url('../../assets/skyline/skyline-light.svg');
+    /* Landing hero sky — theme-swapped (diorama colours live in REDESIGN 9.0) */
+    --hero-sky: linear-gradient(180deg, #4FA8DE 0%, #8CC9EC 32%, #C6E3F4 60%, #EDE9D6 86%, #F2E3BC 100%);
   }
   [data-theme="dark"]{
-    --hero-sky: linear-gradient(180deg, #020617 0%, #0F172A 40%, #1E1B4B 75%, #312E81 100%);
-    --skyline-filter: drop-shadow(0 -15px 45px rgba(251, 191, 36, 0.35)) brightness(1.2);
-    --skyline-img: url('../../assets/skyline/skyline-dark.svg');
+    --hero-sky: linear-gradient(180deg, #03040B 0%, #0A1028 36%, #1A1D44 66%, #2E2854 86%, #413561 100%);
   }
 
   /* ── Display typography — DM Sans, confident + tight ──────── */
@@ -6725,12 +6705,6 @@
     background: var(--hero-sky) !important;
   }
   .lp-cloud-layer { z-index: 1 !important; }
-  .lp-skyline {
-    filter: var(--skyline-filter, none);
-    position: absolute !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
-    height: 44% !important; z-index: 2 !important; pointer-events: none !important;
-    background: var(--skyline-img) bottom center / contain no-repeat !important;
-  }
   /* Soft legibility scrim (theme bg colour) lifts the sky behind the copy */
   .lp-hero-scrim {
     position: absolute !important; inset: 0 !important; z-index: 2 !important; pointer-events: none !important;
@@ -6756,7 +6730,6 @@
     background: rgba(255,255,255,.07) !important; backdrop-filter: blur(6px) !important;
   }
   .lp-hero-btn-secondary:hover { background: rgba(255,255,255,.15) !important; }
-  .lp-hero-scroll-hint span { color: rgba(247,245,240,.7) !important; }
   /* Light theme: dark copy over the bright day sky */
   [data-theme="light"] .lp-hero-title { color: var(--text) !important; text-shadow: 0 1px 2px rgba(255,255,255,.55) !important; }
   [data-theme="light"] .lp-hero-gradient { -webkit-text-fill-color: #A8841F !important; color: #A8841F !important; }
@@ -6771,7 +6744,6 @@
     border-color: rgba(24,20,14,.26) !important; color: var(--text) !important; background: rgba(24,20,14,.04) !important;
   }
   [data-theme="light"] .lp-hero-btn-secondary:hover { background: rgba(24,20,14,.09) !important; }
-  [data-theme="light"] .lp-hero-scroll-hint span { color: rgba(28,24,18,.6) !important; }
   .lp-hero-blobs, .lp-hero-bg { display:none !important; }
 
   /* ── Landing nav — glass ──────────────────────────────────── */
@@ -6874,7 +6846,120 @@
   @media (max-width: 640px){
     .lp-hero { min-height: 82vh !important; }
     .lp-feat-photo { height: 150px; }
-    /* Skyline sits a touch shorter on tall portrait screens so the
-       drifting clouds stay the focal point above the copy. */
-    .lp-skyline { height: 30% !important; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     REDESIGN 9.0 — LIVING LONDON DIORAMA
+     One skyline, two depths, lit by the day/night cycle.
+     Layer order inside .lp-hero (back → front):
+       .lp-hero-sky (z0) → .lp-dio-back (z1) → .lp-cloud-layer (z1,
+       later in DOM) → .lp-hero-scrim (z2) → .lp-dio-front (z2, later
+       in DOM) → .lp-hero-content (z3).
+     Colours are CSS vars so [data-theme] swaps drive the whole scene:
+     bright flat facades by day; silhouettes, lit windows, clock face
+     and aviation beacons at night.
+     ═══════════════════════════════════════════════════════════ */
+  :root{
+    --dio-back:    #AEC5D8;
+    --dio-front:   #7B90A4;
+    --dio-front-2: #8CA0B2;
+    --dio-chimney: #E4EBF1;
+    --dio-face:    #D9E4EC;
+    --dio-win:     #F4CD6E;
+    --dio-clock:   #F7FAFC;
+    --dio-glow-op: 0;
+  }
+  [data-theme="dark"]{
+    --dio-back:    #0C111E;
+    --dio-front:   #11141D;
+    --dio-front-2: #151924;
+    --dio-chimney: #1B2029;
+    --dio-face:    #E8EDF2;
+    --dio-win:     #FFD98A;
+    --dio-clock:   #F4DFA2;
+    --dio-glow-op: 0.85;
+  }
+
+  /* ── Diorama layers — full-bleed, bottom-anchored ─────────── */
+  .lp-dio-back, .lp-dio-front {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+  }
+  .lp-dio-back  { height: 46%; z-index: 1; opacity: .92; animation: dioRise 1.2s .05s var(--ease-out) both; }
+  .lp-dio-front { height: 34%; z-index: 2; animation: dioRise 1.2s .22s var(--ease-out) both; }
+  .lp-dio-back svg, .lp-dio-front svg { display: block; width: 100%; height: 100%; }
+  /* Theme switches cross-fade the whole scene instead of snapping */
+  .lp-dio-back rect, .lp-dio-back polygon, .lp-dio-back circle,
+  .lp-dio-front rect, .lp-dio-front polygon, .lp-dio-front circle,
+  .lp-dio-front path, .lp-dio-front line {
+    transition: fill .9s ease, stroke .9s ease, opacity 1s ease;
+  }
+
+  /* Windows: invisible by day, cascade on at dusk (staggered groups) */
+  .dio-wins { opacity: 0; transition: opacity 1.4s ease; }
+  [data-theme="dark"] .dio-wins       { opacity: .95; }
+  [data-theme="dark"] .dio-wins.dw2   { transition-delay: .25s; }
+  [data-theme="dark"] .dio-wins.dw3   { transition-delay: .5s; }
+  [data-theme="dark"] .dio-wins.dw4   { transition-delay: .75s; }
+  /* Facade detail lines: visible by day, faint at night */
+  .dio-face-lines { opacity: .5; transition: opacity 1.2s ease; }
+  [data-theme="dark"] .dio-face-lines { opacity: .12; }
+  .dio-lattice { stroke: var(--dio-face); opacity: .4; transition: stroke .9s ease, opacity 1.2s ease; }
+  [data-theme="dark"] .dio-lattice { stroke: var(--dio-win); opacity: .3; }
+  /* Big Ben clock face glows warm at night */
+  .dio-clock { fill: var(--dio-clock); transition: fill .9s ease, filter 1.2s ease; }
+  [data-theme="dark"] .dio-clock { filter: drop-shadow(0 0 7px rgba(255, 217, 138, .85)); }
+  /* Eye pods read as capsules by day, fairground lights at night */
+  .dio-pods circle { fill: var(--dio-front-2); transition: fill .9s ease; }
+  [data-theme="dark"] .dio-pods circle { fill: var(--dio-win); }
+  /* Aviation beacons on the tall towers — night only, slow pulse */
+  .dio-beacon { fill: #FF7B6E; opacity: 0; transition: opacity 1s ease; }
+  [data-theme="dark"] .dio-beacon { opacity: 1; animation: dioBeacon 2.6s ease-in-out infinite; }
+  /* Warm city-light bleed on the horizon — night only */
+  .dio-glow { opacity: var(--dio-glow-op); transition: opacity 1.4s ease; }
+
+  /* ── Cloud bank on the horizon ────────────────────────────────
+     Lower band, tops free, bottoms dissolved by mask + tucked behind
+     the front skyline — no hard photo edges can reach the eye. */
+  .lp-cld {
+    opacity: .9;
+    filter: brightness(1.04) saturate(.12) contrast(1.02);
+    -webkit-mask-image: linear-gradient(180deg, #000 40%, rgba(0,0,0,.5) 72%, transparent 95%);
+            mask-image: linear-gradient(180deg, #000 40%, rgba(0,0,0,.5) 72%, transparent 95%);
+  }
+  [data-theme="dark"] .lp-cld {
+    opacity: .48;
+    filter: brightness(.62) saturate(0) contrast(1.05);
+  }
+  .lp-cloud-layer { animation: dioFade 1.6s .1s ease both; }
+
+  /* ── Orchestrated entrance — sky settles, city rises, copy follows ── */
+  @keyframes dioRise { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  .lp-dio-back  { animation-name: dioRiseBack; }
+  @keyframes dioRiseBack { from { opacity: 0; transform: translateY(30px); } to { opacity: .92; transform: translateY(0); } }
+  @keyframes dioFade { from { opacity: 0; } to { opacity: 1; } }
+  .lp-hero-kicker      { animation: heroFadeUp .9s .12s var(--ease-out) both !important; }
+  .lp-hero-title       { animation: heroFadeUp .9s .22s var(--ease-out) both !important; }
+  .lp-hero-sub         { animation: heroFadeUp .9s .34s var(--ease-out) both !important; }
+  .lp-hero-actions     { animation: heroFadeUp .9s .46s var(--ease-out) both !important; }
+  .lp-trust-strip      { animation: heroFadeUp .9s .58s var(--ease-out) both !important; }
+  @keyframes dioBeacon { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+
+  /* ── Calm by request ──────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    .lp-dio-back, .lp-dio-front, .lp-cloud-layer,
+    .lp-hero-kicker, .lp-hero-title, .lp-hero-sub,
+    .lp-hero-actions, .lp-trust-strip {
+      animation: none !important;
+    }
+    .dio-beacon { animation: none !important; }
+  }
+
+  /* ── Mobile: shorter city, fewer clouds ───────────────────── */
+  @media (max-width: 640px){
+    .lp-dio-back  { height: 34%; }
+    .lp-dio-front { height: 25%; }
+    .lp-cld:nth-child(4), .lp-cld:nth-child(5) { display: none; }
+    .lp-cld { -webkit-mask-image: linear-gradient(180deg, #000 30%, rgba(0,0,0,.45) 62%, transparent 90%);
+                      mask-image: linear-gradient(180deg, #000 30%, rgba(0,0,0,.45) 62%, transparent 90%); }
   }

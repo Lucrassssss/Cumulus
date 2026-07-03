@@ -50,8 +50,9 @@ test.describe('Cumulus smoke', () => {
     await page.waitForTimeout(400);
     expect(failed, 'no failed local requests').toEqual([]);
     // Deterministic: fetch each split asset directly.
+    // (The skyline is an inline SVG diorama now — only cloud photos load as assets.)
     for (const path of ['/src/css/styles.css', '/src/js/app.js', '/src/js/config.js',
-                         '/assets/clouds/cloud1.webp', '/assets/skyline/skyline-dark.svg', '/assets/skyline/skyline-light.svg']) {
+                         '/assets/clouds/cloud1.webp', '/assets/clouds/cloud3.webp', '/assets/img/discover.svg']) {
       const res = await page.request.get(path);
       expect(res.status(), `${path} served`).toBe(200);
     }
@@ -93,9 +94,11 @@ test.describe('Cumulus smoke', () => {
     await page.fill('#gate-email', 'nova@example.com');
     await page.evaluate(() => submitGate());
     await expect(page.locator('#gate-field-error')).toContainText(/curator code/i);
-    // A well-formed code clears the gate (validateCuratorCode returns valid offline)
-    const passed = await page.evaluate(async () => (await validateCuratorCode('CUR-AB12-CD34')).valid);
-    expect(passed).toBeTruthy();
+    // A well-formed code passes FORMAT validation. Offline it is accepted
+    // outright (lenient fallback); online the server may reject it as
+    // unknown — either way it must never be a format rejection.
+    const reason = await page.evaluate(async () => (await validateCuratorCode('CUR-AB12-CD34')).reason);
+    expect(reason).not.toBe('format');
   });
 
   test('enter app → 4-tab bottom nav', async ({ page }) => {
@@ -152,13 +155,14 @@ test.describe('Cumulus smoke', () => {
     await expect(page.locator('.perk-row')).toHaveCount(3);
   });
 
-  test('theme toggle flips data-theme', async ({ page }) => {
+  test('day/night cycle sets a valid theme', async ({ page }) => {
+    // Manual toggleTheme was removed in favour of the day/night cycle —
+    // assert the cycle (or saved pref) resolves to a real theme value,
+    // since the landing diorama and sky gradients key off this attribute.
     await page.goto('/');
     await enterApp(page);
-    const before = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
-    await page.evaluate(() => toggleTheme());
-    const after = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
-    expect(after).not.toEqual(before);
+    const theme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+    expect(['light', 'dark']).toContain(theme);
   });
 
 });

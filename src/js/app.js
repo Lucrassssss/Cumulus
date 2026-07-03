@@ -751,6 +751,244 @@ const FEATURED_EVENTS = [
   }
 ];
 
+/* ── Landing diorama — layered paper-cut London, theme-lit ──────────────
+ * Two inline SVGs (back haze + front landmarks) so CSS [data-theme] drives
+ * the lighting: bright flat facades by day, silhouettes with lit windows,
+ * clock face and aviation beacons at night. preserveAspectRatio slice keeps
+ * the scene edge-to-edge at any viewport width. Window grids are SVG
+ * patterns (cheap); .dio-wins groups fade in staggered like dusk. */
+const DIORAMA_BACK_SVG=`
+<svg viewBox="0 0 2400 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+  <g fill="var(--dio-back)">
+    <circle cx="130" cy="252" r="46" fill="none" stroke="var(--dio-back)" stroke-width="4" opacity="0.55"/>
+    <circle cx="130" cy="252" r="46" fill="var(--dio-back)" opacity="0.25"/>
+    <rect x="0" y="228" width="58" height="72"/>
+    <rect x="196" y="212" width="44" height="88"/>
+    <rect x="252" y="238" width="60" height="62"/>
+    <rect x="360" y="220" width="38" height="80"/>
+    <rect x="430" y="196" width="52" height="104"/>
+    <rect x="540" y="228" width="64" height="72"/>
+    <rect x="648" y="204" width="34" height="96"/>
+    <polygon points="700,300 700,196 716,178 732,196 732,300"/>
+    <rect x="788" y="222" width="56" height="78"/>
+    <rect x="876" y="188" width="40" height="112"/>
+    <rect x="948" y="234" width="66" height="66"/>
+    <rect x="1046" y="206" width="44" height="94"/>
+    <rect x="1120" y="230" width="58" height="70"/>
+    <rect x="1236" y="52" width="18" height="248"/>
+    <rect x="1228" y="88" width="8" height="12"/>
+    <rect x="1254" y="102" width="8" height="12"/>
+    <rect x="1228" y="122" width="8" height="10"/>
+    <rect x="1243" y="22" width="4" height="30"/>
+    <rect x="1310" y="214" width="48" height="86"/>
+    <rect x="1394" y="192" width="36" height="108"/>
+    <rect x="1470" y="226" width="62" height="74"/>
+    <rect x="1580" y="204" width="42" height="96"/>
+    <rect x="1662" y="232" width="58" height="68"/>
+    <rect x="1758" y="198" width="38" height="102"/>
+    <rect x="1840" y="224" width="54" height="76"/>
+    <rect x="1936" y="206" width="40" height="94"/>
+    <rect x="2010" y="238" width="60" height="62"/>
+    <rect x="2150" y="120" width="64" height="180"/>
+    <polygon points="2150,120 2182,86 2214,120"/>
+    <circle cx="2182" cy="82" r="2.5" class="dio-beacon"/>
+    <rect x="2226" y="152" width="54" height="148"/>
+    <rect x="2292" y="136" width="58" height="164"/>
+    <polygon points="2292,136 2321,108 2350,136"/>
+    <rect x="2360" y="180" width="40" height="120"/>
+  </g>
+</svg>`;
+const DIORAMA_FRONT_SVG=`
+<svg viewBox="0 0 2400 340" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+  <defs>
+    <pattern id="dioWinA" width="14" height="18" patternUnits="userSpaceOnUse">
+      <rect x="3" y="4" width="5" height="7" rx="0.8" fill="var(--dio-win)"/>
+    </pattern>
+    <pattern id="dioWinB" width="12" height="15" patternUnits="userSpaceOnUse">
+      <rect x="2.5" y="3.5" width="4" height="5.5" rx="0.7" fill="var(--dio-win)"/>
+    </pattern>
+    <pattern id="dioWinC" width="18" height="15" patternUnits="userSpaceOnUse">
+      <rect x="2" y="4" width="12" height="3.4" rx="1" fill="var(--dio-win)"/>
+    </pattern>
+    <linearGradient id="dioGlow" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#C89B3C" stop-opacity="0.28"/>
+      <stop offset="0.6" stop-color="#C89B3C" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#C89B3C" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="170" width="2400" height="170" fill="url(#dioGlow)" class="dio-glow"/>
+
+  <!-- Battersea Power Station -->
+  <g>
+    <polygon points="58,236 74,236 71,152 61,152" fill="var(--dio-chimney)"/>
+    <polygon points="98,236 114,236 111,152 101,152" fill="var(--dio-chimney)"/>
+    <polygon points="206,236 222,236 219,152 209,152" fill="var(--dio-chimney)"/>
+    <polygon points="246,236 262,236 259,152 249,152" fill="var(--dio-chimney)"/>
+    <rect x="44" y="232" width="44" height="108" fill="var(--dio-front)"/>
+    <rect x="232" y="232" width="44" height="108" fill="var(--dio-front)"/>
+    <rect x="80" y="252" width="160" height="88" fill="var(--dio-front-2)"/>
+    <rect x="92" y="266" width="136" height="58" fill="url(#dioWinC)" class="dio-wins dw1"/>
+  </g>
+
+  <!-- Terrace row -->
+  <g>
+    <polygon points="297,286 321,266 345,286" fill="var(--dio-front)"/>
+    <rect x="300" y="284" width="42" height="56" fill="var(--dio-front-2)"/>
+    <polygon points="343,286 367,266 391,286" fill="var(--dio-front)"/>
+    <rect x="346" y="284" width="42" height="56" fill="var(--dio-front)"/>
+    <polygon points="389,286 413,266 437,286" fill="var(--dio-front)"/>
+    <rect x="392" y="284" width="42" height="56" fill="var(--dio-front-2)"/>
+    <rect x="330" y="270" width="7" height="12" fill="var(--dio-front)"/>
+    <rect x="422" y="270" width="7" height="12" fill="var(--dio-front)"/>
+    <rect x="306" y="292" width="122" height="42" fill="url(#dioWinB)" class="dio-wins dw2"/>
+  </g>
+
+  <!-- Palace of Westminster + Elizabeth Tower -->
+  <g>
+    <rect x="452" y="246" width="20" height="94" fill="var(--dio-front)"/>
+    <polygon points="452,246 462,230 472,246" fill="var(--dio-front)"/>
+    <rect x="452" y="266" width="144" height="74" fill="var(--dio-front-2)"/>
+    <rect x="576" y="246" width="20" height="94" fill="var(--dio-front)"/>
+    <polygon points="576,246 586,230 596,246" fill="var(--dio-front)"/>
+    <rect x="460" y="274" width="128" height="58" fill="url(#dioWinB)" class="dio-wins dw1"/>
+    <rect x="604" y="152" width="32" height="188" fill="var(--dio-front)"/>
+    <rect x="609" y="176" width="22" height="148" fill="url(#dioWinB)" class="dio-wins dw3"/>
+    <rect x="599" y="134" width="42" height="30" fill="var(--dio-front)"/>
+    <circle cx="620" cy="149" r="11" class="dio-clock"/>
+    <polygon points="599,134 641,134 628,102 620,84 612,102" fill="var(--dio-front)"/>
+    <rect x="618" y="72" width="4" height="14" fill="var(--dio-front)"/>
+  </g>
+
+  <!-- London Eye -->
+  <g>
+    <polygon points="770,196 724,340 740,340 770,214 800,340 816,340" fill="var(--dio-front)"/>
+    <g stroke="var(--dio-front)" stroke-width="2" opacity="0.75">
+      <line x1="770" y1="190" x2="864" y2="190"/><line x1="770" y1="190" x2="851" y2="237"/>
+      <line x1="770" y1="190" x2="817" y2="271"/><line x1="770" y1="190" x2="770" y2="284"/>
+      <line x1="770" y1="190" x2="723" y2="271"/><line x1="770" y1="190" x2="689" y2="237"/>
+      <line x1="770" y1="190" x2="676" y2="190"/><line x1="770" y1="190" x2="689" y2="143"/>
+      <line x1="770" y1="190" x2="723" y2="109"/><line x1="770" y1="190" x2="770" y2="96"/>
+      <line x1="770" y1="190" x2="817" y2="109"/><line x1="770" y1="190" x2="851" y2="143"/>
+    </g>
+    <circle cx="770" cy="190" r="96" fill="none" stroke="var(--dio-front)" stroke-width="5"/>
+    <circle cx="770" cy="190" r="87" fill="none" stroke="var(--dio-front)" stroke-width="1.6" opacity="0.5"/>
+    <circle cx="770" cy="190" r="8" fill="var(--dio-front)"/>
+    <g class="dio-pods">
+      <circle cx="866" cy="190" r="5.5"/><circle cx="853" cy="238" r="5.5"/><circle cx="818" cy="273" r="5.5"/>
+      <circle cx="770" cy="286" r="5.5"/><circle cx="722" cy="273" r="5.5"/><circle cx="687" cy="238" r="5.5"/>
+      <circle cx="674" cy="190" r="5.5"/><circle cx="687" cy="142" r="5.5"/><circle cx="722" cy="107" r="5.5"/>
+      <circle cx="770" cy="94" r="5.5"/><circle cx="818" cy="107" r="5.5"/><circle cx="853" cy="142" r="5.5"/>
+    </g>
+  </g>
+
+  <!-- Southbank blocks -->
+  <rect x="880" y="262" width="52" height="78" fill="var(--dio-front-2)"/>
+  <rect x="886" y="270" width="40" height="62" fill="url(#dioWinA)" class="dio-wins dw2"/>
+  <rect x="938" y="238" width="66" height="102" fill="var(--dio-front)"/>
+  <rect x="946" y="248" width="50" height="84" fill="url(#dioWinA)" class="dio-wins dw4"/>
+
+  <!-- St Paul's Cathedral -->
+  <g>
+    <rect x="1038" y="246" width="20" height="66" fill="var(--dio-front)"/>
+    <circle cx="1048" cy="242" r="8" fill="var(--dio-front)"/>
+    <rect x="1148" y="246" width="20" height="66" fill="var(--dio-front)"/>
+    <circle cx="1158" cy="242" r="8" fill="var(--dio-front)"/>
+    <rect x="1028" y="274" width="150" height="66" fill="var(--dio-front-2)"/>
+    <rect x="1040" y="284" width="126" height="48" fill="url(#dioWinB)" class="dio-wins dw3"/>
+    <rect x="1072" y="236" width="62" height="40" fill="var(--dio-front)"/>
+    <path d="M1064,238 Q1103,162 1142,238 Z" fill="var(--dio-front)"/>
+    <rect x="1098" y="184" width="10" height="20" fill="var(--dio-front)"/>
+    <circle cx="1103" cy="181" r="7" fill="var(--dio-front)"/>
+    <rect x="1101" y="158" width="4" height="18" fill="var(--dio-front)"/>
+  </g>
+
+  <!-- City cluster -->
+  <rect x="1200" y="206" width="44" height="134" fill="var(--dio-front)"/>
+  <rect x="1206" y="214" width="32" height="118" fill="url(#dioWinA)" class="dio-wins dw1"/>
+  <rect x="1252" y="178" width="56" height="162" fill="var(--dio-front-2)"/>
+  <rect x="1259" y="188" width="42" height="144" fill="url(#dioWinA)" class="dio-wins dw3"/>
+  <rect x="1314" y="224" width="34" height="116" fill="var(--dio-front)"/>
+  <rect x="1319" y="232" width="24" height="100" fill="url(#dioWinB)" class="dio-wins dw2"/>
+
+  <!-- The Gherkin -->
+  <g>
+    <path d="M1366,340 C1362,258 1372,186 1399,152 C1426,186 1436,258 1432,340 Z" fill="var(--dio-front)"/>
+    <path d="M1372,300 Q1399,282 1426,300" fill="none" class="dio-lattice" stroke-width="2"/>
+    <path d="M1370,252 Q1399,234 1428,252" fill="none" class="dio-lattice" stroke-width="2"/>
+    <path d="M1376,206 Q1399,192 1422,206" fill="none" class="dio-lattice" stroke-width="2"/>
+    <g class="dio-wins dw4">
+      <rect x="1386" y="216" width="5" height="6" rx="0.8" fill="var(--dio-win)"/>
+      <rect x="1406" y="238" width="5" height="6" rx="0.8" fill="var(--dio-win)"/>
+      <rect x="1390" y="266" width="5" height="6" rx="0.8" fill="var(--dio-win)"/>
+      <rect x="1412" y="288" width="5" height="6" rx="0.8" fill="var(--dio-win)"/>
+      <rect x="1396" y="310" width="5" height="6" rx="0.8" fill="var(--dio-win)"/>
+    </g>
+  </g>
+
+  <!-- The Cheesegrater -->
+  <g>
+    <polygon points="1456,340 1456,168 1552,340" fill="var(--dio-front-2)"/>
+    <g stroke="var(--dio-face)" stroke-width="1.5" class="dio-face-lines">
+      <line x1="1456" y1="200" x2="1474" y2="200"/><line x1="1456" y1="240" x2="1496" y2="240"/>
+      <line x1="1456" y1="280" x2="1518" y2="280"/><line x1="1456" y1="318" x2="1540" y2="318"/>
+    </g>
+  </g>
+
+  <!-- The Walkie-Talkie -->
+  <g>
+    <path d="M1596,340 L1586,226 C1582,182 1682,182 1680,226 L1670,340 Z" fill="var(--dio-front)"/>
+    <rect x="1600" y="200" width="64" height="126" fill="url(#dioWinC)" class="dio-wins dw2"/>
+  </g>
+
+  <!-- The Shard -->
+  <g>
+    <polygon points="1726,340 1772,58 1772,340" fill="var(--dio-front-2)"/>
+    <polygon points="1772,340 1772,58 1818,340" fill="var(--dio-front)"/>
+    <circle cx="1772" cy="52" r="3" class="dio-beacon"/>
+    <g class="dio-wins dw3">
+      <rect x="1762" y="130" width="4" height="6" rx="0.7" fill="var(--dio-win)"/>
+      <rect x="1776" y="168" width="4" height="6" rx="0.7" fill="var(--dio-win)"/>
+      <rect x="1756" y="212" width="4" height="6" rx="0.7" fill="var(--dio-win)"/>
+      <rect x="1782" y="248" width="4" height="6" rx="0.7" fill="var(--dio-win)"/>
+      <rect x="1764" y="286" width="4" height="6" rx="0.7" fill="var(--dio-win)"/>
+      <rect x="1790" y="300" width="4" height="6" rx="0.7" fill="var(--dio-win)"/>
+    </g>
+  </g>
+
+  <!-- Tower Bridge -->
+  <g>
+    <path d="M1856,304 Q1876,240 1892,222" fill="none" stroke="var(--dio-front)" stroke-width="3"/>
+    <path d="M2088,222 Q2104,240 2124,304" fill="none" stroke="var(--dio-front)" stroke-width="3"/>
+    <rect x="1936" y="206" width="108" height="8" fill="var(--dio-front)"/>
+    <rect x="1936" y="224" width="108" height="8" fill="var(--dio-front)"/>
+    <path d="M1936,340 Q1990,298 2044,340 Z" fill="var(--dio-front)"/>
+    <rect x="1888" y="178" width="8" height="18" fill="var(--dio-front)"/>
+    <rect x="1932" y="178" width="8" height="18" fill="var(--dio-front)"/>
+    <rect x="2040" y="178" width="8" height="18" fill="var(--dio-front)"/>
+    <rect x="2084" y="178" width="8" height="18" fill="var(--dio-front)"/>
+    <rect x="1892" y="186" width="44" height="154" fill="var(--dio-front-2)"/>
+    <rect x="2044" y="186" width="44" height="154" fill="var(--dio-front-2)"/>
+    <polygon points="1888,186 1914,140 1940,186" fill="var(--dio-front)"/>
+    <polygon points="2040,186 2066,140 2092,186" fill="var(--dio-front)"/>
+    <rect x="1856" y="298" width="268" height="10" fill="var(--dio-front)"/>
+    <rect x="1898" y="196" width="32" height="134" fill="url(#dioWinB)" class="dio-wins dw1"/>
+    <rect x="2050" y="196" width="32" height="134" fill="url(#dioWinB)" class="dio-wins dw4"/>
+  </g>
+
+  <!-- East wharf -->
+  <rect x="2140" y="232" width="52" height="108" fill="var(--dio-front)"/>
+  <rect x="2146" y="240" width="40" height="92" fill="url(#dioWinA)" class="dio-wins dw2"/>
+  <rect x="2200" y="208" width="62" height="132" fill="var(--dio-front-2)"/>
+  <rect x="2208" y="218" width="46" height="114" fill="url(#dioWinA)" class="dio-wins dw3"/>
+  <rect x="2270" y="244" width="48" height="96" fill="var(--dio-front)"/>
+  <rect x="2276" y="252" width="36" height="80" fill="url(#dioWinB)" class="dio-wins dw1"/>
+  <rect x="2326" y="190" width="74" height="150" fill="var(--dio-front-2)"/>
+  <rect x="2334" y="200" width="58" height="132" fill="url(#dioWinA)" class="dio-wins dw4"/>
+
+  <rect x="0" y="330" width="2400" height="10" fill="var(--dio-front)"/>
+</svg>`;
+
 function renderGate(prefillName,prefillEmail){
   document.getElementById('gate-root').innerHTML=`
   <div class="lp-root">
@@ -773,45 +1011,35 @@ function renderGate(prefillName,prefillEmail){
     <!-- ── HERO ── -->
     <section class="lp-hero">
       <div class="lp-hero-sky" aria-hidden="true"></div>
+      <div class="lp-dio-back" aria-hidden="true">${DIORAMA_BACK_SVG}</div>
       <div class="lp-cloud-layer" aria-hidden="true">
-        <!-- Real cumulus photos drifting across the sky at staggered speeds/heights.
-             Slow durations = calm, natural movement. Behind the skyline (z-order). -->
-        <div class="lp-cld" style="top:6%; width:58vw;opacity:0.92;--dur:158s;--dly:-20s; --ar:2019/447; background-image:url('assets/clouds/cloud2.webp')"></div>
-        <div class="lp-cld" style="top:19%;width:46vw;opacity:0.80;--dur:196s;--dly:-120s;--ar:1951/583; background-image:url('assets/clouds/cloud1.webp')"></div>
-        <div class="lp-cld" style="top:11%;width:72vw;opacity:0.96;--dur:126s;--dly:-72s; --ar:2049/815; background-image:url('assets/clouds/cloud5.webp')"></div>
-        <div class="lp-cld" style="top:33%;width:60vw;opacity:0.88;--dur:170s;--dly:-42s; --ar:2049/701; background-image:url('assets/clouds/cloud4.webp')"></div>
-        <div class="lp-cld" style="top:45%;width:52vw;opacity:0.70;--dur:214s;--dly:-150s;--ar:2049/1152;background-image:url('assets/clouds/cloud3.webp')"></div>
-        <div class="lp-cld" style="top:27%;width:80vw;opacity:0.90;--dur:138s;--dly:-98s; --ar:2019/447; background-image:url('assets/clouds/cloud2.webp')"></div>
-        <div class="lp-cld" style="top:55%;width:68vw;opacity:0.82;--dur:182s;--dly:-14s; --ar:2049/815; background-image:url('assets/clouds/cloud5.webp')"></div>
+        <!-- Cumulus bank on the horizon: low band, tops free, bottoms dissolved
+             by a CSS mask and tucked behind the front skyline. Very slow drift. -->
+        <div class="lp-cld" style="top:38%;width:44vw;--dur:210s;--dly:-30s; --ar:2019/447; background-image:url('assets/clouds/cloud2.webp')"></div>
+        <div class="lp-cld" style="top:45%;width:34vw;--dur:252s;--dly:-140s;--ar:1951/583; background-image:url('assets/clouds/cloud1.webp')"></div>
+        <div class="lp-cld" style="top:41%;width:56vw;--dur:184s;--dly:-90s; --ar:2049/815; background-image:url('assets/clouds/cloud5.webp')"></div>
+        <div class="lp-cld" style="top:51%;width:48vw;--dur:232s;--dly:-55s; --ar:2049/701; background-image:url('assets/clouds/cloud4.webp')"></div>
+        <div class="lp-cld" style="top:56%;width:52vw;--dur:268s;--dly:-170s;--ar:2049/1152;background-image:url('assets/clouds/cloud3.webp')"></div>
       </div>
-      <div class="lp-skyline" aria-hidden="true"></div>
       <div class="lp-hero-scrim" aria-hidden="true"></div>
-      <div class="lp-hero-blobs">
-        <div class="lp-blob lp-blob-a"></div>
-        <div class="lp-blob lp-blob-b"></div>
-        <div class="lp-blob lp-blob-c"></div>
-      </div>
+      <div class="lp-dio-front" aria-hidden="true">${DIORAMA_FRONT_SVG}</div>
       <div class="lp-hero-content">
         <div class="lp-hero-kicker">
           <span class="lp-live-dot"></span>
-          London · Invite-only social club
+          London · Community events club
         </div>
         <h1 class="lp-hero-title">Find your people.<br><span class="lp-hero-gradient">Unlock the city.</span></h1>
-        <p class="lp-hero-sub">Cumulus is London's members-only social club — a live map of the city's best-kept events. Every pin is visible; the perks behind them (guestlists, complimentary drinks, secret rooms) unlock with a curator code or a check-in at the door.</p>
+        <p class="lp-hero-sub">Cumulus is London's community events club — a live map of what's on across the city. Every event is visible to everyone; perks like guestlists and welcome drinks unlock with a curator code or a check-in at the door.</p>
         <div class="lp-hero-actions">
           <button class="btn lp-hero-btn-primary" onclick="showLpSignup()">Unlock the Map →</button>
           <button class="btn btn-outline lp-hero-btn-secondary" onclick="document.getElementById('lp-features-anchor').scrollIntoView({behavior:'smooth'})">How it works ↓</button>
         </div>
         <div class="lp-trust-strip">
-          <span>Invite only</span>
+          <span>Every event visible</span>
           <span>Curator codes</span>
-          <span>Secret guestlists</span>
-          <span>Members' perks</span>
+          <span>Guestlist perks</span>
+          <span>Check-in rewards</span>
         </div>
-      </div>
-      <div class="lp-hero-scroll-hint" onclick="document.getElementById('lp-features-anchor').scrollIntoView({behavior:'smooth'})">
-        <span>Scroll to explore</span>
-        <div class="lp-scroll-arrow"></div>
       </div>
     </section>
 
@@ -983,9 +1211,9 @@ function renderGate(prefillName,prefillEmail){
           <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">Tell us about your venue or events. Applications are reviewed by our team — approved hosts can post public events, sell tickets, and access host analytics.</div>
         </div>
 
-        <div class="lp-form-eyebrow" id="gate-form-eyebrow">Invite only · Takes 20 seconds</div>
+        <div class="lp-form-eyebrow" id="gate-form-eyebrow">Curated access · Takes 20 seconds</div>
         <h3 class="lp-form-title" id="gate-form-title">Request your access</h3>
-        <p class="lp-form-sub" id="gate-form-sub">Cumulus is members-only. Enter your curator code to unlock the map — or check in at any venue to earn one.</p>
+        <p class="lp-form-sub" id="gate-form-sub">Cumulus runs on curator codes. Enter yours to unlock the map — or check in at any listed venue to earn one.</p>
 
         <div class="gate-field" id="gate-name-field">
           <label class="gate-label" for="gate-name">Full name</label>
@@ -1126,11 +1354,11 @@ function switchSignupType(type) {
     if (label)   label.textContent   = 'Submit application →';
     if (trust)   trust.innerHTML     = '<span>Free to apply</span><span>·</span><span>Reviewed within 48 hrs</span><span>·</span><span>No lock-in</span>';
   } else {
-    if (eyebrow) eyebrow.textContent = 'Invite only · Takes 20 seconds';
+    if (eyebrow) eyebrow.textContent = 'Curated access · Takes 20 seconds';
     if (title)   title.textContent   = 'Request your access';
-    if (sub)     sub.textContent     = 'Cumulus is members-only. Enter your curator code to unlock the map — or check in at any venue to earn one.';
+    if (sub)     sub.textContent     = 'Cumulus runs on curator codes. Enter yours to unlock the map — or check in at any listed venue to earn one.';
     if (label)   label.textContent   = 'Unlock the map →';
-    if (trust)   trust.innerHTML     = '<span>Discreet, always</span><span>·</span><span>Members keep 100%</span><span>·</span><span>Leave anytime</span>';
+    if (trust)   trust.innerHTML     = '<span>Everyone welcome</span><span>·</span><span>Members keep 100%</span><span>·</span><span>Leave anytime</span>';
   }
   // Reset chip selections
   document.querySelectorAll('.host-cat-chip').forEach(c => c.classList.remove('active'));
