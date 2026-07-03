@@ -76,6 +76,26 @@ perks lock/unlock, but event pins and details are never hidden. Migrating the
 ~40 inline `sb.from(...)` calls in `app.js` into this layer is the incremental
 path in Phase 2 item 2.
 
+**Secret Social Club wiring (uses this layer):**
+- Onboarding is invite-only — `submitGate()` requires a valid curator code
+  before creating a new attendee (`validateCuratorCode`); hosts and returning
+  members are unaffected.
+- Event detail shows a **Members' perks** panel: locked until the member is
+  curator-verified (`promptCuratorUnlock`) or has a geolocated check-in at the
+  venue (`checkInToEvent` → `canCheckInAt`). The event itself is always visible.
+- Map (`app.js`) uses Mapbox Standard with a theme-linked `lightPreset`
+  (`night`/`day`) and, on the explore map, hides commercial POI + transit
+  labels (`applyMapChrome`) for the decluttered underground look. Event pins
+  come from a **clustered GeoJSON source** (`buildEventsGeoJSON` +
+  `attachMapLayers`); individual pins are still HTML markers synced off a
+  GeoJSON hitbox — converting those to a pure symbol layer is a follow-up that
+  needs live Mapbox verification (the CDN is blocked in the sandbox).
+
+Backend tables this layer expects (degrade gracefully to localStorage / format-
+only checks until they exist): `curator_codes` (code, curator_name, tier,
+active), `pending_events`, alongside the existing `users`, `events`, `rsvps`,
+`tickets`, `chat_messages`, `friends`, `host_applications`.
+
 ## Security model (important)
 
 There is no server to hide keys behind, so the keys in `config.js` are the

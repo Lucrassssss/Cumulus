@@ -537,6 +537,20 @@ let MAPBOX_TOKEN=DEFAULT_MAPBOX_TOKEN;
 function mapboxConfigured(){ return !!(MAPBOX_TOKEN&&MAPBOX_TOKEN.trim()); }
 // Switched to Mapbox Standard Style to seamlessly support toggle properties without map reload.
 function mapboxStyleUrl(){ return 'mapbox://styles/mapbox/standard'; }
+// Secret-club map chrome: theme-linked lighting, and on the explore map a
+// decluttered "underground" feel — hide commercial POI + transit labels so
+// the only pins that matter are our events. Safe no-op if the style isn't
+// ready or a property is unsupported.
+function applyMapChrome(map, declutter){
+  if(!map) return;
+  try{
+    map.setConfigProperty('basemap','lightPreset', state.theme==='dark' ? 'night' : 'day');
+    if(declutter){
+      map.setConfigProperty('basemap','showPointOfInterestLabels', false);
+      map.setConfigProperty('basemap','showTransitLabels', false);
+    }
+  }catch(e){}
+}
 
 // ---- GEOCODING ----
 let geocodeCache={},geocodingInProgress=false,geocodeProgress={done:0,total:0};
@@ -606,11 +620,11 @@ async function toggleTheme(){
   }
   renderNav();
   if(lmap && lmap.isStyleLoaded()) {
-    lmap.setConfigProperty('basemap', 'lightPreset', state.theme === 'dark' ? 'night' : 'day');
+    applyMapChrome(lmap, true);
     updateClusterPaint();
   }
   if(hostMap && hostMap.isStyleLoaded()) {
-    hostMap.setConfigProperty('basemap', 'lightPreset', state.theme === 'dark' ? 'night' : 'day');
+    applyMapChrome(hostMap, false);
   }
 }
 async function persistProfile(){
@@ -2380,7 +2394,7 @@ function initLeaflet(){
   });
   lmap.addControl(new mapboxgl.NavigationControl({showCompass:true,showZoom:true}),'top-right');
   lmap.on('style.load', () => {
-    lmap.setConfigProperty('basemap', 'lightPreset', state.theme === 'dark' ? 'night' : 'day');
+    applyMapChrome(lmap, true);
     attachMapLayers();
   });
 }
@@ -2399,7 +2413,7 @@ function initHostMap(){
   });
   hostMap.addControl(new mapboxgl.NavigationControl({showCompass:true}),'top-right');
   hostMap.on('style.load', () => {
-    hostMap.setConfigProperty('basemap', 'lightPreset', state.theme === 'dark' ? 'night' : 'day');
+    applyMapChrome(hostMap, false);
   });
   const hostEl=document.createElement('div');
   hostEl.className='evpin-wrap';
