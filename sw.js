@@ -1,7 +1,7 @@
 const CACHE = 'cumulus-v1';
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.add('/'))
+    caches.open(CACHE).then(c => c.add('./'))
   );
   self.skipWaiting();
 });
