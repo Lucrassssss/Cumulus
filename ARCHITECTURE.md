@@ -120,6 +120,41 @@ There is no server to hide keys behind, so the keys in `config.js` are the
 `.env.example` documents these and how to inject per-environment values via
 `window.CUMULUS_CONFIG` (or a future build step) without editing source.
 
+**Known gap — RLS on the pre-existing tables.** This repo's migration history only
+covers `admins`, `curator_codes`, and `pending_events` (see above). The tables that
+predate this repo's migrations — `users`, `events`, `rsvps`, `tickets`,
+`chat_messages`, `friends`, `host_applications` — have no migration file here, so
+their Row Level Security policies aren't tracked or verifiable from the codebase.
+**Before going live, audit these in the Supabase dashboard** (Database → Tables →
+each table's RLS toggle + policies) and confirm the anon key can't read data it
+shouldn't (e.g. other users' emails, private chat messages, another attendee's
+ticket QR). Once confirmed, add a migration file capturing that state so it's
+tracked going forward.
+
+## Production readiness — app & website
+
+- **PWA**: `manifest.json` + real icons (`assets/icons/`) replace an earlier
+  runtime-generated blob-URL manifest, which is unreliable for install prompts
+  (Chrome's installability checks want a stable, fetchable manifest URL, not one
+  regenerated fresh — and possibly differently — on every page load).
+- **Service worker**: exactly one registration (`sw.js`, static file). An
+  in-JS duplicate registration (leftover from before the sw.js extraction) has
+  been removed — it raced the real one and used a stale cache-name scheme.
+- **SEO / sharing**: `robots.txt`, `sitemap.xml`, canonical link, and Open
+  Graph/Twitter Card tags (`assets/og-image.png`) so shared links render a real
+  preview instead of a bare URL. These use `https://cumulusapp.co` as a
+  placeholder canonical domain — **update if the real production domain differs.**
+- **Legal**: `privacy.html` / `terms.html` are real pages now (the footer links
+  previously 404'd). Content is accurate to what the app actually does and
+  collects, but **hasn't had legal review** — treat as a first draft, not final
+  copy, especially for UK GDPR specifics before real user data is at stake.
+- **Security headers**: `vercel.json` sets `X-Content-Type-Options`,
+  `X-Frame-Options`, `Referrer-Policy`, and a `Permissions-Policy` that allows
+  geolocation (used by check-in/map) but blocks camera/mic/payment/usb/midi.
+  Deliberately **no CSP** — the inline-`onclick` architecture (see above) needs
+  `script-src 'unsafe-inline'` to function, which defeats most of a CSP's
+  purpose; getting this right needs a dedicated pass, not a bolt-on.
+
 ---
 
 ## Phase 2 roadmap (deliberately deferred)
