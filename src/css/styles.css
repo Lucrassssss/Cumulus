@@ -6783,17 +6783,20 @@
   .lp-feat-card-title { padding: 16px 22px 0 !important; font-size: 20px !important; font-weight: 800 !important; letter-spacing: -0.01em !important; }
   .lp-feat-card-desc { padding: 8px 22px 28px !important; line-height: 1.65 !important; }
 
-  /* ── Venue section — real venue backdrop, stays dark ──────── */
+  /* ── Venue section — city-network backdrop, stays dark ────── */
   .lp-venues-section {
     background:
       linear-gradient(rgba(6,6,6,.80), rgba(6,6,6,.90)),
-      url('../../assets/img/hero-rooftops.svg') center/cover no-repeat !important;
+      url('../../assets/img/venues-network.svg') center/cover no-repeat !important;
   }
   .lp-venues-stats { gap: 14px !important; }
   .lp-vstat {
     background: rgba(255,255,255,.05) !important; border: 1px solid rgba(255,255,255,.10) !important;
     border-radius: var(--r-md) !important; backdrop-filter: blur(4px) !important;
   }
+  /* Section stays dark in both themes, but .lp-section-title's --text is
+     theme-reactive (near-black in light theme) — force light text here too. */
+  .lp-venues-section .lp-section-title { color:#fff !important; }
   /* Venue feature list — lift contrast off the busy backdrop */
   .lp-venues-section .lp-feat-title { color:#F7F5F0 !important; font-weight:700 !important; }
   .lp-venues-section .lp-feat-desc { color: rgba(240,235,224,.80) !important; }
