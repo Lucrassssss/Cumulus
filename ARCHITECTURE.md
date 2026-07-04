@@ -96,6 +96,17 @@ only checks until they exist): `curator_codes` (code, curator_name, tier,
 active), `pending_events`, alongside the existing `users`, `events`, `rsvps`,
 `tickets`, `chat_messages`, `friends`, `host_applications`.
 
+**Events are real-data-only (no seed).** `app.js` no longer ships demo events —
+`EVENTS` starts empty and is filled at boot from the `events` table via
+`loadRealEvents()`. When there are no events (backend empty or unreachable) the
+map shows a `.map-empty` overlay ("No events on the map yet" / "No events match"
+when filtered) and list/calendar views show their own empty states, rather than
+inventing listings. `supabase/migrations/20260704000000_events_table.sql`
+guarantees the table's column shape (idempotent, additive) but deliberately does
+**not** alter RLS on `events` — the live app writes events with the anon key
+under the custom-users model, so strict RLS is a separate migration decision
+(the hardened Supabase-Auth alternative lives in `docs/velvet-rope/`).
+
 **Admin boundary (real auth).** Event approvals and curator-code management are
 gated **server-side** by RLS, not just the client-side owner-email check. An
 `admins` table + `is_admin()` back policies that require a Supabase **Auth**

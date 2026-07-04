@@ -24,11 +24,34 @@ async function setView(page, view) {
   await page.evaluate((v) => {
     /* global state, EVENTS, renderNav, renderView */
     state.view = v;
-    if (v === 'detail' || v === 'connect') state.selectedEventId = EVENTS[0].id;
+    if ((v === 'detail' || v === 'connect') && EVENTS[0]) state.selectedEventId = EVENTS[0].id;
     renderNav();
     renderView();
   }, view);
   await page.waitForTimeout(250);
+}
+
+/*
+ * Inject a self-contained fixture event. The app no longer ships seed events
+ * (real data comes from Supabase, which is offline in CI), so any test that
+ * needs an event on screen builds its own here rather than relying on seed rows.
+ */
+async function seedFixtureEvent(page) {
+  return await page.evaluate(() => {
+    /* global EVENTS, computeEventDates */
+    const now = Date.now();
+    const ev = {
+      id: 'fixture-1', title: 'Fixture Test Event', category: 'Creative',
+      host: 'Test Host', hostId: 'test-host', venue: 'Test Venue',
+      area: 'Soho', address: 'Soho, London W1D', lat: 51.5136, lon: -0.1365,
+      startTime: new Date(now + 3600000).toISOString(),
+      endTime: new Date(now + 7200000).toISOString(),
+      desc: 'A fixture event for smoke tests.', capacity: 20, price: 0, nightShotUrl: null,
+    };
+    if (typeof computeEventDates === 'function') computeEventDates(ev);
+    if (!EVENTS.some((e) => e.id === ev.id)) EVENTS.push(ev);
+    return ev.id;
+  });
 }
 
 test.describe('Cumulus smoke', () => {
@@ -139,11 +162,12 @@ test.describe('Cumulus smoke', () => {
   test('perk gating: event visible, perks lock/unlock (WCAG-safe)', async ({ page }) => {
     await page.goto('/');
     await enterApp(page);
-    await page.evaluate(() => {
-      state.view = 'detail'; state.selectedEventId = EVENTS[0].id;
+    const evId = await seedFixtureEvent(page);
+    await page.evaluate((id) => {
+      state.view = 'detail'; state.selectedEventId = id;
       state.curatorVerified = false; state.checkedInEventId = null;
       renderNav(); renderView();
-    });
+    }, evId);
     // Event fully visible AND perks locked (content never hidden by the gate)
     await expect(page.locator('.detail-title')).toBeVisible();
     await expect(page.locator('.perk-panel.locked')).toBeVisible();

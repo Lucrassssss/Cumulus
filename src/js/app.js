@@ -1,117 +1,9 @@
-const EVENT_SEED = [
-  {id:1, title:"Botanical Illustration Hour", category:"Creative", host:"Herne Hill Arts Collective", venue:"Ink & Easel Studio", area:"Herne Hill", address:"Brockwell Park, London SE24", startOffsetMin:2223, durationMin:135, capacity:15, desc:"Slow down and study leaves, petals, and stems in fine detail. Calm, focused, and quietly social."},
-  {id:2, title:"Chelsea Watercolour Social", category:"Creative", host:"Chelsea Arts Collective", venue:"The Pottery Loft", area:"Chelsea", address:"Chelsea Embankment, London SW3", startOffsetMin:4457, durationMin:150, capacity:27, desc:"Bring your own canvas energy — paints and a relaxed crowd of creatives supplied. No experience needed, just curiosity."},
-  {id:3, title:"Ceramics & Chill", category:"Creative", host:"Mira Greco", venue:"Canvas & Co.", area:"Bermondsey", address:"Bermondsey Street, London SE1", startOffsetMin:43074, durationMin:135, capacity:25, desc:"Hands in the clay, shoulders down — a low-pressure evening of shaping, chatting, and glazing later."},
-  {id:4, title:"Clay Modelling for Beginners", category:"Creative", host:"Femi Lin", venue:"Paint & Clay Studio", area:"Lewisham", address:"Lewisham High Street, London SE13", startOffsetMin:16282, durationMin:135, capacity:23, desc:"Wedge, coil, and pinch your way to a first piece, glazing notes included for next time."},
-  {id:5, title:"Linocut Printmaking Workshop", category:"Creative", host:"Clapham Arts Collective", venue:"The Atelier Clapham", area:"Clapham", address:"Clapham Common, London SW4", startOffsetMin:28197, durationMin:180, capacity:23, desc:"Carve your own print block and pull a few editions to take home. Beginners very welcome."},
-  {id:6, title:"Urban Sketchers Meetup — Hammersmith", category:"Creative", host:"Hammersmith Arts Collective", venue:"The Drawing Room", area:"Hammersmith", address:"Hammersmith Broadway, London W6", startOffsetMin:14493, durationMin:150, capacity:27, desc:"Grab a stool, a pencil, and join the group capturing the street scene as it happens."},
-  {id:7, title:"Life Drawing & Low-Fi Beats", category:"Creative", host:"Bethnal Green Arts Collective", venue:"The Sketch House", area:"Bethnal Green", address:"Bethnal Green Gardens, London E2", startOffsetMin:32463, durationMin:180, capacity:19, desc:"Dynamic poses, dim lighting, and a live playlist. Materials provided, but feel free to bring your own sketchbook."},
-  {id:8, title:"Sunday Sketch Club — Vauxhall", category:"Creative", host:"Tom Fontaine", venue:"The Kiln Room", area:"Vauxhall", address:"Vauxhall Pleasure Gardens, London SW8", startOffsetMin:41240, durationMin:135, capacity:17, desc:"Outdoor sketching with the group, materials available to borrow. A coffee run happens halfway through."},
-  {id:9, title:"Collage & Cocktails", category:"Creative", host:"Callum Singh", venue:"Clayworks Studio", area:"Stoke Newington", address:"Clissold Park, London N16", startOffsetMin:25129, durationMin:165, capacity:17, desc:"Cut, paste, and rearrange old magazines into something new, with a drink in hand."},
-  {id:10, title:"Pottery Painting Pop-Up", category:"Creative", host:"Greenwich Arts Collective", venue:"Brushwork Studio", area:"Greenwich", address:"Greenwich Park, London SE10", startOffsetMin:-74, durationMin:180, capacity:29, desc:"Pick a piece, paint it your way, take it home. A slow, sociable afternoon with tea on tap."},
-  {id:11, title:"Plein Air Painting Session", category:"Creative", host:"Fitzrovia Arts Collective", venue:"Studio Nine", area:"Fitzrovia", address:"Fitzrovia, London W1T", startOffsetMin:17606, durationMin:180, capacity:17, desc:"Easels out, light changing fast — a relaxed outdoor painting session for any skill level."},
-  {id:12, title:"Zine-Making Night", category:"Creative", host:"Tooting Arts Collective", venue:"The Colour Lab", area:"Tooting", address:"Tooting Common, London SW17", startOffsetMin:19354, durationMin:120, capacity:25, desc:"Fold, staple, and fill pages with whatever's on your mind — small press publishing, just for fun."},
-  {id:13, title:"Valorant Watch Party", category:"Gaming", host:"Balham Gaming Crew", venue:"Arcade Underground", area:"Balham", address:"Balham High Road, London SW12", startOffsetMin:13155, durationMin:210, capacity:62, desc:"The grand finals on a massive projector, themed cocktails and giveaways between rounds."},
-  {id:14, title:"Speedrun Social", category:"Gaming", host:"Marcus Walsh", venue:"The Console Room", area:"Dulwich", address:"Dulwich Park, London SE21", startOffsetMin:157, durationMin:210, capacity:78, desc:"Bring your best time or just come watch — friendly competitive runs with the crowd cheering along."},
-  {id:15, title:"Board-to-Video Game Crossover Night", category:"Gaming", host:"Battersea Gaming Crew", venue:"Combo Breaker Arcade", area:"Battersea", address:"Battersea Park, London SW11", startOffsetMin:7451, durationMin:150, capacity:60, desc:"Board game mechanics meet video game energy — a hybrid night for crossover fans."},
-  {id:16, title:"Cosplay & Co-op Night", category:"Gaming", host:"Wood Green Gaming Crew", venue:"Game Haus", area:"Wood Green", address:"Wood Green High Road, London N22", startOffsetMin:15812, durationMin:180, capacity:80, desc:"Dress up, team up, and tackle a co-op campaign with the rest of the crowd."},
-  {id:17, title:"Mario Kart Grand Prix", category:"Gaming", host:"Mira Shah", venue:"The Loading Screen", area:"King's Cross", address:"King's Cross, London N1C", startOffsetMin:31969, durationMin:225, capacity:34, desc:"Eight-player chaos on the big screen, knockout rounds, and bragging rights on the line."},
-  {id:18, title:"Smash Bros Tournament Night", category:"Gaming", host:"Muswell Hill Gaming Crew", venue:"NQ64 Muswell Hill", area:"Muswell Hill", address:"Alexandra Park, London N10", startOffsetMin:8361, durationMin:210, capacity:78, desc:"Casual bracket, big screens, snacks. Come solo or bring a squad — button-mashers to combo masters welcome."},
-  {id:19, title:"LAN Party — Whitechapel", category:"Gaming", host:"Grace Walsh", venue:"The Byte Bar", area:"Whitechapel", address:"Whitechapel Road, London E1", startOffsetMin:34701, durationMin:180, capacity:40, desc:"Bring your rig, plug in, and battle it out on the local network all evening."},
-  {id:20, title:"Tabletop RPG One-Shot", category:"Gaming", host:"Kingston Gaming Crew", venue:"Player One Lounge", area:"Kingston", address:"Kingston Riverside, London KT1", startOffsetMin:35463, durationMin:165, capacity:56, desc:"Pre-built characters, one evening, one story — perfect if you've never rolled a d20 before."},
-  {id:21, title:"Retro Arcade Meetup — Hampstead", category:"Gaming", host:"Hampstead Gaming Crew", venue:"Heart of Gaming", area:"Hampstead", address:"Hampstead Heath, London NW3", startOffsetMin:-89, durationMin:211, capacity:74, desc:"Pixel art, pinball, and 90s nostalgia. A relaxed evening for anyone who grew up on cartridges."},
-  {id:22, title:"Fighting Game Locals — Farringdon", category:"Gaming", host:"Farringdon Gaming Crew", venue:"The Joystick Bar", area:"Farringdon", address:"Farringdon Road, London EC1M", startOffsetMin:28831, durationMin:180, capacity:70, desc:"Bracket play for the regulars and newcomers alike — bring your stick or borrow a house pad."},
-  {id:23, title:"Indie Dev Playtest Showcase", category:"Gaming", host:"Mayfair Gaming Crew", venue:"The Pixel Pit", area:"Mayfair", address:"Berkeley Square, London W1J", startOffsetMin:16366, durationMin:150, capacity:58, desc:"Playtest unreleased games from local developers, give feedback over a beer, meet the people building them."},
-  {id:24, title:"Pixel Art & Pinball Night", category:"Gaming", host:"Petra Chen", venue:"Retro Rumble Arcade", area:"Forest Hill", address:"Horniman Gardens, London SE23", startOffsetMin:15200, durationMin:210, capacity:66, desc:"Pixel art on the walls, pinball machines warmed up, and a soundtrack straight out of an arcade cabinet."},
-  {id:25, title:"Cult Classics Marathon", category:"Movie Nights", host:"Hugo Okafor", venue:"The Reel Room", area:"Tottenham", address:"Tottenham High Road, London N17", startOffsetMin:37543, durationMin:165, capacity:108, desc:"Back-to-back cult favourites with intermissions for popcorn refills and chat."},
-  {id:26, title:"Silent Film & Live Score", category:"Movie Nights", host:"Crouch End Film Society", venue:"The Film Loft", area:"Crouch End", address:"Crouch End Broadway, London N8", startOffsetMin:26797, durationMin:195, capacity:70, desc:"A silent classic accompanied by a live musician improvising the score in real time."},
-  {id:27, title:"Documentary Discussion Night", category:"Movie Nights", host:"Sam Andersson", venue:"The Roxy Screening Room", area:"Croydon", address:"Croydon Town Centre, London CR0", startOffsetMin:-118, durationMin:243, capacity:94, desc:"Watch, then talk it through — a thoughtful crowd unpacking the issues raised on screen."},
-  {id:28, title:"Secret Cinema Pop-Up", category:"Movie Nights", host:"Tom Andersson", venue:"The Electric Room", area:"Islington", address:"Islington Green, London N1", startOffsetMin:4092, durationMin:150, capacity:122, desc:"We can't tell you the film, but expect a transporting set and a proper theatrical surprise."},
-  {id:29, title:"Open-Air Cinema — Kensington", category:"Movie Nights", host:"Petra Doyle", venue:"Flicker House", area:"Kensington", address:"Kensington Gardens, London W8", startOffsetMin:16415, durationMin:150, capacity:150, desc:"Blankets down, projector up — bring snacks and settle in under the open sky."},
-  {id:30, title:"Foreign Film Friday", category:"Movie Nights", host:"Kemi Adeyemi", venue:"Mystery Reels Woolwich", area:"Woolwich", address:"Woolwich Arsenal, London SE18", startOffsetMin:12145, durationMin:195, capacity:56, desc:"Subtitled gems from around the world, picked to spark conversation afterwards."},
-  {id:31, title:"Midnight Movie Madness", category:"Movie Nights", host:"Ines Fontaine", venue:"The Projection Room", area:"Finsbury Park", address:"Finsbury Park, London N4", startOffsetMin:36186, durationMin:195, capacity:48, desc:"Late-night cult favourites for the night owls — doors open well after dark."},
-  {id:32, title:"Animation Showcase", category:"Movie Nights", host:"Kemi Eriksen", venue:"Night Owl Cinema", area:"Walthamstow", address:"Walthamstow Wetlands, London E17", startOffsetMin:15611, durationMin:150, capacity:40, desc:"Shorts and features from animators pushing the medium somewhere new."},
-  {id:33, title:"Short Films & Soda — Bromley", category:"Movie Nights", host:"Hugo Brennan", venue:"Rio Cinema", area:"Bromley", address:"Bromley Town Centre, London BR1", startOffsetMin:3962, durationMin:195, capacity:66, desc:"A curated set of indie short films from London-based directors, with a Q&A session after."},
-  {id:34, title:"A24 Late Night Screening", category:"Movie Nights", host:"Maya Murphy", venue:"The Castle Cinema", area:"Crystal Palace", address:"Crystal Palace Park, London SE19", startOffsetMin:18814, durationMin:195, capacity:72, desc:"A community screening followed by an open discussion over drinks. This week's pick announced on the night."},
-  {id:35, title:"Classic Film Club — Chiswick", category:"Movie Nights", host:"Lucas Andersson", venue:"Backyard Cinema Chiswick", area:"Chiswick", address:"Chiswick High Road, London W4", startOffsetMin:-49, durationMin:195, capacity:130, desc:"An old favourite on the big screen, introduced by a guest host with some background on the film."},
-  {id:36, title:"Settlers Showdown", category:"Board Games", host:"Peckham Games Club", venue:"Settlers Lounge", area:"Peckham", address:"Peckham Rye Park, London SE15", startOffsetMin:3847, durationMin:165, capacity:32, desc:"A friendly knockout tournament with a small prize for whoever settles the most territory."},
-  {id:37, title:"Strategy Board Game Night", category:"Board Games", host:"Putney Games Club", venue:"The Dice House", area:"Putney", address:"Putney Embankment, London SW15", startOffsetMin:4610, durationMin:165, capacity:18, desc:"Deep-cut strategy games for those who want more than Monopoly. Teachers on hand for anything new."},
-  {id:38, title:"Card Game Carnival", category:"Board Games", host:"Shepherd's Bush Games Club", venue:"Knight's Table Games Café", area:"Shepherd's Bush", address:"Shepherd's Bush Green, London W12", startOffsetMin:7976, durationMin:195, capacity:22, desc:"Quick-fire card games rotating every twenty minutes — easy to learn, hard to put down."},
-  {id:39, title:"Tabletop Taster Night", category:"Board Games", host:"Notting Hill Games Club", venue:"The Strategy Room", area:"Notting Hill", address:"Notting Hill Gate, London W11", startOffsetMin:39082, durationMin:210, capacity:22, desc:"Sample five different games in one evening, hosts on hand to teach the rules each time."},
-  {id:40, title:"Backgammon & Beer", category:"Board Games", host:"Jordan Novak", venue:"The Card Room", area:"Highbury", address:"Highbury Fields, London N5", startOffsetMin:17209, durationMin:180, capacity:32, desc:"Doubles cubes out, pints poured, a relaxed evening of backgammon for all levels."},
-  {id:41, title:"Sunday Chess in the Park — Ealing", category:"Board Games", host:"Oscar Hassan", venue:"Chance & Counters", area:"Ealing", address:"Ealing Common, London W5", startOffsetMin:8697, durationMin:195, capacity:24, desc:"Open-air boards set up along the green — whether you're an expert or don't know how the knight moves, pull up a chair."},
-  {id:42, title:"Eurogame Enthusiasts Meetup", category:"Board Games", host:"Holloway Games Club", venue:"The Tabletop Tavern", area:"Holloway", address:"Holloway Road, London N7", startOffsetMin:20840, durationMin:195, capacity:24, desc:"Heavier strategy titles hit the table for the crowd that loves a long, satisfying game."},
-  {id:43, title:"Co-op Board Game Social", category:"Board Games", host:"Richmond Games Club", venue:"The Game Box", area:"Richmond", address:"Richmond Riverside, London TW9", startOffsetMin:30154, durationMin:150, capacity:18, desc:"Games built for teamwork, not competition — beat the board together, not each other."},
-  {id:44, title:"Puzzle Night — Shoreditch", category:"Board Games", host:"Shoreditch Games Club", venue:"Dice & Slice", area:"Shoreditch", address:"Shoreditch High Street, London E1", startOffsetMin:35354, durationMin:150, capacity:18, desc:"Jigsaw and logic puzzles laid out across shared tables, work on one or hop between a few."},
-  {id:45, title:"Catan & Chill — Bow", category:"Board Games", host:"Jakub Lin", venue:"Draughts Bow", area:"Bow", address:"Bow Wharf, London E3", startOffsetMin:16129, durationMin:150, capacity:26, desc:"Settle Catan, sip something warm, meet new people. Rotating tables so you play with different folks each round."},
-  {id:46, title:"Dungeons & Dragons Drop-In", category:"Board Games", host:"Marcus Adeyemi", venue:"The Board Room", area:"Bloomsbury", address:"Russell Square, London WC1B", startOffsetMin:-166, durationMin:188, capacity:32, desc:"Pre-built characters and a one-shot adventure — drop in any week, no commitment needed."},
-  {id:47, title:"Weekend Wanderers Walk", category:"Meetups", host:"Mile End Social Club", venue:"The Social Yard", area:"Mile End", address:"Mile End Park, London E3", startOffsetMin:41685, durationMin:105, capacity:40, desc:"A scenic route with regular stops, good for meeting people without the small talk pressure."},
-  {id:48, title:"Newcomers Picnic — Acton", category:"Meetups", host:"Acton Social Club", venue:"New Faces Lounge", area:"Acton", address:"Acton Park, London W3", startOffsetMin:-74, durationMin:135, capacity:52, desc:"Blankets on the grass, simple food to share, and an easy way to meet other newcomers."},
-  {id:49, title:"Language Exchange Evening", category:"Meetups", host:"Callum Eriksen", venue:"The Gathering Place", area:"Wembley", address:"Wembley Park, London HA9", startOffsetMin:352, durationMin:90, capacity:36, desc:"Practise a new language over coffee, paired up and swapped around through the evening."},
-  {id:50, title:"Neighbours Brunch Club", category:"Meetups", host:"Owen Kelly", venue:"The Welcome Table", area:"Pimlico", address:"Pimlico, London SW1V", startOffsetMin:29076, durationMin:105, capacity:36, desc:"A relaxed weekend brunch for locals to get to know whoever's just moved onto the street."},
-  {id:51, title:"Book Club Meetup", category:"Meetups", host:"New Cross Social Club", venue:"The Mixer House", area:"New Cross", address:"New Cross Gate, London SE14", startOffsetMin:753, durationMin:150, capacity:46, desc:"This month's pick discussed over snacks — haven't finished it? Come anyway, no spoilers policed too hard."},
-  {id:52, title:"New in London Meetup — Wandsworth", category:"Meetups", host:"Chloe Walsh", venue:"Hoxton Square Social", area:"Wandsworth", address:"Wandsworth Town, London SW18", startOffsetMin:24316, durationMin:180, capacity:22, desc:"For anyone who's recently moved to the city. Casual chats, no pressure, just a friendly afternoon outdoors."},
-  {id:53, title:"Solo Travellers Social", category:"Meetups", host:"Deptford Social Club", venue:"The Meetup Loft", area:"Deptford", address:"Deptford High Street, London SE8", startOffsetMin:8472, durationMin:135, capacity:28, desc:"For anyone travelling or living solo who fancies some company for an evening."},
-  {id:54, title:"Sunday Walk & Talk — Stratford", category:"Meetups", host:"Sienna Greco", venue:"Stratford Community Hub", area:"Stratford", address:"Queen Elizabeth Olympic Park, London E20", startOffsetMin:13887, durationMin:120, capacity:22, desc:"An easy loop with plenty of pauses for conversation — set your own pace and fall in with the group."},
-  {id:55, title:"Riverside 5K & Coffee", category:"Meetups", host:"Clerkenwell Social Club", venue:"The Common Room", area:"Clerkenwell", address:"Clerkenwell Green, London EC1R", startOffsetMin:36812, durationMin:120, capacity:26, desc:"A very casual, all-paces run finishing with coffee and pastries at the market. Mostly chatting, barely racing."},
-  {id:56, title:"Young Professionals Mixer", category:"Meetups", host:"Barnes Social Club", venue:"Open Door Social Club", area:"Barnes", address:"Barnes Green, London SW13", startOffsetMin:10248, durationMin:150, capacity:46, desc:"Drinks, easy conversation, and a room full of people figuring out the same city you are."},
-  {id:57, title:"Career Switchers Coffee Chat", category:"Meetups", host:"Covent Garden Social Club", venue:"Connect Covent Garden", area:"Covent Garden", address:"Covent Garden Piazza, London WC2E", startOffsetMin:10769, durationMin:180, capacity:34, desc:"Swap stories with others rethinking their career path over a relaxed coffee."},
-  {id:58, title:"Pasta-Making Workshop", category:"Food & Drink", host:"Priya Fontaine", venue:"The Pop-Up Pantry", area:"Elephant & Castle", address:"Elephant & Castle, London SE1", startOffsetMin:13199, durationMin:135, capacity:50, desc:"Flour-dusted countertops and fresh pasta from scratch, sauce included, mess expected."},
-  {id:59, title:"Cheese & Wine Pairing", category:"Food & Drink", host:"Barbican Supper Club", venue:"Spice Route Social", area:"Barbican", address:"Barbican Centre, London EC2Y", startOffsetMin:20120, durationMin:150, capacity:48, desc:"Five pairings guided by a sommelier, picked to make even modest cheese taste special."},
-  {id:60, title:"Coffee Cupping Session", category:"Food & Drink", host:"Leyton Supper Club", venue:"Hearth & Home Kitchen", area:"Leyton", address:"Leyton Marsh, London E10", startOffsetMin:1670, durationMin:135, capacity:34, desc:"Smell, slurp, and score your way through a flight of single-origin coffees."},
-  {id:61, title:"Vegan Pop-Up Kitchen", category:"Food & Drink", host:"Hackney Supper Club", venue:"The Long Table", area:"Hackney", address:"Hackney Central, London E8", startOffsetMin:18378, durationMin:150, capacity:44, desc:"An all-plant menu proving you don't need meat to make a table happy."},
-  {id:62, title:"Wine Tasting Evening", category:"Food & Drink", host:"Camden Supper Club", venue:"Supper House Camden", area:"Camden", address:"Camden Lock, London NW1", startOffsetMin:42160, durationMin:150, capacity:36, desc:"Six pours, a guided tasting, and just enough trivia to sound smarter at your next dinner party."},
-  {id:63, title:"Cocktail Masterclass", category:"Food & Drink", host:"Soho Supper Club", venue:"Forktale Kitchen", area:"Soho", address:"Soho Square, London W1D", startOffsetMin:7679, durationMin:120, capacity:40, desc:"Learn the classics and a couple of house originals, shaker in hand the whole night."},
-  {id:64, title:"BBQ & Backyard Social — Kentish Town", category:"Food & Drink", host:"Kentish Town Supper Club", venue:"The Cork & Fork", area:"Kentish Town", address:"Kentish Town Road, London NW5", startOffsetMin:38169, durationMin:135, capacity:36, desc:"Smoke rising, drinks flowing, and a garden full of people who came for the food and stayed for the company."},
-  {id:65, title:"Craft Beer Tasting Night", category:"Food & Drink", host:"Wimbledon Supper Club", venue:"Ferment & Co.", area:"Wimbledon", address:"Wimbledon Common, London SW19", startOffsetMin:7224, durationMin:120, capacity:36, desc:"A flight of small-batch beers from local breweries, with the brewers on hand to talk through them."},
-  {id:66, title:"Bake-Off Social Night", category:"Food & Drink", host:"Canary Wharf Supper Club", venue:"Market Table Canary Wharf", area:"Canary Wharf", address:"Canada Square Park, London E14", startOffsetMin:28719, durationMin:150, capacity:42, desc:"Bring something you baked, taste everyone else's, vote without too much bias."},
-  {id:67, title:"Supper Club — Fulham", category:"Food & Drink", host:"Fulham Supper Club", venue:"The Tasting Room", area:"Fulham", address:"Fulham Broadway, London SW6", startOffsetMin:37907, durationMin:165, capacity:26, desc:"A set menu shared family-style with strangers who won't stay strangers for long."},
-  {id:68, title:"Sunday Roast Social", category:"Food & Drink", host:"Priya Costa", venue:"The Tasting Bar", area:"Angel", address:"Angel, London EC1V", startOffsetMin:34193, durationMin:120, capacity:46, desc:"All the trimmings, shared tables, and seconds always on offer."},
-  {id:69, title:"Acoustic Sessions — Borough", category:"Live Music", host:"Borough Music Collective", venue:"Sessions House Borough", area:"Borough", address:"Borough Market, London SE1", startOffsetMin:20389, durationMin:180, capacity:78, desc:"Stripped-back sets from local songwriters in a room built for quiet attention."},
-  {id:70, title:"Drum & Bass Warehouse Session", category:"Live Music", host:"Marylebone Music Collective", venue:"Vinyl & Verse", area:"Marylebone", address:"Marylebone High Street, London W1U", startOffsetMin:19496, durationMin:165, capacity:80, desc:"Heavy bass, low light, a proper warehouse sound system pushed right to the edge."},
-  {id:71, title:"Busking Showcase — Brixton", category:"Live Music", host:"Brixton Music Collective", venue:"Lowkey Lounge", area:"Brixton", address:"Brixton Market, London SW9", startOffsetMin:24967, durationMin:165, capacity:64, desc:"Street performers given an actual stage and a crowd that came specifically to listen."},
-  {id:72, title:"Singer-Songwriter Showcase", category:"Live Music", host:"Dalston Music Collective", venue:"The Soundbox", area:"Dalston", address:"Dalston Square, London E8", startOffsetMin:37416, durationMin:180, capacity:62, desc:"A rotating bill of new voices getting their first stage time in front of a friendly crowd."},
-  {id:73, title:"Jazz in the Park", category:"Live Music", host:"Lucas Eriksen", venue:"The Listening Room", area:"Herne Hill", address:"Brockwell Park, London SE24", startOffsetMin:18923, durationMin:150, capacity:40, desc:"Bring a blanket, the band sets up as the sun goes down, no amps needed."},
-  {id:74, title:"Sunday Jazz Brunch", category:"Live Music", host:"Noah Singh", venue:"Resonance Hall", area:"Chelsea", address:"Chelsea Embankment, London SW3", startOffsetMin:30593, durationMin:150, capacity:122, desc:"Brunch plates out, a trio playing soft sets, a lazy Sunday done right."},
-  {id:75, title:"Open Mic Night — Bermondsey", category:"Live Music", host:"Freya Kowalski", venue:"The Hidden String", area:"Bermondsey", address:"Bermondsey Street, London SE1", startOffsetMin:11240, durationMin:210, capacity:100, desc:"Sign up on the night, play two songs, get a room that actually listens."},
-  {id:76, title:"Folk Music Circle", category:"Live Music", host:"Lewisham Music Collective", venue:"The Amp Room", area:"Lewisham", address:"Lewisham High Street, London SE13", startOffsetMin:41600, durationMin:180, capacity:76, desc:"Pull out an instrument or just hum along — tunes passed around the circle all night."},
-  {id:77, title:"Indie Gig Night", category:"Live Music", host:"Clapham Music Collective", venue:"Echo Chamber Clapham", area:"Clapham", address:"Clapham Common, London SW4", startOffsetMin:15512, durationMin:210, capacity:50, desc:"Three local bands, one small stage, and a crowd that actually came for the music."},
-  {id:78, title:"Vinyl Listening Party", category:"Live Music", host:"Hammersmith Music Collective", venue:"Backroom Sessions", area:"Hammersmith", address:"Hammersmith Broadway, London W6", startOffsetMin:13170, durationMin:210, capacity:68, desc:"Bring a record, take a turn on the deck, talk about why it matters to you."},
-  {id:79, title:"Live Band Karaoke", category:"Live Music", host:"Priya Hassan", venue:"The Note Room", area:"Bethnal Green", address:"Bethnal Green Gardens, London E2", startOffsetMin:4892, durationMin:180, capacity:100, desc:"A real band behind you instead of a backing track — braver karaoke for braver singers."},
-  {id:80, title:"Forest Bathing Walk", category:"Wellness & Outdoors", host:"Vauxhall Wellness Co-op", venue:"Earthbound Studio", area:"Vauxhall", address:"Vauxhall Pleasure Gardens, London SW8", startOffsetMin:27982, durationMin:60, capacity:39, desc:"A slow, deliberate walk through the trees, phones away, senses on."},
-  {id:81, title:"Sunrise Yoga — Stoke Newington", category:"Wellness & Outdoors", host:"Joel Adeyemi", venue:"The Stillness Studio", area:"Stoke Newington", address:"Clissold Park, London N16", startOffsetMin:16451, durationMin:120, capacity:15, desc:"Mats out before the city wakes up — gentle flow followed by a quiet coffee together."},
-  {id:82, title:"Sound Bath & Meditation", category:"Wellness & Outdoors", host:"Greenwich Wellness Co-op", venue:"The Breathing Room", area:"Greenwich", address:"Greenwich Park, London SE10", startOffsetMin:8858, durationMin:105, capacity:17, desc:"Lie back, let the bowls do the work, and leave lighter than you arrived."},
-  {id:83, title:"Outdoor Bootcamp Session", category:"Wellness & Outdoors", host:"Fitzrovia Wellness Co-op", venue:"The Calm Space", area:"Fitzrovia", address:"Fitzrovia, London W1T", startOffsetMin:-153, durationMin:254, capacity:35, desc:"Bodyweight circuits scaled to whoever shows up — no equipment, no excuses."},
-  {id:84, title:"Park Run Social — Tooting", category:"Wellness & Outdoors", host:"Tooting Wellness Co-op", venue:"Tooting Wellness Collective", area:"Tooting", address:"Tooting Common, London SW17", startOffsetMin:33201, durationMin:120, capacity:29, desc:"An easy group run finishing with stretches and a proper catch-up after."},
-  {id:85, title:"Stretch & Connect Social", category:"Wellness & Outdoors", host:"Lucas Adeyemi", venue:"Pathway Studio", area:"Balham", address:"Balham High Road, London SW12", startOffsetMin:29615, durationMin:105, capacity:19, desc:"Light movement, easy conversation, and a proper excuse to get off the sofa."},
-  {id:86, title:"Pilates in the Park", category:"Wellness & Outdoors", host:"Ines Eriksen", venue:"The Grounding Place", area:"Dulwich", address:"Dulwich Park, London SE21", startOffsetMin:-143, durationMin:287, capacity:35, desc:"Mat work suited to all levels, fresh air doing half the work for you."},
-  {id:87, title:"Community Garden Volunteer Day", category:"Wellness & Outdoors", host:"Battersea Wellness Co-op", venue:"The Mindful Room", area:"Battersea", address:"Battersea Park, London SW11", startOffsetMin:5197, durationMin:105, capacity:23, desc:"Get your hands dirty for an afternoon, then sit down together for tea after."},
-  {id:88, title:"Wild Swimming Meetup", category:"Wellness & Outdoors", host:"Wood Green Wellness Co-op", venue:"Roots & Branches Studio", area:"Wood Green", address:"Wood Green High Road, London N22", startOffsetMin:-95, durationMin:196, capacity:21, desc:"Hardy regulars and curious first-timers both welcome, towels and tea provided after."},
-  {id:89, title:"Nature Walk & Journaling", category:"Wellness & Outdoors", host:"King's Cross Wellness Co-op", venue:"Open Air Wellness Hub", area:"King's Cross", address:"King's Cross, London N1C", startOffsetMin:10004, durationMin:75, capacity:17, desc:"A slow loop with stops to write down whatever the walk brings up."},
-  {id:90, title:"Mindfulness Morning — Muswell Hill", category:"Wellness & Outdoors", host:"Chloe Costa", venue:"The Renewal Room", area:"Muswell Hill", address:"Alexandra Park, London N10", startOffsetMin:-116, durationMin:240, capacity:21, desc:"Ten quiet minutes together before the day picks up speed."},
-  {id:91, title:"Hack Night — Whitechapel", category:"Tech & Talks", host:"Ravi Davies", venue:"The Build Space", area:"Whitechapel", address:"Whitechapel Road, London E1", startOffsetMin:27580, durationMin:135, capacity:78, desc:"Bring a laptop and a problem, leave with a prototype and a few new collaborators."},
-  {id:92, title:"Data Nerds Social", category:"Tech & Talks", host:"Kingston Tech Circle", venue:"The Lightning Room", area:"Kingston", address:"Kingston Riverside, London KT1", startOffsetMin:39654, durationMin:150, capacity:76, desc:"Bring a dataset or just bring opinions about one — either way, good conversation guaranteed."},
-  {id:93, title:"Startup Pitch Night", category:"Tech & Talks", host:"Hampstead Tech Circle", venue:"The Innovation Room", area:"Hampstead", address:"Hampstead Heath, London NW3", startOffsetMin:18007, durationMin:105, capacity:60, desc:"Three founders, five minutes each, and a room of people happy to ask hard questions."},
-  {id:94, title:"No-Code Builders Meetup", category:"Tech & Talks", host:"Leo Murphy", venue:"Signal Space", area:"Farringdon", address:"Farringdon Road, London EC1M", startOffsetMin:26617, durationMin:165, capacity:50, desc:"Show off what you built without writing a line of code, swap tools and tips."},
-  {id:95, title:"Future of Work Roundtable", category:"Tech & Talks", host:"Mayfair Tech Circle", venue:"Beta Lounge", area:"Mayfair", address:"Berkeley Square, London W1J", startOffsetMin:8484, durationMin:135, capacity:82, desc:"An open discussion on how working life keeps shifting, and what to do about it."},
-  {id:96, title:"Women in Tech Mixer", category:"Tech & Talks", host:"Forest Hill Tech Circle", venue:"Circuit Social", area:"Forest Hill", address:"Horniman Gardens, London SE23", startOffsetMin:25942, durationMin:90, capacity:64, desc:"A relaxed evening built around the people too often missing from the room."},
-  {id:97, title:"AI & Coffee Meetup", category:"Tech & Talks", host:"Tottenham Tech Circle", venue:"Hack House Tottenham", area:"Tottenham", address:"Tottenham High Road, London N17", startOffsetMin:5621, durationMin:90, capacity:72, desc:"Casual chat over coffee about what's actually changing day to day, no hype required."},
-  {id:98, title:"Lightning Talks Night — Crouch End", category:"Tech & Talks", host:"Crouch End Tech Circle", venue:"The Founders' Loft", area:"Crouch End", address:"Crouch End Broadway, London N8", startOffsetMin:30377, durationMin:180, capacity:38, desc:"Five-minute talks, no slides required, on whatever someone's been building lately."},
-  {id:99, title:"Product Show & Tell", category:"Tech & Talks", host:"Jakub Murphy", venue:"The Pitch Room", area:"Croydon", address:"Croydon Town Centre, London CR0", startOffsetMin:29919, durationMin:105, capacity:50, desc:"A rotating lineup of builders showing what they shipped this month."},
-  {id:100, title:"Open Source Contributors Meetup", category:"Tech & Talks", host:"Theo Wright", venue:"Code & Coffee House", area:"Islington", address:"Islington Green, London N1", startOffsetMin:27747, durationMin:180, capacity:78, desc:"Find a project, pick up an issue, pair with someone who knows the codebase."},
-];
-
-// Anchor to UTC midnight of today — same reference point on every device
-const _d = new Date(); const DAY_EPOCH = Date.UTC(_d.getUTCFullYear(), _d.getUTCMonth(), _d.getUTCDate());
-
-const EVENTS = EVENT_SEED.map(seed => ({
-  id: seed.id, title: seed.title, category: seed.category, host: seed.host,
-  venue: seed.venue, area: seed.area, address: seed.address,
-  lat: null, lon: null,
-  startTime: new Date(DAY_EPOCH + seed.startOffsetMin*60000).toISOString(),
-  endTime: new Date(DAY_EPOCH + (seed.startOffsetMin + seed.durationMin)*60000).toISOString(),
-  capacity: seed.capacity, desc: seed.desc
-}));
+// ── Events ───────────────────────────────
+// Cumulus runs on REAL data only — no demo/seed events. EVENTS starts empty
+// and is populated at boot from the Supabase `events` table via
+// loadRealEvents(). If the backend is unreachable or has no rows, the app
+// renders clean empty states rather than inventing listings.
+const EVENTS = [];
 
 // Category palette — distinct, harmonious, no purple/indigo/violet.
 // Used only as scannability accents (dots, badges, markers, borders);
@@ -683,74 +575,6 @@ async function start(){
   renderGate();
 }
 
-const FEATURED_EVENTS = [
-  {
-    id:'f1', title:'Drum & Bass Warehouse Session',
-    category:'Live Music', categoryColor:'#CBA43A',
-    venue:'Tobacco Dock', area:'Wapping, London E1W',
-    date:'Sat 28 Jun', time:'10 PM – 4 AM',
-    capacity:1200, attending:847,
-    price:'From £18', badge:'SOLD OUT SOON',
-    badgeColor:'#A8841F',
-    desc:'Four rooms. Four sounds. One night that defines the summer.',
-    icon:'🎶',
-    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#A8841F 100%)',
-    accentColor:'#CBA43A'
-  },
-  {
-    id:'f2', title:'Open-Air Cinema — Kensington Palace',
-    category:'Movie Nights', categoryColor:'#CBA43A',
-    venue:'Kensington Palace Gardens', area:'Kensington, London W8',
-    date:'Fri 27 Jun', time:'8:30 PM',
-    capacity:800, attending:612,
-    price:'From £14', badge:'FEATURED',
-    badgeColor:'#D9A52E',
-    desc:'Blankets on the lawn, the palace lit behind you. Cinema reimagined.',
-    icon:'🎬',
-    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#A8841F 100%)',
-    accentColor:'#CBA43A'
-  },
-  {
-    id:'f3', title:'London Startup Pitch Finals',
-    category:'Tech & Talks', categoryColor:'#CBA43A',
-    venue:'The Barbican Centre', area:'Barbican, London EC2Y',
-    date:'Thu 26 Jun', time:'6 PM – 10 PM',
-    capacity:500, attending:389,
-    price:'Free', badge:'HIGH DEMAND',
-    badgeColor:'#A8841F',
-    desc:'Ten founders. Five minutes each. One city watching.',
-    icon:'⚡',
-    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#A8841F 100%)',
-    accentColor:'#CBA43A'
-  },
-  {
-    id:'f4', title:'Smash Bros Championship — London',
-    category:'Gaming', categoryColor:'#CBA43A',
-    venue:'Copper Box Arena', area:'Olympic Park, London E20',
-    date:'Sun 29 Jun', time:'12 PM – 8 PM',
-    capacity:1500, attending:1201,
-    price:'From £10', badge:'MAJOR EVENT',
-    badgeColor:'#A8841F',
-    desc:'The biggest bracket London has ever seen. Bring your controller.',
-    icon:'🎮',
-    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#A8841F 100%)',
-    accentColor:'#CBA43A'
-  },
-  {
-    id:'f5', title:'Grand Supper Club — Rooftop Edition',
-    category:'Food & Drink', categoryColor:'#CBA43A',
-    venue:'Sky Garden', area:'Monument, London EC3M',
-    date:'Wed 25 Jun', time:'7 PM – 11 PM',
-    capacity:200, attending:176,
-    price:'From £65', badge:'FEW LEFT',
-    badgeColor:'#A8841F',
-    desc:'Eight courses. 155 metres up. London laid out below you.',
-    icon:'🍽',
-    gradient:'linear-gradient(135deg,#0A0A0A 0%,#1C1008 40%,#A8841F 100%)',
-    accentColor:'#CBA43A'
-  }
-];
-
 /* ── Landing diorama — layered paper-cut London, theme-lit ──────────────
  * Two inline SVGs (back haze + front landmarks) so CSS [data-theme] drives
  * the lighting: bright flat facades by day, silhouettes with lit windows,
@@ -1087,10 +911,10 @@ function renderGate(prefillName,prefillEmail){
           <button class="btn lp-venues-cta" onclick="showLpSignup()">Get started — it's free →</button>
         </div>
         <div class="lp-venues-stats">
-          <div class="lp-vstat"><div class="lp-vstat-num">100+</div><div class="lp-vstat-label">Active events</div></div>
+          <div class="lp-vstat"><div class="lp-vstat-num">0%</div><div class="lp-vstat-label">Host fees</div></div>
           <div class="lp-vstat"><div class="lp-vstat-num">9</div><div class="lp-vstat-label">Categories</div></div>
           <div class="lp-vstat"><div class="lp-vstat-num">32</div><div class="lp-vstat-label">London boroughs</div></div>
-          <div class="lp-vstat"><div class="lp-vstat-num">∞</div><div class="lp-vstat-label">Connections made</div></div>
+          <div class="lp-vstat"><div class="lp-vstat-num">100%</div><div class="lp-vstat-label">Community-led</div></div>
         </div>
       </div>
     </section>
@@ -2012,8 +1836,10 @@ function closeCardEditor(){ document.getElementById('card-editor-root').innerHTM
 function openConnectGateway(id){ if(state.myCard) openConnect(id); else openCardEditor(id); }
 
 async function initApp(){
-  // Background data load — enterApp() already rendered the UI with seed data.
-  // This enriches it once Supabase responds without blocking the cloud animation.
+  // Background data load — enterApp() rendered the shell already; this fills it
+  // with real events from Supabase without blocking the cloud animation. With no
+  // seed data, the map/list show empty states until this resolves (or stay empty
+  // if there genuinely are no events yet).
   await loadRealEvents();
 
   await loadGeocodeCache();
@@ -2039,7 +1865,7 @@ async function loadRealEvents(){
   const {data}=await sb.from('events').select('*').order('start_time',{ascending:true});
   if(!data) return;
   data.forEach(ev=>{
-    // Don't duplicate seed events (they use numeric IDs 1-100)
+    // Idempotent: skip any event already loaded (e.g. one just created locally)
     if(EVENTS.find(e=>e.id===ev.id)) return;
     const mapped={
       id:ev.id, title:ev.title, category:ev.category,
@@ -2497,7 +2323,9 @@ function refreshMarkers(){
   const geo=buildEventsGeoJSON();
   src.setData(geo);
 
-  getFilteredEvents().forEach(ev=>{
+  const visibleEvents=getFilteredEvents();
+  updateMapEmptyState(visibleEvents.length);
+  visibleEvents.forEach(ev=>{
     const color=CATS[ev.category].color;
     const status=eventStatus(ev);
     const att=attendeesFor(ev.id);
@@ -2575,6 +2403,36 @@ function refreshMarkers(){
     lmap.fitBounds(bounds,{padding:{top:120,bottom:140,left:40,right:40},maxZoom:12});
     lmapFitted=true;
   }
+}
+
+// Empty-state overlay on the map when no events are visible — distinguishes
+// "no events exist yet" from "your filters/search matched nothing".
+function updateMapEmptyState(count){
+  const host=document.getElementById('main-map'); if(!host) return;
+  let el=document.getElementById('map-empty');
+  if(count>0){ if(el) el.remove(); return; }
+  if(!el){ el=document.createElement('div'); el.id='map-empty'; el.className='map-empty'; host.appendChild(el); }
+  const filtered = state.selectedCategory!=='all' || state.liveOnly || state.hotOnly || state.friendsOnly ||
+                   !!(document.getElementById('search-input')?.value||'').trim();
+  el.innerHTML = filtered
+    ? `<div class="map-empty-card" role="status">
+         <div class="me-emoji" aria-hidden="true">🔍</div>
+         <div class="me-title">No events match</div>
+         <div class="me-sub">Nothing fits those filters right now. Try clearing them.</div>
+         <button class="btn" onclick="clearMapFilters()">Clear filters</button>
+       </div>`
+    : `<div class="map-empty-card" role="status">
+         <div class="me-emoji" aria-hidden="true">🗺️</div>
+         <div class="me-title">No events on the map yet</div>
+         <div class="me-sub">Cumulus is just getting started in London. Be the first to put something on.</div>
+         <button class="btn" onclick="openHost()">Host an event</button>
+       </div>`;
+}
+
+function clearMapFilters(){
+  state.selectedCategory='all'; state.liveOnly=false; state.hotOnly=false; state.friendsOnly=false;
+  const si=document.getElementById('search-input'); if(si) si.value='';
+  refreshFilters(); refreshMarkers();
 }
 
 function initLeaflet(){
