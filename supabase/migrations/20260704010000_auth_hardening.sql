@@ -8,11 +8,13 @@
 -- ORDERING — IMPORTANT. This migration REQUIRES the Phase 2 frontend (which
 -- signs users in through sb.auth so requests carry a JWT). Applying it while the
 -- old anon/localStorage signup is still live WILL break sign-up and writes,
--- because those requests have no auth.uid(). Apply this together with the
--- Phase 2 deploy, on a STAGING project first.
+-- because those requests have no auth.uid(). Apply it together with the Phase 2
+-- deploy — on a STAGING project first.
 --
 -- Depends on 20260703000000_secret_club.sql (public.admins, is_admin()).
--- Idempotent: re-runnable.
+-- RESILIENT: the optional tables (rsvps/tickets/chat_messages/friends/
+-- host_applications) are guarded with to_regclass(), so this applies cleanly
+-- whether or not every table exists yet. Idempotent / re-runnable.
 -- ============================================================================
 
 -- ── Roles ───────────────────────────────────────────────────────────────────
@@ -20,11 +22,33 @@ do $$ begin
   create type public.user_role as enum ('eventee', 'partner_host');
 exception when duplicate_object then null; end $$;
 
-alter table if exists public.users
-  add column if not exists role public.user_role not null default 'eventee';
+-- ── users profile (ensure it exists and is keyed on auth.users) ─────────────
+-- Created only if absent; if you already have a users table this is a no-op and
+-- the add-column-if-not-exists lines below reconcile any missing fields.
+create table if not exists public.users (
+  id             uuid primary key references auth.users(id) on delete cascade,
+  email          text,
+  name           text,
+  profile_id     text,
+  special_badges jsonb default '[]'::jsonb,
+  theme          text default 'light',
+  card_theme     text,
+  card_bio       text,
+  card_interests text,
+  card_fact      text,
+  role           public.user_role not null default 'eventee',
+  created_at     timestamptz not null default now()
+);
+alter table public.users add column if not exists profile_id     text;
+alter table public.users add column if not exists special_badges jsonb default '[]'::jsonb;
+alter table public.users add column if not exists theme          text default 'light';
+alter table public.users add column if not exists card_theme     text;
+alter table public.users add column if not exists card_bio       text;
+alter table public.users add column if not exists card_interests text;
+alter table public.users add column if not exists card_fact      text;
+alter table public.users add column if not exists role           public.user_role not null default 'eventee';
 
 -- ── Profile provisioning: auth.users → public.users ─────────────────────────
--- public.users.id must equal auth.users.id. New signups get a profile row here.
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
@@ -45,35 +69,6 @@ returns public.user_role language sql stable security definer set search_path = 
   select role from public.users where id = p_user;
 $$;
 
--- ── Enable RLS everywhere ────────────────────────────────────────────────────
-alter table if exists public.users            enable row level security;
-alter table if exists public.events           enable row level security;
-alter table if exists public.rsvps            enable row level security;
-alter table if exists public.tickets          enable row level security;
-alter table if exists public.chat_messages    enable row level security;
-alter table if exists public.friends          enable row level security;
-alter table if exists public.host_applications enable row level security;
-
--- ── users ────────────────────────────────────────────────────────────────────
--- Self + admin only. Other members' display names are read from denormalised
--- columns (rsvps.user_name, chat_messages.user_name, friends.friend_name), so
--- the profile row — which holds email — never needs a public read.
-drop policy if exists users_self_read   on public.users;
-create policy users_self_read on public.users
-  for select to authenticated using (id = auth.uid() or public.is_admin());
-
-drop policy if exists users_self_write  on public.users;
-create policy users_self_write on public.users
-  for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
-
-drop policy if exists users_self_insert on public.users;
-create policy users_self_insert on public.users
-  for insert to authenticated with check (id = auth.uid());
-
-drop policy if exists users_admin_all   on public.users;
-create policy users_admin_all on public.users
-  for all to authenticated using (public.is_admin()) with check (public.is_admin());
-
 -- Guard privileged columns: a member may edit their profile but not their own
 -- role. service_role (backend) and admins bypass.
 create or replace function public.protect_user_role()
@@ -91,88 +86,126 @@ create trigger protect_user_role_trg
   before update on public.users
   for each row execute function public.protect_user_role();
 
--- ── events ───────────────────────────────────────────────────────────────────
--- Public listings: any signed-in member may read. Writes must be your own
--- (host_id = auth.uid()) — no anon writes, no impersonation.
-drop policy if exists events_read        on public.events;
-create policy events_read on public.events
-  for select to authenticated using (true);
+-- ── users RLS (table is guaranteed to exist by now) ─────────────────────────
+alter table public.users enable row level security;
 
-drop policy if exists events_insert_own  on public.events;
-create policy events_insert_own on public.events
-  for insert to authenticated with check (host_id = auth.uid());
--- To restrict public hosting to vetted partners later, tighten the check to:
---   host_id = auth.uid() and public.app_role() = 'partner_host'
--- (leave a separate connections/private policy for eventees).
+drop policy if exists users_self_read   on public.users;
+create policy users_self_read on public.users
+  for select to authenticated using (id = auth.uid() or public.is_admin());
 
-drop policy if exists events_modify_own  on public.events;
-create policy events_modify_own on public.events
-  for update to authenticated using (host_id = auth.uid() or public.is_admin())
-  with check (host_id = auth.uid() or public.is_admin());
+drop policy if exists users_self_write  on public.users;
+create policy users_self_write on public.users
+  for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
 
-drop policy if exists events_delete_own  on public.events;
-create policy events_delete_own on public.events
-  for delete to authenticated using (host_id = auth.uid() or public.is_admin());
+drop policy if exists users_self_insert on public.users;
+create policy users_self_insert on public.users
+  for insert to authenticated with check (id = auth.uid());
 
--- ── rsvps ────────────────────────────────────────────────────────────────────
--- Attendee lists are visible to members (the app shows who's going); you may
--- only add/remove your OWN rsvp.
-drop policy if exists rsvps_read       on public.rsvps;
-create policy rsvps_read on public.rsvps
-  for select to authenticated using (true);
+drop policy if exists users_admin_all   on public.users;
+create policy users_admin_all on public.users
+  for all to authenticated using (public.is_admin()) with check (public.is_admin());
 
-drop policy if exists rsvps_insert_own on public.rsvps;
-create policy rsvps_insert_own on public.rsvps
-  for insert to authenticated with check (user_id = auth.uid());
+-- ── events RLS ──────────────────────────────────────────────────────────────
+-- (events is guaranteed by 20260704000000_events_table.sql, but guard anyway.)
+do $$ begin
+  if to_regclass('public.events') is null then return; end if;
+  execute 'alter table public.events enable row level security';
 
-drop policy if exists rsvps_delete_own on public.rsvps;
-create policy rsvps_delete_own on public.rsvps
-  for delete to authenticated using (user_id = auth.uid() or public.is_admin());
+  execute 'drop policy if exists events_read on public.events';
+  execute 'create policy events_read on public.events
+             for select to authenticated using (true)';
 
--- ── tickets ──────────────────────────────────────────────────────────────────
--- Private: a ticket (with its QR) is visible only to its owner (or an admin).
-drop policy if exists tickets_read_own   on public.tickets;
-create policy tickets_read_own on public.tickets
-  for select to authenticated using (user_id = auth.uid() or public.is_admin());
+  execute 'drop policy if exists events_insert_own on public.events';
+  execute 'create policy events_insert_own on public.events
+             for insert to authenticated with check (host_id = auth.uid())';
 
-drop policy if exists tickets_insert_own on public.tickets;
-create policy tickets_insert_own on public.tickets
-  for insert to authenticated with check (user_id = auth.uid());
+  execute 'drop policy if exists events_modify_own on public.events';
+  execute 'create policy events_modify_own on public.events
+             for update to authenticated using (host_id = auth.uid() or public.is_admin())
+             with check (host_id = auth.uid() or public.is_admin())';
 
--- ── chat_messages ────────────────────────────────────────────────────────────
--- Readable by members; you may only post as yourself.
-drop policy if exists chat_read       on public.chat_messages;
-create policy chat_read on public.chat_messages
-  for select to authenticated using (true);
+  execute 'drop policy if exists events_delete_own on public.events';
+  execute 'create policy events_delete_own on public.events
+             for delete to authenticated using (host_id = auth.uid() or public.is_admin())';
+end $$;
 
-drop policy if exists chat_insert_own on public.chat_messages;
-create policy chat_insert_own on public.chat_messages
-  for insert to authenticated with check (user_id = auth.uid());
+-- ── rsvps RLS ───────────────────────────────────────────────────────────────
+do $$ begin
+  if to_regclass('public.rsvps') is null then return; end if;
+  execute 'alter table public.rsvps enable row level security';
 
-drop policy if exists chat_delete_own on public.chat_messages;
-create policy chat_delete_own on public.chat_messages
-  for delete to authenticated using (user_id = auth.uid() or public.is_admin());
+  execute 'drop policy if exists rsvps_read on public.rsvps';
+  execute 'create policy rsvps_read on public.rsvps
+             for select to authenticated using (true)';
 
--- ── friends ──────────────────────────────────────────────────────────────────
--- Fully private to the owner.
-drop policy if exists friends_own on public.friends;
-create policy friends_own on public.friends
-  for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+  execute 'drop policy if exists rsvps_insert_own on public.rsvps';
+  execute 'create policy rsvps_insert_own on public.rsvps
+             for insert to authenticated with check (user_id = auth.uid())';
 
--- ── host_applications ────────────────────────────────────────────────────────
--- A member may submit their own application and read it back; only admins may
--- read the whole queue or change status (approve/reject).
-drop policy if exists host_apps_insert_own on public.host_applications;
-create policy host_apps_insert_own on public.host_applications
-  for insert to authenticated with check (user_id = auth.uid());
+  execute 'drop policy if exists rsvps_delete_own on public.rsvps';
+  execute 'create policy rsvps_delete_own on public.rsvps
+             for delete to authenticated using (user_id = auth.uid() or public.is_admin())';
+end $$;
 
-drop policy if exists host_apps_read on public.host_applications;
-create policy host_apps_read on public.host_applications
-  for select to authenticated using (user_id = auth.uid() or public.is_admin());
+-- ── tickets RLS (private — owner only) ──────────────────────────────────────
+do $$ begin
+  if to_regclass('public.tickets') is null then return; end if;
+  execute 'alter table public.tickets enable row level security';
 
-drop policy if exists host_apps_admin_update on public.host_applications;
-create policy host_apps_admin_update on public.host_applications
-  for update to authenticated using (public.is_admin()) with check (public.is_admin());
+  execute 'drop policy if exists tickets_read_own on public.tickets';
+  execute 'create policy tickets_read_own on public.tickets
+             for select to authenticated using (user_id = auth.uid() or public.is_admin())';
+
+  execute 'drop policy if exists tickets_insert_own on public.tickets';
+  execute 'create policy tickets_insert_own on public.tickets
+             for insert to authenticated with check (user_id = auth.uid())';
+end $$;
+
+-- ── chat_messages RLS ───────────────────────────────────────────────────────
+do $$ begin
+  if to_regclass('public.chat_messages') is null then return; end if;
+  execute 'alter table public.chat_messages enable row level security';
+
+  execute 'drop policy if exists chat_read on public.chat_messages';
+  execute 'create policy chat_read on public.chat_messages
+             for select to authenticated using (true)';
+
+  execute 'drop policy if exists chat_insert_own on public.chat_messages';
+  execute 'create policy chat_insert_own on public.chat_messages
+             for insert to authenticated with check (user_id = auth.uid())';
+
+  execute 'drop policy if exists chat_delete_own on public.chat_messages';
+  execute 'create policy chat_delete_own on public.chat_messages
+             for delete to authenticated using (user_id = auth.uid() or public.is_admin())';
+end $$;
+
+-- ── friends RLS (fully private to owner) ────────────────────────────────────
+do $$ begin
+  if to_regclass('public.friends') is null then return; end if;
+  execute 'alter table public.friends enable row level security';
+
+  execute 'drop policy if exists friends_own on public.friends';
+  execute 'create policy friends_own on public.friends
+             for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid())';
+end $$;
+
+-- ── host_applications RLS ───────────────────────────────────────────────────
+do $$ begin
+  if to_regclass('public.host_applications') is null then return; end if;
+  execute 'alter table public.host_applications enable row level security';
+
+  execute 'drop policy if exists host_apps_insert_own on public.host_applications';
+  execute 'create policy host_apps_insert_own on public.host_applications
+             for insert to authenticated with check (user_id = auth.uid())';
+
+  execute 'drop policy if exists host_apps_read on public.host_applications';
+  execute 'create policy host_apps_read on public.host_applications
+             for select to authenticated using (user_id = auth.uid() or public.is_admin())';
+
+  execute 'drop policy if exists host_apps_admin_update on public.host_applications';
+  execute 'create policy host_apps_admin_update on public.host_applications
+             for update to authenticated using (public.is_admin()) with check (public.is_admin())';
+end $$;
 
 -- ============================================================================
 -- END Phase 1. Phase 2 (frontend) switches sign-up/login to sb.auth so these
