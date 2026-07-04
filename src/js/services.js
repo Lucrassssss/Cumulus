@@ -105,3 +105,38 @@ async function isAdminSession() {
   try { const { data, error } = await sb.rpc('is_admin'); if (!error) return !!data; } catch (e) {}
   return false;
 }
+
+/* ── Member auth (Phase 2 — everyone signs in via Supabase Auth) ────────────
+ * Email one-time-code (OTP): authSendCode() mails a 6-digit code and creates
+ * the auth.users row on first use (a DB trigger mirrors it into public.users);
+ * authVerifyCode() exchanges the code for a real session (JWT). RLS then keys
+ * every read/write off that session's auth.uid(). All degrade to a structured
+ * error rather than throwing, so a blocked/unconfigured backend never crashes
+ * the gate. `meta` (e.g. { name }) rides along as user_metadata for the trigger. */
+async function authSendCode(email, meta) {
+  try {
+    const { error } = await sb.auth.signInWithOtp({
+      email, options: { shouldCreateUser: true, data: meta || {} }
+    });
+    return { ok: !error, error: error ? error.message : null };
+  } catch (e) { return { ok: false, error: 'unavailable' }; }
+}
+async function authVerifyCode(email, token) {
+  try {
+    const { data, error } = await sb.auth.verifyOtp({ email, token, type: 'email' });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, userId: (data && data.user && data.user.id) || null };
+  } catch (e) { return { ok: false, error: 'unavailable' }; }
+}
+/* The current signed-in auth user (or null). Reads the persisted session, so it
+ * works offline until the stored token expires. */
+async function authCurrentUser() {
+  try { const { data } = await sb.auth.getSession(); return (data && data.session && data.session.user) || null; }
+  catch (e) { return null; }
+}
+/* Load a member's profile row (public.users) by id. Null on error/offline. */
+async function loadUserProfile(userId) {
+  if (!userId) return null;
+  try { const { data } = await sb.from('users').select('*').eq('id', userId).single(); return data || null; }
+  catch (e) { return null; }
+}

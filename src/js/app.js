@@ -521,57 +521,35 @@ async function start(){
   applyTheme();
   MAPBOX_TOKEN=DEFAULT_MAPBOX_TOKEN;
 
-  // Check if we have a cached email to try loading from Supabase. Any failure
-  // here (network blip, Supabase unreachable) must never blank the app — fall
-  // through to the cached-session restore, then to the gate.
-  const cachedEmail=await localGet('cumulus_email');
-  if(cachedEmail){
-    let profile=null;
-    try{ const r=await sb.from('users').select('*').eq('email',cachedEmail).single(); profile=r.data; }
-    catch(e){ profile=null; }
+  // Real auth (Phase 2): the source of truth is the Supabase Auth session.
+  // If a member is signed in, restore their profile and enter the app. Any
+  // failure here must never blank the app — fall through to the gate.
+  const authUser=await authCurrentUser();
+  if(authUser){
+    let profile=await loadUserProfile(authUser.id);
+    if(!profile){
+      // Authenticated but the profile fetch failed (offline). Restore display
+      // fields from the cached snapshot; writes still carry the real JWT.
+      try{
+        const raw=await localGet('cumulus_session');
+        if(raw){ const s=JSON.parse(raw); if(s&&s.userId===authUser.id&&s.name){
+          profile={id:s.userId,name:s.name,email:s.email,profile_id:s.profileId,special_badges:s.specialBadges,theme:s.theme};
+        } }
+      }catch(e){}
+    }
     if(profile&&profile.name){
-      state.userId=profile.id;
-      state.profileId=profile.profile_id||generateUniqueId();
-      state.profileName=profile.name;
-      state.profileEmail=profile.email;
-      state.specialBadges=profile.special_badges||[];
-      // Supabase-saved theme wins; if they never set one, respect OS pref
+      _restoreUserFromRow(profile);
+      state.profileEmail=profile.email||authUser.email||'';
       state.theme=profile.theme||(prefsRaw&&JSON.parse(prefsRaw||'{}').theme)||(_sysDark?'dark':'light');
       applyTheme();
-      // Restore card from profile columns
-      if(profile.card_bio||profile.card_theme){
-        state.myCard={
-          name:profile.name,
-          theme:profile.card_theme||'crimson',
-          bio:profile.card_bio||'',
-          interests:profile.card_interests||'',
-          fact:profile.card_fact||''
-        };
-      }
+      await localSet('cumulus_email',state.profileEmail);
       _cacheSession();
       enterApp();
       return;
     }
-    // Supabase didn't answer but we have a cached snapshot — restore offline.
-    // Fresh data loads in the background once initApp() reaches the network.
-    try{
-      const raw=await localGet('cumulus_session');
-      if(raw){
-        const s=JSON.parse(raw);
-        if(s&&s.email===cachedEmail&&s.name){
-          state.userId=s.userId;
-          state.profileId=s.profileId||generateUniqueId();
-          state.profileName=s.name;
-          state.profileEmail=s.email;
-          state.specialBadges=s.specialBadges||[];
-          if(s.theme){ state.theme=s.theme; applyTheme(); }
-          enterApp();
-          return;
-        }
-      }
-    }catch(e){}
+    // Signed in but no usable profile yet (mid-onboarding) — show the gate.
   }
-  // No cached session — show the gate
+  // Not signed in — show the gate
   renderGate();
 }
 
@@ -1263,77 +1241,129 @@ async function submitGate(){
   const curatorCode = (!isLogin && _signupType==='attendee')
     ? (document.getElementById('gate-curator')?.value||'').trim() : '';
 
-  // Show loading state
+  // ── Real auth, step 1: email the one-time code ──────────────────────────
+  // We don't create/validate anything yet — curator check, name and host
+  // application all happen in verifyGateCode() once we hold a real session
+  // (auth.uid()), so RLS is satisfied and nothing can be forged client-side.
   const btn=document.querySelector('.lp-claim-btn');
-  const resetBtn=(labelText)=>{ if(btn){ btn.disabled=false; btn.querySelector('#gate-claim-label').textContent=labelText; } };
-  if(btn){ btn.disabled=true; btn.querySelector('#gate-claim-label').textContent=isLogin?'Logging in…':'Setting up…'; }
+  const label=()=>btn&&btn.querySelector('#gate-claim-label');
+  const origLabel=label()?label().textContent:'Continue →';
+  if(btn){ btn.disabled=true; if(label()) label().textContent='Sending code…'; }
 
-  // Look up the account by email
-  let existing=null;
-  try{ const r=await sb.from('users').select('*').eq('email',email).single(); existing=r.data; }
-  catch(e){ existing=null; }
-
-  if(isLogin){
-    // LOGIN — account must already exist
-    if(!(existing&&existing.name)){
-      resetBtn('Log in →');
-      gateErr('No account found for that email. Switch to Sign up to create one.');
-      return;
-    }
-    _restoreUserFromRow(existing);
-  } else if(existing&&existing.name){
-    // SIGN UP with an email that already has an account — just log them back in
-    _restoreUserFromRow(existing);
-    showToast('Welcome back — you already have an account','info');
-  } else {
-    // NEW member — members-only gate: a new attendee needs a valid curator
-    // code (a venue check-in is the alternative way in, handled in-app).
-    if(_signupType==='attendee'){
-      const cur = await validateCuratorCode(curatorCode);
-      if(!cur.valid){
-        resetBtn('Unlock the map →');
-        gateErr(cur.reason==='inactive' ? 'That curator code is no longer active — ask your host for a current one.'
-          : cur.reason==='unknown' ? "We don't recognise that curator code. Check it, or check in at a venue to receive one."
-          : 'Enter a valid curator code (CUR-XXXX-XXXX), or check in at a venue to receive one.');
-        return;
-      }
-      state.curatorVerified = true;
-      state.curatorCode = cur.code;
-      state.curatorTier = cur.tier || 'standard';
-    }
-    // NEW user — create in Supabase
-    state.profileName=name;
-    state.profileEmail=email;
-    state.specialBadges=[];
-    state.profileId=generateUniqueId();
-    try{
-      const {data:created,error}=await sb.from('users').insert({
-        name,email,profile_id:state.profileId,special_badges:[],theme:'light'
-      }).select().single();
-      if(error) throw error;
-      if(created) state.userId=created.id;
-    }catch(e){
-      console.error('Sign up failed:',e);
-      resetBtn('Unlock the map →');
-      gateErr('Could not create your account — please try again.');
-      return;
-    }
-  }
-
-  // Cache session locally (email + lightweight snapshot for offline restore)
-  await localSet('cumulus_email',email);
-  await localSet('prefs',JSON.stringify({theme:state.theme}));
-  _cacheSession();
-
-  // Host application flow (sign up only)
-  if(!isLogin && _signupType==='host'){
-    await _submitHostApplication({name,email,bizName,hostDesc,whyHost});
+  const res=await authSendCode(email, isLogin?{}:{name});
+  if(btn){ btn.disabled=false; if(label()) label().textContent=origLabel; }
+  if(!res.ok){
+    gateErr(res.error==='unavailable'
+      ? 'Sign-in is temporarily unavailable — please try again in a moment.'
+      : (res.error||'Could not send your code. Please try again.'));
     return;
   }
 
+  // Stash everything the verify step needs, then swap to the code entry panel.
+  _pendingAuth={ isLogin, name, email, curatorCode, signupType:_signupType, bizName, hostDesc, whyHost, hostCats:[..._hostCats] };
+  showOtpStep(email);
+}
+
+// Pending onboarding context between "send code" and "verify code".
+let _pendingAuth=null;
+
+// ── Real auth, step 2: verify the code, then finalise onboarding ──────────
+async function verifyGateCode(){
+  const p=_pendingAuth; if(!p) return;
+  const code=(document.getElementById('gate-otp-input')?.value||'').trim();
+  if(!/^\d{6}$/.test(code)){ otpErr('Enter the 6-digit code from your email.'); return; }
+
+  const vbtn=document.getElementById('gate-otp-verify');
+  const vlabel=vbtn&&vbtn.querySelector('.lp-claim-btn-text');
+  if(vbtn){ vbtn.disabled=true; if(vlabel) vlabel.textContent='Verifying…'; }
+  const reEnable=()=>{ if(vbtn){ vbtn.disabled=false; if(vlabel) vlabel.textContent='Verify & continue'; } };
+
+  const res=await authVerifyCode(p.email, code);
+  if(!res.ok || !res.userId){
+    reEnable();
+    otpErr(res.error==='unavailable'
+      ? 'Verification is temporarily unavailable — try again shortly.'
+      : 'That code didn’t match. Check it and try again.');
+    return;
+  }
+
+  // We now hold a real session. The DB trigger has created the profile row.
+  state.userId=res.userId;
+  let profile=await loadUserProfile(res.userId);
+
+  if(p.isLogin){
+    if(profile&&profile.name){ _restoreUserFromRow(profile); state.profileEmail=profile.email||p.email; }
+    else { state.profileName=(profile&&profile.name)||p.email.split('@')[0]; state.profileEmail=p.email; state.profileId=generateUniqueId(); }
+  } else {
+    // New attendee — members-only curator gate, validated server-side now that
+    // we're authenticated (SECURITY DEFINER RPC; the codes table stays hidden).
+    if(p.signupType==='attendee'){
+      const cur=await validateCuratorCode(p.curatorCode);
+      if(!cur.valid){
+        reEnable();
+        otpErr(cur.reason==='inactive' ? 'That curator code is no longer active — ask your host for a current one.'
+          : cur.reason==='unknown' ? 'We don’t recognise that curator code. Check it, or check in at a venue to receive one.'
+          : 'Enter a valid curator code (CUR-XXXX-XXXX), or check in at a venue to receive one.');
+        return;
+      }
+      state.curatorVerified=true; state.curatorCode=cur.code; state.curatorTier=cur.tier||'standard';
+    }
+    state.profileName=p.name||(profile&&profile.name)||p.email.split('@')[0];
+    state.profileEmail=p.email;
+    state.profileId=(profile&&profile.profile_id)||generateUniqueId();
+    state.specialBadges=(profile&&profile.special_badges)||[];
+    // Persist the display name + public profile id (RLS: id = auth.uid()).
+    try{ await sb.from('users').update({ name:state.profileName, profile_id:state.profileId }).eq('id',res.userId); }catch(e){}
+  }
+
+  await localSet('cumulus_email',p.email);
+  await localSet('prefs',JSON.stringify({theme:state.theme}));
+  _cacheSession();
+
+  // Host application (sign up as host)
+  if(!p.isLogin && p.signupType==='host'){
+    _hostCats=p.hostCats||[];
+    await _submitHostApplication({name:state.profileName,email:p.email,bizName:p.bizName,hostDesc:p.hostDesc,whyHost:p.whyHost});
+    _pendingAuth=null;
+    return;
+  }
+
+  _pendingAuth=null;
   document.body.style.overflow='';
   document.getElementById('gate-root').innerHTML='';
   enterApp();
+}
+
+// Swap the gate form for the 6-digit code entry step (same modal).
+function showOtpStep(email){
+  const modal=document.querySelector('.lp-signup-modal'); if(!modal) return;
+  let panel=document.getElementById('gate-otp-panel');
+  if(!panel){ panel=document.createElement('div'); panel.id='gate-otp-panel'; modal.appendChild(panel); }
+  panel.innerHTML=`
+    <button class="gate-otp-back" onclick="backToGateForm()" aria-label="Back to sign-in form">←</button>
+    <div class="lp-form-eyebrow">Check your inbox</div>
+    <h3 class="lp-form-title">Enter your code</h3>
+    <p class="lp-form-sub">We emailed a 6-digit code to <strong>${escapeHtml(email)}</strong>. It expires in a few minutes.</p>
+    <div class="gate-field">
+      <label class="gate-label" for="gate-otp-input">6-digit code</label>
+      <input id="gate-otp-input" class="gate-input gate-otp-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" aria-describedby="gate-otp-error" oninput="this.value=this.value.replace(/\\D/g,'')"/>
+    </div>
+    <p id="gate-otp-error" class="gate-field-error" role="alert"></p>
+    <button id="gate-otp-verify" class="lp-claim-btn" onclick="verifyGateCode()">
+      <span class="lp-claim-btn-text">Verify &amp; continue</span>
+    </button>
+    <button class="gate-otp-resend" onclick="resendGateCode()">Didn’t get it? Resend code</button>`;
+  modal.classList.add('otp-active');
+  const inp=document.getElementById('gate-otp-input');
+  if(inp){ setTimeout(()=>inp.focus(),50); inp.addEventListener('keydown',e=>{ if(e.key==='Enter') verifyGateCode(); }); }
+}
+function backToGateForm(){ const m=document.querySelector('.lp-signup-modal'); if(m) m.classList.remove('otp-active'); const e=document.getElementById('gate-field-error'); if(e) e.classList.remove('show'); }
+function otpErr(msg){ const e=document.getElementById('gate-otp-error'); if(e){ e.textContent=msg; e.classList.add('show'); } }
+async function resendGateCode(){
+  if(!_pendingAuth) return;
+  const b=document.querySelector('.gate-otp-resend'); if(b){ b.disabled=true; b.textContent='Sending…'; }
+  const res=await authSendCode(_pendingAuth.email, _pendingAuth.isLogin?{}:{name:_pendingAuth.name});
+  if(b){ b.disabled=false; b.textContent=res.ok?'Code re-sent ✓':'Resend failed — try again'; }
 }
 
 async function _submitHostApplication({name,email,bizName,hostDesc,whyHost}){

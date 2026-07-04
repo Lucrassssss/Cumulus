@@ -119,10 +119,18 @@ phases:
   Phase 2 is live — applying it while the old anon signup is still deployed
   breaks writes (no `auth.uid()`), so apply it *with* the Phase 2 deploy on a
   staging project first.
-- **Phase 2 — frontend (pending):** replace the localStorage/custom-users
-  sign-up & session with `sb.auth` (email OTP), so requests carry a JWT. Done on
-  the feature branch and verified on a preview deploy before it reaches
-  production `main`, because Supabase auth can't be exercised from the sandbox.
+- **Phase 2 — frontend (built, on the feature branch, pending live verify):**
+  sign-up/login now go through `sb.auth` email OTP. `submitGate()` emails a
+  6-digit code (`authSendCode`); a new `verifyGateCode()` exchanges it for a
+  session (`authVerifyCode`) and only THEN runs the curator gate + writes the
+  profile, so RLS always has an `auth.uid()`. `start()` restores via
+  `sb.auth.getSession()` (with a cached-snapshot fallback for offline display);
+  `config.js` persists/refreshes the session. This is on
+  `claude/profile-card-customization-r4nptf` ONLY — it is deliberately NOT on
+  `main`, because Supabase auth can't be exercised from the sandbox. Verify it
+  on the branch's Vercel preview (enable Email OTP in Supabase → Auth →
+  Providers first), and apply BOTH migrations to a staging project, before
+  merging to `main`.
 
 **Admin boundary (real auth).** Event approvals and curator-code management are
 gated **server-side** by RLS, not just the client-side owner-email check. An

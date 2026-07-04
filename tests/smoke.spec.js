@@ -112,16 +112,25 @@ test.describe('Cumulus smoke', () => {
     await expect(page.locator('#gate-curator-field')).toBeHidden();
     await page.evaluate(() => switchSignupType('attendee'));
     await expect(page.locator('#gate-curator-field')).toBeVisible();
-    // Bad / empty code is rejected with a curator error
+
+    // Curator gate LOGIC (the real guard). Under the Phase-2 auth flow the
+    // curator check runs in verifyGateCode() AFTER the email OTP, which needs a
+    // live backend, so we assert the gating function directly (offline-safe):
+    //   • empty / malformed code  → rejected as a format failure
+    //   • well-formed code        → passes format (server decides valid/unknown)
+    const bad = await page.evaluate(async () => await validateCuratorCode('nope'));
+    expect(bad.valid).toBe(false);
+    expect(bad.reason).toBe('format');
+    const good = await page.evaluate(async () => (await validateCuratorCode('CUR-AB12-CD34')).reason);
+    expect(good).not.toBe('format');
+
+    // Step-1 wiring: submitting emails a code. With the backend offline here it
+    // must fail GRACEFULLY (surface an error, never crash) rather than sign the
+    // user in without verification.
     await page.fill('#gate-name', 'Nova');
     await page.fill('#gate-email', 'nova@example.com');
     await page.evaluate(() => submitGate());
-    await expect(page.locator('#gate-field-error')).toContainText(/curator code/i);
-    // A well-formed code passes FORMAT validation. Offline it is accepted
-    // outright (lenient fallback); online the server may reject it as
-    // unknown — either way it must never be a format rejection.
-    const reason = await page.evaluate(async () => (await validateCuratorCode('CUR-AB12-CD34')).reason);
-    expect(reason).not.toBe('format');
+    await expect(page.locator('#gate-field-error')).toBeVisible();
   });
 
   test('enter app → 4-tab bottom nav', async ({ page }) => {

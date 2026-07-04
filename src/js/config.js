@@ -23,4 +23,9 @@ window.CUMULUS_CONFIG = Object.assign({
 
 const SUPABASE_URL      = window.CUMULUS_CONFIG.SUPABASE_URL;
 const SUPABASE_ANON_KEY = window.CUMULUS_CONFIG.SUPABASE_ANON_KEY;
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  // Real auth (Phase 2): persist the session + refresh tokens so a signed-in
+  // member stays signed in across reloads. verifyOtp() establishes the session;
+  // getSession() restores it (works offline from the stored token until expiry).
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+});
