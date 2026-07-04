@@ -407,7 +407,37 @@ function resolveCardColors(bgStyleId, accentHex){
 }
 function applyTheme(){ document.documentElement.setAttribute('data-theme',state.theme); }
 
-// OS theme listener removed for day/night cycle
+// ── Day/night cycle ───────────────────────────────────────────────────────
+// The whole app — landing diorama + explore/host maps — is lit by London's
+// ACTUAL time of day, not the device's OS dark-mode setting: light 06:00–17:59,
+// dark otherwise. One source of truth, re-checked every minute so the scene
+// transitions live as the hour rolls over (and any open map re-lights with it).
+function themeForNow(){
+  try{
+    const h=parseInt(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',hour:'numeric',hourCycle:'h23'}).format(new Date()),10);
+    return (h>=6 && h<18) ? 'light' : 'dark';
+  }catch(e){
+    const h=new Date().getHours(); return (h>=6 && h<18) ? 'light' : 'dark';
+  }
+}
+// Re-check the clock; if the day/night phase flipped, apply it everywhere.
+function applyDayNight(){
+  const t=themeForNow();
+  if(t===state.theme) return;
+  state.theme=t;
+  applyTheme();
+  if(lmap) applyMapChrome(lmap,true);
+  if(hostMap) applyMapChrome(hostMap,false);
+}
+let _dayNightTimer=null;
+function startDayNightCycle(){
+  state.theme=themeForNow();
+  applyTheme();
+  if(lmap) applyMapChrome(lmap,true);
+  if(hostMap) applyMapChrome(hostMap,false);
+  if(_dayNightTimer) clearInterval(_dayNightTimer);
+  _dayNightTimer=setInterval(applyDayNight,60000);
+}
 
 
 // ---- MAPBOX TOKEN ----
@@ -513,12 +543,9 @@ function computeEventDates(ev){
 }
 
 async function start(){
-  // Theme: saved pref wins; if none, fall back to OS preference
-  const _sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const prefsRaw=await localGet('prefs');
-  if(prefsRaw){ try{ const p=JSON.parse(prefsRaw); if(p.theme) state.theme=p.theme; else state.theme=_sysDark?'dark':'light'; }catch(e){ state.theme=_sysDark?'dark':'light'; } }
-  else { state.theme=_sysDark?'dark':'light'; }
-  applyTheme();
+  // Theme follows London's day/night cycle — not the OS setting or a saved
+  // preference. startDayNightCycle() sets it now and keeps it in sync.
+  startDayNightCycle();
   MAPBOX_TOKEN=DEFAULT_MAPBOX_TOKEN;
 
   // Real auth (Phase 2): the source of truth is the Supabase Auth session.
@@ -540,8 +567,7 @@ async function start(){
     if(profile&&profile.name){
       _restoreUserFromRow(profile);
       state.profileEmail=profile.email||authUser.email||'';
-      state.theme=profile.theme||(prefsRaw&&JSON.parse(prefsRaw||'{}').theme)||(_sysDark?'dark':'light');
-      applyTheme();
+      // Theme stays on the day/night cycle — no per-profile override.
       await localSet('cumulus_email',state.profileEmail);
       _cacheSession();
       enterApp();
@@ -1209,8 +1235,7 @@ function _restoreUserFromRow(existing){
   state.profileName=existing.name;
   state.profileEmail=existing.email;
   state.specialBadges=existing.special_badges||[];
-  state.theme=existing.theme||'light';
-  applyTheme();
+  // Theme is driven by the day/night cycle, not the saved profile value.
   if(existing.card_bio||existing.card_theme){
     state.myCard={name:existing.name,theme:existing.card_theme||'crimson',bio:existing.card_bio||'',interests:existing.card_interests||'',fact:existing.card_fact||''};
   }
@@ -1983,8 +2008,6 @@ function renderNav(){
   navContainer.querySelectorAll('.nav-link').forEach(btn=>{
     btn.classList.toggle('active-cloud-tab', btn.dataset.nav===activeTab);
   });
-  const themBtn=navContainer.querySelector('.theme-toggle');
-  if(themBtn) themBtn.textContent=state.theme==='light'?'◑':'◐';
 
   // Patch social badge without touching other buttons
   const socialBadge=navContainer.querySelector('[data-nav="social"] .nav-social-badge');
