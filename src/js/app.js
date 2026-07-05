@@ -2488,80 +2488,65 @@ function clearMapFilters(){
   refreshFilters(); refreshMarkers();
 }
 
-class WeatherControl {
-  onAdd(map) {
-    this._map = map;
-    this._container = document.createElement('div');
-    this._container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
-    
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.title = 'Cycle Weather & Time';
-    btn.innerHTML = '☀️';
-    btn.style.fontSize = '16px';
-    
-    this._states = ['day-clear', 'dusk-fog', 'night-rain', 'night-snow', 'dawn-clear'];
-    this._currentState = 0;
-    
-    btn.onclick = () => {
-      this._currentState = (this._currentState + 1) % this._states.length;
-      this.applyState(this._states[this._currentState], btn);
-    };
-    
-    this._container.appendChild(btn);
-    return this._container;
-  }
-  
-  applyState(state, btn) {
-    if(!this._map.setRain) return; // safety check
-    this._map.setRain(null);
-    this._map.setSnow(null);
-    this._map.setFog(null);
-    
-    if (state === 'day-clear') {
-      this._map.setConfigProperty('basemap', 'lightPreset', 'day');
-      btn.innerHTML = '☀️';
-    } else if (state === 'dusk-fog') {
-      this._map.setConfigProperty('basemap', 'lightPreset', 'dusk');
-      this._map.setFog({
-        'range': [0.5, 3],
-        'color': '#8e99a8',
-        'high-color': '#245bdf',
-        'space-color': '#0b1626',
-        'star-intensity': 0.2
-      });
-      btn.innerHTML = '🌫️';
-    } else if (state === 'night-rain') {
-      this._map.setConfigProperty('basemap', 'lightPreset', 'night');
-      this._map.setRain({ density: 1, intensity: 1, color: '#a0b0c0' });
-      this._map.setFog({
-        'range': [1, 5],
-        'color': '#111',
-        'high-color': '#222',
-        'space-color': '#000',
-        'star-intensity': 0.8
-      });
-      btn.innerHTML = '🌧️';
-    } else if (state === 'night-snow') {
-      this._map.setConfigProperty('basemap', 'lightPreset', 'night');
-      this._map.setSnow({ density: 1, intensity: 1, color: '#ffffff' });
-      this._map.setFog({
-        'range': [1, 4],
-        'color': '#223',
-        'high-color': '#112',
-        'space-color': '#000',
-        'star-intensity': 1.0
-      });
-      btn.innerHTML = '❄️';
-    } else if (state === 'dawn-clear') {
-      this._map.setConfigProperty('basemap', 'lightPreset', 'dawn');
-      btn.innerHTML = '🌅';
-    }
-  }
+async function applyRealWeather(map) {
+  try {
+    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=51.5072&longitude=-0.1276&current_weather=true');
+    const data = await res.json();
+    const w = data.current_weather;
+    if (!w) return;
 
-  onRemove() {
-    this._container.parentNode.removeChild(this._container);
-    this._map = undefined;
+    if(!map.setRain) return;
+    map.setRain(null);
+    map.setSnow(null);
+    map.setFog(null);
+
+    // Set day/night based on real local time
+    const light = w.is_day === 1 ? 'day' : 'night';
+    map.setConfigProperty('basemap', 'lightPreset', light);
+
+    // Weather codes (WMO)
+    const code = w.weathercode;
+    
+    // Fog (45, 48)
+    if (code === 45 || code === 48) {
+      map.setFog({
+        'range': [0.5, 3],
+        'color': light === 'day' ? '#e0e5eb' : '#111',
+        'high-color': light === 'day' ? '#b0c4de' : '#222',
+        'space-color': '#000',
+        'star-intensity': light === 'day' ? 0 : 0.8
+      });
+    }
+    // Drizzle / Rain (51-67, 80-82)
+    else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+      map.setRain({ density: 1, intensity: code >= 63 ? 1 : 0.5, color: light === 'day' ? '#8a9ba8' : '#a0b0c0' });
+      // Light fog for rain mood
+      map.setFog({
+        'range': [1, 5],
+        'color': light === 'day' ? '#c8d2d9' : '#111',
+        'high-color': light === 'day' ? '#9fb1be' : '#222',
+        'space-color': '#000',
+        'star-intensity': light === 'day' ? 0 : 0.5
+      });
+    }
+    // Snow (71-77, 85-86)
+    else if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) {
+      map.setSnow({ density: 1, intensity: code >= 73 ? 1 : 0.5, color: '#ffffff' });
+      map.setFog({
+        'range': [1, 4],
+        'color': light === 'day' ? '#eef2f5' : '#223',
+        'high-color': light === 'day' ? '#d9e2e8' : '#112',
+        'space-color': '#000',
+        'star-intensity': light === 'day' ? 0 : 1.0
+      });
+    }
+    // Thunderstorm (95, 96, 99)
+    else if (code >= 95) {
+      map.setRain({ density: 1, intensity: 1, color: '#556677' });
+      map.setConfigProperty('basemap', 'lightPreset', 'dusk'); // Darken for storm
+    }
+  } catch(e) {
+    console.error('Failed to load real weather', e);
   }
 }
 
@@ -2574,16 +2559,17 @@ function initLeaflet(){
     center:[-0.1276,51.5072], zoom:12,
     fadeDuration:300,
     attributionControl:false,
-    maxPitch:85, pitch:45, dragPitch:true, touchPitch:true, pitchWithRotate:true
+    maxPitch:0, pitch:0, dragPitch:false, touchPitch:false, pitchWithRotate:false
   });
   lmap.addControl(new mapboxgl.NavigationControl({showCompass:true,showZoom:true}),'top-right');
-  lmap.addControl(new WeatherControl(), 'top-right');
   lmap.on('style.load', () => {
     applyMapChrome(lmap, true);
     attachMapLayers();
     // Default to time-based theme
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     lmap.setConfigProperty('basemap', 'lightPreset', isDark ? 'night' : 'day');
+    // Fetch and apply real London weather!
+    applyRealWeather(lmap);
   });
 }
 
