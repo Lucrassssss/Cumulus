@@ -2488,6 +2488,77 @@ function clearMapFilters(){
   refreshFilters(); refreshMarkers();
 }
 
+class WeatherControl {
+  onAdd(map) {
+    this._map = map;
+    this._container = document.createElement('div');
+    this._container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
+    
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.title = 'Weather: Live (London)';
+    btn.innerHTML = '🌍';
+    btn.style.fontSize = '16px';
+    
+    this._states = ['live', 'clear', 'rain', 'snow', 'fog'];
+    this._currentState = 0;
+    
+    btn.onclick = () => {
+      this._currentState = (this._currentState + 1) % this._states.length;
+      this.applyState(this._states[this._currentState], btn);
+    };
+    
+    this._container.appendChild(btn);
+    return this._container;
+  }
+  
+  applyState(stateName, btn) {
+    if(!this._map.setRain) return;
+    
+    if (stateName === 'live') {
+      btn.innerHTML = '🌍';
+      btn.title = 'Weather: Live (London)';
+      applyRealWeather(this._map);
+      return;
+    }
+
+    // For simulated states, first clear everything
+    this._map.setRain(null);
+    this._map.setSnow(null);
+    this._map.setFog(null);
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const light = isDark ? 'night' : 'day';
+    this._map.setConfigProperty('basemap', 'lightPreset', light);
+
+    if (stateName === 'clear') {
+      btn.innerHTML = '☀️';
+      btn.title = 'Weather: Simulated Clear';
+    } else if (stateName === 'rain') {
+      btn.innerHTML = '🌧️';
+      btn.title = 'Weather: Simulated Rain';
+      this._map.setConfigProperty('basemap', 'lightPreset', 'dusk');
+      this._map.setRain({ density: 1, intensity: 1, color: '#a0b0c0' });
+      this._map.setFog({ 'range': [1, 5], 'color': '#111', 'high-color': '#222', 'space-color': '#000', 'star-intensity': 0.5 });
+    } else if (stateName === 'snow') {
+      btn.innerHTML = '❄️';
+      btn.title = 'Weather: Simulated Snow';
+      this._map.setConfigProperty('basemap', 'lightPreset', light);
+      this._map.setSnow({ density: 1, intensity: 1, color: '#ffffff' });
+      this._map.setFog({ 'range': [1, 4], 'color': isDark?'#223':'#eef2f5', 'high-color': isDark?'#112':'#d9e2e8', 'space-color': '#000', 'star-intensity': isDark?1.0:0 });
+    } else if (stateName === 'fog') {
+      btn.innerHTML = '🌫️';
+      btn.title = 'Weather: Simulated Fog';
+      this._map.setConfigProperty('basemap', 'lightPreset', light);
+      this._map.setFog({ 'range': [0.5, 3], 'color': isDark?'#111':'#e0e5eb', 'high-color': isDark?'#222':'#b0c4de', 'space-color': '#000', 'star-intensity': isDark?0.8:0 });
+    }
+  }
+
+  onRemove() {
+    this._container.parentNode.removeChild(this._container);
+    this._map = undefined;
+  }
+}
+
 async function applyRealWeather(map) {
   try {
     const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=51.5072&longitude=-0.1276&current_weather=true');
@@ -2562,10 +2633,11 @@ function initLeaflet(){
     maxPitch:0, pitch:0, dragPitch:false, touchPitch:false, pitchWithRotate:false
   });
   lmap.addControl(new mapboxgl.NavigationControl({showCompass:true,showZoom:true}),'top-right');
+  lmap.addControl(new WeatherControl(), 'top-right');
   lmap.on('style.load', () => {
     applyMapChrome(lmap, true);
     attachMapLayers();
-    // Default to time-based theme
+    // Default to time-based theme for safety, overridden by real weather shortly
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     lmap.setConfigProperty('basemap', 'lightPreset', isDark ? 'night' : 'day');
     // Fetch and apply real London weather!
