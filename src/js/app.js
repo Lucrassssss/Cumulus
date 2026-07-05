@@ -1296,7 +1296,7 @@ let _pendingAuth=null;
 async function verifyGateCode(){
   const p=_pendingAuth; if(!p) return;
   const code=(document.getElementById('gate-otp-input')?.value||'').trim();
-  if(!/^d{6}$/.test(code)){ otpErr('Enter the 6-digit code from your email.'); return; }
+  if(!/^\d{6}$/.test(code)){ otpErr('Enter the 6-digit code from your email.'); return; }
 
   const vbtn=document.getElementById('gate-otp-verify');
   const vlabel=vbtn&&vbtn.querySelector('.lp-claim-btn-text');
@@ -1371,7 +1371,7 @@ function showOtpStep(email){
     <p class="lp-form-sub">We emailed a 6-digit code to <strong>${escapeHtml(email)}</strong>. It expires in a few minutes.</p>
     <div class="gate-field">
       <label class="gate-label" for="gate-otp-input">6-digit code</label>
-      <input id="gate-otp-input" class="gate-input gate-otp-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" aria-describedby="gate-otp-error" oninput="this.value=this.value.replace(/D/g,'')"/>
+      <input id="gate-otp-input" class="gate-input gate-otp-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" aria-describedby="gate-otp-error" oninput="this.value=this.value.replace(/\D/g,'')"/>
     </div>
     <p id="gate-otp-error" class="gate-field-error" role="alert"></p>
     <button id="gate-otp-verify" class="lp-claim-btn" onclick="verifyGateCode()">
