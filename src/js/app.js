@@ -37,7 +37,7 @@ function catImg(cat){ const id=CAT_IMG[cat]||"1517457373958-b7bdd4587205"; retur
 function eventStatus(ev){ const now=Date.now(); if(now>=ev.startsAt&&now<=ev.endsAt) return 'live'; if(now<ev.startsAt) return 'upcoming'; return 'past'; }
 function isHotEvent(ev){ const st=eventStatus(ev); if(st==='past') return false; if(st==='live') return true; return attendeesFor(ev.id).length>=2; }
 function generateUniqueId(){ return Math.floor(Math.random()*1000000).toString().padStart(6,'0'); }
-function codeFor(name,id){ const c=name.toUpperCase().replace(/\s+/g,'-').replace(/[^A-Z0-9-]/g,''); return `CUMULUS-FRIEND::${c}-${id}`; }
+function codeFor(name,id){ const c=name.toUpperCase().replace(/s+/g,'-').replace(/[^A-Z0-9-]/g,''); return `CUMULUS-FRIEND::${c}-${id}`; }
 
 const DEMO_PEOPLE = [
   {name:"Alex Rivera", id:"849201", events:[3,11,61,70,96], blurb:"Watercolours and board games. Always brings snacks."},
@@ -318,7 +318,7 @@ const CARD_PATTERNS={
   cobweb:`<svg class="card-pattern-svg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-width="0.7" fill="none">${Array.from({length:12},(_,i)=>{const a=i*(Math.PI*2/12),x2=(200+Math.cos(a)*280).toFixed(1),y2=(125+Math.sin(a)*200).toFixed(1);return `<line x1="200" y1="125" x2="${x2}" y2="${y2}"/>`;}).join('')}${[40,80,120,160].map(r=>`<ellipse cx="200" cy="125" rx="${r*1.4}" ry="${r}"/>`).join('')}</g></svg>`,
 };
 
-const LONDON_AREAS=['Shoreditch','Dalston','Hackney','Peckham','Brixton','Clapham','Soho','Fitzrovia','Islington','Bethnal Green','Bermondsey','Borough','Vauxhall','Battersea','Chelsea','Fulham','Hammersmith','Notting Hill','Kensington','Camden','Kentish Town','Holloway','Crouch End','Stoke Newington','Wood Green','Tottenham','Stratford','Bow','Canary Wharf','Greenwich','Lewisham','New Cross','Crystal Palace','Dulwich','Herne Hill','Tooting','Wimbledon','Richmond','Kingston','Putney','Wandsworth','Balham','Elephant & Castle','Southwark','Wapping','Mayfair','Marylebone','King\'s Cross','Angel','Farringdon','Barbican','Clerkenwell','Whitechapel','Bethnal Green','Stepney','Mile End','Walthamstow','Leyton'];
+const LONDON_AREAS=['Shoreditch','Dalston','Hackney','Peckham','Brixton','Clapham','Soho','Fitzrovia','Islington','Bethnal Green','Bermondsey','Borough','Vauxhall','Battersea','Chelsea','Fulham','Hammersmith','Notting Hill','Kensington','Camden','Kentish Town','Holloway','Crouch End','Stoke Newington','Wood Green','Tottenham','Stratford','Bow','Canary Wharf','Greenwich','Lewisham','New Cross','Crystal Palace','Dulwich','Herne Hill','Tooting','Wimbledon','Richmond','Kingston','Putney','Wandsworth','Balham','Elephant & Castle','Southwark','Wapping','Mayfair','Marylebone',"King's Cross",'Angel','Farringdon','Barbican','Clerkenwell','Whitechapel','Bethnal Green','Stepney','Mile End','Walthamstow','Leyton'];
 const CATEGORY_KEYWORDS={"Gaming":["gaming","video game","games","esports","arcade","retro"],"Creative":["art","painting","drawing","sketch","pottery","crafts","ceramics"],"Movie Nights":["movies","film","cinema","screening"],"Board Games":["board games","tabletop","strategy","puzzles","catan"],"Meetups":["meetups","social","networking","making friends"],"Food & Drink":["food","drink","wine","cocktails","beer","cooking","tasting"],"Live Music":["live music","gig","concert","open mic","jazz","acoustic"],"Wellness & Outdoors":["wellness","yoga","meditation","outdoors","fitness","running","mindfulness"],"Tech & Talks":["tech","startup","coding","ai","talks","hackathon","product"]};
 const MILESTONE_BADGES=[{id:'m1',name:'First Step',glyph:'I',need:1,desc:'RSVP to your first event',metal:'#C97B4A',tier:'Bronze'},{id:'m3',name:'Getting Around',glyph:'III',need:3,desc:'RSVP to 3 events',metal:'#B7C2CC',tier:'Silver'},{id:'m5',name:'Local Regular',glyph:'V',need:5,desc:'RSVP to 5 events',metal:'#F4C430',tier:'Gold'},{id:'m10',name:'Cloud Chaser',glyph:'X',need:10,desc:'RSVP to 10 events',metal:'#9FE3F0',tier:'Platinum'}];
 const CATEGORY_BADGES=[{id:'cat-Creative',name:'Creative Soul',cat:'Creative',glyph:'✎',desc:'Attend a creative event'},{id:'cat-Gaming',name:'Player One',cat:'Gaming',glyph:'◉',desc:'Attend a gaming event'},{id:'cat-Movie Nights',name:'Cinephile',cat:'Movie Nights',glyph:'▷',desc:'Attend a movie night'},{id:'cat-Board Games',name:'Tactician',cat:'Board Games',glyph:'♟',desc:'Attend a board game night'},{id:'cat-Meetups',name:'Social Butterfly',cat:'Meetups',glyph:'❋',desc:'Attend a meetup'},{id:'cat-Food & Drink',name:'Taste Maker',cat:'Food & Drink',glyph:'❖',desc:'Attend a food & drink event'},{id:'cat-Live Music',name:'Music Lover',cat:'Live Music',glyph:'♪',desc:'Attend a live music event'},{id:'cat-Wellness & Outdoors',name:'Grounded',cat:'Wellness & Outdoors',glyph:'❀',desc:'Attend a wellness or outdoors event'},{id:'cat-Tech & Talks',name:'Builder',cat:'Tech & Talks',glyph:'⚙',desc:'Attend a tech & talks event'}];
@@ -349,7 +349,7 @@ const CALENDAR_MONTH=nowObj.getMonth();
 const MONTH_NAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const WEEKDAY_LABELS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const BLOT_SVG=`<svg class="blot-icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill="var(--gold)" d="M10 1c2 1 4 2 5 4.5 1 2.3 1 4.6-0.3 6.6-1.3 2-3.6 3.3-5.7 4.8-1-1.3-2.7-2-4.2-3.2C2.8 12 1.3 9.8 1.8 7.3 2.3 4.7 4.7 3 7 1.8 8 1.3 9 0.7 10 1Z"/></svg>`;
-const EMAIL_PATTERN=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_PATTERN=/^[^s@]+@[^s@]+.[^s@]+$/;
 
 let state={view:'browse',selectedEventId:null,selectedCategory:'all',calendarDay:null,
   userId:null,
@@ -370,7 +370,7 @@ async function localSet(key,value){ try{ localStorage.setItem(key,value); }catch
 async function storageGet(key){ return localGet(key); }
 async function storageSet(key,value){ return localSet(key,value); }
 
-function initials(name){ if(!name||!name.trim()) return '?'; const p=name.trim().split(/\s+/); return (p[0][0]+(p.length>1?p[1][0]:'')).toUpperCase(); }
+function initials(name){ if(!name||!name.trim()) return '?'; const p=name.trim().split(/s+/); return (p[0][0]+(p.length>1?p[1][0]:'')).toUpperCase(); }
 function hexToRgba(hex,a){ const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16); return `rgba(${r},${g},${b},${a})`; }
 function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -1296,7 +1296,7 @@ let _pendingAuth=null;
 async function verifyGateCode(){
   const p=_pendingAuth; if(!p) return;
   const code=(document.getElementById('gate-otp-input')?.value||'').trim();
-  if(!/^\d{6}$/.test(code)){ otpErr('Enter the 6-digit code from your email.'); return; }
+  if(!/^d{6}$/.test(code)){ otpErr('Enter the 6-digit code from your email.'); return; }
 
   const vbtn=document.getElementById('gate-otp-verify');
   const vlabel=vbtn&&vbtn.querySelector('.lp-claim-btn-text');
@@ -1371,7 +1371,7 @@ function showOtpStep(email){
     <p class="lp-form-sub">We emailed a 6-digit code to <strong>${escapeHtml(email)}</strong>. It expires in a few minutes.</p>
     <div class="gate-field">
       <label class="gate-label" for="gate-otp-input">6-digit code</label>
-      <input id="gate-otp-input" class="gate-input gate-otp-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" aria-describedby="gate-otp-error" oninput="this.value=this.value.replace(/\\D/g,'')"/>
+      <input id="gate-otp-input" class="gate-input gate-otp-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" aria-describedby="gate-otp-error" oninput="this.value=this.value.replace(/D/g,'')"/>
     </div>
     <p id="gate-otp-error" class="gate-field-error" role="alert"></p>
     <button id="gate-otp-verify" class="lp-claim-btn" onclick="verifyGateCode()">
@@ -2036,7 +2036,7 @@ function destroyHostMap(){ if(hostMap){ try{ hostMap.remove(); }catch(e){} hostM
 // Dedicated sign-out — tears the session down cleanly and returns to the gate.
 // Confirms first unless called with confirmed=true (e.g. from clearAllUsers).
 async function signOut(confirmed){
-  if(!confirmed){ showConfirm('Sign out?','You\'ll return to the welcome screen. Your data is saved.','Sign out','signOut'); return; }
+  if(!confirmed){ showConfirm('Sign out?',"You'll return to the welcome screen. Your data is saved.",'Sign out','signOut'); return; }
   // Clear any Supabase auth session (defensive — harmless if none is active,
   // and future-proofs a move to real sb.auth without leaving a token behind).
   try{ await sb.auth.signOut(); }catch(e){}
@@ -2243,7 +2243,7 @@ async function redeemBadge(){
   }
   input.value=''; renderView(); showToast(`Unlocked: ${match.name}`,'success');
 }
-function getEventDay(ev){ const m=ev.date.match(/(\d{1,2})/); return m?parseInt(m[1],10):null; }
+function getEventDay(ev){ const m=ev.date.match(/(d{1,2})/); return m?parseInt(m[1],10):null; }
 function buildCalendarWeeks(year,monthIdx){
   const firstDay=new Date(year,monthIdx,1); const daysInMonth=new Date(year,monthIdx+1,0).getDate();
   const startOffset=(firstDay.getDay()+6)%7; const cells=[];
@@ -2560,8 +2560,8 @@ function handleAddressAutocomplete(){
         resultsDiv.innerHTML=data.suggestions.map(s=>{
           const fullAddress=s.full_address||s.place_formatted||s.name;
           const placeText=s.name||fullAddress;
-          const mapboxId=(s.mapbox_id||'').replace(/'/g,"\\'");
-          return `<div style="padding:10px 14px;cursor:pointer;font-size:13.5px;border-bottom:1px solid var(--line-soft);color:var(--text);" onclick="selectSearchSuggestion('${mapboxId}','${escapeHtml(fullAddress).replace(/'/g,"\\'")}','${escapeHtml(placeText).replace(/'/g,"\\'")}')">
+          const mapboxId=(s.mapbox_id||'').replace(/'/g,"'");
+          return `<div style="padding:10px 14px;cursor:pointer;font-size:13.5px;border-bottom:1px solid var(--line-soft);color:var(--text);" onclick="selectSearchSuggestion('${mapboxId}','${escapeHtml(fullAddress).replace(/'/g,"'")}','${escapeHtml(placeText).replace(/'/g,"'")}')">
             <div style="font-weight:600;">${escapeHtml(placeText)}</div>
             ${s.place_formatted?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${escapeHtml(s.place_formatted)}</div>`:''}
           </div>`;
@@ -2641,7 +2641,7 @@ async function submitHostEvent(){
       }catch(e){}
     }
     if(pbtn){ pbtn.disabled=false; pbtn.textContent='Submit for review →'; }
-    showToast(saved?'Submitted for review — we\'ll approve it shortly.':'Could not submit — please try again.', saved?'success':'error');
+    showToast(saved?"Submitted for review — we'll approve it shortly.":'Could not submit — please try again.', saved?'success':'error');
     if(saved){ state.view='browse'; renderNav(); renderView(); }
     return;
   }
@@ -2728,7 +2728,7 @@ async function clearAllTestData(confirmed){
   if(!confirmed){
     showConfirm(
       'Wipe all test data?',
-      'This deletes every row in users, events, rsvps, tickets, chat_messages, and friends in Supabase. Seed events in the app are unaffected (they\'re hardcoded). Cannot be undone.',
+      "This deletes every row in users, events, rsvps, tickets, chat_messages, and friends in Supabase. Seed events in the app are unaffected (they're hardcoded). Cannot be undone.",
       'Wipe everything',
       'clearAllTestData'
     );
@@ -2806,7 +2806,7 @@ function od_renderStaff(){
     const el=document.createElement('div');
     el.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#1E1F24;border-radius:10px;margin-bottom:6px;';
     const z=r.data.cost===0;
-    el.innerHTML='<div><div style="font-size:12px;font-weight:500;color:#C5C6CB">'+r.name+'</div><div style="font-size:10px;color:#5F5E5A;margin-top:2px">'+r.data.l+'</div></div><div><div style="font-family:\'SF Mono\',monospace;font-size:13px;font-weight:600;color:'+(z?'#5F5E5A':'#E24B4A')+'">'+_odGbp(r.data.cost)+'/mo</div></div>';
+    el.innerHTML='<div><div style="font-size:12px;font-weight:500;color:#C5C6CB">'+r.name+'</div><div style="font-size:10px;color:#5F5E5A;margin-top:2px">'+r.data.l+'</div></div><div><div style="font-family:&quot;SF Mono&quot;,monospace;font-size:13px;font-weight:600;color:'+(z?'#5F5E5A':'#E24B4A')+'">'+_odGbp(r.data.cost)+'/mo</div></div>';
     list.appendChild(el);
   });
   const tot=p.cs.cost+p.eng.cost;
@@ -3882,7 +3882,7 @@ function renderConnect(id){
     const bioSnippet=card?card.bio:person?person.blurb:'';
     const interests=card&&card.interests?card.interests.split(',').map(s=>s.trim()).filter(Boolean).slice(0,2):[];
     const tagsHtml=interests.map(t=>`<span class="going-card-tag" style="border-color:${avaColor}55;color:${ctext};background:${avaColor}18;">${escapeHtml(t)}</span>`).join('');
-    const safeName=escapeHtml(name).replace(/'/g,"\\'");
+    const safeName=escapeHtml(name).replace(/'/g,"'");
     return `<div class="going-card" style="background:${cbg};border-color:${cborder};" onclick="peekAttendee(${id},'${safeName}')">
       <div class="going-card-ava" style="background:${avaColor};">${initials(name)}</div>
       <div class="going-card-name" style="color:${ctext};">${escapeHtml(name)}${fr?` <span style="color:var(--gold);font-size:10px;">★</span>`:''}</div>
@@ -4681,7 +4681,7 @@ async function registerFree(evId){
 
 async function processPayment(){
   const name=(document.getElementById('pay-name')?.value||'').trim();
-  const card=(document.getElementById('pay-card')?.value||'').replace(/\s/g,'');
+  const card=(document.getElementById('pay-card')?.value||'').replace(/s/g,'');
   const expiry=document.getElementById('pay-expiry')?.value||'';
   const cvv=(document.getElementById('pay-cvv')?.value||'').trim();
   if(!name||card.length<15||expiry.length<4||cvv.length<3){ showToast('Please fill in all payment details correctly.','error'); return; }
@@ -4712,8 +4712,8 @@ async function processPayment(){
   state.view='confirmed'; renderNav(); renderView(); window.scrollTo({top:0,behavior:'smooth'});
 }
 
-function formatCardNumber(el){ let v=el.value.replace(/\D/g,'').slice(0,16); el.value=v.replace(/(.{4})/g,'$1 ').trim(); }
-function formatExpiry(el){ let v=el.value.replace(/\D/g,'').slice(0,4); if(v.length>2) v=v.slice(0,2)+'/'+v.slice(2); el.value=v; }
+function formatCardNumber(el){ let v=el.value.replace(/D/g,'').slice(0,16); el.value=v.replace(/(.{4})/g,'$1 ').trim(); }
+function formatExpiry(el){ let v=el.value.replace(/D/g,'').slice(0,4); if(v.length>2) v=v.slice(0,2)+'/'+v.slice(2); el.value=v; }
 
 function afterRenderConfirmed(){
   const tickets=bookingDraft.confirmedTickets||[]; if(!tickets.length) return;
@@ -4731,9 +4731,9 @@ function downloadICS(evId){
   const fmtDT=d=>{ const u=new Date(d); return `${u.getUTCFullYear()}${pad(u.getUTCMonth()+1)}${pad(u.getUTCDate())}T${pad(u.getUTCHours())}${pad(u.getUTCMinutes())}${pad(u.getUTCSeconds())}Z`; };
   const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Cumulus Events//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT',
     `UID:cumulus-${ev.id}-${Date.now()}@cumulus.app`,`DTSTART:${fmtDT(ev.startTime)}`,`DTEND:${fmtDT(ev.endTime)}`,
-    `SUMMARY:${ev.title}`,`DESCRIPTION:${ev.desc.replace(/[\\;,]/g,'\\$&').replace(/\n/g,'\\n')} — Hosted by ${ev.host}`,
-    `LOCATION:${ev.venue}\\, ${ev.area}\\, London`,`ORGANIZER;CN="${ev.host}":mailto:events@cumulus.app`,
-    'STATUS:CONFIRMED','TRANSP:OPAQUE','END:VEVENT','END:VCALENDAR'].join('\r\n');
+    `SUMMARY:${ev.title}`,`DESCRIPTION:${ev.desc.replace(/[;,]/g,'$&').replace(/n/g,'n')} — Hosted by ${ev.host}`,
+    `LOCATION:${ev.venue}, ${ev.area}, London`,`ORGANIZER;CN="${ev.host}":mailto:events@cumulus.app`,
+    'STATUS:CONFIRMED','TRANSP:OPAQUE','END:VEVENT','END:VCALENDAR'].join('rn');
   const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -4831,7 +4831,7 @@ function renderConfirmed(){
     </div>`).join('');
   return `<div style="text-align:center;padding:20px 0 16px;">
       <div style="width:58px;height:58px;border-radius:50%;background:#22C55E;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:24px;box-shadow:0 4px 18px rgba(34,197,94,0.3);">✓</div>
-      <div style="font-size:21px;font-weight:800;color:var(--text);">${totalPaid?'Payment confirmed!':'You\'re registered!'}</div>
+      <div style="font-size:21px;font-weight:800;color:var(--text);">${totalPaid?'Payment confirmed!':"You're registered!"}</div>
       <div style="font-size:12.5px;color:var(--text-muted);margin-top:3px;">${tickets.length} ticket${tickets.length!==1?'s':''} · ${totalPaid?`£${totalPaid.toFixed(2)} total`:'Free'}</div>
     </div>
     ${ticketCards}
@@ -5061,6 +5061,127 @@ function setHostType(t){
   if(btn) btn.textContent=t==='private'?'Create private event →':'Submit for review →';
 }
 
+async function startAgeVerification() {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    
+    // Using simple mock request for local testing bypass
+    const res = await fetch("http://127.0.0.1:54321/functions/v1/identity-webhook", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-local-bypass": "true"
+      },
+      body: JSON.stringify({ user_id: session.user.id })
+    });
+    
+    if (res.ok) {
+      // Re-fetch progress
+      const p = await getHostingProgress();
+      state.hostingProgress = p;
+      renderView();
+    } else {
+      alert("Verification failed: " + await res.text());
+    }
+  } catch(e) {
+    console.error("Age verification error:", e);
+    alert("Could not complete verification.");
+  }
+}
+
+function renderHostChecklist(progress) {
+  const completed = [progress.ageVerified, progress.eventsCheckedIn >= progress.eventsRequired, progress.connections >= progress.connectionsRequired].filter(Boolean).length;
+  
+  return `
+    <div style="padding: 16px;">
+      <section aria-labelledby="hc-heading" class="mx-auto max-w-md rounded-2xl border border-white/10 p-6 text-zinc-100" style="margin-top:20px; padding: 24px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); background: #18181b; color: #f4f4f5;">
+        <header style="margin-bottom: 20px;">
+          <p style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: #fcd34d;">Members' track</p>
+          <h2 id="hc-heading" style="margin-top: 4px; font-size: 20px; font-weight: 700; letter-spacing: -0.025em;">Unlock private hosting</h2>
+          <p style="margin-top: 8px; font-size: 14px; color: #d4d4d8; line-height: 1.5;">
+            Complete three steps to host <span style="font-weight: 600;">connections-only</span> events. Progress is verified by Cumulus — no need to prove anything twice.
+          </p>
+          <div style="margin-top: 16px;">
+            <div role="progressbar" aria-valuenow="${completed}" aria-valuemin="0" aria-valuemax="3" aria-valuetext="${completed} of 3 steps complete" style="height: 8px; width: 100%; border-radius: 999px; background: rgba(255,255,255,0.1); overflow: hidden;">
+              <div style="height: 100%; border-radius: 999px; background: #fcd34d; width: ${(completed/3)*100}%; transition: width 0.5s;"></div>
+            </div>
+            <p style="margin-top: 8px; font-size: 14px; font-weight: 500; color: #e4e4e7;">${completed} of 3 complete</p>
+          </div>
+          <p aria-live="polite" class="sr-only">${completed} of 3 steps complete toward unlocking private hosting.</p>
+        </header>
+
+        <ol style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+          
+          <!-- Step 1: Age -->
+          <li style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(9,9,11,0.6); padding: 16px;">
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+              <span style="margin-top: 2px; flex-shrink: 0;" aria-hidden>
+                ${progress.ageVerified ? '<span style="font-size: 20px;">✅</span>' : '<span style="font-size: 20px;">🔒</span>'}
+              </span>
+              <div style="min-width: 0; flex: 1;">
+                <h3 style="font-size: 14px; font-weight: 600; color: ${progress.ageVerified ? '#a1a1aa' : '#f4f4f5'}; text-decoration: ${progress.ageVerified ? 'line-through' : 'none'};">Verify you're 18 or over</h3>
+                <p style="margin-top: 4px; font-size: 12px; font-weight: 500;">
+                  ${progress.ageVerified ? '<span style="color: #4ade80;">Done</span>' : '<span style="color: #d4d4d8;">Not started</span>'}
+                </p>
+                ${!progress.ageVerified ? `
+                  <button type="button" onclick="startAgeVerification()" style="margin-top: 12px; display: inline-flex; min-height: 44px; align-items: center; gap: 8px; border-radius: 8px; background: rgba(255,255,255,0.1); padding: 0 12px; font-size: 14px; font-weight: 600; color: #f4f4f5; border: none; cursor: pointer;">
+                    Verify with your device
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+            <span class="sr-only">Step 1 of 3, ${progress.ageVerified ? 'complete' : 'incomplete'}: verify your age with your device to continue.</span>
+          </li>
+
+          <!-- Step 2: Check-in -->
+          <li style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(9,9,11,0.6); padding: 16px;">
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+              <span style="margin-top: 2px; flex-shrink: 0;" aria-hidden>
+                ${progress.eventsCheckedIn >= progress.eventsRequired ? '<span style="font-size: 20px;">✅</span>' : '<span style="font-size: 20px;">🔒</span>'}
+              </span>
+              <div style="min-width: 0; flex: 1;">
+                <h3 style="font-size: 14px; font-weight: 600; color: ${progress.eventsCheckedIn >= progress.eventsRequired ? '#a1a1aa' : '#f4f4f5'}; text-decoration: ${progress.eventsCheckedIn >= progress.eventsRequired ? 'line-through' : 'none'};">Check in at a real event</h3>
+                <p style="margin-top: 4px; font-size: 12px; font-weight: 500;">
+                  ${progress.eventsCheckedIn >= progress.eventsRequired ? '<span style="color: #4ade80;">Done</span>' : `<span style="color: #d4d4d8;">${progress.eventsCheckedIn} / ${progress.eventsRequired}</span>`}
+                </p>
+                ${progress.eventsCheckedIn < progress.eventsRequired ? `
+                  <button type="button" onclick="openSocialTab()" style="margin-top: 12px; display: inline-flex; min-height: 44px; align-items: center; gap: 8px; border-radius: 8px; background: rgba(255,255,255,0.1); padding: 0 12px; font-size: 14px; font-weight: 600; color: #f4f4f5; border: none; cursor: pointer;">
+                    Find an event near you
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+            <span class="sr-only">Step 2 of 3, ${progress.eventsCheckedIn >= progress.eventsRequired ? 'complete' : 'incomplete'}: ${progress.eventsCheckedIn} of ${progress.eventsRequired} events attended in person.</span>
+          </li>
+
+          <!-- Step 3: Connections -->
+          <li style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(9,9,11,0.6); padding: 16px;">
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+              <span style="margin-top: 2px; flex-shrink: 0;" aria-hidden>
+                ${progress.connections >= progress.connectionsRequired ? '<span style="font-size: 20px;">✅</span>' : '<span style="font-size: 20px;">🔒</span>'}
+              </span>
+              <div style="min-width: 0; flex: 1;">
+                <h3 style="font-size: 14px; font-weight: 600; color: ${progress.connections >= progress.connectionsRequired ? '#a1a1aa' : '#f4f4f5'}; text-decoration: ${progress.connections >= progress.connectionsRequired ? 'line-through' : 'none'};">Make 3 mutual connections</h3>
+                <p style="margin-top: 4px; font-size: 12px; font-weight: 500;">
+                  ${progress.connections >= progress.connectionsRequired ? '<span style="color: #4ade80;">Done</span>' : `<span style="color: #d4d4d8;">${progress.connections} / ${progress.connectionsRequired}</span>`}
+                </p>
+                ${progress.connections < progress.connectionsRequired ? `
+                  <button type="button" onclick="openFriends()" style="margin-top: 12px; display: inline-flex; min-height: 44px; align-items: center; gap: 8px; border-radius: 8px; background: rgba(255,255,255,0.1); padding: 0 12px; font-size: 14px; font-weight: 600; color: #f4f4f5; border: none; cursor: pointer;">
+                    Find people to connect with
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+            <span class="sr-only">Step 3 of 3, ${progress.connections >= progress.connectionsRequired ? 'complete' : 'incomplete'}: ${progress.connections} of ${progress.connectionsRequired} connections accepted.</span>
+          </li>
+        </ol>
+      </section>
+    </div>
+  `;
+}
+
+
 function renderSocialTab(){
   const view=state.view;
   const isOwner=state.profileEmail==='gondoxml@gmail.com';
@@ -5073,6 +5194,19 @@ function renderSocialTab(){
 
   // ── HOST content ──────────────────────────────────────────────────────
   if(view==='host'){
+    if (!state.hostingProgress) {
+      getHostingProgress().then(p => { state.hostingProgress = p; renderView(); });
+      return `<div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Loading...</p></div>`;
+    }
+
+    if (!state.hostingProgress.eligible) {
+      return `
+        <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Host an event for your community</p></div>
+        ${seg}
+        ${renderHostChecklist(state.hostingProgress)}
+      `;
+    }
+
     return `
       <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Host an event for your community</p></div>
       ${seg}
@@ -5146,7 +5280,7 @@ function renderSocialTab(){
             <div class="fname"><span class="star">★</span> ${escapeHtml(n)}</div>
             ${p?`<div class="fblurb">${escapeHtml(p.blurb)}</div>`:''}
             <div class="fgoing">${evs.length?`Going to: ${evs.map(e=>escapeHtml(e.title)).join(', ')}`:'No events listed'}</div>
-            <button class="btn btn-outline btn-small" style="width:100%;margin-top:4px;" onclick="removeFriend('${escapeHtml(n).replace(/'/g,"\\'")}')">Remove</button>
+            <button class="btn btn-outline btn-small" style="width:100%;margin-top:4px;" onclick="removeFriend('${escapeHtml(n).replace(/'/g,"'")}')">Remove</button>
           </div>`;
         }).join('')
       : `<div class="panel" style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;line-height:1.6;">No friends yet.<br>Scan someone's QR code at an event to add them.</div>`;

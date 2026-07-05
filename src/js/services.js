@@ -140,3 +140,25 @@ async function loadUserProfile(userId) {
   try { const { data } = await sb.from('users').select('*').eq('id', userId).single(); return data || null; }
   catch (e) { return null; }
 }
+
+async function getHostingProgress() {
+  const user = await authCurrentUser();
+  if (!user) return { eligible: false, ageVerified: false, eventsCheckedIn: 0, eventsRequired: 3, connections: 0, connectionsRequired: 3 };
+
+  try {
+    const { data, error } = await sb.rpc('get_hosting_progress');
+    if (error) throw error;
+    
+    return {
+      ageVerified: data.age_verified,
+      eventsCheckedIn: data.events_checked_in,
+      eventsRequired: data.events_required,
+      connections: data.connections,
+      connectionsRequired: data.connections_required,
+      eligible: data.eligible
+    };
+  } catch (e) {
+    return { eligible: false, ageVerified: false, eventsCheckedIn: 0, eventsRequired: 3, connections: 0, connectionsRequired: 3 };
+  }
+}
+
