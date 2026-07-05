@@ -6,19 +6,19 @@
 # This workflow serialises deployments (concurrency group below) so pushes
 # queue instead of colliding.
 #
-# ── ACTIVATION (one-time, avoids any failing runs) ──────────────────────────
-#   1. Repo Settings → Pages → Build and deployment → Source → "GitHub Actions".
-#   2. Then change the trigger below from `workflow_dispatch` to:
-#          on:
-#            push: { branches: [main] }
-#            workflow_dispatch:
-#      (or just tell me and I'll flip it). It is dispatch-only for now so it
-#      never runs — and never fails — while the source is still "branch".
+# ── HOW IT WORKS ─────────────────────────────────────────────────────────────
+#   Pages Source must be set to "GitHub Actions" in:
+#     Repo Settings → Pages → Build and deployment → Source
+#   This workflow triggers on every push to main AND manual dispatch.
+#   The concurrency group below serialises deploys so rapid pushes queue
+#   instead of colliding (which caused the recurring red ✗ failures).
 # ────────────────────────────────────────────────────────────────────────────
 
 name: Deploy to GitHub Pages
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
