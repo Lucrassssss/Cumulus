@@ -445,7 +445,7 @@ const DEFAULT_MAPBOX_TOKEN=(window.CUMULUS_CONFIG&&window.CUMULUS_CONFIG.MAPBOX_
 let MAPBOX_TOKEN=DEFAULT_MAPBOX_TOKEN;
 function mapboxConfigured(){ return !!(MAPBOX_TOKEN&&MAPBOX_TOKEN.trim()); }
 // Switched to Mapbox Standard Style to seamlessly support toggle properties without map reload.
-function mapboxStyleUrl(){ return 'mapbox://styles/mapbox/standard'; }
+function mapboxStyleUrl(){ return 'mapbox://styles/mapbox/standard?optimize=true'; }
 // Secret-club map chrome: theme-linked lighting, and on the explore map a
 // decluttered "underground" feel — hide commercial POI + transit labels so
 // the only pins that matter are our events. Safe no-op if the style isn't
