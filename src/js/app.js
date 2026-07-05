@@ -2667,7 +2667,10 @@ function initLeaflet(){
     center:[-0.1276,51.5072], zoom:12,
     fadeDuration:300,
     attributionControl:false,
-    maxPitch:85, pitch:45, dragPitch:true, touchPitch:true, pitchWithRotate:true
+    maxPitch:85, pitch:45, dragPitch:true, touchPitch:true, pitchWithRotate:true,
+    crossSourceCollisions: false,
+    localIdeographFontFamily: "'Noto Sans', 'Helvetica Neue', Arial, sans-serif",
+    prefetchZoomDelta: 2
   });
   lmap.addControl(new mapboxgl.NavigationControl({showCompass:true,showZoom:true}),'top-right');
   lmap.addControl(new WeatherControl(), 'top-right');
@@ -2698,7 +2701,10 @@ function initHostMap(){
     center:[newEventLon,newEventLat], zoom:13,
     fadeDuration:300,
     attributionControl:false,
-    maxPitch:0, pitch:0, dragPitch:false, touchPitch:false, pitchWithRotate:false
+    maxPitch:0, pitch:0, dragPitch:false, touchPitch:false, pitchWithRotate:false,
+    crossSourceCollisions: false,
+    localIdeographFontFamily: "'Noto Sans', 'Helvetica Neue', Arial, sans-serif",
+    prefetchZoomDelta: 2
   });
   hostMap.addControl(new mapboxgl.NavigationControl({showCompass:true}),'top-right');
   hostMap.on('style.load', () => {
