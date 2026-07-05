@@ -18,7 +18,7 @@ module.exports = defineConfig({
     trace: 'on-first-retry',
     // Smoke tests assert UI rendering only, so they pass even when the
     // external Supabase/Mapbox/font CDNs are unreachable (sandbox/CI).
-    launchOptions: { executablePath: CHROMIUM },
+    launchOptions: process.env.PW_CHROMIUM_PATH ? { executablePath: process.env.PW_CHROMIUM_PATH } : {},
   },
   projects: [
     { name: 'mobile',  use: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 } },
