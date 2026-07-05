@@ -2677,6 +2677,12 @@ function initLeaflet(){
     // Default to time-based theme for safety, overridden by real weather shortly
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     lmap.setConfigProperty('basemap', 'lightPreset', isDark ? 'night' : 'day');
+    
+    // Performance optimizations: disable expensive 3D trees and clutter labels, keep 3D buildings
+    lmap.setConfigProperty('basemap', 'show3dTrees', false);
+    lmap.setConfigProperty('basemap', 'showPointOfInterestLabels', false);
+    lmap.setConfigProperty('basemap', 'showTransitLabels', false);
+
     // Fetch and apply real London weather!
     applyRealWeather(lmap);
   });
@@ -2698,6 +2704,9 @@ function initHostMap(){
   hostMap.on('style.load', () => {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     hostMap.setConfigProperty('basemap', 'lightPreset', isDark ? 'night' : 'day');
+    hostMap.setConfigProperty('basemap', 'show3dTrees', false);
+    hostMap.setConfigProperty('basemap', 'showPointOfInterestLabels', false);
+    hostMap.setConfigProperty('basemap', 'showTransitLabels', false);
     hostMap.setFog(null);
     hostMap.setRain(null);
     hostMap.setSnow(null);
