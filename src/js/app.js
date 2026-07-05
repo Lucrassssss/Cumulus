@@ -349,7 +349,7 @@ const CALENDAR_MONTH=nowObj.getMonth();
 const MONTH_NAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const WEEKDAY_LABELS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const BLOT_SVG=`<svg class="blot-icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill="var(--gold)" d="M10 1c2 1 4 2 5 4.5 1 2.3 1 4.6-0.3 6.6-1.3 2-3.6 3.3-5.7 4.8-1-1.3-2.7-2-4.2-3.2C2.8 12 1.3 9.8 1.8 7.3 2.3 4.7 4.7 3 7 1.8 8 1.3 9 0.7 10 1Z"/></svg>`;
-const EMAIL_PATTERN=/^[^s@]+@[^s@]+.[^s@]+$/;
+const EMAIL_PATTERN=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 let state={view:'browse',selectedEventId:null,selectedCategory:'all',calendarDay:null,
   userId:null,
