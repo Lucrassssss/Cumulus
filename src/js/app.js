@@ -454,6 +454,7 @@ function applyMapChrome(map, declutter){
   if(!map) return;
   try{
     map.setConfigProperty('basemap','lightPreset', state.theme==='dark' ? 'night' : 'day');
+    map.setConfigProperty('basemap', 'show3dTrees', false); // Universally disable trees for performance
     if(declutter){
       map.setConfigProperty('basemap','showPointOfInterestLabels', false);
       map.setConfigProperty('basemap','showTransitLabels', false);
@@ -2532,6 +2533,7 @@ class WeatherControl {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const light = isDark ? 'night' : 'day';
     this._map.setConfigProperty('basemap', 'lightPreset', light);
+    this._map.setConfigProperty('basemap', 'show3dTrees', false);
 
     if (stateName === 'clear') {
       btn.innerHTML = '☀️';
@@ -2607,6 +2609,7 @@ async function applyRealWeather(map, force = false) {
     }
     
     map.setConfigProperty('basemap', 'lightPreset', light);
+    map.setConfigProperty('basemap', 'show3dTrees', false);
 
     // Weather codes (WMO)
     const code = w.weathercode;
