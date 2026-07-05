@@ -2502,7 +2502,7 @@ class WeatherControl {
     btn.innerHTML = '🌍';
     btn.style.fontSize = '16px';
     
-    this._states = ['live', 'clear', 'rain', 'snow', 'fog'];
+    this._states = ['live', 'clear', 'dawn', 'dusk', 'rain', 'snow', 'fog'];
     this._currentState = 0;
     
     btn.onclick = () => {
@@ -2536,6 +2536,14 @@ class WeatherControl {
     if (stateName === 'clear') {
       btn.innerHTML = '☀️';
       btn.title = 'Weather: Simulated Clear';
+    } else if (stateName === 'dawn') {
+      btn.innerHTML = '🌅';
+      btn.title = 'Weather: Simulated Dawn';
+      this._map.setConfigProperty('basemap', 'lightPreset', 'dawn');
+    } else if (stateName === 'dusk') {
+      btn.innerHTML = '🌇';
+      btn.title = 'Weather: Simulated Dusk';
+      this._map.setConfigProperty('basemap', 'lightPreset', 'dusk');
     } else if (stateName === 'rain') {
       btn.innerHTML = '🌧️';
       btn.title = 'Weather: Simulated Rain';
