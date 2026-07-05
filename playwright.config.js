@@ -25,7 +25,7 @@ module.exports = defineConfig({
     { name: 'desktop', use: { viewport: { width: 1440, height: 900 } } },
   ],
   webServer: {
-    command: 'python3 -m http.server 3457',
+    command: 'python -m http.server 3457',
     url: 'http://localhost:3457',
     reuseExistingServer: true,
     timeout: 20_000,
