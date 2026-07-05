@@ -2488,6 +2488,83 @@ function clearMapFilters(){
   refreshFilters(); refreshMarkers();
 }
 
+class WeatherControl {
+  onAdd(map) {
+    this._map = map;
+    this._container = document.createElement('div');
+    this._container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
+    
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.title = 'Cycle Weather & Time';
+    btn.innerHTML = '☀️';
+    btn.style.fontSize = '16px';
+    
+    this._states = ['day-clear', 'dusk-fog', 'night-rain', 'night-snow', 'dawn-clear'];
+    this._currentState = 0;
+    
+    btn.onclick = () => {
+      this._currentState = (this._currentState + 1) % this._states.length;
+      this.applyState(this._states[this._currentState], btn);
+    };
+    
+    this._container.appendChild(btn);
+    return this._container;
+  }
+  
+  applyState(state, btn) {
+    if(!this._map.setRain) return; // safety check
+    this._map.setRain(null);
+    this._map.setSnow(null);
+    this._map.setFog(null);
+    
+    if (state === 'day-clear') {
+      this._map.setConfigProperty('basemap', 'lightPreset', 'day');
+      btn.innerHTML = '☀️';
+    } else if (state === 'dusk-fog') {
+      this._map.setConfigProperty('basemap', 'lightPreset', 'dusk');
+      this._map.setFog({
+        'range': [0.5, 3],
+        'color': '#8e99a8',
+        'high-color': '#245bdf',
+        'space-color': '#0b1626',
+        'star-intensity': 0.2
+      });
+      btn.innerHTML = '🌫️';
+    } else if (state === 'night-rain') {
+      this._map.setConfigProperty('basemap', 'lightPreset', 'night');
+      this._map.setRain({ density: 1, intensity: 1, color: '#a0b0c0' });
+      this._map.setFog({
+        'range': [1, 5],
+        'color': '#111',
+        'high-color': '#222',
+        'space-color': '#000',
+        'star-intensity': 0.8
+      });
+      btn.innerHTML = '🌧️';
+    } else if (state === 'night-snow') {
+      this._map.setConfigProperty('basemap', 'lightPreset', 'night');
+      this._map.setSnow({ density: 1, intensity: 1, color: '#ffffff' });
+      this._map.setFog({
+        'range': [1, 4],
+        'color': '#223',
+        'high-color': '#112',
+        'space-color': '#000',
+        'star-intensity': 1.0
+      });
+      btn.innerHTML = '❄️';
+    } else if (state === 'dawn-clear') {
+      this._map.setConfigProperty('basemap', 'lightPreset', 'dawn');
+      btn.innerHTML = '🌅';
+    }
+  }
+
+  onRemove() {
+    this._container.parentNode.removeChild(this._container);
+    this._map = undefined;
+  }
+}
+
 function initLeaflet(){
   if(lmap||typeof mapboxgl==='undefined'||!mapboxConfigured()) return;
   const host=document.getElementById('main-map'); if(!host) return;
@@ -2497,12 +2574,16 @@ function initLeaflet(){
     center:[-0.1276,51.5072], zoom:12,
     fadeDuration:300,
     attributionControl:false,
-    maxPitch:0, pitch:0, dragPitch:false, touchPitch:false, pitchWithRotate:false
+    maxPitch:85, pitch:45, dragPitch:true, touchPitch:true, pitchWithRotate:true
   });
   lmap.addControl(new mapboxgl.NavigationControl({showCompass:true,showZoom:true}),'top-right');
+  lmap.addControl(new WeatherControl(), 'top-right');
   lmap.on('style.load', () => {
     applyMapChrome(lmap, true);
     attachMapLayers();
+    // Default to time-based theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    lmap.setConfigProperty('basemap', 'lightPreset', isDark ? 'night' : 'day');
   });
 }
 
