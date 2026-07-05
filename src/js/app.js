@@ -2488,6 +2488,8 @@ function clearMapFilters(){
   refreshFilters(); refreshMarkers();
 }
 
+window.CUMULUS_WEATHER_MODE = 'live';
+
 class WeatherControl {
   onAdd(map) {
     this._map = map;
@@ -2505,7 +2507,8 @@ class WeatherControl {
     
     btn.onclick = () => {
       this._currentState = (this._currentState + 1) % this._states.length;
-      this.applyState(this._states[this._currentState], btn);
+      window.CUMULUS_WEATHER_MODE = this._states[this._currentState];
+      this.applyState(window.CUMULUS_WEATHER_MODE, btn);
     };
     
     this._container.appendChild(btn);
@@ -2518,7 +2521,7 @@ class WeatherControl {
     if (stateName === 'live') {
       btn.innerHTML = '🌍';
       btn.title = 'Weather: Live (London)';
-      applyRealWeather(this._map);
+      applyRealWeather(this._map, true);
       return;
     }
 
@@ -2559,9 +2562,13 @@ class WeatherControl {
   }
 }
 
-async function applyRealWeather(map) {
+let _weatherPollInterval = null;
+
+async function applyRealWeather(map, force = false) {
+  if (window.CUMULUS_WEATHER_MODE !== 'live' && !force) return;
+  
   try {
-    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=51.5072&longitude=-0.1276&current_weather=true');
+    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=51.5072&longitude=-0.1276&current_weather=true&daily=sunrise,sunset&timezone=Europe%2FLondon');
     const data = await res.json();
     const w = data.current_weather;
     if (!w) return;
@@ -2571,8 +2578,26 @@ async function applyRealWeather(map) {
     map.setSnow(null);
     map.setFog(null);
 
-    // Set day/night based on real local time
-    const light = w.is_day === 1 ? 'day' : 'night';
+    // Calculate precision day/dawn/dusk/night based on real local time
+    const now = new Date();
+    const sunrise = new Date(data.daily.sunrise[0]);
+    const sunset = new Date(data.daily.sunset[0]);
+    
+    let light = 'day';
+    const msIn45Mins = 45 * 60 * 1000;
+    
+    if (now < new Date(sunrise.getTime() - msIn45Mins)) {
+      light = 'night';
+    } else if (now < sunrise) {
+      light = 'dawn';
+    } else if (now < sunset) {
+      light = 'day';
+    } else if (now < new Date(sunset.getTime() + msIn45Mins)) {
+      light = 'dusk';
+    } else {
+      light = 'night';
+    }
+    
     map.setConfigProperty('basemap', 'lightPreset', light);
 
     // Weather codes (WMO)
@@ -2585,19 +2610,18 @@ async function applyRealWeather(map) {
         'color': light === 'day' ? '#e0e5eb' : '#111',
         'high-color': light === 'day' ? '#b0c4de' : '#222',
         'space-color': '#000',
-        'star-intensity': light === 'day' ? 0 : 0.8
+        'star-intensity': (light === 'night' || light === 'dusk' || light === 'dawn') ? 0.8 : 0
       });
     }
     // Drizzle / Rain (51-67, 80-82)
     else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
       map.setRain({ density: 1, intensity: code >= 63 ? 1 : 0.5, color: light === 'day' ? '#8a9ba8' : '#a0b0c0' });
-      // Light fog for rain mood
       map.setFog({
         'range': [1, 5],
         'color': light === 'day' ? '#c8d2d9' : '#111',
         'high-color': light === 'day' ? '#9fb1be' : '#222',
         'space-color': '#000',
-        'star-intensity': light === 'day' ? 0 : 0.5
+        'star-intensity': (light === 'night' || light === 'dusk' || light === 'dawn') ? 0.5 : 0
       });
     }
     // Snow (71-77, 85-86)
@@ -2608,13 +2632,18 @@ async function applyRealWeather(map) {
         'color': light === 'day' ? '#eef2f5' : '#223',
         'high-color': light === 'day' ? '#d9e2e8' : '#112',
         'space-color': '#000',
-        'star-intensity': light === 'day' ? 0 : 1.0
+        'star-intensity': (light === 'night' || light === 'dusk' || light === 'dawn') ? 1.0 : 0
       });
     }
     // Thunderstorm (95, 96, 99)
     else if (code >= 95) {
       map.setRain({ density: 1, intensity: 1, color: '#556677' });
-      map.setConfigProperty('basemap', 'lightPreset', 'dusk'); // Darken for storm
+      if (light === 'day') map.setConfigProperty('basemap', 'lightPreset', 'dusk'); // Darken for storm
+    }
+
+    // Schedule next poll in 15 minutes to keep it continuously synced
+    if (!_weatherPollInterval) {
+      _weatherPollInterval = setInterval(() => { applyRealWeather(map); }, 15 * 60 * 1000);
     }
   } catch(e) {
     console.error('Failed to load real weather', e);
