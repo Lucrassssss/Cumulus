@@ -2640,6 +2640,7 @@ function initLeaflet(){
     // Default to time-based theme for safety, overridden by real weather shortly
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     lmap.setConfigProperty('basemap', 'lightPreset', isDark ? 'night' : 'day');
+    lmap.setConfigProperty('basemap', 'show3dObjects', false); // Fully 2D layout for performance
     // Fetch and apply real London weather!
     applyRealWeather(lmap);
   });
@@ -2658,6 +2659,14 @@ function initHostMap(){
     maxPitch:0, pitch:0, dragPitch:false, touchPitch:false, pitchWithRotate:false
   });
   hostMap.addControl(new mapboxgl.NavigationControl({showCompass:true}),'top-right');
+  hostMap.on('style.load', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    hostMap.setConfigProperty('basemap', 'lightPreset', isDark ? 'night' : 'day');
+    hostMap.setConfigProperty('basemap', 'show3dObjects', false);
+    hostMap.setFog(null);
+    hostMap.setRain(null);
+    hostMap.setSnow(null);
+  });
   hostMap.on('style.load', () => {
     applyMapChrome(hostMap, false);
   });
