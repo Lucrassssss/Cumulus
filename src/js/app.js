@@ -2667,7 +2667,7 @@ function initLeaflet(){
     center:[-0.1276,51.5072], zoom:12,
     fadeDuration:300,
     attributionControl:false,
-    maxPitch:0, pitch:0, dragPitch:false, touchPitch:false, pitchWithRotate:false
+    maxPitch:85, pitch:45, dragPitch:true, touchPitch:true, pitchWithRotate:true
   });
   lmap.addControl(new mapboxgl.NavigationControl({showCompass:true,showZoom:true}),'top-right');
   lmap.addControl(new WeatherControl(), 'top-right');
