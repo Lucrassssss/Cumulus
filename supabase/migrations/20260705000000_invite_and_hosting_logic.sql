@@ -56,6 +56,12 @@ create table if not exists public.users (
   onboarded_at     timestamptz,                 -- set when an invite is redeemed
   created_at       timestamptz not null default now()
 );
+-- Reconcile an existing users table: add Velvet Rope columns if missing.
+alter table public.users add column if not exists display_name    text;
+alter table public.users add column if not exists role            public.user_role default 'eventee';
+alter table public.users add column if not exists age_verified_at timestamptz;
+alter table public.users add column if not exists invited_by      uuid;
+alter table public.users add column if not exists onboarded_at    timestamptz;
 
 -- 2.2 invite_codes — the velvet rope.
 --   * friend codes:  uses_left counts down (issued 3-per-user, single use each);
@@ -107,6 +113,53 @@ create table if not exists public.events (
   price       numeric(10,2) not null default 0,
   created_at  timestamptz not null default now()
 );
+-- Reconcile an existing events table: add columns the Velvet Rope model needs
+-- but that the original events_table migration didn't have.
+alter table public.events add column if not exists visibility  public.event_visibility;
+alter table public.events add column if not exists starts_at   timestamptz;
+alter table public.events add column if not exists ends_at     timestamptz;
+-- Backfill: default existing rows to 'public' visibility if NULL
+update public.events set visibility = 'public' where visibility is null;
+
+-- ── Migrate events.id from bigint → uuid if the table predates this schema ──
+-- The original events table used bigint; the Velvet Rope model needs uuid for
+-- FK consistency. This block safely converts only if the column is still bigint.
+do $$
+declare
+  col_type text;
+begin
+  select data_type into col_type
+    from information_schema.columns
+   where table_schema = 'public'
+     and table_name   = 'events'
+     and column_name  = 'id';
+
+  if col_type = 'bigint' then
+    -- Drop existing constraints that reference the old bigint type
+    -- (rsvps, event_attendees, etc. will be recreated below)
+    execute 'alter table public.events drop constraint if exists events_pkey cascade';
+    execute 'alter table public.events alter column id drop default';
+    execute 'alter table public.events alter column id type uuid using gen_random_uuid()';
+    execute 'alter table public.events alter column id set default gen_random_uuid()';
+    execute 'alter table public.events add primary key (id)';
+  end if;
+end $$;
+
+-- Ensure host_id FK references public.users if not already
+do $$
+begin
+  if not exists (
+    select 1 from information_schema.table_constraints
+    where table_schema = 'public' and table_name = 'events'
+      and constraint_name = 'events_host_id_fkey'
+  ) then
+    begin
+      execute 'alter table public.events add constraint events_host_id_fkey foreign key (host_id) references public.users(id) on delete cascade';
+    exception when others then null;
+    end;
+  end if;
+end $$;
+
 create index if not exists events_host_idx       on public.events (host_id);
 create index if not exists events_visibility_idx on public.events (visibility);
 
@@ -152,9 +205,10 @@ create table if not exists public.admins (
 --    legitimately needs to count).
 -- ─────────────────────────────────────────────────────────────────────────
 
-create or replace function public.is_admin(p_user uuid default auth.uid())
+-- is_admin helper: reused in RLS policies.
+create or replace function public.is_admin()
 returns boolean language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.admins a where a.user_id = p_user);
+  select exists (select 1 from public.admins a where a.user_id = auth.uid());
 $$;
 
 create or replace function public.app_role(p_user uuid default auth.uid())
@@ -295,9 +349,9 @@ grant execute on function public.claim_invite_code(text) to authenticated;
 create or replace function public.gen_invite_code()
 returns text language sql volatile as $$
   select 'INV-'
-    || upper(substr(translate(encode(gen_random_bytes(4),'base64'),'+/=OIL01','ABCDEFG'),1,4))
+    || upper(substr(translate(encode(extensions.gen_random_bytes(4),'base64'),'+/=OIL01','ABCDEFG'),1,4))
     || '-'
-    || upper(substr(translate(encode(gen_random_bytes(4),'base64'),'+/=OIL01','HJKMNPQ'),1,4));
+    || upper(substr(translate(encode(extensions.gen_random_bytes(4),'base64'),'+/=OIL01','HJKMNPQ'),1,4));
 $$;
 
 -- On auth signup: create the public.users row and mint exactly 3 friend codes.

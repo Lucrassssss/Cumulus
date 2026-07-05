@@ -16,7 +16,6 @@
 -- ============================================================================
 
 create extension if not exists pgcrypto;
-
 create table if not exists public.events (
   id             uuid primary key default gen_random_uuid(),
   title          text not null,
@@ -36,7 +35,6 @@ create table if not exists public.events (
   night_shot_url text,
   created_at     timestamptz not null default now()
 );
-
 -- Reconcile an existing table: add any column the client needs but that a
 -- pre-existing schema may be missing. (No-ops where the column already exists.)
 alter table public.events add column if not exists category       text;
@@ -54,7 +52,6 @@ alter table public.events add column if not exists capacity       integer;
 alter table public.events add column if not exists price          numeric(10,2) default 0;
 alter table public.events add column if not exists night_shot_url text;
 alter table public.events add column if not exists created_at     timestamptz default now();
-
 create index if not exists events_start_time_idx on public.events (start_time);
 create index if not exists events_category_idx   on public.events (category);
 create index if not exists events_host_idx       on public.events (host_id);
