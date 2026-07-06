@@ -1,10 +1,35 @@
-const CACHE = 'cumulus-v2';
+const CACHE = 'cumulus-v3';
+const ASSETS = [
+  './',
+  './index.html',
+  './src/css/styles.css',
+  './src/js/config.js',
+  './src/js/services.js',
+  './src/js/app.js',
+  './manifest.json',
+  './assets/icons/icon.svg',
+  './assets/icons/favicon-32.png',
+  './assets/icons/apple-touch-icon.png',
+  './assets/clouds/cloud1.webp',
+  './assets/clouds/cloud2.webp',
+  './assets/clouds/cloud3.webp',
+  './assets/clouds/cloud4.webp',
+  './assets/clouds/cloud5.webp',
+  './assets/img/connect.svg',
+  './assets/img/discover.svg',
+  './assets/img/hero-rooftops.svg',
+  './assets/img/pass.svg',
+  './assets/img/venues-network.svg',
+  './assets/og-image.png'
+];
+
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.add('./'))
+    caches.open(CACHE).then(c => c.addAll(ASSETS))
   );
   self.skipWaiting();
 });
+
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
@@ -12,6 +37,7 @@ self.addEventListener('activate', e => {
       .then(() => self.clients.claim())
   );
 });
+
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(

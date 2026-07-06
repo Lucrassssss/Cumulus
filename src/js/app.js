@@ -355,7 +355,8 @@ let state={view:'browse',selectedEventId:null,selectedCategory:'all',calendarDay
   userId:null,
   profileName:'',profileEmail:'',profileId:null,specialBadges:[],theme:'light',
   editingProfile:false,myCard:null,rsvps:{},attendeeCards:{},chats:{},friends:[],friendsOnly:false,goingOpen:{},liveOnly:false,hotOnly:false,
-  curatorVerified:false,curatorCode:null,curatorTier:null,checkedInEventId:null};
+  curatorVerified:false,curatorCode:null,curatorTier:null,checkedInEventId:null,
+  bgLoading:false};
 let cardDraft={theme:'obsidian',bgStyle:'obsidian',accentColor:'#CBA43A',pattern:'constellation',patternOpacity:0.35,bio:'',interests:'',fact:'',motto:'',photo:'',areas:[]};
 let cardEditorEventId=null;
 let lmap=null,lmapFitted=false;
@@ -549,35 +550,77 @@ async function start(){
   startDayNightCycle();
   MAPBOX_TOKEN=DEFAULT_MAPBOX_TOKEN;
 
-  // Real auth (Phase 2): the source of truth is the Supabase Auth session.
-  // If a member is signed in, restore their profile and enter the app. Any
-  // failure here must never blank the app — fall through to the gate.
-  const authUser=await authCurrentUser();
-  if(authUser){
-    let profile=await loadUserProfile(authUser.id);
-    if(!profile){
-      // Authenticated but the profile fetch failed (offline). Restore display
-      // fields from the cached snapshot; writes still carry the real JWT.
-      try{
-        const raw=await localGet('cumulus_session');
-        if(raw){ const s=JSON.parse(raw); if(s&&s.userId===authUser.id&&s.name){
-          profile={id:s.userId,name:s.name,email:s.email,profile_id:s.profileId,special_badges:s.specialBadges,theme:s.theme};
-        } }
-      }catch(e){}
-    }
-    if(profile&&profile.name){
-      _restoreUserFromRow(profile);
-      state.profileEmail=profile.email||authUser.email||'';
-      // Theme stays on the day/night cycle — no per-profile override.
-      await localSet('cumulus_email',state.profileEmail);
-      _cacheSession();
-      enterApp();
-      return;
-    }
-    // Signed in but no usable profile yet (mid-onboarding) — show the gate.
-  }
-  // Not signed in — show the gate
+  // Render the gate (landing page) immediately so the user lands on it instantly.
+  // This will also remove the default 'optimising map data' loading overlay.
   renderGate();
+
+  // Real auth (Phase 2): the source of truth is the Supabase Auth session.
+  // We check this in the background without blocking the landing page.
+  authCurrentUser().then(async (authUser) => {
+    if(authUser){
+      let profile=await loadUserProfile(authUser.id);
+      if(!profile){
+        // Authenticated but the profile fetch failed (offline). Restore display
+        // fields from the cached snapshot; writes still carry the real JWT.
+        try{
+          const raw=await localGet('cumulus_session');
+          if(raw){ const s=JSON.parse(raw); if(s&&s.userId===authUser.id&&s.name){
+            profile={id:s.userId,name:s.name,email:s.email,profile_id:s.profileId,special_badges:s.specialBadges,theme:s.theme};
+          } }
+        }catch(e){}
+      }
+      if(profile&&profile.name){
+        _restoreUserFromRow(profile);
+        state.profileEmail=profile.email||authUser.email||'';
+        // Theme stays on the day/night cycle — no per-profile override.
+        await localSet('cumulus_email',state.profileEmail);
+        _cacheSession();
+
+        // Already signed in! Initialize map and enter app in the background.
+        // We flag bgLoading = true, add a class to #app to keep it invisible,
+        // and call enterApp().
+        state.bgLoading = true;
+        const app = document.getElementById('app');
+        if (app) {
+          app.classList.add('app-bg-loading');
+        }
+
+        // Define clean transition logic once background load completes
+        const finishBgTransition = () => {
+          if (!state.bgLoading) return;
+          state.bgLoading = false;
+
+          const gate = document.getElementById('gate-root');
+          if (gate) {
+            gate.classList.add('gate-fade-out');
+            setTimeout(() => {
+              gate.innerHTML = '';
+              gate.classList.remove('gate-fade-out');
+            }, 500);
+          }
+
+          if (app) {
+            app.classList.remove('app-bg-loading');
+            app.classList.add('app-fade-in');
+            setTimeout(() => app.classList.remove('app-fade-in'), 500);
+          }
+
+          // Double check resize to make sure Mapbox compiles with correct bounds
+          if (lmap) lmap.resize();
+        };
+
+        // Safety timeout: transition after 5s regardless of map idle state to ensure app never hangs
+        setTimeout(finishBgTransition, 5000);
+
+        // Store a reference to resolve background loading once map standard style and markers are settled
+        window.resolveBgLoad = finishBgTransition;
+
+        enterApp();
+      }
+    }
+  }).catch(e => {
+    console.error('Background boot failed:', e);
+  });
 }
 
 /* ── Landing diorama — layered paper-cut London, theme-lit ──────────────
@@ -819,6 +862,11 @@ const DIORAMA_FRONT_SVG=`
 </svg>`;
 
 function renderGate(prefillName,prefillEmail){
+  const loader = document.getElementById('cumulus-loader');
+  if (loader) {
+    loader.style.opacity = '0';
+    setTimeout(() => loader.remove(), 500);
+  }
   document.getElementById('gate-root').innerHTML=`
   <div class="lp-root">
 
@@ -2781,6 +2829,10 @@ function initLeaflet(){
       if (loader) {
         loader.style.opacity = '0';
         setTimeout(() => loader.remove(), 500);
+      }
+      // If we were background loading, transition into the app now!
+      if (typeof window.resolveBgLoad === 'function') {
+        window.resolveBgLoad();
       }
     }, 2500);
   });
