@@ -2771,12 +2771,15 @@ function initLeaflet(){
   });
 
   // Hide the immersive loader once Mapbox has fully compiled shaders and loaded tiles
+  // We add a 2.5 second buffer after 'idle' to ensure HTML markers are fully painted and JIT is settled
   lmap.once('idle', () => {
-    const loader = document.getElementById('cumulus-loader');
-    if (loader) {
-      loader.style.opacity = '0';
-      setTimeout(() => loader.remove(), 500);
-    }
+    setTimeout(() => {
+      const loader = document.getElementById('cumulus-loader');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.remove(), 500);
+      }
+    }, 2500);
   });
 }
 
