@@ -2318,10 +2318,181 @@ function buildEventsGeoJSON(){
   };
 }
 
+// ── WebGL Lightning Beacon ────────────────────────────────────────────────
+// Pure WebGL effect — zero DOM thrashing. Uses fill-extrusion (vertical
+// beam) + circle (ground shockwave) driven by a requestAnimationFrame loop.
+// Replaces mapboxgl.Marker() for the "selected event" highlight entirely.
+
+/**
+ * createGeoJSONCircle — builds a GeoJSON Polygon approximating a circle.
+ * Mapbox fill-extrusion requires a polygon; it cannot extrude a Point.
+ *
+ * @param {[number,number]} center  [lng, lat]
+ * @param {number}          radiusM Radius in metres
+ * @param {number}          pts     Polygon vertex count (default 32)
+ * @returns {object}  GeoJSON Feature<Polygon>
+ */
+function createGeoJSONCircle(center, radiusM, pts = 32) {
+  const [lng, lat] = center;
+  const coords = [];
+  // Convert metres → rough degrees (equirectangular approximation fine at city scale)
+  const dLat = (radiusM / 111320);           // metres per degree latitude
+  const dLng = radiusM / (111320 * Math.cos(lat * Math.PI / 180));
+  for (let i = 0; i <= pts; i++) {
+    const angle = (i / pts) * 2 * Math.PI;
+    coords.push([
+      lng + dLng * Math.cos(angle),
+      lat + dLat * Math.sin(angle)
+    ]);
+  }
+  return {
+    type: 'Feature',
+    geometry: { type: 'Polygon', coordinates: [coords] },
+    properties: {}
+  };
+}
+
+/**
+ * spawnLightningBeacon — adds a WebGL energy beacon at lngLat on mapInstance.
+ *
+ * Sources / layers added (all namespaced by eventId to allow coexistence):
+ *   beacon-beam-src-{id}   GeoJSON polygon  → fill-extrusion (vertical beam)
+ *   beacon-wave-src-{id}   GeoJSON point    → circle (ground shockwave)
+ *
+ * The rAF loop strobe-flickers the beam opacity (chaotic lightning feel) and
+ * pulses the shockwave radius outward while fading opacity to zero.
+ *
+ * Usage (replaces new mapboxgl.Marker(el).setLngLat([lon,lat]).addTo(lmap)):
+ *   const beacon = spawnLightningBeacon(lmap, [ev.lon, ev.lat], ev.id, color);
+ *   // later: beacon.destroy();
+ *
+ * @param {mapboxgl.Map}     mapInstance
+ * @param {[number,number]}  lngLat   [longitude, latitude]
+ * @param {string|number}    eventId  Unique event identifier
+ * @param {string}           color    CSS hex or rgb colour for the beam
+ * @returns {{ destroy: Function }}  Call .destroy() to tear down cleanly
+ */
+function spawnLightningBeacon(mapInstance, lngLat, eventId, color = '#0ea5e9') {
+  const id        = String(eventId).replace(/[^a-zA-Z0-9]/g, '_');
+  const beamSrcId = `beacon-beam-src-${id}`;
+  const waveSrcId = `beacon-wave-src-${id}`;
+  const beamLyrId = `beacon-beam-${id}`;
+  const waveLyrId = `beacon-wave-${id}`;
+
+  let rafId       = null;
+  let destroyed   = false;
+
+  // ── Add GeoJSON sources ──────────────────────────────────────────────────
+  // Beam source: small polygon so fill-extrusion has geometry to extrude
+  mapInstance.addSource(beamSrcId, {
+    type: 'geojson',
+    data: createGeoJSONCircle(lngLat, 8, 32)   // 8-metre footprint
+  });
+
+  // Shockwave source: simple Point for the flat circle
+  mapInstance.addSource(waveSrcId, {
+    type: 'geojson',
+    data: { type: 'FeatureCollection', features: [{
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: lngLat },
+      properties: {}
+    }]}
+  });
+
+  // ── Add Layers ───────────────────────────────────────────────────────────
+  // Beam: fill-extrusion shoots 2500 m into the sky with vertical gradient
+  mapInstance.addLayer({
+    id: beamLyrId,
+    type: 'fill-extrusion',
+    source: beamSrcId,
+    paint: {
+      'fill-extrusion-color': color,
+      'fill-extrusion-height': 2500,
+      'fill-extrusion-base': 0,
+      'fill-extrusion-opacity': 0.85,
+      'fill-extrusion-vertical-gradient': true
+    }
+  });
+
+  // Shockwave: flat circle on the ground plane, pitch-aligned to the terrain
+  mapInstance.addLayer({
+    id: waveLyrId,
+    type: 'circle',
+    source: waveSrcId,
+    paint: {
+      'circle-color': color,
+      'circle-radius': 0,
+      'circle-opacity': 0.8,
+      'circle-pitch-alignment': 'map',   // lies flat on 3D terrain
+      'circle-pitch-scale': 'map'
+    }
+  });
+
+  // ── Animation Loop ───────────────────────────────────────────────────────
+  // Beam: chaotic lightning strobe — random flickers at ~60fps
+  // Shockwave: radius expands 0→120px, opacity 0.8→0 over WAVE_PERIOD ms
+  const WAVE_PERIOD = 2000; // ms for one full shockwave pulse
+  const WAVE_MAX_R  = 120;  // px at 1:1 zoom — Mapbox scales automatically
+  let waveStart     = null;
+
+  // Lightning uses a 3-frame strobe sequence seeded by noise for chaos
+  let noiseT = Math.random() * 1000;
+
+  function tick(ts) {
+    if (destroyed) return;
+
+    // Graceful exit: if either layer was removed externally, shut down
+    if (!mapInstance.getLayer(beamLyrId) || !mapInstance.getLayer(waveLyrId)) {
+      destroyed = true;
+      return;
+    }
+
+    // ── Beam: chaotic lightning strobe ──
+    // Mix two sine waves at irrational frequencies to avoid periodicity,
+    // then clamp into a range that always keeps a minimum visible base.
+    noiseT += 0.08;
+    const n1 = Math.sin(noiseT * 1.7);
+    const n2 = Math.sin(noiseT * 3.1 + 0.9);
+    const n3 = Math.sin(noiseT * 7.3 + 2.1);
+    // Occasional hard-flash on peaks for the spark/surge effect
+    const flash = (n1 + n2 * 0.5 + n3 * 0.25 + 1.75) / 3.5; // 0–1
+    const beamOpacity = 0.2 + flash * 0.75; // range: 0.2–0.95
+    mapInstance.setPaintProperty(beamLyrId, 'fill-extrusion-opacity', beamOpacity);
+
+    // ── Shockwave: expanding ring that resets every WAVE_PERIOD ms ──
+    if (!waveStart) waveStart = ts;
+    const elapsed = (ts - waveStart) % WAVE_PERIOD;
+    const progress = elapsed / WAVE_PERIOD;            // 0 → 1
+    const waveR    = WAVE_MAX_R * progress;
+    const waveA    = 0.8 * (1 - progress);             // opacity fades out
+    mapInstance.setPaintProperty(waveLyrId, 'circle-radius',  waveR);
+    mapInstance.setPaintProperty(waveLyrId, 'circle-opacity', waveA);
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  rafId = requestAnimationFrame(tick);
+
+  // ── Public API ───────────────────────────────────────────────────────────
+  return {
+    destroy() {
+      destroyed = true;
+      if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+      try { mapInstance.removeLayer(beamLyrId); } catch(e) {}
+      try { mapInstance.removeLayer(waveLyrId); } catch(e) {}
+      try { mapInstance.removeSource(beamSrcId); } catch(e) {}
+      try { mapInstance.removeSource(waveSrcId); } catch(e) {}
+    }
+  };
+}
+
 let activePopup=null, activePopupEventId=null;
 let activeHtmlMarker=null;
+let activeBeacon=null;  // current lightning beacon (WebGL, replaces DOM marker)
 
 function removeActiveHtmlMarker(){
+  // Destroy WebGL beacon if one is live
+  if(activeBeacon){ try{ activeBeacon.destroy(); }catch(e){} activeBeacon=null; }
   if(activeHtmlMarker){ try{ activeHtmlMarker.remove(); }catch(e){} activeHtmlMarker=null; }
   closeActivePopup();
 }
@@ -2353,34 +2524,29 @@ function loadWebGLIcons(){
 }
 
 function openActiveEventMarker(evId){
-  removeActiveHtmlMarker();
+  removeActiveHtmlMarker(); // tears down prior beacon + popup
   const ev=EVENTS.find(e=>String(e.id)===String(evId));
-  if(!ev) return;
-  const color=CATS[ev.category].color;
-  const status=eventStatus(ev);
-  const att=attendeesFor(ev.id);
-  const friendGoing=att.some(isFriend);
-  const hot=isHotEvent(ev);
-  const chatOpen=chatIsOpen(ev)&&status!=='past';
-  const chatBadge=chatOpen?`<span class="pin-chat"><svg viewBox="0 0 20 20" width="7" height="7" fill="#fff"><path d="M18 2H2C.9 2 0 2.9 0 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></span>`:'';
-  
-  const el=document.createElement('div');
-  el.className='evpin-wrap active-pin-wrap';
-  el.innerHTML=`<div class="evpin ${status}${hot?' hot':''} open" style="--c:${color}">
-    ${status==='live'?'<span class="pulse-ring"></span><span class="pulse-ring r2"></span>':''}
-    <div class="pin"><span class="pin-dot"></span></div>
-    ${friendGoing?'<span class="pin-star">★</span>':''}
-    ${chatBadge}
-  </div>`;
-  
-  activeHtmlMarker=new mapboxgl.Marker({element:el,anchor:'center'}).setLngLat([ev.lon,ev.lat]).addTo(lmap);
-  
+  if(!ev||ev.lat==null||ev.lon==null) return;
+
+  const catData = CATS[ev.category] || {};
+  const color   = catData.color || '#CBA43A';
+  const status  = eventStatus(ev);
+
+  // ── WebGL Lightning Beacon (replaces DOM evpin marker entirely) ──────────
+  // spawnLightningBeacon returns a { destroy() } handle stored in activeBeacon.
+  // removeActiveHtmlMarker() calls .destroy() next time a new pin is selected
+  // or the map canvas is tapped empty.
+  if(lmap && ev.lon != null && ev.lat != null){
+    activeBeacon = spawnLightningBeacon(lmap, [ev.lon, ev.lat], ev.id, color);
+  }
+
+  // ── Mapbox Popup (unchanged — still a lightweight overlay, not DOM-heavy) ─
   const popup=new mapboxgl.Popup({
     offset:{top:[0,8],bottom:[0,-14],left:[14,0],right:[-14,0]},
     closeButton:false,closeOnClick:false,className:'evtip-popup',anchor:'bottom',maxWidth:'240px'
   }).setLngLat([ev.lon,ev.lat]).setHTML(pinTooltipHtml(ev)).addTo(lmap);
   activePopup=popup; activePopupEventId=ev.id;
-  
+
   const popupEl=popup.getElement();
   if(popupEl){
     popupEl.addEventListener('click',e=>{ e.stopPropagation(); removeActiveHtmlMarker(); openEvent(ev.id); });
