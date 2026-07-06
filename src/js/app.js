@@ -2070,7 +2070,7 @@ function onSearchInput(){ if(state.view!=='browse'){ state.view='browse'; state.
 function destroyMainMap(){
   if(lmap){
     try{
-      closeActivePopup();
+      removeActiveHtmlMarker();
       Object.values(htmlMarkerRefs).forEach(ref=>{
         if(ref.added){ ref.marker.remove(); if(ref.bubbleMarker) ref.bubbleMarker.remove(); }
       });
@@ -2346,8 +2346,9 @@ function loadWebGLIcons(){
     ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
     ctx.beginPath(); ctx.arc(size/2,size/2,8,0,Math.PI*2); ctx.fillStyle=cat.color; ctx.fill();
     ctx.beginPath(); ctx.arc(size/2,size/2,2.5,0,Math.PI*2); ctx.fillStyle='#ffffff'; ctx.fill();
-    const imageData=ctx.getImageData(0,0,size,size);
-    if(!lmap.hasImage('pin-'+name)) lmap.addImage('pin-'+name,imageData);
+    try {
+      lmap.addImage('pin-'+name,imageData);
+    } catch(e) {}
   });
 }
 
