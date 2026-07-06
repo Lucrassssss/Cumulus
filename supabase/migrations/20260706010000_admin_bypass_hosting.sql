@@ -62,11 +62,11 @@ grant execute on function public.get_hosting_progress(uuid) to authenticated;
 -- For now, the key effect is via the existing is_admin() checks in other RPCs.
 --
 -- If you ever enable RLS on public.events, uncomment these lines:
--- alter table public.events enable row level security;
--- create policy events_admin_all on public.events
---   for all to authenticated
---   using (public.is_admin())
---   with check (public.is_admin());
+alter table public.events enable row level security;
+create policy events_admin_all on public.events
+  for all to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
 
 -- ── Verification query (run in SQL editor to confirm setup) ────────────────
 -- select user_id, added_at from public.admins;

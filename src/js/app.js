@@ -3218,11 +3218,12 @@ async function submitHostEvent(){
       const abtn=document.getElementById('host-submit-btn');
       if(abtn){ abtn.disabled=true; abtn.textContent='Publishing…'; }
       const {data:aData,error:aErr}=await sb.from('events').insert({
-        title, category:cat,
+        title, category:cat, visibility:_hostType,
         host_id:state.userId, host_name:state.profileName,
         venue, area:areaName||'London', address:pubAddress,
         lat:newEventLat, lon:newEventLon,
         start_time:stDate.toISOString(), end_time:enDate.toISOString(),
+        starts_at:stDate.toISOString(), ends_at:enDate.toISOString(),
         description:desc, capacity:parseInt(capStr,10), price:priceVal
       }).select().single();
       if(abtn){ abtn.disabled=false; abtn.textContent='Publish event →'; }
@@ -3248,11 +3249,12 @@ async function submitHostEvent(){
     // Non-admin: queue in pending_events for owner approval
     const pubAddress=document.getElementById('host-address-search')?.value||'';
     const pending={
-      title, category:cat,
+      title, category:cat, visibility:_hostType,
       host_id:state.userId||null, host_name:state.profileName||'', host_email:state.profileEmail||'',
       venue, area:areaName||'London', address:pubAddress,
       lat:newEventLat, lon:newEventLon,
       start_time:stDate.toISOString(), end_time:enDate.toISOString(),
+      starts_at:stDate.toISOString(), ends_at:enDate.toISOString(),
       description:desc, capacity:parseInt(capStr,10), price:priceVal,
       status:'pending', created_at:new Date().toISOString()
     };
@@ -4297,11 +4299,12 @@ async function _publishApprovedEvent(rec){
   let inserted=null;
   try{
     const {data,error}=await sb.from('events').insert({
-      title:rec.title, category:rec.category,
+      title:rec.title, category:rec.category, visibility:rec.visibility||'public',
       host_id:rec.host_id, host_name:rec.host_name,
       venue:rec.venue, area:rec.area||'London', address:rec.address||'',
       lat:rec.lat, lon:rec.lon,
       start_time:rec.start_time, end_time:rec.end_time,
+      starts_at:rec.starts_at||rec.start_time, ends_at:rec.ends_at||rec.end_time,
       description:rec.description, capacity:rec.capacity, price:rec.price||0
     }).select().single();
     if(!error) inserted=data;
@@ -4508,7 +4511,16 @@ function renderDetail(id){
         <div class="attendee-list">${attendees.length?attendees.map(n=>{ const fr=isFriend(n); return `<div class="attendee-chip ${fr?'friend':''}"><div class="avatar" style="margin-left:0">${initials(n)}</div><span>${fr?'<span class="star">★</span> ':''}${escapeHtml(n)}</span></div>`; }).join(''):`<span style="color:var(--text-muted);font-size:13px;">No bookings yet.</span>`}</div>
       </div>
       ${going?`<div style="margin-top:20px;"><button class="btn" style="background:${c.color};color:#fff;width:100%;" onclick="openConnectGateway(${id})">Open Connect Space →</button></div>`:`<div class="connect-note">Book a ticket to unlock the Connect Space — see who's going and chat before the event.</div>`}
+      ${(state.isAdmin || ev.hostId === state.userId) ? `<div style="margin-top:10px;"><button class="btn btn-outline" style="color:#E23B3B;border-color:#E23B3B;width:100%;" onclick="if(confirm('Delete this event permanently?')) deleteEvent('${id}')">Delete Event</button></div>` : ''}
     </div>`;
+}
+
+async function deleteEvent(id) {
+  const { error } = await sb.from('events').delete().eq('id', id);
+  if (error) { showToast('Error deleting event: ' + error.message, 'error'); return; }
+  showToast('Event deleted', 'success');
+  EVENTS = EVENTS.filter(e => String(e.id) !== String(id));
+  goBack();
 }
 
 function renderConnect(id){
