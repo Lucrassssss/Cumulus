@@ -1460,6 +1460,8 @@ async function _submitHostApplication({name,email,bizName,hostDesc,whyHost}){
 // Cloud loading transition removed — enter the app directly.
 
 function enterApp() {
+  document.getElementById('gate-root').innerHTML = '';
+  document.body.style.overflow = '';
   const app = document.getElementById('app');
   app.style.display = '';
   // Always boot to the map — never restore a stale tab from memory
