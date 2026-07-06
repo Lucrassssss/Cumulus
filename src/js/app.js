@@ -2661,34 +2661,104 @@ async function applyRealWeather(map, force = false) {
   }
 }
 
+// ====== DEVICE TIER PROFILER ======
+function getDeviceTier() {
+  const hardwareConcurrency = navigator.hardwareConcurrency || 2;
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  let renderer = '';
+  try {
+    const gl = document.createElement('canvas').getContext('webgl');
+    if (gl) {
+      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      if (debugInfo) {
+        renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+      }
+    }
+  } catch (e) {}
+
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isApple = /apple/i.test(renderer);
+  const isHighEndMaliOrAdreno = /mali-g7|adreno (6|7)/i.test(renderer);
+  
+  if (hardwareConcurrency <= 4 && isMobile && !isApple && !isHighEndMaliOrAdreno) {
+    return 'low';
+  } else if (hardwareConcurrency >= 8 || isApple || isHighEndMaliOrAdreno || !isMobile) {
+    return 'high';
+  }
+  return 'mid';
+}
+
 function initLeaflet(){
   if(lmap||typeof mapboxgl==='undefined'||!mapboxConfigured()) return;
   const host=document.getElementById('main-map'); if(!host) return;
   mapboxgl.accessToken=MAPBOX_TOKEN;
-  lmap=new mapboxgl.Map({
-    container:host, style:mapboxStyleUrl(),
-    center:[-0.1276,51.5072], zoom:12,
-    fadeDuration:300,
-    attributionControl:false,
-    maxPitch:85, pitch:45, dragPitch:true, touchPitch:true, pitchWithRotate:true,
+  
+  const tier = getDeviceTier();
+  const mapConfig = {
+    container: host,
+    style: tier === 'low' ? 'mapbox://styles/mapbox/dark-v11' : mapboxStyleUrl(),
+    center: [-0.1276, 51.5072],
+    zoom: 12,
+    fadeDuration: 300,
+    attributionControl: false,
     crossSourceCollisions: false,
     localIdeographFontFamily: "'Noto Sans', 'Helvetica Neue', Arial, sans-serif",
-    prefetchZoomDelta: 2,
-    antialias: false
-  });
+    prefetchZoomDelta: 2
+  };
+
+  if (tier === 'low') {
+    mapConfig.pitch = 0;
+    mapConfig.maxPitch = 0;
+    mapConfig.dragPitch = false;
+    mapConfig.antialias = false;
+  } else if (tier === 'mid') {
+    mapConfig.pitch = 45;
+    mapConfig.maxPitch = 60;
+    mapConfig.dragPitch = true;
+    mapConfig.touchPitch = true;
+    mapConfig.pitchWithRotate = true;
+    mapConfig.antialias = false;
+  } else {
+    mapConfig.pitch = 45;
+    mapConfig.maxPitch = 85;
+    mapConfig.dragPitch = true;
+    mapConfig.touchPitch = true;
+    mapConfig.pitchWithRotate = true;
+    mapConfig.antialias = true;
+  }
+
+  lmap=new mapboxgl.Map(mapConfig);
   lmap.addControl(new mapboxgl.NavigationControl({showCompass:true,showZoom:true}),'top-right');
   lmap.addControl(new WeatherControl(), 'top-right');
+  
+  // Prevent DOM thrashing
+  lmap.on('movestart', () => document.body.classList.add('map-moving'));
+  lmap.on('moveend', () => document.body.classList.remove('map-moving'));
+
   lmap.on('style.load', () => {
     applyMapChrome(lmap, true);
     attachMapLayers();
+    
     // Default to time-based theme for safety, overridden by real weather shortly
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    lmap.setConfigProperty('basemap', 'lightPreset', isDark ? 'night' : 'day');
+    if (tier === 'mid' || tier === 'high') {
+      lmap.setConfigProperty('basemap', 'lightPreset', isDark ? 'night' : 'day');
+    }
     
-    // Performance optimizations: disable expensive 3D trees and clutter labels, keep 3D buildings
-    lmap.setConfigProperty('basemap', 'show3dTrees', false);
+    // Performance optimizations
+    lmap.setConfigProperty('basemap', 'show3dTrees', tier === 'high');
     lmap.setConfigProperty('basemap', 'showPointOfInterestLabels', false);
     lmap.setConfigProperty('basemap', 'showTransitLabels', false);
+
+    // Fog Occlusion Culling for Low/Mid tiers
+    if (tier === 'low' || tier === 'mid') {
+      const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0F0E0C';
+      lmap.setFog({
+        'range': [0.5, 2],
+        'color': bgColor,
+        'horizon-blend': 0.1
+      });
+    }
 
     // Fetch and apply real London weather!
     applyRealWeather(lmap);
