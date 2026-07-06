@@ -2319,12 +2319,74 @@ function buildEventsGeoJSON(){
 }
 
 let activePopup=null, activePopupEventId=null;
+let activeHtmlMarker=null;
+
+function removeActiveHtmlMarker(){
+  if(activeHtmlMarker){ try{ activeHtmlMarker.remove(); }catch(e){} activeHtmlMarker=null; }
+  closeActivePopup();
+}
+
 function closeActivePopup(){
   if(activePopup){ try{ activePopup.remove(); }catch(e){} activePopup=null; activePopupEventId=null; }
+  if(activeHtmlMarker){ try{ activeHtmlMarker.remove(); }catch(e){} activeHtmlMarker=null; }
   document.querySelectorAll('.evpin.open').forEach(el=>el.classList.remove('open'));
 }
 
 let htmlMarkerRefs = {};
+
+function loadWebGLIcons(){
+  if(!lmap) return;
+  Object.entries(CATS).forEach(([name,cat])=>{
+    const size=32;
+    const canvas=document.createElement('canvas');
+    canvas.width=size; canvas.height=size;
+    const ctx=canvas.getContext('2d');
+    ctx.shadowColor='rgba(0,0,0,0.35)'; ctx.shadowBlur=4; ctx.shadowOffsetY=2;
+    ctx.beginPath(); ctx.arc(size/2,size/2,10,0,Math.PI*2); ctx.fillStyle='#ffffff'; ctx.fill();
+    ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+    ctx.beginPath(); ctx.arc(size/2,size/2,8,0,Math.PI*2); ctx.fillStyle=cat.color; ctx.fill();
+    ctx.beginPath(); ctx.arc(size/2,size/2,2.5,0,Math.PI*2); ctx.fillStyle='#ffffff'; ctx.fill();
+    const imageData=ctx.getImageData(0,0,size,size);
+    if(!lmap.hasImage('pin-'+name)) lmap.addImage('pin-'+name,imageData);
+  });
+}
+
+function openActiveEventMarker(evId){
+  removeActiveHtmlMarker();
+  const ev=EVENTS.find(e=>String(e.id)===String(evId));
+  if(!ev) return;
+  const color=CATS[ev.category].color;
+  const status=eventStatus(ev);
+  const att=attendeesFor(ev.id);
+  const friendGoing=att.some(isFriend);
+  const hot=isHotEvent(ev);
+  const chatOpen=chatIsOpen(ev)&&status!=='past';
+  const chatBadge=chatOpen?`<span class="pin-chat"><svg viewBox="0 0 20 20" width="7" height="7" fill="#fff"><path d="M18 2H2C.9 2 0 2.9 0 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></span>`:'';
+  
+  const el=document.createElement('div');
+  el.className='evpin-wrap active-pin-wrap';
+  el.innerHTML=`<div class="evpin ${status}${hot?' hot':''} open" style="--c:${color}">
+    ${status==='live'?'<span class="pulse-ring"></span><span class="pulse-ring r2"></span>':''}
+    <div class="pin"><span class="pin-dot"></span></div>
+    ${friendGoing?'<span class="pin-star">★</span>':''}
+    ${chatBadge}
+  </div>`;
+  
+  activeHtmlMarker=new mapboxgl.Marker({element:el,anchor:'center'}).setLngLat([ev.lon,ev.lat]).addTo(lmap);
+  
+  const popup=new mapboxgl.Popup({
+    offset:{top:[0,8],bottom:[0,-14],left:[14,0],right:[-14,0]},
+    closeButton:false,closeOnClick:false,className:'evtip-popup',anchor:'bottom',maxWidth:'240px'
+  }).setLngLat([ev.lon,ev.lat]).setHTML(pinTooltipHtml(ev)).addTo(lmap);
+  activePopup=popup; activePopupEventId=ev.id;
+  
+  const popupEl=popup.getElement();
+  if(popupEl){
+    popupEl.addEventListener('click',e=>{ e.stopPropagation(); removeActiveHtmlMarker(); openEvent(ev.id); });
+    popupEl.addEventListener('touchend',e=>{ e.preventDefault(); e.stopPropagation(); removeActiveHtmlMarker(); openEvent(ev.id); },{passive:false});
+  }
+  lmap.easeTo({center:[ev.lon,ev.lat]});
+}
 
 function updateClusterPaint(){
   if(!lmap||!lmap.getLayer('clusters')) return;
@@ -2337,17 +2399,21 @@ function updateClusterPaint(){
 }
 
 function attachMapLayers(){
-  if(!lmap||lmap.getSource('events')) return;
-  lmap.addSource('events',{
+  if(!lmap||lmap.getSource('events-source')) return;
+  
+  // Load WebGL custom pin icons
+  loadWebGLIcons();
+
+  lmap.addSource('events-source',{
     type:'geojson', data:{type:'FeatureCollection',features:[]},
-    cluster:true, clusterMaxZoom:13, clusterRadius:42
+    cluster:true, clusterMaxZoom:14, clusterRadius:50
   });
 
   // Native Mapbox GL cluster layers — palette matches light/dark via updateClusterPaint()
   lmap.addLayer({
     id:'clusters',
     type:'circle',
-    source:'events',
+    source:'events-source',
     filter:['has','point_count'],
     paint:{
       'circle-color':['step',['get','point_count'],'#CBA43A',10,'#A8841F',30,'#7E6210'],
@@ -2357,10 +2423,11 @@ function attachMapLayers(){
       'circle-opacity':0.95
     }
   });
+  
   lmap.addLayer({
     id:'cluster-count',
     type:'symbol',
-    source:'events',
+    source:'events-source',
     filter:['has','point_count'],
     layout:{
       'text-field':['get','point_count_abbreviated'],
@@ -2372,17 +2439,35 @@ function attachMapLayers(){
   });
   updateClusterPaint();
 
-  // Invisible hitbox for unclustered points (used to show/hide HTML event pins)
-  lmap.addLayer({ id:'event-hitbox', type:'circle', source:'events',
+  // Native WebGL symbol layer to render all individual event pins directly in WebGL
+  lmap.addLayer({
+    id:'unclustered-events',
+    type:'symbol',
+    source:'events-source',
     filter:['!',['has','point_count']],
-    paint:{'circle-radius':1,'circle-opacity':0}
+    layout:{
+      'icon-image':['concat','pin-',['get','category']],
+      'icon-size':1.0,
+      'icon-allow-overlap':true,
+      'icon-ignore-placement':true
+    }
   });
+
+  // Click handler to open the single active HTML marker and details
+  lmap.on('click','unclustered-events',(e)=>{
+    const features=lmap.queryRenderedFeatures(e.point,{layers:['unclustered-events']});
+    if(!features.length) return;
+    const evId=features[0].properties.id;
+    openActiveEventMarker(evId);
+  });
+  lmap.on('mouseenter','unclustered-events',()=>{ lmap.getCanvas().style.cursor='pointer'; });
+  lmap.on('mouseleave','unclustered-events',()=>{ lmap.getCanvas().style.cursor=''; });
 
   // Cluster click → zoom in
   lmap.on('click','clusters',(e)=>{
     const features=lmap.queryRenderedFeatures(e.point,{layers:['clusters']});
     if(!features.length) return;
-    lmap.getSource('events').getClusterExpansionZoom(features[0].properties.cluster_id,(err,zoom)=>{
+    lmap.getSource('events-source').getClusterExpansionZoom(features[0].properties.cluster_id,(err,zoom)=>{
       if(!err) lmap.easeTo({center:features[0].geometry.coordinates,zoom:zoom+0.8});
     });
   });
@@ -2390,114 +2475,25 @@ function attachMapLayers(){
   lmap.on('mouseleave','clusters',()=>{ lmap.getCanvas().style.cursor=''; });
 
   lmap.on('click',(e)=>{
-    const hits=lmap.queryRenderedFeatures(e.point,{layers:['clusters','event-hitbox']});
-    if(!hits.length) closeActivePopup();
+    const hits=lmap.queryRenderedFeatures(e.point,{layers:['clusters','unclustered-events']});
+    if(!hits.length) removeActiveHtmlMarker();
   });
-
-  lmap.on('render', syncHtmlMarkers);
 
   if(state.view==='browse') setTimeout(refreshMarkers, 0);
 }
 
-function syncHtmlMarkers(){
-  if(!lmap||!lmap.getSource('events')) return;
-  // Show/hide HTML event pin markers based on whether the unclustered point is rendered
-  const visible = lmap.queryRenderedFeatures({layers:['event-hitbox']});
-  const visibleIds = new Set(visible.map(f=>String(f.properties.id)));
-  Object.entries(htmlMarkerRefs).forEach(([evId,ref])=>{
-    const show=visibleIds.has(evId);
-    if(show&&!ref.added){ ref.marker.addTo(lmap); if(ref.bubbleMarker) ref.bubbleMarker.addTo(lmap); ref.added=true; }
-    else if(!show&&ref.added){ ref.marker.remove(); if(ref.bubbleMarker) ref.bubbleMarker.remove(); ref.added=false; if(String(activePopupEventId)===evId) closeActivePopup(); }
-  });
-}
-
 function refreshMarkers(){
   if(!lmap||typeof mapboxgl==='undefined') return;
-  const src=lmap.getSource('events');
+  const src=lmap.getSource('events-source');
   if(!src){ lmap.once('load',refreshMarkers); return; }
 
-  Object.values(htmlMarkerRefs).forEach(ref=>{ if(ref.added){ ref.marker.remove(); if(ref.bubbleMarker) ref.bubbleMarker.remove(); } });
-  htmlMarkerRefs={};
-
-  
-  closeActivePopup();
+  removeActiveHtmlMarker();
 
   const geo=buildEventsGeoJSON();
   src.setData(geo);
 
   const visibleEvents=getFilteredEvents();
   updateMapEmptyState(visibleEvents.length);
-  visibleEvents.forEach(ev=>{
-    const color=CATS[ev.category].color;
-    const status=eventStatus(ev);
-    const att=attendeesFor(ev.id);
-    const friendGoing=att.some(isFriend);
-
-    const el=document.createElement('div');
-    el.className='evpin-wrap';
-    const hot=isHotEvent(ev);
-    const chatOpen=chatIsOpen(ev)&&status!=='past';
-    const chatBadge=chatOpen?'<span class="pin-chat"><svg viewBox="0 0 20 20" width="7" height="7" fill="#fff"><path d="M18 2H2C.9 2 0 2.9 0 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></span>':'';
-    el.innerHTML=`<div class="evpin ${status}${hot?' hot':''}" style="--c:${color}">
-      ${status==='live'?'<span class="pulse-ring"></span><span class="pulse-ring r2"></span>':''}
-      <div class="pin"><span class="pin-dot"></span></div>
-      ${friendGoing?'<span class="pin-star">★</span>':''}
-      ${chatBadge}
-    </div>`;
-
-    // Separate bubble marker — own Mapbox Marker so it never affects the pin's anchor
-    let bubbleMarker=null;
-    if(status!=='past'&&(hot||chatOpen)){
-      const bEl=document.createElement('div');
-      bEl.className='pin-bubble-wrap';
-      const t=ev.title.length>18?ev.title.slice(0,17)+'…':ev.title;
-      const statusHtml=status==='live'
-        ?`<div class="pbc-status"><span class="pbc-dot"></span>Live now</div>`
-        :chatOpen?`<div class="pbc-status"><span class="pbc-dot"></span>Chat open</div>`:'';
-      bEl.innerHTML=`<div class="pin-bubble-card" style="--c:${color}">
-        <div class="pbc-title">${escapeHtml(t)}</div>
-        ${ev.area?`<div class="pbc-sub">${escapeHtml(ev.area)}</div>`:''}
-        ${statusHtml}
-      </div>`;
-      bubbleMarker=new mapboxgl.Marker({element:bEl,anchor:'bottom',offset:[0,-15]}).setLngLat([ev.lon,ev.lat]);
-    }
-
-    const marker=new mapboxgl.Marker({element:el,anchor:'center'}).setLngLat([ev.lon,ev.lat]);
-
-    let closeTimer=null;
-
-    const openPopup=()=>{
-      if(activePopupEventId===ev.id) return;
-      closeActivePopup();
-      const popup=new mapboxgl.Popup({
-        offset:{top:[0,8],bottom:[0,-14],left:[14,0],right:[-14,0]},
-        closeButton:false, closeOnClick:false, className:'evtip-popup', anchor:'bottom', maxWidth:'240px'
-      }).setLngLat([ev.lon,ev.lat]).setHTML(pinTooltipHtml(ev)).addTo(lmap);
-      activePopup=popup; activePopupEventId=ev.id;
-      el.querySelector('.evpin')?.classList.add('open');
-      const popupEl=popup.getElement();
-      if(popupEl){
-        popupEl.addEventListener('mouseenter',()=>{ clearTimeout(closeTimer); closeTimer=null; });
-        popupEl.addEventListener('mouseleave',()=>{ clearTimeout(closeTimer); closeTimer=setTimeout(dismissPopup,150); });
-        popupEl.addEventListener('click',e=>{ e.stopPropagation(); closeActivePopup(); openEvent(ev.id); });
-        popupEl.addEventListener('touchend',e=>{ e.preventDefault(); e.stopPropagation(); closeActivePopup(); openEvent(ev.id); },{passive:false});
-      }
-    };
-
-    const dismissPopup=()=>{
-      if(activePopupEventId===ev.id){ closeActivePopup(); el.querySelector('.evpin')?.classList.remove('open'); }
-    };
-
-    el.addEventListener('mouseenter',()=>{ clearTimeout(closeTimer); closeTimer=null; openPopup(); });
-    el.addEventListener('mouseleave',()=>{ clearTimeout(closeTimer); closeTimer=setTimeout(dismissPopup,200); });
-    el.addEventListener('click',e=>{
-      e.stopPropagation();
-      if(activePopupEventId===ev.id){ closeActivePopup(); openEvent(ev.id); } 
-      else { openPopup(); }
-    });
-
-    htmlMarkerRefs[String(ev.id)]={marker,bubbleMarker,el,added:false};
-  });
 
   if(!lmapFitted&&geo.features.length>0){
     const coords=geo.features.map(f=>f.geometry.coordinates);
@@ -2789,9 +2785,26 @@ function initLeaflet(){
   lmap.addControl(new mapboxgl.NavigationControl({showCompass:true,showZoom:true}),'top-right');
   lmap.addControl(new WeatherControl(), 'top-right');
   
-  // Prevent DOM thrashing
-  lmap.on('movestart', () => document.body.classList.add('map-moving'));
-  lmap.on('moveend', () => document.body.classList.remove('map-moving'));
+  // Prevent DOM thrashing (throttled via requestAnimationFrame)
+  let movestartScheduled = false;
+  lmap.on('movestart', () => {
+    if (movestartScheduled) return;
+    movestartScheduled = true;
+    requestAnimationFrame(() => {
+      document.body.classList.add('map-moving');
+      movestartScheduled = false;
+    });
+  });
+
+  let moveendScheduled = false;
+  lmap.on('moveend', () => {
+    if (moveendScheduled) return;
+    moveendScheduled = true;
+    requestAnimationFrame(() => {
+      document.body.classList.remove('map-moving');
+      moveendScheduled = false;
+    });
+  });
 
   lmap.on('style.load', () => {
     applyMapChrome(lmap, true);

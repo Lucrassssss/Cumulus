@@ -14,7 +14,7 @@ module.exports = defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: [['list']],
   use: {
-    baseURL: 'http://localhost:3457',
+    baseURL: 'http://127.0.0.1:3457',
     trace: 'on-first-retry',
     // Smoke tests assert UI rendering only, so they pass even when the
     // external Supabase/Mapbox/font CDNs are unreachable (sandbox/CI).
@@ -25,8 +25,8 @@ module.exports = defineConfig({
     { name: 'desktop', use: { viewport: { width: 1440, height: 900 } } },
   ],
   webServer: {
-    command: 'python -m http.server 3457',
-    url: 'http://localhost:3457',
+    command: 'python -m http.server 3457 --bind 127.0.0.1',
+    url: 'http://127.0.0.1:3457',
     reuseExistingServer: true,
     timeout: 20_000,
   },

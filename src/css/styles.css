@@ -1079,6 +1079,13 @@ body.no-scroll {
   cursor: pointer;
 }
 
+.evpin, .mapboxgl-popup, .mapboxgl-marker {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
 .evpin {
   position: relative;
   width: 20px;
