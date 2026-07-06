@@ -2690,7 +2690,11 @@ function getDeviceTier() {
   } else {
     // Laptops & Desktops
     if (isPowerfulDesktop) return 'high'; // Only truly powerful GPUs get High (Antialiasing + 3D Trees)
-    if (isIntegratedLaptop || hardwareConcurrency <= 4) return 'mid'; // Integrated laptop GPUs
+    
+    // UHD 620 and basic integrated chips struggle with 3D buildings. 
+    // Force them into 'low' tier (strict 2D) to guarantee 60fps.
+    if (isIntegratedLaptop || hardwareConcurrency <= 4) return 'low'; 
+    
     return 'mid'; // Default to mid for safety on unknown desktop GPUs to ensure 60fps
   }
 }
