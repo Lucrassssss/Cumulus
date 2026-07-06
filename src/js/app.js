@@ -3284,11 +3284,12 @@ async function submitHostEvent(){
   if(btn){ btn.disabled=true; btn.textContent='Creating…'; }
 
   const {data,error}=await sb.from('events').insert({
-    title, category:cat,
+    title, category:cat, visibility:_hostType,
     host_id:state.userId, host_name:state.profileName,
     venue, area:areaName||'London', address,
     lat:newEventLat, lon:newEventLon,
     start_time:stDate.toISOString(), end_time:enDate.toISOString(),
+    starts_at:stDate.toISOString(), ends_at:enDate.toISOString(),
     description:desc, capacity:parseInt(capStr,10), price:priceVal
   }).select().single();
 
