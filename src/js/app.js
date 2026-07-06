@@ -2715,9 +2715,11 @@ function initLeaflet(){
   };
 
   if (tier === 'low') {
-    mapConfig.pitch = 0;
-    mapConfig.maxPitch = 0;
-    mapConfig.dragPitch = false;
+    mapConfig.pitch = 45;
+    mapConfig.maxPitch = 60;
+    mapConfig.dragPitch = true;
+    mapConfig.touchPitch = true;
+    mapConfig.pitchWithRotate = true;
     mapConfig.antialias = false;
   } else if (tier === 'mid') {
     mapConfig.pitch = 45;
@@ -2753,6 +2755,7 @@ function initLeaflet(){
     
     // Performance optimizations
     lmap.setConfigProperty('basemap', 'show3dTrees', tier === 'high');
+    lmap.setConfigProperty('basemap', 'show3dObjects', tier !== 'low'); // Flat buildings on low tier to save FPS
     lmap.setConfigProperty('basemap', 'showPointOfInterestLabels', false);
     lmap.setConfigProperty('basemap', 'showTransitLabels', false);
 
