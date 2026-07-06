@@ -26,7 +26,7 @@
 -- Supabase Auth → Users panel for chafull@crick.ac.uk (or whichever email
 -- you sign in with). Example format: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
 insert into public.admins (user_id)
-values ('YOUR-AUTH-UID-HERE'::uuid)
+select id from auth.users where email = 'chafull@crick.ac.uk'
 on conflict (user_id) do nothing;
 
 -- ── Step 2: Override get_hosting_progress to short-circuit for admins ──────
