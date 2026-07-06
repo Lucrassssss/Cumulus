@@ -4238,26 +4238,38 @@ function _pendingEventKey(e){ return e.id!=null ? String(e.id) : (e.title||'')+'
 async function loadAndRenderEventApprovals(){
   const content=document.getElementById('evapp-content');
   if(!content) return;
-  let evs=[];
-  try{
-    const {data,error}=await sb.from('pending_events').select('*').order('created_at',{ascending:false});
-    if(!error&&data) evs=[...evs,...data];
-  }catch(e){}
-  try{
-    const local=JSON.parse(localStorage.getItem('pending_events_local')||'[]');
-    const keys=new Set(evs.map(_pendingEventKey));
-    evs=[...evs,...local.filter(e=>!keys.has(_pendingEventKey(e)))];
-  }catch(e){}
+  try {
+    let evs=[];
+    try{
+      const {data,error}=await sb.from('pending_events').select('*').order('created_at',{ascending:false});
+      if(error) console.error('[loadAndRenderEventApprovals] DB Error:', error);
+      if(!error&&data) evs=[...evs,...data];
+    }catch(e){
+      console.error('[loadAndRenderEventApprovals] DB Catch:', e);
+    }
+    try{
+      const local=JSON.parse(localStorage.getItem('pending_events_local')||'[]').filter(e=>e!=null);
+      const keys=new Set(evs.filter(e=>e!=null).map(_pendingEventKey));
+      evs=[...evs,...local.filter(e=>e!=null&&!keys.has(_pendingEventKey(e)))];
+    }catch(e){
+      console.error('[loadAndRenderEventApprovals] Local Catch:', e);
+    }
 
-  if(!evs.length){
-    content.innerHTML=`<div class="review-empty"><div class="review-empty-icon">✅</div><div style="font-weight:700;margin-bottom:4px;">All clear</div><div>No public events awaiting approval.</div></div>`;
-    return;
+    evs = evs.filter(e => e != null);
+
+    if(!evs.length){
+      content.innerHTML=`<div class="review-empty"><div class="review-empty-icon">✅</div><div style="font-weight:700;margin-bottom:4px;">All clear</div><div>No public events awaiting approval.</div></div>`;
+      return;
+    }
+    const pending=evs.filter(e=>e.status==='pending');
+    const reviewed=evs.filter(e=>e.status!=='pending');
+    content.innerHTML=`
+      ${pending.length?`<div class="review-section-hd">Pending (${pending.length})</div>${pending.map(_buildEventApprovalCard).join('')}`:''}
+      ${reviewed.length?`<div class="review-section-hd" style="margin-top:${pending.length?'20px':'0'};">Reviewed (${reviewed.length})</div>${reviewed.map(_buildEventApprovalCard).join('')}`:''}`;
+  } catch (err) {
+    content.innerHTML = `<div class="review-empty"><div class="review-empty-icon">⚠️</div><div style="font-weight:700;margin-bottom:4px;">Error Loading Panel</div><div>${escapeHtml(err.message)}</div></div>`;
+    console.error(err);
   }
-  const pending=evs.filter(e=>e.status==='pending');
-  const reviewed=evs.filter(e=>e.status!=='pending');
-  content.innerHTML=`
-    ${pending.length?`<div class="review-section-hd">Pending (${pending.length})</div>${pending.map(_buildEventApprovalCard).join('')}`:''}
-    ${reviewed.length?`<div class="review-section-hd" style="margin-top:${pending.length?'20px':'0'};">Reviewed (${reviewed.length})</div>${reviewed.map(_buildEventApprovalCard).join('')}`:''}`;
 }
 
 function _buildEventApprovalCard(ev){
