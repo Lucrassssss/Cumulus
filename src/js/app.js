@@ -2673,7 +2673,8 @@ function initLeaflet(){
     maxPitch:85, pitch:45, dragPitch:true, touchPitch:true, pitchWithRotate:true,
     crossSourceCollisions: false,
     localIdeographFontFamily: "'Noto Sans', 'Helvetica Neue', Arial, sans-serif",
-    prefetchZoomDelta: 2
+    prefetchZoomDelta: 2,
+    antialias: false
   });
   lmap.addControl(new mapboxgl.NavigationControl({showCompass:true,showZoom:true}),'top-right');
   lmap.addControl(new WeatherControl(), 'top-right');
@@ -2691,6 +2692,15 @@ function initLeaflet(){
 
     // Fetch and apply real London weather!
     applyRealWeather(lmap);
+  });
+
+  // Hide the immersive loader once Mapbox has fully compiled shaders and loaded tiles
+  lmap.once('idle', () => {
+    const loader = document.getElementById('cumulus-loader');
+    if (loader) {
+      loader.style.opacity = '0';
+      setTimeout(() => loader.remove(), 500);
+    }
   });
 }
 
