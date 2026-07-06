@@ -2707,7 +2707,7 @@ function initLeaflet(){
   const tier = getDeviceTier();
   const mapConfig = {
     container: host,
-    style: tier === 'low' ? 'mapbox://styles/mapbox/dark-v11' : mapboxStyleUrl(),
+    style: mapboxStyleUrl(), // Standard style is required to support live weather colours
     center: [-0.1276, 51.5072],
     zoom: 12,
     fadeDuration: 300,
@@ -2752,9 +2752,7 @@ function initLeaflet(){
     
     // Default to time-based theme for safety, overridden by real weather shortly
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    if (tier === 'mid' || tier === 'high') {
-      lmap.setConfigProperty('basemap', 'lightPreset', isDark ? 'night' : 'day');
-    }
+    lmap.setConfigProperty('basemap', 'lightPreset', isDark ? 'night' : 'day');
     
     // Performance optimizations
     lmap.setConfigProperty('basemap', 'show3dTrees', tier === 'high');
