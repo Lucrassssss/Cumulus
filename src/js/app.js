@@ -2677,15 +2677,22 @@ function getDeviceTier() {
   } catch (e) {}
 
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  const isApple = /apple/i.test(renderer);
+  const isAppleGPU = /apple/i.test(renderer);
   const isHighEndMaliOrAdreno = /mali-g7|adreno (6|7)/i.test(renderer);
+  const isIntegratedLaptop = /intel|uhd|hd graphics|amd radeon graphics/i.test(renderer) && !/rx|rtx|gtx/i.test(renderer);
+  const isPowerfulDesktop = /nvidia|rtx|gtx|rx \d000|apple m/i.test(renderer);
   
-  if (hardwareConcurrency <= 4 && isMobile && !isApple && !isHighEndMaliOrAdreno) {
-    return 'low';
-  } else if (hardwareConcurrency >= 8 || isApple || isHighEndMaliOrAdreno || !isMobile) {
-    return 'high';
+  if (isMobile) {
+    if (hardwareConcurrency <= 4 || (!isAppleGPU && !isHighEndMaliOrAdreno)) {
+      return 'low';
+    }
+    return 'mid';
+  } else {
+    // Laptops & Desktops
+    if (isPowerfulDesktop) return 'high'; // Only truly powerful GPUs get High (Antialiasing + 3D Trees)
+    if (isIntegratedLaptop || hardwareConcurrency <= 4) return 'mid'; // Integrated laptop GPUs
+    return 'mid'; // Default to mid for safety on unknown desktop GPUs to ensure 60fps
   }
-  return 'mid';
 }
 
 function initLeaflet(){
