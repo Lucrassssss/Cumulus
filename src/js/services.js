@@ -150,15 +150,16 @@ async function getHostingProgress() {
     if (error) throw error;
     
     return {
-      ageVerified: data.age_verified,
-      eventsCheckedIn: data.events_checked_in,
-      eventsRequired: data.events_required,
+      ageVerified: data.ageVerified,
+      eventsCheckedIn: data.eventsCheckedIn,
+      eventsRequired: data.eventsRequired,
       connections: data.connections,
-      connectionsRequired: data.connections_required,
+      connectionsRequired: data.connectionsRequired,
+      role: data.role || 'eventee',
       eligible: data.eligible
     };
   } catch (e) {
-    return { eligible: false, ageVerified: false, eventsCheckedIn: 0, eventsRequired: 3, connections: 0, connectionsRequired: 3 };
+    return { eligible: false, ageVerified: false, eventsCheckedIn: 0, eventsRequired: 3, connections: 0, connectionsRequired: 3, role: 'eventee' };
   }
 }
 

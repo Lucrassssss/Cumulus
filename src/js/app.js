@@ -3194,6 +3194,12 @@ function selectAutocompleteAddress(lat,lon,fullAddress,name){
 }
 
 async function submitHostEvent(){
+  let visibility = _hostType;
+  if(_hostType==='private'){
+    const role = (state.hostingProgress && state.hostingProgress.role) || 'eventee';
+    visibility = (role === 'partner_host') ? 'host_private' : 'connections_only';
+  }
+
   const title=(document.getElementById('host-title')?.value||'').trim();
   const cat=document.getElementById('host-cat')?.value;
   const startDate=document.getElementById('host-start-date')?.value;
@@ -3220,7 +3226,7 @@ async function submitHostEvent(){
       const abtn=document.getElementById('host-submit-btn');
       if(abtn){ abtn.disabled=true; abtn.textContent='Publishing…'; }
       const {data:aData,error:aErr}=await sb.from('events').insert({
-        title, category:cat, visibility:_hostType,
+        title, category:cat, visibility:visibility,
         host_id:state.userId, host_name:state.profileName,
         venue, area:areaName||'London', address:pubAddress,
         lat:newEventLat, lon:newEventLon,
@@ -3251,7 +3257,7 @@ async function submitHostEvent(){
     // Non-admin: queue in pending_events for owner approval
     const pubAddress=document.getElementById('host-address-search')?.value||'';
     const pending={
-      title, category:cat, visibility:_hostType,
+      title, category:cat, visibility:visibility,
       host_id:state.userId||null, host_name:state.profileName||'', host_email:state.profileEmail||'',
       venue, area:areaName||'London', address:pubAddress,
       lat:newEventLat, lon:newEventLon,
@@ -3284,7 +3290,7 @@ async function submitHostEvent(){
   if(btn){ btn.disabled=true; btn.textContent='Creating…'; }
 
   const {data,error}=await sb.from('events').insert({
-    title, category:cat, visibility:_hostType,
+    title, category:cat, visibility:visibility,
     host_id:state.userId, host_name:state.profileName,
     venue, area:areaName||'London', address,
     lat:newEventLat, lon:newEventLon,
@@ -4286,7 +4292,10 @@ async function decideEvent(pendingId, decision){
   if(!rec){
     try{ const arr=JSON.parse(localStorage.getItem('pending_events_local')||'[]'); rec=arr.find(e=>String(e.id)===String(pendingId))||null; }catch(e){}
   }
-  if(decision==='approved' && rec) await _publishApprovedEvent(rec);
+  if(decision==='approved' && rec) {
+    const ok = await _publishApprovedEvent(rec);
+    if(!ok) return; // Halt if publication failed
+  }
   // Record the decision (both stores, whichever exists)
   try{ await sb.from('pending_events').update({status:decision}).eq('id',pendingId); }catch(e){}
   try{
@@ -4310,8 +4319,17 @@ async function _publishApprovedEvent(rec){
       starts_at:rec.starts_at||rec.start_time, ends_at:rec.ends_at||rec.end_time,
       description:rec.description, capacity:rec.capacity, price:rec.price||0
     }).select().single();
-    if(!error) inserted=data;
-  }catch(e){}
+    if(error) {
+      showToast('Failed to publish event: ' + error.message, 'error');
+      console.error(error);
+      return false;
+    }
+    inserted=data;
+  }catch(e){
+    showToast('Failed to publish event: ' + e.message, 'error');
+    console.error(e);
+    return false;
+  }
   const src=inserted||rec;
   const newEvent={
     id: inserted?inserted.id : ('local_ev_'+Date.now()),
@@ -4324,6 +4342,7 @@ async function _publishApprovedEvent(rec){
   };
   computeEventDates(newEvent);
   if(!EVENTS.some(e=>String(e.id)===String(newEvent.id))) EVENTS.push(newEvent);
+  return true;
 }
 
 function renderView(){
