@@ -2677,26 +2677,23 @@ function getDeviceTier() {
   } catch (e) {}
 
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  // All desktop and laptop web browsers are strictly 2D for maximum performance
+  if (!isMobile) {
+    return 'low';
+  }
+
+  // Phone devices get 3D optimized
   const isAppleGPU = /apple/i.test(renderer);
   const isHighEndMaliOrAdreno = /mali-g7|adreno (6|7)/i.test(renderer);
-  const isIntegratedLaptop = /intel|uhd|hd graphics|amd radeon graphics/i.test(renderer) && !/rx|rtx|gtx/i.test(renderer);
-  const isPowerfulDesktop = /nvidia|rtx|gtx|rx \d000|apple m/i.test(renderer);
   
-  if (isMobile) {
-    if (hardwareConcurrency <= 4 || (!isAppleGPU && !isHighEndMaliOrAdreno)) {
-      return 'low';
-    }
-    return 'mid';
-  } else {
-    // Laptops & Desktops
-    if (isPowerfulDesktop) return 'high'; // Only truly powerful GPUs get High (Antialiasing + 3D Trees)
-    
-    // UHD 620 and basic integrated chips struggle with 3D buildings. 
-    // Force them into 'low' tier (strict 2D) to guarantee 60fps.
-    if (isIntegratedLaptop || hardwareConcurrency <= 4) return 'low'; 
-    
-    return 'mid'; // Default to mid for safety on unknown desktop GPUs to ensure 60fps
+  if (hardwareConcurrency <= 4 && !isAppleGPU && !isHighEndMaliOrAdreno) {
+    return 'low'; // Extremely budget phones get 2D
+  } else if (hardwareConcurrency >= 8 || isAppleGPU || isHighEndMaliOrAdreno) {
+    return 'high'; // Powerful phones get full 3D (Antialiasing + Trees)
   }
+  
+  return 'mid'; // Standard phones get 3D optimized (No Antialiasing, No Trees)
 }
 
 function initLeaflet(){
