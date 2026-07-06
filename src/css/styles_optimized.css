@@ -7957,7 +7957,7 @@ body {
   will-change: transform, box-shadow;
   backdrop-filter: blur(24px) saturate(1.8) !important;
   -webkit-backdrop-filter: blur(24px) saturate(1.8) !important;
-  border-color: var(--line) !important;
+  border-color: var(--line-soft) !important;
 }
 
 .panel:hover {
@@ -8016,8 +8016,8 @@ body {
   --text: #191A1C !important;
   --text-soft: #45474C !important;
   --text-muted: #7C7A73 !important;
-  --line: rgba(156,123,24,0.42) !important;
-  --line-soft: rgba(156,123,24,0.18) !important;
+  --line: rgba(25,26,28,0.10) !important;
+  --line-soft: rgba(25,26,28,0.05) !important;
   --accent: #9C7B18 !important;
   --accent-deep: #7E6210 !important;
   --gold: #9C7B18 !important;
@@ -8061,7 +8061,7 @@ body {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   border-width: 1.5px !important;
-  border-color: var(--line) !important;
+  border-color: var(--ch-divider) !important;
   filter: none !important;
   border-radius: 12px !important;
 }
@@ -9333,7 +9333,7 @@ textarea.gate-input {
 
 .lp-feat-card {
   background: var(--surface) !important;
-  border: 1px solid var(--line) !important;
+  border: 1px solid var(--line-soft) !important;
   border-radius: var(--r-lg) !important;
   padding: 0 !important;
   display: flex;
@@ -9622,8 +9622,8 @@ textarea.gate-input {
   --text: #ECE9E1 !important;
   --text-soft: #B4B0A7 !important;
   --text-muted: #7A776F !important;
-  --line: rgba(203,164,58,0.35) !important;
-  --line-soft: rgba(203,164,58,0.16) !important;
+  --line: rgba(236,233,225,0.09) !important;
+  --line-soft: rgba(236,233,225,0.05) !important;
   --accent: #CBA43A !important;
   --accent-deep: #A8841F !important;
   --gold: #CBA43A !important;
@@ -9874,37 +9874,4 @@ textarea.gate-input {
 .map-moving .dio-beacon, .map-moving .evt-marker.pulse::before, .map-moving .map-caption .dot, .map-moving .pbc-dot, .map-moving .pulse-btn::after, .map-moving .pulse-ring {
   animation: none !important;
   display: none !important;
-}
-
-/* Background loading transitions for seamless boot */
-.app-bg-loading {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  z-index: -9999 !important;
-}
-
-.gate-fade-out {
-  opacity: 0 !important;
-  transition: opacity 0.5s ease-out !important;
-  pointer-events: none !important;
-}
-
-.app-fade-in {
-  animation: appFadeIn 0.5s ease-in-out both;
-}
-
-@keyframes appFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
 }
