@@ -356,6 +356,7 @@ let state={view:'browse',selectedEventId:null,selectedCategory:'all',calendarDay
   profileName:'',profileEmail:'',profileId:null,specialBadges:[],theme:'light',
   editingProfile:false,myCard:null,rsvps:{},attendeeCards:{},chats:{},friends:[],friendsOnly:false,goingOpen:{},liveOnly:false,hotOnly:false,
   curatorVerified:false,curatorCode:null,curatorTier:null,checkedInEventId:null,
+  isAdmin:false,   // set to true after admin OTP verification — bypasses all gates
   bgLoading:false};
 let cardDraft={theme:'obsidian',bgStyle:'obsidian',accentColor:'#CBA43A',pattern:'constellation',patternOpacity:0.35,bio:'',interests:'',fact:'',motto:'',photo:'',areas:[]};
 let cardEditorEventId=null;
@@ -550,78 +551,55 @@ async function start(){
   startDayNightCycle();
   MAPBOX_TOKEN=DEFAULT_MAPBOX_TOKEN;
 
-  // Render the gate (landing page) immediately so the user lands on it instantly.
-  // This will also remove the default 'optimising map data' loading overlay.
-  renderGate();
+  // ── Session-first boot ──────────────────────────────────────────────────
+  // Check for an existing Supabase Auth session BEFORE rendering the gate.
+  // If the user is already logged in (reload / return visit), go straight
+  // to the app — never show the gate at all. Only show the gate if there
+  // is genuinely no active session. This prevents the "reload logs you out
+  // then back in" loop where the gate would flash and accept inputs while
+  // enterApp() was already booting in the background.
+  let authUser = null;
+  try { authUser = await authCurrentUser(); } catch(e) {}
 
-  // Real auth (Phase 2): the source of truth is the Supabase Auth session.
-  // We check this in the background without blocking the landing page.
-  authCurrentUser().then(async (authUser) => {
-    if(authUser){
-      let profile=await loadUserProfile(authUser.id);
-      if(!profile){
-        // Authenticated but the profile fetch failed (offline). Restore display
-        // fields from the cached snapshot; writes still carry the real JWT.
-        try{
-          const raw=await localGet('cumulus_session');
-          if(raw){ const s=JSON.parse(raw); if(s&&s.userId===authUser.id&&s.name){
-            profile={id:s.userId,name:s.name,email:s.email,profile_id:s.profileId,special_badges:s.specialBadges,theme:s.theme};
-          } }
-        }catch(e){}
-      }
-      if(profile&&profile.name){
-        _restoreUserFromRow(profile);
-        state.profileEmail=profile.email||authUser.email||'';
-        // Theme stays on the day/night cycle — no per-profile override.
-        await localSet('cumulus_email',state.profileEmail);
-        _cacheSession();
-
-        // Already signed in! Initialize map and enter app in the background.
-        // We flag bgLoading = true, add a class to #app to keep it invisible,
-        // and call enterApp().
-        state.bgLoading = true;
-        const app = document.getElementById('app');
-        if (app) {
-          app.classList.add('app-bg-loading');
-        }
-
-        // Define clean transition logic once background load completes
-        const finishBgTransition = () => {
-          if (!state.bgLoading) return;
-          state.bgLoading = false;
-
-          const gate = document.getElementById('gate-root');
-          if (gate) {
-            gate.classList.add('gate-fade-out');
-            setTimeout(() => {
-              gate.innerHTML = '';
-              gate.classList.remove('gate-fade-out');
-            }, 500);
-          }
-
-          if (app) {
-            app.classList.remove('app-bg-loading');
-            app.classList.add('app-fade-in');
-            setTimeout(() => app.classList.remove('app-fade-in'), 500);
-          }
-
-          // Double check resize to make sure Mapbox compiles with correct bounds
-          if (lmap) lmap.resize();
-        };
-
-        // Safety timeout: transition after 5s regardless of map idle state to ensure app never hangs
-        setTimeout(finishBgTransition, 5000);
-
-        // Store a reference to resolve background loading once map standard style and markers are settled
-        window.resolveBgLoad = finishBgTransition;
-
-        enterApp();
-      }
+  if(authUser){
+    let profile = await loadUserProfile(authUser.id).catch(()=>null);
+    if(!profile){
+      // Authenticated but profile fetch failed (offline). Restore from cache.
+      try{
+        const raw = await localGet('cumulus_session');
+        if(raw){ const s=JSON.parse(raw); if(s&&s.userId===authUser.id&&s.name){
+          profile={id:s.userId,name:s.name,email:s.email,profile_id:s.profileId,special_badges:s.specialBadges};
+        } }
+      }catch(e){}
     }
-  }).catch(e => {
-    console.error('Background boot failed:', e);
-  });
+
+    if(profile && profile.name){
+      // ── Returning user: skip the gate entirely ──
+      _restoreUserFromRow(profile);
+      state.profileEmail = profile.email || authUser.email || '';
+      await localSet('cumulus_email', state.profileEmail);
+      _cacheSession();
+
+      // Show a minimal loading screen while the app boots (no gate flash)
+      const gateRoot = document.getElementById('gate-root');
+      if(gateRoot){
+        gateRoot.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;
+          background:var(--bg,#0d0e1a);flex-direction:column;gap:16px">
+          <div style="width:36px;height:36px;border:3px solid rgba(203,164,58,0.25);
+            border-top-color:#CBA43A;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+          <span style="color:rgba(255,255,255,0.5);font-size:13px;font-family:sans-serif">Resuming session…</span>
+        </div>`;
+      }
+
+      enterApp();
+      return; // Done — no gate needed
+    }
+  }
+
+  // No active session (or profile incomplete) → show the landing gate
+  renderGate();
 }
+
 
 /* ── Landing diorama — layered paper-cut London, theme-lit ──────────────
  * Two inline SVGs (back haze + front landmarks) so CSS [data-theme] drives
@@ -2517,8 +2495,11 @@ function loadWebGLIcons(){
     ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
     ctx.beginPath(); ctx.arc(size/2,size/2,8,0,Math.PI*2); ctx.fillStyle=cat.color; ctx.fill();
     ctx.beginPath(); ctx.arc(size/2,size/2,2.5,0,Math.PI*2); ctx.fillStyle='#ffffff'; ctx.fill();
+    // ctx.getImageData() reads the actual pixel buffer back from the canvas
+    // as a flat Uint8ClampedArray — the format Mapbox addImage() requires.
+    const imageData = ctx.getImageData(0, 0, size, size);
     try {
-      lmap.addImage('pin-'+name,imageData);
+      lmap.addImage('pin-'+name, { width: size, height: size, data: imageData.data });
     } catch(e) {}
   });
 }
@@ -3230,7 +3211,41 @@ async function submitHostEvent(){
   if(stDate>=enDate){ showToast('End time must be after start time.','error'); return; }
 
   if(_hostType==='public'){
-    // Public events don't go live immediately — they queue for owner approval.
+    // Admin bypasses the approval queue — events go live immediately.
+    // Everyone else goes via pending_events for owner review.
+    if(state.isAdmin){
+      const pubAddress=document.getElementById('host-address-search')?.value||'';
+      const abtn=document.getElementById('host-submit-btn');
+      if(abtn){ abtn.disabled=true; abtn.textContent='Publishing…'; }
+      const {data:aData,error:aErr}=await sb.from('events').insert({
+        title, category:cat,
+        host_id:state.userId, host_name:state.profileName,
+        venue, area:areaName||'London', address:pubAddress,
+        lat:newEventLat, lon:newEventLon,
+        start_time:stDate.toISOString(), end_time:enDate.toISOString(),
+        description:desc, capacity:parseInt(capStr,10), price:priceVal
+      }).select().single();
+      if(abtn){ abtn.disabled=false; abtn.textContent='Publish event →'; }
+      if(aErr){ showToast('Failed to publish event — '+aErr.message,'error'); return; }
+      // Inject into local EVENTS array so map updates immediately
+      const aEv={
+        id:aData.id, title:aData.title, category:aData.category,
+        host:aData.host_name, hostId:aData.host_id,
+        venue:aData.venue, area:aData.area, address:aData.address,
+        lat:aData.lat, lon:aData.lon,
+        startTime:aData.start_time, endTime:aData.end_time,
+        desc:aData.description, capacity:aData.capacity, price:priceVal
+      };
+      computeEventDates(aEv);
+      EVENTS.push(aEv);
+      await sb.from('rsvps').insert({event_id:aData.id,user_id:state.userId,user_name:state.profileName}).catch(()=>{});
+      state.rsvps[aData.id]=[state.profileName];
+      showToast('Event published live to the map!','success');
+      openEvent(aData.id);
+      return;
+    }
+
+    // Non-admin: queue in pending_events for owner approval
     const pubAddress=document.getElementById('host-address-search')?.value||'';
     const pending={
       title, category:cat,
@@ -4136,23 +4151,61 @@ async function reviewHost(appId, email, decision){
    ══════════════════════════════════════════════════ */
 function openEventApprovals(){ pushNav(); state.view='event-approvals'; renderNav(); renderView(); window.scrollTo({top:0,behavior:'smooth'}); }
 
-// Owner admin sign-in via Supabase Auth (option B). Obtains the JWT that RLS
-// checks with is_admin(), so approvals/curator management are enforced
-// server-side, not just by the client-side owner-email gate. Degrades
-// gracefully when Auth isn't configured (the app keeps its local fallback).
+// Admin sign-in via Supabase Auth OTP — reuses the same 6-digit email code
+// flow as normal login so there is no separate credential to remember.
+// The flow: enter email → receive 6-digit OTP → verify → is_admin() checked.
+let _adminPendingEmail = null;
+
 async function promptAdminSignIn(){
-  const email = (prompt('Admin email (owner):', state.profileEmail||'')||'').trim();
+  // Step 1: ask for email (reuse profileEmail if already set, avoid double-entry)
+  const email = (prompt('Admin email:', state.profileEmail||'')||'').trim();
   if(!email) return;
-  showToast('Sending a one-time code…','info');
-  const sent = await adminSendCode(email);
-  if(!sent.ok){ showToast(sent.error==='unavailable'?'Auth unavailable right now':('Could not send code — '+(sent.error||'error')),'error'); return; }
+
+  const sub = document.getElementById('admin-auth-sub');
+  if(sub) sub.textContent = 'Sending code…';
+
+  // Use the same authSendCode helper as normal login — sends the Supabase
+  // magic-link / OTP email. Admin email just needs to be in public.admins.
+  const sent = await authSendCode(email, {});
+  if(!sent.ok){
+    if(sub) sub.textContent = 'Verify with a one-time code to approve events';
+    showToast(sent.error==='unavailable' ? 'Auth unavailable right now'
+      : ('Could not send code — '+(sent.error||'error')), 'error');
+    return;
+  }
+
+  _adminPendingEmail = email;
+  if(sub) sub.textContent = 'Code sent — check your email';
+  showToast('6-digit code sent to '+email, 'info');
+
+  // Step 2: prompt for the code (same 6-digit OTP as normal login)
   const code = (prompt('Enter the 6-digit code sent to '+email+':')||'').trim();
-  if(!code) return;
-  const res = await adminVerifyCode(email, code);
-  const sub=document.getElementById('admin-auth-sub');
-  if(res.ok && res.isAdmin){ showToast('Admin verified — approvals unlocked','success'); if(sub) sub.textContent='Verified admin session active'; }
-  else if(res.ok){ showToast('Signed in, but this account is not an admin','error'); }
-  else { showToast('Verification failed — '+(res.error||'error'),'error'); }
+  if(!code){ _adminPendingEmail=null; if(sub) sub.textContent='Verify with a one-time code to approve events'; return; }
+
+  if(sub) sub.textContent = 'Verifying…';
+
+  // authVerifyCode is the shared OTP verifier — it returns the Supabase session
+  const res = await authVerifyCode(email, code);
+  _adminPendingEmail = null;
+
+  if(!res.ok){
+    if(sub) sub.textContent = 'Verify with a one-time code to approve events';
+    showToast('Verification failed — '+(res.error||'error'), 'error');
+    return;
+  }
+
+  // Check is_admin() server-side — prevents non-admin accounts from gaining access
+  const isAdmin = await isAdminSession();
+  if(isAdmin){
+    state.isAdmin = true;  // unlocks all hosting gates client-side
+    showToast('Admin verified — all gates bypassed', 'success');
+    if(sub) sub.textContent = 'Admin session active — full access';
+    // Reset hostingProgress so the host view re-renders with eligible:true
+    state.hostingProgress = null;
+  } else {
+    showToast('Signed in, but this account is not in the admins table', 'error');
+    if(sub) sub.textContent = 'Not an admin account';
+  }
 }
 
 function renderEventApprovals(){
@@ -5808,11 +5861,17 @@ function renderSocialTab(){
   // ── HOST content ──────────────────────────────────────────────────────
   if(view==='host'){
     if (!state.hostingProgress) {
-      getHostingProgress().then(p => { state.hostingProgress = p; renderView(); });
-      return `<div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Loading...</p></div>`;
+      // Admin: skip the server check — always eligible
+      if(state.isAdmin){
+        state.hostingProgress = { eligible:true, ageVerified:true, eventsCheckedIn:1, eventsRequired:1, connections:3, connectionsRequired:3 };
+      } else {
+        getHostingProgress().then(p => { state.hostingProgress = p; renderView(); });
+        return `<div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Loading...</p></div>`;
+      }
     }
 
-    if (!state.hostingProgress.eligible) {
+    // Admin always bypasses eligibility gate, even if hostingProgress said otherwise
+    if (!state.hostingProgress.eligible && !state.isAdmin) {
       return `
         <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Host an event for your community</p></div>
         ${seg}
@@ -5827,7 +5886,11 @@ function renderSocialTab(){
         <button class="host-type-btn${_hostType==='private'?' active':''}" data-type="private" onclick="setHostType('private')">Private</button>
         <button class="host-type-btn${_hostType==='public'?' active':''}" data-type="public" onclick="setHostType('public')">Public</button>
       </div>
-      <div id="host-type-notice" class="host-notice">${_hostType==='private'?'Visible to your friends only — no approval needed.':'Your event will go live after a short verification review.'}</div>
+      <div id="host-type-notice" class="host-notice">${
+        _hostType==='private' ? 'Visible to your friends only — no approval needed.'
+        : state.isAdmin ? '⚡ Admin — event publishes immediately to the live map.'
+        : 'Your event will go live after a short verification review.'
+      }</div>
 
       <div class="host-section">
         <div class="host-section-title">Event basics</div>
