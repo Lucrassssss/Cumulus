@@ -31,9 +31,9 @@
 const CURATOR_CODE_RE = /^CUR-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
 
 async function validateCuratorCode(rawCode) {
-  const code = (rawCode || '').trim().toUpperCase();
+  const code = (rawCode || "").trim().toUpperCase();
   if (!CURATOR_CODE_RE.test(code)) {
-    return { valid: false, reason: 'format', code };
+    return { valid: false, reason: "format", code };
   }
   // Server check via a SECURITY DEFINER RPC so the `curator_codes` table is
   // NOT exposed to the anon key (no dumping valid codes). The function returns
@@ -42,16 +42,33 @@ async function validateCuratorCode(rawCode) {
   //   • ran, no rows   → unknown/inactive code → reject
   //   • call errored (function absent / offline) → lenient format-only fallback
   try {
-    const { data, error } = await sb.rpc('validate_curator_code', { p_code: code });
+    const { data, error } = await sb.rpc("validate_curator_code", {
+      p_code: code,
+    });
     if (!error && data !== null && data !== undefined) {
       const row = Array.isArray(data) ? data[0] : data;
       if (row) {
-        return { valid: true, reason: 'ok', code, curator: row.curator_name || null, tier: row.tier || 'standard' };
+        return {
+          valid: true,
+          reason: "ok",
+          code,
+          curator: row.curator_name || null,
+          tier: row.tier || "standard",
+        };
       }
-      return { valid: false, reason: 'unknown', code };
+      return { valid: false, reason: "unknown", code };
     }
-  } catch (e) { /* offline / function absent — fall through to format-only */ }
-  return { valid: true, reason: 'format-only', code, curator: null, tier: 'standard', unverified: true };
+  } catch (e) {
+    /* offline / function absent — fall through to format-only */
+  }
+  return {
+    valid: true,
+    reason: "format-only",
+    code,
+    curator: null,
+    tier: "standard",
+    unverified: true,
+  };
 }
 
 /* ── Perk gating (WCAG-safe by construction) ───────────────────
@@ -68,10 +85,13 @@ function isPerkUnlocked(state) {
 /* Great-circle distance in metres between two {lat, lon} points. */
 function distanceMeters(a, b) {
   if (!a || !b) return Infinity;
-  const R = 6371000, toRad = d => d * Math.PI / 180;
-  const dLat = toRad(b.lat - a.lat), dLon = toRad(b.lon - a.lon);
-  const h = Math.sin(dLat / 2) ** 2 +
-            Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2;
+  const R = 6371000,
+    toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat),
+    dLon = toRad(b.lon - a.lon);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2;
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
@@ -88,21 +108,31 @@ function canCheckInAt(userLatLon, venueLatLon, radiusM) {
  * degrades gracefully if Auth isn't configured yet, so the app still runs. */
 async function adminSendCode(email) {
   try {
-    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+    const { error } = await sb.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: true },
+    });
     return { ok: !error, error: error ? error.message : null };
-  } catch (e) { return { ok: false, error: 'unavailable' }; }
+  } catch (e) {
+    return { ok: false, error: "unavailable" };
+  }
 }
 async function adminVerifyCode(email, token) {
   try {
-    const { error } = await sb.auth.verifyOtp({ email, token, type: 'email' });
+    const { error } = await sb.auth.verifyOtp({ email, token, type: "email" });
     if (error) return { ok: false, error: error.message };
     return { ok: true, isAdmin: await isAdminSession() };
-  } catch (e) { return { ok: false, error: 'unavailable' }; }
+  } catch (e) {
+    return { ok: false, error: "unavailable" };
+  }
 }
 /* Is the CURRENT Supabase Auth session an admin? RLS-backed, so it can't be
  * spoofed client-side. Returns false when unauthenticated or unconfigured. */
 async function isAdminSession() {
-  try { const { data, error } = await sb.rpc('is_admin'); if (!error) return !!data; } catch (e) {}
+  try {
+    const { data, error } = await sb.rpc("is_admin");
+    if (!error) return !!data;
+  } catch (e) {}
   return false;
 }
 
@@ -116,50 +146,87 @@ async function isAdminSession() {
 async function authSendCode(email, meta) {
   try {
     const { error } = await sb.auth.signInWithOtp({
-      email, options: { shouldCreateUser: true, data: meta || {} }
+      email,
+      options: { shouldCreateUser: true, data: meta || {} },
     });
     return { ok: !error, error: error ? error.message : null };
-  } catch (e) { return { ok: false, error: 'unavailable' }; }
+  } catch (e) {
+    return { ok: false, error: "unavailable" };
+  }
 }
 async function authVerifyCode(email, token) {
   try {
-    const { data, error } = await sb.auth.verifyOtp({ email, token, type: 'email' });
+    const { data, error } = await sb.auth.verifyOtp({
+      email,
+      token,
+      type: "email",
+    });
     if (error) return { ok: false, error: error.message };
     return { ok: true, userId: (data && data.user && data.user.id) || null };
-  } catch (e) { return { ok: false, error: 'unavailable' }; }
+  } catch (e) {
+    return { ok: false, error: "unavailable" };
+  }
 }
 /* The current signed-in auth user (or null). Reads the persisted session, so it
  * works offline until the stored token expires. */
 async function authCurrentUser() {
-  try { const { data } = await sb.auth.getSession(); return (data && data.session && data.session.user) || null; }
-  catch (e) { return null; }
+  try {
+    const { data } = await sb.auth.getSession();
+    return (data && data.session && data.session.user) || null;
+  } catch (e) {
+    return null;
+  }
 }
 /* Load a member's profile row (public.users) by id. Null on error/offline. */
 async function loadUserProfile(userId) {
   if (!userId) return null;
-  try { const { data } = await sb.from('users').select('*').eq('id', userId).single(); return data || null; }
-  catch (e) { return null; }
+  try {
+    const { data } = await sb
+      .from("users")
+      .select("*")
+      .eq("id", userId)
+      .single();
+    return data || null;
+  } catch (e) {
+    return null;
+  }
 }
 
 async function getHostingProgress() {
   const user = await authCurrentUser();
-  if (!user) return { eligible: false, ageVerified: false, eventsCheckedIn: 0, eventsRequired: 3, connections: 0, connectionsRequired: 3 };
+  if (!user)
+    return {
+      eligible: false,
+      ageVerified: false,
+      eventsCheckedIn: 0,
+      eventsRequired: 3,
+      connections: 0,
+      connectionsRequired: 3,
+    };
 
   try {
-    const { data, error } = await sb.rpc('get_hosting_progress');
+    const { data, error } = await sb.rpc("get_hosting_progress");
     if (error) throw error;
-    
+
     return {
       ageVerified: data.ageVerified,
       eventsCheckedIn: data.eventsCheckedIn,
       eventsRequired: data.eventsRequired,
       connections: data.connections,
       connectionsRequired: data.connectionsRequired,
-      role: data.role || 'eventee',
-      eligible: data.eligible
+      role: data.role || "eventee",
+      eligible: data.eligible,
     };
   } catch (e) {
-    return { eligible: false, ageVerified: false, eventsCheckedIn: 0, eventsRequired: 3, connections: 0, connectionsRequired: 3, role: 'eventee' };
+    return {
+      eligible: false,
+      ageVerified: false,
+      eventsCheckedIn: 0,
+      eventsRequired: 3,
+      connections: 0,
+      connectionsRequired: 3,
+      role: "eventee",
+    };
   }
 }
 
@@ -172,15 +239,21 @@ async function getHostingProgress() {
  * Parameters come straight from lmap.getBounds() in app.js.
  * Returns null on error/offline so the caller can keep its current data.      */
 async function fetchEventsGeoJSON({ min_lng, min_lat, max_lng, max_lat }) {
-  if (typeof sb === 'undefined') return null;
+  if (typeof sb === "undefined") return null;
   try {
-    const { data, error } = await sb.rpc('get_events_geojson', {
-      min_lng, min_lat, max_lng, max_lat
+    const { data, error } = await sb.rpc("get_events_geojson", {
+      min_lng,
+      min_lat,
+      max_lng,
+      max_lat,
     });
-    if (error) { console.warn('[fetchEventsGeoJSON]', error.message); return null; }
+    if (error) {
+      console.warn("[fetchEventsGeoJSON]", error.message);
+      return null;
+    }
     return data; // Already a GeoJSON FeatureCollection object (jsonb → JS object)
   } catch (e) {
-    console.warn('[fetchEventsGeoJSON] offline or unavailable:', e.message);
+    console.warn("[fetchEventsGeoJSON] offline or unavailable:", e.message);
     return null;
   }
 }

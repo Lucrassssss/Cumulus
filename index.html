@@ -1,98 +1,204 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-theme="light">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Cumulus — London Community Events</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <title>Cumulus — London Community Events</title>
 
-<!-- ══ CDN Preconnects ══ -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://api.mapbox.com">
-<link rel="preconnect" href="https://events.mapbox.com">
-<link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <!-- ══ CDN Preconnects ══ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://api.mapbox.com" />
+    <link rel="preconnect" href="https://events.mapbox.com" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
 
-<!-- ══ iOS / PWA ══ -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Cumulus">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#0F0E0C" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#F5F4F0" media="(prefers-color-scheme: light)">
+    <!-- ══ iOS / PWA ══ -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Cumulus" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta
+      name="theme-color"
+      content="#0F0E0C"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta
+      name="theme-color"
+      content="#F5F4F0"
+      media="(prefers-color-scheme: light)"
+    />
 
-<!-- Instant day/night theme by LONDON time (matches app.js themeForNow), set
+    <!-- Instant day/night theme by LONDON time (matches app.js themeForNow), set
      before any CSS paints so there's no flash. -->
-<script>
-(function(){
-  try {
-    var h;
-    try { h = parseInt(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',hour:'numeric',hourCycle:'h23'}).format(new Date()),10); }
-    catch(e){ h = new Date().getHours(); }
-    document.documentElement.setAttribute('data-theme', (h >= 6 && h < 18) ? 'light' : 'dark');
-  } catch(e) {}
-})();
-</script>
-<meta name="description" content="Cumulus — London community events. Your city, your people.">
-<link rel="canonical" href="https://cumulusapp.co/">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg">
-<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
-<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+    <script>
+      (function () {
+        try {
+          var h;
+          try {
+            h = parseInt(
+              new Intl.DateTimeFormat("en-GB", {
+                timeZone: "Europe/London",
+                hour: "numeric",
+                hourCycle: "h23",
+              }).format(new Date()),
+              10,
+            );
+          } catch (e) {
+            h = new Date().getHours();
+          }
+          document.documentElement.setAttribute(
+            "data-theme",
+            h >= 6 && h < 18 ? "light" : "dark",
+          );
+        } catch (e) {}
+      })();
+    </script>
+    <meta
+      name="description"
+      content="Cumulus — London community events. Your city, your people."
+    />
+    <link rel="canonical" href="https://cumulusapp.co/" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="assets/icons/favicon-32.png"
+    />
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
 
-<!-- ══ Social share previews ══ -->
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Cumulus">
-<meta property="og:title" content="Cumulus — London Community Events">
-<meta property="og:description" content="London community events. Your city, your people.">
-<meta property="og:url" content="https://cumulusapp.co/">
-<meta property="og:image" content="https://cumulusapp.co/assets/og-image.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Cumulus — London Community Events">
-<meta name="twitter:description" content="London community events. Your city, your people.">
-<meta name="twitter:image" content="https://cumulusapp.co/assets/og-image.png">
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- Variable Inter with optical sizing + DM Sans for display headings -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&family=DM+Sans:ital,opsz,wght@0,9..40,300..900;1,9..40,300..900&family=DM+Mono:ital,wght@0,400;0,500&display=swap" rel="stylesheet">
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.18.0/mapbox-gl.css" rel="stylesheet">
-<script defer src="https://api.mapbox.com/mapbox-gl-js/v3.18.0/mapbox-gl.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<link rel="stylesheet" href="src/css/styles.css">
-</head>
-<body>
-<!-- Loading Overlay (removed once map is idle or logged out) -->
-<div id="cumulus-loader" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s ease;pointer-events:none;">
-  <div style="width:50px;height:50px;border-radius:50%;border:3px solid var(--accent);border-top-color:transparent;animation:spin 1s linear infinite;"></div>
-  <p style="margin-top:20px;font-family:'DM Sans',sans-serif;color:var(--text);font-weight:500;">Optimising map data...</p>
-  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-</div>
-<div class="bg-blot blot-a"></div>
-<div class="bg-blot blot-b"></div>
-<div class="bg-blot blot-c"></div>
-<div class="bg-blot blot-d"></div>
-<div class="bg-blot blot-e"></div>
-<div class="bg-grain" aria-hidden="true"></div>
+    <!-- ══ Social share previews ══ -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Cumulus" />
+    <meta property="og:title" content="Cumulus — London Community Events" />
+    <meta
+      property="og:description"
+      content="London community events. Your city, your people."
+    />
+    <meta property="og:url" content="https://cumulusapp.co/" />
+    <meta
+      property="og:image"
+      content="https://cumulusapp.co/assets/og-image.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Cumulus — London Community Events" />
+    <meta
+      name="twitter:description"
+      content="London community events. Your city, your people."
+    />
+    <meta
+      name="twitter:image"
+      content="https://cumulusapp.co/assets/og-image.png"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    ></script>
+    <!-- Variable Inter with optical sizing + DM Sans for display headings -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&family=DM+Sans:ital,opsz,wght@0,9..40,300..900;1,9..40,300..900&family=DM+Mono:ital,wght@0,400;0,500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v3.18.0/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <script
+      defer
+      src="https://api.mapbox.com/mapbox-gl-js/v3.18.0/mapbox-gl.js"
+    ></script>
+    <script
+      defer
+      src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+    ></script>
+    <link rel="stylesheet" href="src/css/styles.css" />
+  </head>
+  <body>
+    <!-- Loading Overlay (removed once map is idle or logged out) -->
+    <div
+      id="cumulus-loader"
+      style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--bg);
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.5s ease;
+        pointer-events: none;
+      "
+    >
+      <div
+        style="
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          border: 3px solid var(--accent);
+          border-top-color: transparent;
+          animation: spin 1s linear infinite;
+        "
+      ></div>
+      <p
+        style="
+          margin-top: 20px;
+          font-family: &quot;DM Sans&quot;, sans-serif;
+          color: var(--text);
+          font-weight: 500;
+        "
+      >
+        Optimising map data...
+      </p>
+      <style>
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      </style>
+    </div>
+    <div class="bg-blot blot-a"></div>
+    <div class="bg-blot blot-b"></div>
+    <div class="bg-blot blot-c"></div>
+    <div class="bg-blot blot-d"></div>
+    <div class="bg-blot blot-e"></div>
+    <div class="bg-grain" aria-hidden="true"></div>
 
-<div id="gate-root"></div>
-<div id="card-editor-root"></div>
+    <div id="gate-root"></div>
+    <div id="card-editor-root"></div>
 
-<div id="app" style="display:none;">
-  <div id="nav-container"></div>
-  <div id="main-map" class="map-host" style="display:none;"></div>
-  <div id="map-filters" class="map-filters" style="display:none;"></div>
-  <div id="geocode-banner"></div>
-  <div id="map-caption-bar" class="map-caption" style="display:none;"><span class="cap-live"><span class="dot"></span>Live</span> events pulse · tap pin to view</div>
-  <div id="owner-fin-fab" style="display:none;"></div>
-  <div id="view-container"></div>
-</div>
-<script defer src="./src/js/config.js"></script>
-<script defer src="./src/js/services.js"></script>
-<script defer src="./src/js/app.js"></script>
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
-  }
-</script>
-</body>
+    <div id="app" style="display: none">
+      <div id="nav-container"></div>
+      <div id="main-map" class="map-host" style="display: none"></div>
+      <div id="map-filters" class="map-filters" style="display: none"></div>
+      <div id="geocode-banner"></div>
+      <div id="map-caption-bar" class="map-caption" style="display: none">
+        <span class="cap-live"><span class="dot"></span>Live</span> events pulse
+        · tap pin to view
+      </div>
+      <div id="owner-fin-fab" style="display: none"></div>
+      <div id="view-container"></div>
+    </div>
+    <script defer src="./src/js/config.js"></script>
+    <script defer src="./src/js/services.js"></script>
+    <script defer src="./src/js/app.js"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      }
+    </script>
+  </body>
 </html>

@@ -15,17 +15,26 @@
  * config.local.js loaded before this file), set window.CUMULUS_CONFIG first.
  * See .env.example.
  * ───────────────────────────────────────────────────────────── */
-window.CUMULUS_CONFIG = Object.assign({
-  SUPABASE_URL:      'https://xyzrvgbdnevllwvxqcka.supabase.co',
-  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5enJ2Z2JkbmV2bGx3dnhxY2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NDM0NTAsImV4cCI6MjA5NzQxOTQ1MH0.jfSmMobPUV1tTg2cmyAvTGuRmAyd9C5r-pooMVpSV6E',
-  MAPBOX_TOKEN:      'pk.eyJ1IjoibHVjcmFzc3Nzc3MiLCJhIjoiY21xam1pcTJ4MGt0dTJzcXhobnQyZ3owMiJ9.RpRNYuS-zJnNdZ3wOGl61g'
-}, window.CUMULUS_CONFIG || {});
+window.CUMULUS_CONFIG = Object.assign(
+  {
+    SUPABASE_URL: "https://xyzrvgbdnevllwvxqcka.supabase.co",
+    SUPABASE_ANON_KEY:
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5enJ2Z2JkbmV2bGx3dnhxY2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NDM0NTAsImV4cCI6MjA5NzQxOTQ1MH0.jfSmMobPUV1tTg2cmyAvTGuRmAyd9C5r-pooMVpSV6E",
+    MAPBOX_TOKEN:
+      "pk.eyJ1IjoibHVjcmFzc3Nzc3MiLCJhIjoiY21xam1pcTJ4MGt0dTJzcXhobnQyZ3owMiJ9.RpRNYuS-zJnNdZ3wOGl61g",
+  },
+  window.CUMULUS_CONFIG || {},
+);
 
-const SUPABASE_URL      = window.CUMULUS_CONFIG.SUPABASE_URL;
+const SUPABASE_URL = window.CUMULUS_CONFIG.SUPABASE_URL;
 const SUPABASE_ANON_KEY = window.CUMULUS_CONFIG.SUPABASE_ANON_KEY;
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   // Real auth (Phase 2): persist the session + refresh tokens so a signed-in
   // member stays signed in across reloads. verifyOtp() establishes the session;
   // getSession() restores it (works offline from the stored token until expiry).
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+  },
 });

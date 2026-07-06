@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * HostChecklist — the "Host a Private Event" tab for an `eventee`.
@@ -19,8 +19,8 @@
  *   4.1.3 Status Messages  — progress announced via an aria-live region.
  */
 
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
 import {
   Lock,
   CheckCircle2,
@@ -30,7 +30,7 @@ import {
   Fingerprint,
   ArrowRight,
   PartyPopper,
-} from 'lucide-react';
+} from "lucide-react";
 
 /* ── Types (server-authoritative shape returned by get_hosting_progress) ── */
 export interface HostingProgress {
@@ -42,7 +42,7 @@ export interface HostingProgress {
   eligible: boolean;
 }
 
-type StepId = 'age' | 'checkin' | 'connections';
+type StepId = "age" | "checkin" | "connections";
 
 interface Step {
   id: StepId;
@@ -89,33 +89,43 @@ export default function HostChecklist({
 
   const steps: Step[] = [
     {
-      id: 'age',
-      title: 'Verify you’re 18 or over',
+      id: "age",
+      title: "Verify you’re 18 or over",
       srSummary: progress.ageVerified
-        ? 'Step 1 of 3, complete: your age is verified.'
-        : 'Step 1 of 3, incomplete: verify your age with your device to continue.',
+        ? "Step 1 of 3, complete: your age is verified."
+        : "Step 1 of 3, incomplete: verify your age with your device to continue.",
       icon: ShieldCheck,
       done: progress.ageVerified,
     },
     {
-      id: 'checkin',
-      title: 'Check in at a real event',
+      id: "checkin",
+      title: "Check in at a real event",
       srSummary: `Step 2 of 3, ${
-        progress.eventsCheckedIn >= progress.eventsRequired ? 'complete' : 'incomplete'
+        progress.eventsCheckedIn >= progress.eventsRequired
+          ? "complete"
+          : "incomplete"
       }: ${progress.eventsCheckedIn} of ${progress.eventsRequired} events attended in person.`,
       icon: Ticket,
       done: progress.eventsCheckedIn >= progress.eventsRequired,
-      count: { value: progress.eventsCheckedIn, target: progress.eventsRequired },
+      count: {
+        value: progress.eventsCheckedIn,
+        target: progress.eventsRequired,
+      },
     },
     {
-      id: 'connections',
-      title: 'Make 3 mutual connections',
+      id: "connections",
+      title: "Make 3 mutual connections",
       srSummary: `Step 3 of 3, ${
-        progress.connections >= progress.connectionsRequired ? 'complete' : 'incomplete'
+        progress.connections >= progress.connectionsRequired
+          ? "complete"
+          : "incomplete"
       }: ${progress.connections} of ${progress.connectionsRequired} connections accepted.`,
       icon: Users,
       done: progress.connections >= progress.connectionsRequired,
-      count: { value: progress.connections, target: progress.connectionsRequired },
+      count: {
+        value: progress.connections,
+        target: progress.connectionsRequired,
+      },
     },
   ];
 
@@ -154,9 +164,11 @@ export default function HostChecklist({
         </h2>
         <p className="mt-2 text-sm text-zinc-300">
           {/* zinc-300 (#d4d4d8) on zinc-900 (#18181b) ≈ 10.4:1 */}
-          You’ve met every requirement. You can now host{' '}
-          <span className="font-semibold text-zinc-100">connections-only</span> events for people
-          you’re connected with.
+          You’ve met every requirement. You can now host{" "}
+          <span className="font-semibold text-zinc-100">
+            connections-only
+          </span>{" "}
+          events for people you’re connected with.
         </p>
         <button
           type="button"
@@ -185,8 +197,9 @@ export default function HostChecklist({
           Unlock private hosting
         </h2>
         <p className="mt-2 text-sm text-zinc-300">
-          Complete three steps to host <span className="font-semibold">connections-only</span>{' '}
-          events. Progress is verified by Cumulus — no need to prove anything twice.
+          Complete three steps to host{" "}
+          <span className="font-semibold">connections-only</span> events.
+          Progress is verified by Cumulus — no need to prove anything twice.
         </p>
 
         {/* Visible progress meter + accessible name. */}
@@ -211,7 +224,8 @@ export default function HostChecklist({
 
         {/* 4.1.3 — announce changes without moving focus. */}
         <p id={liveId} aria-live="polite" className="sr-only">
-          {completed} of {steps.length} steps complete toward unlocking private hosting.
+          {completed} of {steps.length} steps complete toward unlocking private
+          hosting.
         </p>
       </header>
 
@@ -241,8 +255,8 @@ export default function HostChecklist({
                     <h3
                       className={
                         step.done
-                          ? 'text-sm font-semibold text-zinc-400 line-through'
-                          : 'text-sm font-semibold text-zinc-100'
+                          ? "text-sm font-semibold text-zinc-400 line-through"
+                          : "text-sm font-semibold text-zinc-100"
                       }
                     >
                       {step.title}
@@ -263,8 +277,11 @@ export default function HostChecklist({
                   </p>
 
                   {/* Per-step action for the incomplete steps. */}
-                  {!step.done && step.id === 'age' && (
-                    <Dialog.Root open={verifyOpen} onOpenChange={handleOpenChange}>
+                  {!step.done && step.id === "age" && (
+                    <Dialog.Root
+                      open={verifyOpen}
+                      onOpenChange={handleOpenChange}
+                    >
                       <Dialog.Trigger asChild>
                         <button
                           ref={ageTriggerRef}
@@ -275,11 +292,14 @@ export default function HostChecklist({
                           Verify with your device
                         </button>
                       </Dialog.Trigger>
-                      <AgeVerifyModal verifying={verifying} onConfirm={handleVerify} />
+                      <AgeVerifyModal
+                        verifying={verifying}
+                        onConfirm={handleVerify}
+                      />
                     </Dialog.Root>
                   )}
 
-                  {!step.done && step.id === 'checkin' && (
+                  {!step.done && step.id === "checkin" && (
                     <button
                       type="button"
                       onClick={onFindEvents}
@@ -290,7 +310,7 @@ export default function HostChecklist({
                     </button>
                   )}
 
-                  {!step.done && step.id === 'connections' && (
+                  {!step.done && step.id === "connections" && (
                     <button
                       type="button"
                       onClick={onFindConnections}
@@ -335,11 +355,13 @@ function AgeVerifyModal({
         className="fixed left-1/2 top-1/2 w-[min(92vw,26rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/10 bg-zinc-900 p-6 text-zinc-100 shadow-2xl focus:outline-none"
       >
         <Fingerprint aria-hidden className="h-8 w-8 text-amber-300" />
-        <Dialog.Title className="mt-3 text-lg font-bold">Verify your age</Dialog.Title>
+        <Dialog.Title className="mt-3 text-lg font-bold">
+          Verify your age
+        </Dialog.Title>
         <p id={descId} className="mt-2 text-sm text-zinc-300">
-          We’ll confirm you’re 18 or over using your device — Face ID, a fingerprint, or your
-          banking app. There’s nothing to memorise and no puzzle to solve. Cumulus never sees your
-          documents.
+          We’ll confirm you’re 18 or over using your device — Face ID, a
+          fingerprint, or your banking app. There’s nothing to memorise and no
+          puzzle to solve. Cumulus never sees your documents.
         </p>
         <div className="mt-6 flex flex-col gap-2">
           <button
@@ -348,7 +370,7 @@ function AgeVerifyModal({
             disabled={verifying}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-amber-300 px-4 font-semibold text-zinc-950 transition-colors hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 disabled:opacity-60 motion-reduce:transition-none"
           >
-            {verifying ? 'Opening secure check…' : 'Continue with device'}
+            {verifying ? "Opening secure check…" : "Continue with device"}
           </button>
           <Dialog.Close asChild>
             <button
