@@ -2480,6 +2480,11 @@ function attachMapLayers(){
     if(!hits.length) removeActiveHtmlMarker();
   });
 
+  // After each camera settle, fetch only the events within the new viewport.
+  // The 300ms debounce means rapid pans generate exactly ONE RPC call when
+  // the user stops, preventing Supabase spam and keeping bandwidth minimal.
+  lmap.on('moveend', () => _debouncedFetchVisible());
+
   if(state.view==='browse') setTimeout(refreshMarkers, 0);
 }
 
@@ -2503,6 +2508,89 @@ function refreshMarkers(){
     lmapFitted=true;
   }
 }
+
+// ── Bounding-box event refresh via PostGIS RPC ────────────────────────────
+// fetchVisibleEvents() queries only the events within the current map
+// viewport using the get_events_geojson Postgres RPC. The result is a
+// pre-built GeoJSON FeatureCollection from the server — zero client-side
+// serialisation overhead. New events are merged into the in-memory EVENTS
+// array so calendar/social/detail views stay consistent.
+//
+// The debounced moveend listener (300ms) batches rapid pans so we never
+// fire more than one RPC per camera settle. Falls back to the local
+// buildEventsGeoJSON() if the RPC is unavailable (offline / not deployed).
+
+let _bboxFetchTimer = null;
+
+async function fetchVisibleEvents() {
+  if (!lmap || typeof mapboxgl === 'undefined') return;
+  const src = lmap.getSource('events-source');
+  if (!src) return;
+
+  // Extract SW / NE corners of the current viewport
+  const bounds = lmap.getBounds();
+  const sw = bounds.getSouthWest();
+  const ne = bounds.getNorthEast();
+
+  // Pad bbox slightly (10%) so pins near the edge don't pop in/out abruptly
+  const lngSpan = (ne.lng - sw.lng) * 0.1;
+  const latSpan = (ne.lat - sw.lat) * 0.1;
+
+  const bbox = {
+    min_lng: sw.lng - lngSpan,
+    min_lat: sw.lat - latSpan,
+    max_lng: ne.lng + lngSpan,
+    max_lat: ne.lat + latSpan,
+  };
+
+  // Call the PostGIS RPC (defined in services.js) which returns a
+  // fully-formed GeoJSON FeatureCollection from the database
+  const geojson = await fetchEventsGeoJSON(bbox);
+
+  if (!geojson || !Array.isArray(geojson.features)) {
+    // RPC unavailable (offline / not deployed yet) — fall back gracefully
+    src.setData(buildEventsGeoJSON());
+    return;
+  }
+
+  // Merge any new events from the bbox result into the in-memory EVENTS array
+  // so that other views (calendar, social, detail) remain consistent.
+  geojson.features.forEach(f => {
+    const p = f.properties;
+    if (!p || !p.id) return;
+    if (EVENTS.find(e => e.id === p.id)) return; // already loaded
+    const mapped = {
+      id: p.id, title: p.title, category: p.category,
+      host: p.host_name, hostId: p.host_id,
+      venue: p.venue, area: p.area, address: p.address,
+      lat: p.lat, lon: p.lon,
+      startTime: p.start_time, endTime: p.end_time,
+      desc: p.description, capacity: p.capacity, price: p.price || 0,
+      nightShotUrl: p.night_shot_url || null
+    };
+    computeEventDates(mapped);
+    EVENTS.push(mapped);
+  });
+
+  // Apply client-side filters (category, live/hot/friends toggles, search)
+  // and push the resulting GeoJSON directly to the WebGL source
+  const filteredGeo = buildEventsGeoJSON();
+  src.setData(filteredGeo);
+  updateMapEmptyState(filteredGeo.features.length);
+}
+
+// Debounce helper — executes fn at most once every `wait` ms after last call
+function debounce(fn, wait) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), wait);
+  };
+}
+
+// Register the debounced bbox fetch on map moveend (registered once in
+// attachMapLayers so it survives style reloads cleanly)
+const _debouncedFetchVisible = debounce(fetchVisibleEvents, 300);
 
 // Empty-state overlay on the map when no events are visible — distinguishes
 // "no events exist yet" from "your filters/search matched nothing".

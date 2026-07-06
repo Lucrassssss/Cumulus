@@ -162,3 +162,24 @@ async function getHostingProgress() {
   }
 }
 
+/* ── PostGIS GeoJSON bounding-box fetch ────────────────────────────────────
+ * Calls the `get_events_geojson` Postgres RPC which builds a fully-formed
+ * GeoJSON FeatureCollection server-side. This offloads JSON serialisation
+ * from the mobile device to Postgres and filters to only the visible map
+ * viewport, avoiding the cost of fetching + mapping the entire events table.
+ *
+ * Parameters come straight from lmap.getBounds() in app.js.
+ * Returns null on error/offline so the caller can keep its current data.      */
+async function fetchEventsGeoJSON({ min_lng, min_lat, max_lng, max_lat }) {
+  if (typeof sb === 'undefined') return null;
+  try {
+    const { data, error } = await sb.rpc('get_events_geojson', {
+      min_lng, min_lat, max_lng, max_lat
+    });
+    if (error) { console.warn('[fetchEventsGeoJSON]', error.message); return null; }
+    return data; // Already a GeoJSON FeatureCollection object (jsonb → JS object)
+  } catch (e) {
+    console.warn('[fetchEventsGeoJSON] offline or unavailable:', e.message);
+    return null;
+  }
+}
