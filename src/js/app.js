@@ -7632,7 +7632,7 @@ async function decideEvent(pendingId, decision) {
 async function _publishApprovedEvent(rec) {
   let inserted = null;
   try {
-    const { data, error } = await sb
+    let { data, error } = await sb
       .from("events")
       .insert({
         title: rec.title,
@@ -7656,9 +7656,47 @@ async function _publishApprovedEvent(rec) {
       .select()
       .single();
     if (error) {
-      showToast("Failed to publish event: " + error.message, "error");
-      console.error(error);
-      return false;
+      if (error.message && error.message.includes("events_host_id_fkey")) {
+        console.warn(
+          "Host ID not found in users table. Retrying with null host_id.",
+        );
+        const retryRes = await sb
+          .from("events")
+          .insert({
+            title: rec.title,
+            category: rec.category,
+            visibility: rec.visibility || "public",
+            host_id: null,
+            host_name: rec.host_name,
+            venue: rec.venue,
+            area: rec.area || "London",
+            address: rec.address || "",
+            lat: rec.lat,
+            lon: rec.lon,
+            start_time: rec.start_time,
+            end_time: rec.end_time,
+            starts_at: rec.starts_at || rec.start_time,
+            ends_at: rec.ends_at || rec.end_time,
+            description: rec.description,
+            capacity: rec.capacity,
+            price: rec.price || 0,
+          })
+          .select()
+          .single();
+        if (retryRes.error) {
+          showToast(
+            "Failed to publish event: " + retryRes.error.message,
+            "error",
+          );
+          console.error(retryRes.error);
+          return false;
+        }
+        data = retryRes.data;
+      } else {
+        showToast("Failed to publish event: " + error.message, "error");
+        console.error(error);
+        return false;
+      }
     }
     inserted = data;
   } catch (e) {
