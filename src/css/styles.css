@@ -10653,3 +10653,33 @@ textarea.gate-input {
   color: #dc2626;
   border-color: #dc2626;
 }
+
+/* ── Landing page: mobile grid fix ─────────────────────────────────────────
+ * The stylesheet had NO @media queries at all, so every fixed multi-column
+ * grid on the landing page rendered unchanged down to phone widths — e.g.
+ * .lp-features-grid (3 columns) and .lp-venues-inner (2 columns, 60px gap)
+ * squeezed their content into ~120px slivers, wrapping every word onto its
+ * own line. Stack these to a single column below the tablet breakpoint;
+ * desktop/tablet keep their original multi-column layout untouched. */
+@media (max-width: 860px) {
+  .lp-features-grid {
+    grid-template-columns: 1fr;
+  }
+  .lp-venues-inner {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  /* Not currently rendered by app.js, but harden them the same way in case
+     they're reintroduced — cheap insurance against the same bug returning. */
+  .lp-events-grid {
+    grid-template-columns: 1fr;
+  }
+  .lp-event-card:nth-child(1),
+  .lp-event-card:nth-child(4) {
+    grid-column: span 1;
+  }
+  .lp-join-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}

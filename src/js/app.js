@@ -2600,6 +2600,17 @@ function gateErr(msg) {
     el.classList.add("show");
   }
 }
+// Turn a raw auth error into human copy — never leak a non-message value
+// (e.g. an empty "{}" body some mail providers return on a misconfigured
+// SMTP send) to the sign-in screen or a toast.
+function authErrMsg(err) {
+  const s = typeof err === "string" ? err.trim() : "";
+  if (/rate limit/i.test(s))
+    return "Too many code requests just now — wait a minute, then try again.";
+  if (!s || s === "unavailable" || s.charAt(0) === "{" || s.charAt(0) === "[")
+    return "We couldn't send your code. Check your email address, or try again shortly.";
+  return s;
+}
 // Persist a lightweight session snapshot so a reload can restore instantly and
 // still boot the app if Supabase is momentarily unreachable.
 function _cacheSession() {
@@ -2699,11 +2710,7 @@ async function submitGate() {
     if (label()) label().textContent = origLabel;
   }
   if (!res.ok) {
-    gateErr(
-      res.error === "unavailable"
-        ? "Sign-in is temporarily unavailable — please try again in a moment."
-        : res.error || "Could not send your code. Please try again.",
-    );
+    gateErr(authErrMsg(res.error));
     return;
   }
 
@@ -7423,12 +7430,7 @@ async function promptAdminSignIn() {
   const sent = await authSendCode(email, {});
   if (!sent.ok) {
     if (sub) sub.textContent = "Verify with a one-time code to approve events";
-    showToast(
-      sent.error === "unavailable"
-        ? "Auth unavailable right now"
-        : "Could not send code — " + (sent.error || "error"),
-      "error",
-    );
+    showToast(authErrMsg(sent.error), "error");
     return;
   }
 
@@ -7454,7 +7456,7 @@ async function promptAdminSignIn() {
 
   if (!res.ok) {
     if (sub) sub.textContent = "Verify with a one-time code to approve events";
-    showToast("Verification failed — " + (res.error || "error"), "error");
+    showToast("That code didn't match. Check it and try again.", "error");
     return;
   }
 
