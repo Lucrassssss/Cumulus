@@ -10487,6 +10487,13 @@ const _origRenderCardEditor = renderCardEditor;
 renderCardEditor = function () {
   _origRenderCardEditor.apply(this, arguments);
   requestAnimationFrame(() => {
+    // The card editor's swatch/pattern/tag pickers add up to 250+ elements
+    // across its four tabs. Staggering by a flat per-element index (i * 50ms)
+    // meant elements late in DOM order — e.g. the Pattern tab's buttons —
+    // stayed invisible for 5-15+ seconds if a user switched to that tab
+    // before its turn came up, since switching tabs doesn't re-trigger this
+    // reveal. Cap the index so every field is visible within ~1s of the
+    // editor opening, no matter how many fields exist across all tabs.
     const fields = document.querySelectorAll(
       "#card-editor-root label, #card-editor-root input, #card-editor-root textarea, #card-editor-root button",
     );
@@ -10497,7 +10504,7 @@ renderCardEditor = function () {
           el.style.transition = "opacity 0.28s ease";
           el.style.opacity = "";
         },
-        180 + i * 50,
+        180 + Math.min(i, 14) * 50,
       );
     });
   });

@@ -10685,4 +10685,15 @@ textarea.gate-input {
     grid-template-columns: 1fr;
     gap: 40px;
   }
+
+  /* .hide-mobile is applied in app.js (landing nav's Features/For Venues
+     links, and the in-app nav's "Cumulus" wordmark) but had NO matching CSS
+     rule anywhere in this file — another casualty of the missing @media
+     queries. Without it, the landing nav packed logo + 2 links + 2 buttons
+     into one unwrapping flex row: measured 511px of content in a 390px bar,
+     so "Request Access" rendered ~121px off the right edge (only "R"
+     visible). Restore the hide so nav fits: icon + Log in + Request Access. */
+  .hide-mobile {
+    display: none !important;
+  }
 }
