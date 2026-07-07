@@ -3,6 +3,13 @@
 .env.local
 src/js/config.local.js
 
+# Supabase CLI local state (machine-specific; includes pooler URL/org ids)
+supabase/.temp/
+
+# Editor-generated / ad-hoc backup files
+*.bak
+*_optimized.css
+
 # Dependencies (if a build step is added later)
 node_modules/
 dist/
