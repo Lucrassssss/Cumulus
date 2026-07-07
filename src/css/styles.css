@@ -9811,14 +9811,17 @@ textarea.gate-input {
   right: 0;
   z-index: 2000;
   padding: 12px 20px;
+  /* Clear the notch/Dynamic Island + status bar (needs viewport-fit=cover,
+     already set in index.html) instead of rendering underneath it. */
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
   backdrop-filter: blur(16px) saturate(1.3) !important;
   -webkit-backdrop-filter: blur(16px) !important;
   background: color-mix(in srgb, var(--bg) 70%, transparent) !important;
   border-bottom: 1px solid var(--line-soft) !important;
   box-shadow: none !important;
   animation: navDrop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-  padding-left: var(--lp-gutter) !important;
-  padding-right: var(--lp-gutter) !important;
+  padding-left: calc(var(--lp-gutter) + env(safe-area-inset-left, 0px)) !important;
+  padding-right: calc(var(--lp-gutter) + env(safe-area-inset-right, 0px)) !important;
 }
 
 .lp-features-grid {
