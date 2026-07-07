@@ -7411,50 +7411,174 @@ function openEventApprovals() {
 // Admin sign-in via Supabase Auth OTP — reuses the same 6-digit email code
 // flow as normal login so there is no separate credential to remember.
 // The flow: enter email → receive 6-digit OTP → verify → is_admin() checked.
+//
+// This runs as an in-page modal rather than window.prompt(). Native prompt()
+// dialogs get auto-dismissed by the browser/OS when the tab loses focus —
+// which is exactly what happens the moment you switch to your email app to
+// read the code, wiping out the pending prompt and forcing a restart. A
+// regular DOM modal has no such issue: switching tabs to grab the code and
+// coming back leaves it exactly as you left it.
 let _adminPendingEmail = null;
 
-async function promptAdminSignIn() {
-  // Step 1: ask for email (reuse profileEmail if already set, avoid double-entry)
-  const email = (prompt("Admin email:", state.profileEmail || "") || "").trim();
-  if (!email) return;
+function promptAdminSignIn() {
+  const old = document.getElementById("admin-auth-overlay");
+  if (old) old.remove();
 
-  const sub = document.getElementById("admin-auth-sub");
-  if (sub) sub.textContent = "Sending code…";
+  const html = `<div class="card-xl-overlay open" id="admin-auth-overlay" onclick="if(event.target===this)closeAdminSignIn()">
+    <div class="admin-auth-modal">
+      <button class="card-xl-close" onclick="closeAdminSignIn()" aria-label="Close">✕</button>
+      <div id="admin-auth-panel"></div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML("beforeend", html);
+  renderAdminEmailStep(state.profileEmail || "");
+}
+
+function closeAdminSignIn() {
+  const ov = document.getElementById("admin-auth-overlay");
+  if (ov) ov.remove();
+  _adminPendingEmail = null;
+}
+
+function renderAdminEmailStep(prefill) {
+  const panel = document.getElementById("admin-auth-panel");
+  if (!panel) return;
+  panel.innerHTML = `
+    <div class="lp-form-eyebrow">Admin access</div>
+    <h3 class="lp-form-title">Sign in as admin</h3>
+    <p class="lp-form-sub">Enter your admin email — we'll send a 6-digit code.</p>
+    <div class="gate-field">
+      <label class="gate-label" for="admin-auth-email">Email</label>
+      <input id="admin-auth-email" class="gate-input" type="email" autocomplete="email" placeholder="you@example.com" value="${escapeHtml(prefill)}" aria-describedby="admin-auth-error"/>
+    </div>
+    <p id="admin-auth-error" class="gate-field-error" role="alert"></p>
+    <button id="admin-auth-send" class="lp-claim-btn" onclick="adminSendCode()">
+      <span class="lp-claim-btn-text">Send code</span>
+    </button>`;
+  const inp = document.getElementById("admin-auth-email");
+  if (inp) {
+    setTimeout(() => inp.focus(), 50);
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") adminSendCode();
+    });
+  }
+}
+
+function adminAuthErr(msg) {
+  const e = document.getElementById("admin-auth-error");
+  if (e) {
+    e.textContent = msg;
+    e.classList.add("show");
+  }
+}
+
+async function adminSendCode() {
+  const email = (
+    document.getElementById("admin-auth-email")?.value || ""
+  ).trim();
+  const errEl = document.getElementById("admin-auth-error");
+  if (errEl) errEl.classList.remove("show");
+  if (!EMAIL_PATTERN.test(email)) {
+    adminAuthErr("Please enter a valid email address.");
+    return;
+  }
+
+  const btn = document.getElementById("admin-auth-send");
+  const label = () => btn && btn.querySelector(".lp-claim-btn-text");
+  if (btn) {
+    btn.disabled = true;
+    if (label()) label().textContent = "Sending…";
+  }
 
   // Use the same authSendCode helper as normal login — sends the Supabase
   // magic-link / OTP email. Admin email just needs to be in public.admins.
   const sent = await authSendCode(email, {});
+  if (btn) {
+    btn.disabled = false;
+    if (label()) label().textContent = "Send code";
+  }
   if (!sent.ok) {
-    if (sub) sub.textContent = "Verify with a one-time code to approve events";
-    showToast(authErrMsg(sent.error), "error");
+    adminAuthErr(authErrMsg(sent.error));
     return;
   }
 
   _adminPendingEmail = email;
+  const sub = document.getElementById("admin-auth-sub");
   if (sub) sub.textContent = "Code sent — check your email";
-  showToast("6-digit code sent to " + email, "info");
+  renderAdminOtpStep(email);
+}
 
-  // Step 2: prompt for the code (same 6-digit OTP as normal login)
-  const code = (
-    prompt("Enter the 6-digit code sent to " + email + ":") || ""
-  ).trim();
-  if (!code) {
-    _adminPendingEmail = null;
-    if (sub) sub.textContent = "Verify with a one-time code to approve events";
+function renderAdminOtpStep(email) {
+  const panel = document.getElementById("admin-auth-panel");
+  if (!panel) return;
+  panel.innerHTML = `
+    <button class="gate-otp-back" onclick="renderAdminEmailStep('${escapeHtml(email)}')" aria-label="Back">←</button>
+    <div class="lp-form-eyebrow">Check your inbox</div>
+    <h3 class="lp-form-title">Enter your code</h3>
+    <p class="lp-form-sub">We emailed a 6-digit code to <strong>${escapeHtml(email)}</strong>. Switch to your email app and come back — this stays open.</p>
+    <div class="gate-field">
+      <label class="gate-label" for="admin-otp-input">6-digit code</label>
+      <input id="admin-otp-input" class="gate-input gate-otp-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" aria-describedby="admin-auth-error" oninput="this.value=this.value.replace(/\\D/g,'')"/>
+    </div>
+    <p id="admin-auth-error" class="gate-field-error" role="alert"></p>
+    <button id="admin-auth-verify" class="lp-claim-btn" onclick="adminVerifyCode()">
+      <span class="lp-claim-btn-text">Verify &amp; sign in</span>
+    </button>
+    <button class="gate-otp-resend" onclick="adminResendCode()">Didn't get it? Resend code</button>`;
+  const inp = document.getElementById("admin-otp-input");
+  if (inp) {
+    setTimeout(() => inp.focus(), 50);
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") adminVerifyCode();
+    });
+  }
+}
+
+async function adminResendCode() {
+  if (!_adminPendingEmail) return;
+  const b = document.querySelector(".gate-otp-resend");
+  if (b) {
+    b.disabled = true;
+    b.textContent = "Sending…";
+  }
+  const res = await authSendCode(_adminPendingEmail, {});
+  if (b) {
+    b.disabled = false;
+    b.textContent = res.ok ? "Code re-sent ✓" : "Resend failed — try again";
+  }
+}
+
+async function adminVerifyCode() {
+  const email = _adminPendingEmail;
+  if (!email) return;
+  const code = (document.getElementById("admin-otp-input")?.value || "").trim();
+  const errEl = document.getElementById("admin-auth-error");
+  if (errEl) errEl.classList.remove("show");
+  if (!/^\d{6}$/.test(code)) {
+    adminAuthErr("Enter the 6-digit code from your email.");
     return;
   }
 
-  if (sub) sub.textContent = "Verifying…";
+  const btn = document.getElementById("admin-auth-verify");
+  const label = () => btn && btn.querySelector(".lp-claim-btn-text");
+  if (btn) {
+    btn.disabled = true;
+    if (label()) label().textContent = "Verifying…";
+  }
 
   // authVerifyCode is the shared OTP verifier — it returns the Supabase session
   const res = await authVerifyCode(email, code);
-  _adminPendingEmail = null;
-
   if (!res.ok) {
-    if (sub) sub.textContent = "Verify with a one-time code to approve events";
-    showToast("That code didn't match. Check it and try again.", "error");
+    if (btn) {
+      btn.disabled = false;
+      if (label()) label().textContent = "Verify & sign in";
+    }
+    adminAuthErr("That code didn't match. Check it and try again.");
     return;
   }
+
+  _adminPendingEmail = null;
+  const sub = document.getElementById("admin-auth-sub");
 
   // Check is_admin() server-side — prevents non-admin accounts from gaining access
   const isAdmin = await isAdminSession();
@@ -7468,12 +7592,14 @@ async function promptAdminSignIn() {
     if (sub) sub.textContent = "Admin session active — full access";
     // Reset hostingProgress so the host view re-renders with eligible:true
     state.hostingProgress = null;
+    closeAdminSignIn();
   } else {
     showToast(
       "Signed in, but this account is not in the admins table",
       "error",
     );
     if (sub) sub.textContent = "Not an admin account";
+    closeAdminSignIn();
   }
 }
 
