@@ -4130,6 +4130,12 @@ async function signOut(confirmed) {
   state.rsvps = {};
   state.chats = {};
   myTickets = [];
+  // Admin flags and cached hosting eligibility must NOT survive a sign-out —
+  // otherwise the next account signed into this tab inherits the previous
+  // admin's bypass (full host form visible immediately, no checklist).
+  state.isAdmin = false;
+  state._verifiedAdmin = false;
+  state.hostingProgress = null;
   destroyMainMap();
   destroyHostMap();
   document.getElementById("app").style.display = "none";
