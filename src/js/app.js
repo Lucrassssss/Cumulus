@@ -9998,6 +9998,11 @@ function setHostType(t) {
       t === "private" ? "Create private event →" : "Submit for review →";
 }
 
+/* Real Stripe Identity flow: ask create-verification-session (server-side,
+ * holds the Stripe secret key) for a session, launch Stripe's hosted modal
+ * with the publishable key, then poll get_hosting_progress() briefly —
+ * ageVerified only flips once Stripe's *signed* webhook reaches
+ * identity-webhook, which can land a beat after the modal closes. */
 async function startAgeVerification() {
   try {
     const {
@@ -10005,29 +10010,37 @@ async function startAgeVerification() {
     } = await sb.auth.getSession();
     if (!session) return;
 
-    // Using simple mock request for local testing bypass
-    const res = await fetch(
-      "http://127.0.0.1:54321/functions/v1/identity-webhook",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-local-bypass": "true",
-        },
-        body: JSON.stringify({ user_id: session.user.id }),
-      },
+    const { data, error } = await sb.functions.invoke(
+      "create-verification-session",
+      { method: "POST" },
     );
+    if (error || !data?.client_secret) {
+      showToast("Could not start verification. Please try again.", "error");
+      return;
+    }
 
-    if (res.ok) {
-      // Re-fetch progress
+    const pk = window.CUMULUS_CONFIG && window.CUMULUS_CONFIG.STRIPE_PUBLISHABLE_KEY;
+    if (!pk || typeof Stripe === "undefined") {
+      showToast("Verification is not available right now.", "error");
+      return;
+    }
+    const stripe = Stripe(pk);
+    const result = await stripe.verifyIdentity(data.client_secret);
+    if (result.error) {
+      showToast(result.error.message || "Verification cancelled.", "error");
+      return;
+    }
+
+    showToast("Verification submitted — checking status…", "info");
+    for (let i = 0; i < 5; i++) {
+      await new Promise((r) => setTimeout(r, 2000));
       const p = await getHostingProgress();
       state.hostingProgress = p;
-      renderView();
-    } else {
-      alert("Verification failed: " + (await res.text()));
+      if (p.ageVerified) break;
     }
+    renderView();
   } catch (e) {
-    alert("Could not complete verification.");
+    showToast("Could not complete verification.", "error");
   }
 }
 
