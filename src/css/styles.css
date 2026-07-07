@@ -869,7 +869,7 @@ body.no-scroll {
 }
 
 .star {
-  color: var(--gold);
+  color: var(--gold-text);
 }
 
 .calendar-header-row {
@@ -892,6 +892,10 @@ body.no-scroll {
 
 .calendar-cell.today .calendar-day-num {
   color: var(--gold);
+}
+
+[data-theme="light"] .calendar-cell.today .calendar-day-num {
+  color: #725a12;
 }
 
 .map-host {
@@ -986,7 +990,7 @@ body.no-scroll {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #e23b3b;
+  color: #cc1e1e;
 }
 
 .cap-live .dot {
@@ -2615,7 +2619,7 @@ body.no-scroll {
 }
 
 .prof-action-signout {
-  color: #e23b3b !important;
+  color: #cc1e1e !important;
 }
 
 .prof-divider {
@@ -8625,7 +8629,7 @@ textarea {
   letter-spacing: 0.4px !important;
   padding: 3px 9px !important;
   margin-bottom: var(--sp-3) !important;
-  color: var(--cat, var(--accent)) !important;
+  color: var(--cat-text, var(--cat, var(--gold-text))) !important;
   border-radius: 7px !important;
   align-items: center !important;
   text-transform: uppercase !important;

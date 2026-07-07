@@ -9,15 +9,15 @@ const EVENTS = [];
 // Used only as scannability accents (dots, badges, markers, borders);
 // all interactive chrome (buttons/nav/CTAs) stays yellow.
 const CATS = {
-  Creative: { color: "#CBA43A" }, // gold
-  Gaming: { color: "#35C98A" }, // emerald
-  "Movie Nights": { color: "#F0913E" }, // orange
-  "Board Games": { color: "#2FB6C4" }, // teal
-  Meetups: { color: "#E85BA0" }, // pink
-  "Food & Drink": { color: "#E85641" }, // red
-  "Live Music": { color: "#F0687E" }, // rose
-  "Wellness & Outdoors": { color: "#8FC63D" }, // lime
-  "Tech & Talks": { color: "#4F9BE8" }, // blue
+  Creative: { color: "#CBA43A", textColor: "#765E1F" }, // gold
+  Gaming: { color: "#35C98A", textColor: "#1D6C4A" }, // emerald
+  "Movie Nights": { color: "#F0913E", textColor: "#984D0C" }, // orange
+  "Board Games": { color: "#2FB6C4", textColor: "#1B6A72" }, // teal
+  Meetups: { color: "#E85BA0", textColor: "#B41965" }, // pink
+  "Food & Drink": { color: "#E85641", textColor: "#B22916" }, // red
+  "Live Music": { color: "#F0687E", textColor: "#B7122D" }, // rose
+  "Wellness & Outdoors": { color: "#8FC63D", textColor: "#4C6A1F" }, // lime
+  "Tech & Talks": { color: "#4F9BE8", textColor: "#1660AB" }, // blue
 };
 
 // Category → representative photo (Unsplash, free license). Presentation only.
@@ -1387,42 +1387,42 @@ const LEVELS = [
   {
     min: 0,
     title: "Newcomer",
-    color: "#8B95A8",
+    color: "#476EB9",
     glow: "rgba(139,149,168,0.25)",
     ring: "1px solid #8B95A8",
   },
   {
     min: 1,
     title: "Explorer",
-    color: "#CD7F32",
+    color: "#9C6126",
     glow: "rgba(205,127,50,0.35)",
     ring: "1.5px solid #CD7F32",
   },
   {
     min: 3,
     title: "Regular",
-    color: "#C0C0C0",
+    color: "#6E6E6E",
     glow: "rgba(192,192,192,0.35)",
     ring: "1.5px solid #C0C0C0",
   },
   {
     min: 6,
     title: "Enthusiast",
-    color: "#FFD700",
+    color: "#7F6B00",
     glow: "rgba(255,215,0,0.4)",
     ring: "2px solid #FFD700",
   },
   {
     min: 10,
     title: "Community Pillar",
-    color: "#9FE3F0",
+    color: "#16778A",
     glow: "rgba(159,227,240,0.45)",
     ring: "2px solid #9FE3F0",
   },
   {
     min: 15,
     title: "Legend",
-    color: "#FBBF24",
+    color: "#8E6703",
     glow: "rgba(251,191,36,0.55)",
     ring: "2.5px solid #FBBF24",
   },
@@ -7227,7 +7227,7 @@ function renderHostPayoutsPanel() {
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">You set the ticket price and <strong style="color:var(--text);">keep 100% of it</strong> — always. Buyers pay a small platform fee at checkout that covers card processing and running Cumulus. It's added on top of your price, so it never comes out of your earnings.</div>
     <div class="hp-tier-row">
       <span class="hp-tier-label">Your ticket price</span>
-      <span class="hp-tier-fee" style="color:#22C55E">You keep 100%</span>
+      <span class="hp-tier-fee" style="color:#147136">You keep 100%</span>
     </div>
     <div class="hp-tier-row">
       <span class="hp-tier-label">Platform fee</span>
@@ -7991,14 +7991,14 @@ function renderDetail(id) {
       ? `<button class="live-chip" style="border:none;background:none;cursor:pointer;padding:0;" onclick="document.getElementById('going-section')?.scrollIntoView({behavior:'smooth'})"><span class="dot"></span>Live now</button>`
       : `<span class="upcoming-chip">${status === "past" ? "Ended" : "Upcoming"}</span>`;
   const capBadge = ev.capacity
-    ? `<span class="event-badge" style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);margin-left:6px;font-size:10px;">${spacesLeft} spaces left</span>`
+    ? `<span class="event-badge" style="background:var(--surface-2);color:var(--text) !important;border:1px solid var(--line);margin-left:6px;font-size:10px;">${spacesLeft} spaces left</span>`
     : "";
   const priceBadge = price
-    ? `<span class="event-badge" style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);margin-left:6px;font-size:10px;">From £${price}</span>`
-    : `<span class="event-badge" style="background:#22C55E22;color:#22C55E;border:1px solid #22C55E44;margin-left:6px;font-size:10px;">Free</span>`;
+    ? `<span class="event-badge" style="background:var(--surface-2);color:var(--text) !important;border:1px solid var(--line);margin-left:6px;font-size:10px;">From £${price}</span>`
+    : `<span class="event-badge" style="background:#14713622;color:#147136 !important;border:1px solid #14713644;margin-left:6px;font-size:10px;">Free</span>`;
   let bookBtn = "";
   if (ticket) {
-    bookBtn = `<button class="btn" style="background:transparent;border:2px solid #22C55E;color:#22C55E;box-shadow:none;width:100%;" onclick="openViewTicket(${id})">✓ You have a ticket — View it</button>`;
+    bookBtn = `<button class="btn" style="background:transparent;border:2px solid #147136;color:#147136;box-shadow:none;width:100%;" onclick="openViewTicket(${id})">✓ You have a ticket — View it</button>`;
   } else if (isFull) {
     bookBtn = `<button class="btn" style="background:var(--surface-2);color:var(--text-muted);cursor:not-allowed;width:100%;">Sold Out</button>`;
   } else {
@@ -8009,10 +8009,10 @@ function renderDetail(id) {
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="panel detail-card" style="--corner:${c.color};">
       <div class="detail-hero" style="background-image:url('${catImg(ev.category)}');"></div>
-      <span class="event-badge" style="--cat:${c.color};">${ev.category}</span>${statusChip}${capBadge}${priceBadge}
+      <span class="event-badge" style="--cat:${c.color};--cat-text:${c.textColor};">${ev.category}</span>${statusChip}${capBadge}${priceBadge}
       <h2 class="detail-title">${ev.title}</h2>
       <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;flex-wrap:wrap;">
-        <span style="font-size:14px;font-weight:700;color:${c.color};">📅 ${ev.date}</span>
+        <span style="font-size:14px;font-weight:700;color:${c.textColor};">📅 ${ev.date}</span>
         <span style="font-size:13px;font-weight:600;color:var(--text);">· ${ev.time}</span>
       </div>
       <div class="detail-meta-row"><span>${ev.venue}${ev.area ? `, ${ev.area}` : ""}</span><span>By ${escapeHtml(ev.host)}</span></div>
