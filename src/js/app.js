@@ -7460,6 +7460,10 @@ async function promptAdminSignIn() {
   const isAdmin = await isAdminSession();
   if (isAdmin) {
     state.isAdmin = true; // unlocks all hosting gates client-side
+    // Marks that THIS session passed the real server-side is_admin() check,
+    // so the TEMP admin-preview toggle below is only ever offered to a
+    // confirmed admin — never to an arbitrary logged-in user.
+    state._verifiedAdmin = true;
     showToast("Admin verified — all gates bypassed", "success");
     if (sub) sub.textContent = "Admin session active — full access";
     // Reset hostingProgress so the host view re-renders with eligible:true
@@ -10044,6 +10048,21 @@ async function startAgeVerification() {
   }
 }
 
+/* TEMP — lets a *confirmed* admin (state._verifiedAdmin, set only after a
+ * real is_admin() RPC pass) flip state.isAdmin off to preview the ordinary
+ * member's 3-step host checklist without signing into a second account, then
+ * flip back on. Purely a client-side view switch: any RPC that actually
+ * matters (event insert, approvals, etc.) still re-checks is_admin() on the
+ * server regardless of this flag, so toggling it grants no real access.
+ * Remove this function and its call site in renderSocialTab() before real
+ * users onboard — it has no place in production UI. */
+function toggleAdminPreview() {
+  if (!state._verifiedAdmin) return;
+  state.isAdmin = !state.isAdmin;
+  state.hostingProgress = null; // force a fresh fetch/fabrication on next render
+  renderView();
+}
+
 function renderHostChecklist(progress) {
   const completed = [
     progress.ageVerified,
@@ -10183,11 +10202,23 @@ function renderSocialTab() {
       }
     }
 
+    // TEMP — admin-only preview toggle (see toggleAdminPreview()). Only ever
+    // rendered for a session that already passed the real is_admin() RPC
+    // check; flipping it just swaps which client-side view renders below,
+    // it grants no real access. Remove before real users onboard.
+    const adminPreviewToggle = state._verifiedAdmin
+      ? `<div style="margin:12px 0;padding:10px 12px;border-radius:10px;background:rgba(203,164,58,0.12);border:1px dashed rgba(203,164,58,0.4);display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-size:12px;color:var(--text-muted);">TEST: admin bypass is <strong>${state.isAdmin ? "ON" : "OFF"}</strong></span>
+          <button class="btn btn-outline" style="min-height:32px;padding:0 12px;font-size:12px;" onclick="toggleAdminPreview()">${state.isAdmin ? "Preview as member" : "Preview as admin"}</button>
+        </div>`
+      : "";
+
     // Admin always bypasses eligibility gate, even if hostingProgress said otherwise
     if (!state.hostingProgress.eligible && !state.isAdmin) {
       return `
         <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Host an event for your community</p></div>
         ${seg}
+        ${adminPreviewToggle}
         ${renderHostChecklist(state.hostingProgress)}
       `;
     }
@@ -10195,6 +10226,7 @@ function renderSocialTab() {
     return `
       <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Host an event for your community</p></div>
       ${seg}
+      ${adminPreviewToggle}
       <div class="host-type-seg">
         <button class="host-type-btn${_hostType === "private" ? " active" : ""}" data-type="private" onclick="setHostType('private')">Private</button>
         <button class="host-type-btn${_hostType === "public" ? " active" : ""}" data-type="public" onclick="setHostType('public')">Public</button>
