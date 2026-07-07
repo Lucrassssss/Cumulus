@@ -248,12 +248,10 @@ async function fetchEventsGeoJSON({ min_lng, min_lat, max_lng, max_lat }) {
       max_lat,
     });
     if (error) {
-      console.warn("[fetchEventsGeoJSON]", error.message);
       return null;
     }
     return data; // Already a GeoJSON FeatureCollection object (jsonb → JS object)
   } catch (e) {
-    console.warn("[fetchEventsGeoJSON] offline or unavailable:", e.message);
     return null;
   }
 }

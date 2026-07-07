@@ -13,11 +13,6 @@ body.no-scroll {
   overflow: hidden;
 }
 
-@keyframes drift1 {
-}
-
-@keyframes drift2 {
-}
 
 #app.map-home {
   padding: 0;
@@ -1608,11 +1603,6 @@ body.no-scroll {
   animation: drift1 22s ease-in-out infinite alternate-reverse;
 }
 
-@keyframes drift1 {
-}
-
-@keyframes drift2 {
-}
 
 @keyframes drift3 {
 }

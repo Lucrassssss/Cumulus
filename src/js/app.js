@@ -5378,7 +5378,6 @@ async function applyRealWeather(map, force = false) {
       );
     }
   } catch (e) {
-    console.error("Failed to load real weather", e);
   }
 }
 
@@ -5923,7 +5922,6 @@ async function submitHostEvent() {
   }
   if (error) {
     showToast("Failed to create event. Please try again.", "error");
-    console.error(error);
     return;
   }
 
@@ -6114,7 +6112,6 @@ async function clearAllTestData(confirmed) {
     showToast("All test data wiped. Signing out…", "success");
     setTimeout(() => resetProfile(true), 1200);
   } catch (err) {
-    console.error("Wipe failed:", err);
     showToast("Wipe failed — check console", "error");
   }
 }
@@ -6141,7 +6138,6 @@ async function clearAllUsers(confirmed) {
     showToast("All user accounts cleared. Signing out…", "success");
     setTimeout(() => resetProfile(true), 1200);
   } catch (err) {
-    console.error("Clear users failed:", err);
     showToast("Clear failed — check console", "error");
   }
 }
@@ -6860,7 +6856,6 @@ async function loadOwnerLiveData() {
     };
     _renderOwnerLivePanel();
   } catch (err) {
-    console.error("Live data error:", err);
     const p = document.getElementById("od-live-panel");
     if (p)
       p.querySelector(".od-live-loading").textContent =
@@ -7509,10 +7504,8 @@ async function loadAndRenderEventApprovals() {
         .select("*")
         .order("created_at", { ascending: false });
       if (error)
-        console.error("[loadAndRenderEventApprovals] DB Error:", error);
       if (!error && data) evs = [...evs, ...data];
     } catch (e) {
-      console.error("[loadAndRenderEventApprovals] DB Catch:", e);
     }
     try {
       const local = JSON.parse(
@@ -7524,7 +7517,6 @@ async function loadAndRenderEventApprovals() {
         ...local.filter((e) => e != null && !keys.has(_pendingEventKey(e))),
       ];
     } catch (e) {
-      console.error("[loadAndRenderEventApprovals] Local Catch:", e);
     }
 
     evs = evs.filter((e) => e != null);
@@ -7540,7 +7532,6 @@ async function loadAndRenderEventApprovals() {
       ${reviewed.length ? `<div class="review-section-hd" style="margin-top:${pending.length ? "20px" : "0"};">Reviewed (${reviewed.length})</div>${reviewed.map(_buildEventApprovalCard).join("")}` : ""}`;
   } catch (err) {
     content.innerHTML = `<div class="review-empty"><div class="review-empty-icon">⚠️</div><div style="font-weight:700;margin-bottom:4px;">Error Loading Panel</div><div>${escapeHtml(err.message)}</div></div>`;
-    console.error(err);
   }
 }
 
@@ -7660,9 +7651,6 @@ async function _publishApprovedEvent(rec) {
       .single();
     if (error) {
       if (error.message && error.message.includes("events_host_id_fkey")) {
-        console.warn(
-          "Host ID not found in users table. Retrying with null host_id.",
-        );
         const retryRes = await sb
           .from("events")
           .insert({
@@ -7691,20 +7679,17 @@ async function _publishApprovedEvent(rec) {
             "Failed to publish event: " + retryRes.error.message,
             "error",
           );
-          console.error(retryRes.error);
           return false;
         }
         data = retryRes.data;
       } else {
         showToast("Failed to publish event: " + error.message, "error");
-        console.error(error);
         return false;
       }
     }
     inserted = data;
   } catch (e) {
     showToast("Failed to publish event: " + e.message, "error");
-    console.error(e);
     return false;
   }
   const src = inserted || rec;
@@ -10042,7 +10027,6 @@ async function startAgeVerification() {
       alert("Verification failed: " + (await res.text()));
     }
   } catch (e) {
-    console.error("Age verification error:", e);
     alert("Could not complete verification.");
   }
 }
@@ -10387,7 +10371,6 @@ function renderSocialTab() {
 
 // Boot. Never let an unexpected rejection leave the user on a blank screen.
 start().catch((e) => {
-  console.error("Boot failed, showing gate:", e);
   try {
     renderGate();
   } catch (_) {}
