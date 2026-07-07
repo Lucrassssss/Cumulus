@@ -2334,7 +2334,7 @@ function renderGate(prefillName, prefillEmail) {
 
         <!-- Attendee pass preview -->
         <div id="gate-attendee-preview" class="lp-pass-preview" style="margin-bottom:20px;">
-          <div class="lp-pass-card" id="lp-pass-preview-card" style="background:linear-gradient(140deg,var(--accent),var(--accent-deep));">
+          <div class="lp-pass-card" id="lp-pass-preview-card" style="background:linear-gradient(rgba(0,0,0,0.14),rgba(0,0,0,0.14)),linear-gradient(140deg,var(--accent),var(--accent-deep));">
             <div class="lp-pass-shine"></div>
             <div class="lp-pass-label">// Cumulus Pass</div>
             <div class="lp-pass-name" id="lp-pass-name-preview">Your name here</div>
@@ -4014,7 +4014,7 @@ function renderNav() {
     ];
     navContainer.innerHTML = `
       <div class="top-bar">
-        <div class="logo-wrap" onclick="goBrowse()">${BLOT_SVG}<span class="logo hide-mobile">Cumulus</span></div>
+        <div class="logo-wrap" onclick="goBrowse()" role="button" tabindex="0" aria-label="Cumulus home">${BLOT_SVG}<span class="logo hide-mobile">Cumulus</span></div>
         <input id="search-input" class="search-input" placeholder="Search events..." oninput="onSearchInput()" autocomplete="off"/>
         
       </div>
@@ -4331,7 +4331,7 @@ function peekAttendee(evId, name) {
       photo = localStorage.getItem("card_photo:" + name) || "";
   } catch (e) {}
   const avatarHtml = photo
-    ? `<div class="attendee-full-ava" style="background:${ca};overflow:hidden;"><img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/></div>`
+    ? `<div class="attendee-full-ava" style="background:${ca};overflow:hidden;"><img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="${escapeHtml(name)}"/></div>`
     : `<div class="attendee-full-ava" style="background:${ca};">${ava}</div>`;
   const cardHtml = `<div class="attendee-full-card" style="background:${cbg};border:1px solid ${cborder};">
     <div class="attendee-full-card-header">
@@ -5656,7 +5656,7 @@ function handleAddressAutocomplete() {
             const fullAddress = s.full_address || s.place_formatted || s.name;
             const placeText = s.name || fullAddress;
             const mapboxId = (s.mapbox_id || "").replace(/'/g, "'");
-            return `<div style="padding:10px 14px;cursor:pointer;font-size:13.5px;border-bottom:1px solid var(--line-soft);color:var(--text);" onclick="selectSearchSuggestion('${mapboxId}','${escapeHtml(fullAddress).replace(/'/g, "'")}','${escapeHtml(placeText).replace(/'/g, "'")}')">
+            return `<div style="padding:10px 14px;cursor:pointer;font-size:13.5px;border-bottom:1px solid var(--line-soft);color:var(--text);" onclick="selectSearchSuggestion('${mapboxId}','${escapeHtml(fullAddress).replace(/'/g, "'")}','${escapeHtml(placeText).replace(/'/g, "'")}')" role="button" tabindex="0">
             <div style="font-weight:600;">${escapeHtml(placeText)}</div>
             ${s.place_formatted ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${escapeHtml(s.place_formatted)}</div>` : ""}
           </div>`;
@@ -6155,6 +6155,7 @@ function od_tog(id) {
   const o = b.classList.contains("open");
   b.classList.toggle("open", !o);
   h.classList.toggle("open", !o);
+  h.setAttribute("aria-expanded", String(!o));
 }
 
 function _odPlatformFee(pr) {
@@ -7010,7 +7011,7 @@ function renderOwnerDash() {
     <div class="pitfall-alert warn" id="od-alert-ratio">⚠ Free event load above 60% of total RSVPs — tighten vetted organiser criteria.</div>
 
     <!-- PAID EVENTS -->
-    <div class="section-h open" id="od-sh-paid" onclick="od_tog('paid')">
+    <div class="section-h open" id="od-sh-paid" onclick="od_tog('paid')" role="button" tabindex="0" aria-expanded="true" aria-controls="od-sb-paid">
       <span class="sh-t"><span class="od-dot" style="background:#5B9FD9"></span> Paid events</span>
       <span style="display:flex;align-items:center;gap:8px"><span class="sh-v" id="od-shv-paid">—</span><span class="sh-arr">▾</span></span>
     </div>
@@ -7037,7 +7038,7 @@ function renderOwnerDash() {
     </div>
 
     <!-- FREE EVENTS -->
-    <div class="section-h" id="od-sh-free" onclick="od_tog('free')" style="margin-top:4px">
+    <div class="section-h" id="od-sh-free" onclick="od_tog('free')" style="margin-top:4px" role="button" tabindex="0" aria-expanded="false" aria-controls="od-sb-free">
       <span class="sh-t"><span class="od-dot" style="background:#D4537E"></span> Free events</span>
       <span style="display:flex;align-items:center;gap:8px"><span class="sh-v" id="od-shv-free">—</span><span class="sh-arr">▾</span></span>
     </div>
@@ -7058,7 +7059,7 @@ function renderOwnerDash() {
     </div>
 
     <!-- HOST VETTING -->
-    <div class="section-h" id="od-sh-vet" onclick="od_tog('vet')" style="margin-top:4px">
+    <div class="section-h" id="od-sh-vet" onclick="od_tog('vet')" style="margin-top:4px" role="button" tabindex="0" aria-expanded="false" aria-controls="od-sb-vet">
       <span class="sh-t"><span class="od-dot" style="background:#E0B23C"></span> Host vetting tiers</span>
       <span style="display:flex;align-items:center;gap:8px"><span class="sh-v" id="od-shv-vet">Active</span><span class="sh-arr">▾</span></span>
     </div>
@@ -7075,7 +7076,7 @@ function renderOwnerDash() {
     </div>
 
     <!-- RISK INPUTS -->
-    <div class="section-h" id="od-sh-risk" onclick="od_tog('risk')" style="margin-top:4px">
+    <div class="section-h" id="od-sh-risk" onclick="od_tog('risk')" style="margin-top:4px" role="button" tabindex="0" aria-expanded="false" aria-controls="od-sb-risk">
       <span class="sh-t"><span class="od-dot" style="background:#E24B4A"></span> Risk inputs</span>
       <span style="display:flex;align-items:center;gap:8px"><span class="sh-v" id="od-shv-risk">—</span><span class="sh-arr">▾</span></span>
     </div>
@@ -7089,7 +7090,7 @@ function renderOwnerDash() {
     </div>
 
     <!-- STAFFING -->
-    <div class="section-h" id="od-sh-staff" onclick="od_tog('staff')" style="margin-top:4px">
+    <div class="section-h" id="od-sh-staff" onclick="od_tog('staff')" style="margin-top:4px" role="button" tabindex="0" aria-expanded="false" aria-controls="od-sb-staff">
       <span class="sh-t"><span class="od-dot" style="background:#7F77DD"></span> Staffing</span>
       <span style="display:flex;align-items:center;gap:8px"><span class="sh-v" id="od-shv-staff">—</span><span class="sh-arr">▾</span></span>
     </div>
@@ -7159,7 +7160,7 @@ function renderOwnerDash() {
     </div>
 
     <!-- PITFALL ANALYSIS -->
-    <div class="section-h" id="od-sh-risks" onclick="od_tog('risks')" style="margin-top:10px">
+    <div class="section-h" id="od-sh-risks" onclick="od_tog('risks')" style="margin-top:10px" role="button" tabindex="0" aria-expanded="false" aria-controls="od-sb-risks">
       <span class="sh-t"><span class="od-dot" style="background:#E24B4A"></span> Pitfall analysis</span>
       <span style="display:flex;align-items:center;gap:8px"><span class="sh-v" id="od-shv-risks">—</span><span class="sh-arr">▾</span></span>
     </div>
@@ -7168,7 +7169,7 @@ function renderOwnerDash() {
     </div>
 
     <!-- INFRASTRUCTURE -->
-    <div class="section-h" id="od-sh-infra" onclick="od_tog('infra')" style="margin-top:4px">
+    <div class="section-h" id="od-sh-infra" onclick="od_tog('infra')" style="margin-top:4px" role="button" tabindex="0" aria-expanded="false" aria-controls="od-sb-infra">
       <span class="sh-t"><span class="od-dot" style="background:#1D9E75"></span> Infrastructure headroom</span>
       <span style="display:flex;align-items:center;gap:8px"><span class="sh-v" id="od-shv-infra">—</span><span class="sh-arr">▾</span></span>
     </div>
@@ -8133,7 +8134,7 @@ function renderConnect(id) {
             )
             .join("");
           const safeName = escapeHtml(name).replace(/'/g, "'");
-          return `<div class="going-card" style="background:${cbg};border-color:${cborder};" onclick="peekAttendee(${id},'${safeName}')">
+          return `<div class="going-card" style="background:${cbg};border-color:${cborder};" onclick="peekAttendee(${id},'${safeName}')" role="button" tabindex="0" aria-label="View ${escapeHtml(name)}">
       <div class="going-card-ava" style="background:${avaColor};">${initials(name)}</div>
       <div class="going-card-name" style="color:${ctext};">${escapeHtml(name)}${fr ? ` <span style="color:var(--gold);font-size:10px;">★</span>` : ""}</div>
       ${bioSnippet ? `<div class="going-card-bio" style="color:${ctextSoft};">${escapeHtml(bioSnippet)}</div>` : ""}
@@ -8187,7 +8188,7 @@ function renderConnect(id) {
     </div>
     <div class="section-title">Your card</div>${yourCardHtml}
     <div class="section-title">Who's going (${others.length})</div>
-    <div class="going-section-hdr" id="going-section" onclick="toggleGoingSection(${id})">
+    <div class="going-section-hdr" id="going-section" onclick="toggleGoingSection(${id})" role="button" tabindex="0" aria-expanded="${goingOpen ? "true" : "false"}">
       <div style="display:flex;align-items:center;gap:10px;">
         <div class="going-previews">${previewAvas || '<span style="font-size:12px;color:var(--text-muted);">None yet</span>'}</div>
         <span style="font-size:13.5px;font-weight:700;color:var(--text);">${others.length} attendee${others.length !== 1 ? "s" : ""}</span>
@@ -8745,7 +8746,7 @@ function renderProfile() {
       .join("")
       .toUpperCase();
     const photoSticker = profilePhoto
-      ? `<div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid ${accent};flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><img src="${profilePhoto}" style="width:100%;height:100%;object-fit:cover;display:block;"/></div>`
+      ? `<div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid ${accent};flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><img src="${profilePhoto}" style="width:100%;height:100%;object-fit:cover;display:block;" alt="${escapeHtml(c?.name || state.profileName)}"/></div>`
       : `<div style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${accent}22;border:2px solid ${accent}55;flex-shrink:0;font-size:18px;font-weight:800;color:${accent};">${initStr}</div>`;
     return `<div class="id-card profile-id-card prof-avatar-float" style="background:${bg};border:${borderStyle};box-shadow:${shadowStyle};">
       <div style="position:absolute;inset:0;pointer-events:none;color:${accent};opacity:${ext.patternOpacity || 0.35};">${pat}</div>
@@ -8784,7 +8785,7 @@ function renderProfile() {
         ev.nightShotUrl || localStorage.getItem("night_shot:" + ev.id);
       const shortTitle =
         ev.title.length > 22 ? ev.title.substring(0, 20) + "…" : ev.title;
-      return `<div class="ns-tile" onclick="openEvent(${ev.id})">
+      return `<div class="ns-tile" onclick="openEvent(${ev.id})" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
       <img src="${shotUrl}" alt="${escapeHtml(ev.title)}"/>
       <div class="ns-tile-label">${escapeHtml(shortTitle)}</div>
     </div>`;
@@ -8823,7 +8824,7 @@ function renderProfile() {
           : status === "upcoming"
             ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c2.color};margin-right:4px;opacity:0.7;"></span>`
             : "";
-      return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:${mutedBg};border:1px solid ${c2.color}28;" title="${escapeHtml(ev.title)}">
+      return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:${mutedBg};border:1px solid ${c2.color}28;" title="${escapeHtml(ev.title)}" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
       <div style="font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;">${escapeHtml(shortTitle)}</div>
       <div style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;">${statusDot}${escapeHtml(ev.category)}</div>
       ${evDate ? `<div style="font-size:10px;color:${c2.color};font-weight:600;margin-top:4px;">${evDate}</div>` : ""}
@@ -8864,7 +8865,7 @@ function renderProfile() {
     </div>
 
     <!-- Achievements card -->
-    <div class="prof-achievements-card" onclick="openAchievements()">
+    <div class="prof-achievements-card" onclick="openAchievements()" role="button" tabindex="0">
       <div class="prof-ach-header">
         <span class="prof-ach-title">Achievements</span>
         <span class="prof-ach-level" style="color:${lv.color};">${lv.title}</span>
@@ -9088,7 +9089,7 @@ function renderAchievements() {
               : status === "upcoming"
                 ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c2.color};margin-right:4px;opacity:0.7;"></span>`
                 : "";
-          return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:${hexToRgba(c2.color, 0.08)};border:1px solid var(--line);border-left:2px solid ${c2.color};">
+          return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:${hexToRgba(c2.color, 0.08)};border:1px solid var(--line);border-left:2px solid ${c2.color};" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
           <div style="font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;">${escapeHtml(shortTitle)}</div>
           <div style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;">${statusDot}${escapeHtml(ev.category)}</div>
           ${evDate ? `<div style="font-size:10px;color:${c2.color};font-weight:600;margin-top:4px;">${evDate}</div>` : ""}
@@ -9231,7 +9232,7 @@ function renderCalendar() {
                   "",
                 )}${dayEvents.length > 4 ? `<span class="cal-dot-more">+${dayEvents.length - 4}</span>` : ""}</div>`
             : "";
-          return `<div class="calendar-cell ${isToday ? "today" : ""} ${dayEvents.length ? "has-events" : ""} pointer" onclick="openCalendarDay(${day})" style="cursor:pointer;"><div class="calendar-day-num">${day}</div>${dots}</div>`;
+          return `<div class="calendar-cell ${isToday ? "today" : ""} ${dayEvents.length ? "has-events" : ""} pointer" onclick="openCalendarDay(${day})" style="cursor:pointer;" role="button" tabindex="0" aria-label="${day}${dayEvents.length ? `, ${dayEvents.length} event${dayEvents.length !== 1 ? "s" : ""}` : ""}"><div class="calendar-day-num">${day}</div>${dots}</div>`;
         })
         .join(""),
     )
@@ -9571,7 +9572,7 @@ function renderBook() {
   const typeCards = types
     .map(
       (t) => `
-    <div onclick="setBookingType('${t.id}')" style="border:2px solid ${bookingDraft.type === t.id ? c.color : "var(--line)"};border-radius:14px;padding:14px 16px;cursor:pointer;background:${bookingDraft.type === t.id ? hexToRgba(c.color, 0.07) : "var(--surface-2)"};transition:all .15s;margin-bottom:10px;">
+    <div onclick="setBookingType('${t.id}')" style="border:2px solid ${bookingDraft.type === t.id ? c.color : "var(--line)"};border-radius:14px;padding:14px 16px;cursor:pointer;background:${bookingDraft.type === t.id ? hexToRgba(c.color, 0.07) : "var(--surface-2)"};transition:all .15s;margin-bottom:10px;" role="radio" tabindex="0" aria-checked="${bookingDraft.type === t.id ? "true" : "false"}" aria-label="${escapeHtml(t.label)}, ${t.price ? `£${t.price.toFixed(2)}` : "Free"}">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
         <div><div style="font-weight:700;font-size:14px;color:var(--text);">${t.label}</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${t.desc}</div></div>
         <div style="font-size:18px;font-weight:800;color:${bookingDraft.type === t.id ? c.color : "var(--text)"};">${t.price ? `£${t.price.toFixed(2)}` : "Free"}</div>
@@ -10318,7 +10319,7 @@ function renderSocialTab() {
     const isNewOpen = seen === undefined;
     const hasUnread =
       isNewOpen || (chat.length > seen && lastMsg?.name !== state.profileName);
-    return `<div class="panel" onclick="openSocialForEvent(${ev.id})" style="--corner:${open && status !== "past" ? c.color : "var(--line)"};padding:16px 18px;margin-bottom:10px;cursor:pointer;transition:transform .12s ease;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+    return `<div class="panel" onclick="openSocialForEvent(${ev.id})" style="--corner:${open && status !== "past" ? c.color : "var(--line)"};padding:16px 18px;margin-bottom:10px;cursor:pointer;transition:transform .12s ease;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''" role="button" tabindex="0" aria-label="Open chat for ${escapeHtml(ev.title)}">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
         <div style="flex:1;min-width:0;">
           <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap;">
@@ -10350,7 +10351,7 @@ function renderSocialTab() {
   };
 
   const myCardBanner = state.myCard
-    ? `<div class="panel" style="--corner:var(--accent);display:flex;align-items:center;gap:14px;padding:14px 16px;margin-bottom:4px;cursor:pointer;" onclick="openExpandedCard()">
+    ? `<div class="panel" style="--corner:var(--accent);display:flex;align-items:center;gap:14px;padding:14px 16px;margin-bottom:4px;cursor:pointer;" onclick="openExpandedCard()" role="button" tabindex="0" aria-label="My Card and QR Code">
         <div style="width:46px;height:46px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;font-weight:900;color:#fff;letter-spacing:-1px;">CU</div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:14px;font-weight:700;color:var(--text);">My Card &amp; QR Code</div>
@@ -10513,4 +10514,38 @@ renderCardEditor = function () {
 // --- Smooth map caption on load ---
 window.addEventListener("load", () => {
   setTimeout(() => setupReveal(document.getElementById("view-container")), 300);
+});
+
+// Keyboard support for div/span elements acting as buttons (role="button"/"radio"):
+// activates on Enter/Space so mouse-only onclick handlers are reachable from a keyboard.
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const el = e.target.closest('[role="button"],[role="radio"]');
+  if (!el) return;
+  e.preventDefault();
+  el.click();
+});
+
+// Escape closes whichever overlay/modal/popup is currently open — each close
+// function is a no-op if its overlay isn't present, so it's safe to call them all.
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  try {
+    closeLpSignup();
+  } catch (err) {}
+  try {
+    closeAttendeePeek();
+  } catch (err) {}
+  try {
+    closeActivePopup();
+  } catch (err) {}
+  try {
+    closeBadgePicker();
+  } catch (err) {}
+  try {
+    closeExpandedCard();
+  } catch (err) {}
+  try {
+    if (document.getElementById("card-editor-root")?.innerHTML) closeCardEditor();
+  } catch (err) {}
 });

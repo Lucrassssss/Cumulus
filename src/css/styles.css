@@ -1697,7 +1697,7 @@ body.no-scroll {
 
 .cu-toast.success {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--gold-text);
   background: color-mix(in srgb, var(--accent) 8%, var(--surface));
 }
 
@@ -1825,7 +1825,7 @@ body.no-scroll {
   border-radius: 12px;
   font-size: 13px;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--gold-text);
 }
 
 @keyframes ceOverlayIn {
@@ -2243,7 +2243,7 @@ body.no-scroll {
 .ce-intensity-pct {
   font-size: 11px;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--gold-text);
   min-width: 28px;
   text-align: right;
 }
@@ -2533,7 +2533,7 @@ body.no-scroll {
 .area-chip-num {
   font-size: 10px;
   font-weight: 800;
-  color: var(--accent);
+  color: var(--gold-text);
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   border-radius: 99px;
   padding: 1px 6px;
@@ -3766,7 +3766,7 @@ body.no-scroll {
   font-weight: 800;
   letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.95);
   margin-bottom: 8px;
 }
 
@@ -3782,7 +3782,7 @@ body.no-scroll {
 
 .lp-pass-detail {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.9);
   margin-bottom: auto;
 }
 
@@ -3855,7 +3855,7 @@ body.no-scroll {
   font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--gold-text);
   font-weight: 800;
 }
 
@@ -4999,7 +4999,7 @@ body.no-scroll {
 
 #od-wrap .pb button:hover {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--gold-text);
 }
 
 #od-wrap .pb button.a {
@@ -5133,7 +5133,7 @@ body.no-scroll {
 
 #od-wrap .od-vb {
   font-weight: 700;
-  color: var(--accent);
+  color: var(--gold-text);
   font-family: "DM Mono", monospace;
   font-size: 13px;
 }
@@ -5397,7 +5397,7 @@ body.no-scroll {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--accent);
+  color: var(--gold-text);
   margin-bottom: 2px;
 }
 
@@ -5993,7 +5993,7 @@ body.no-scroll {
 .hp-tier-fee {
   font-size: 13px;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--gold-text);
   font-family: "DM Mono", monospace;
 }
 
@@ -6935,7 +6935,7 @@ select.gate-input {
 }
 
 .btn-text:hover {
-  color: var(--accent) !important;
+  color: var(--gold-text) !important;
   transform: none !important;
 }
 
@@ -7236,7 +7236,7 @@ select.gate-input {
   font-weight: 800 !important;
   letter-spacing: 0.16em !important;
   text-transform: uppercase !important;
-  color: var(--accent) !important;
+  color: var(--gold-text) !important;
   margin-bottom: 14px !important;
   display: block !important;
   align-items: center;
@@ -7327,7 +7327,7 @@ select.gate-input {
   transform: none !important;
   box-shadow: none !important;
   border-color: var(--accent) !important;
-  color: var(--accent) !important;
+  color: var(--gold-text) !important;
   background: color-mix(in srgb, var(--accent) 7%, var(--surface)) !important;
 }
 
@@ -7596,7 +7596,7 @@ textarea:focus {
 
 .interest-pill:hover {
   border-color: var(--accent) !important;
-  color: var(--accent) !important;
+  color: var(--gold-text) !important;
   background: color-mix(in srgb, var(--accent) 7%, var(--surface)) !important;
 }
 
@@ -7795,7 +7795,7 @@ textarea:focus {
   font-weight: 800 !important;
   letter-spacing: 0.14em !important;
   text-transform: uppercase !important;
-  color: var(--accent) !important;
+  color: var(--gold-text) !important;
   margin-bottom: 10px !important;
   display: flex;
   align-items: center;
@@ -7989,7 +7989,7 @@ textarea:focus {
 .section-title {
   font-size: 10px !important;
   font-weight: 800 !important;
-  color: var(--accent) !important;
+  color: var(--gold-text) !important;
   margin: 24px 0 11px;
   letter-spacing: 0.14em !important;
   text-transform: uppercase !important;
@@ -8015,7 +8015,7 @@ textarea:focus {
 }
 
 .nav-link.active-cloud-tab {
-  color: var(--accent) !important;
+  color: var(--gold-text) !important;
   background: transparent !important;
   border-radius: 12px;
   animation: navTabPop var(--dur-slow) var(--spring) both;
@@ -8101,7 +8101,7 @@ textarea:focus {
 .prof-ach-level {
   font-size: 12px;
   font-weight: 700;
-  color: var(--accent) !important;
+  color: var(--gold-text) !important;
 }
 
 .prof-ach-fill {
@@ -8114,7 +8114,7 @@ textarea:focus {
 .prof-ach-cta {
   font-size: 12.5px !important;
   font-weight: 800 !important;
-  color: var(--accent) !important;
+  color: var(--gold-text) !important;
   text-align: right;
 }
 
@@ -8123,7 +8123,7 @@ textarea:focus {
   font-weight: 800 !important;
   letter-spacing: 0.14em !important;
   text-transform: uppercase;
-  color: var(--accent) !important;
+  color: var(--gold-text) !important;
   margin-bottom: 10px;
 }
 
@@ -8154,7 +8154,7 @@ textarea:focus {
   background: color-mix(in srgb, var(--accent) 6%, var(--surface)) !important;
   transform: translateX(-2px);
   border-color: var(--accent) !important;
-  color: var(--accent) !important;
+  color: var(--gold-text) !important;
 }
 
 .lp-join-bg {
@@ -8333,7 +8333,7 @@ body {
   background: var(--surface) !important;
   transform: rotate(20deg) scale(1.08);
   border-color: var(--accent) !important;
-  color: var(--accent) !important;
+  color: var(--gold-text) !important;
 }
 
 .btn-outline:focus-visible,
@@ -8382,12 +8382,13 @@ body {
   --surface-2: #ebe8e1 !important;
   --text: #191a1c !important;
   --text-soft: #45474c !important;
-  --text-muted: #7c7a73 !important;
+  --text-muted: #6a6862 !important;
   --line: rgba(156, 123, 24, 0.42) !important;
   --line-soft: rgba(156, 123, 24, 0.18) !important;
   --accent: #9c7b18 !important;
   --accent-deep: #7e6210 !important;
   --gold: #9c7b18 !important;
+  --gold-text: #7c6213 !important;
   --gold-tint: rgba(156, 123, 24, 0.1) !important;
   --shadow: rgba(25, 26, 28, 0.08) !important;
   --scrim: rgba(240, 235, 224, 0.92) !important;
@@ -8448,7 +8449,7 @@ body {
 .btn-outline:hover {
   background: color-mix(in srgb, var(--accent) 8%, transparent) !important;
   border-color: var(--accent) !important;
-  color: var(--accent) !important;
+  color: var(--gold-text) !important;
   box-shadow: none !important;
   filter: none !important;
   transform: none !important;
@@ -8765,7 +8766,7 @@ textarea {
 .cal-dot-more {
   font-size: 8px;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--gold-text);
   line-height: 1;
 }
 
@@ -8900,7 +8901,7 @@ textarea {
   font-weight: 800;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--gold-text);
   margin-bottom: 7px !important;
 }
 
@@ -9756,7 +9757,7 @@ textarea.gate-input {
 
 .lp-hero-btn-secondary:hover {
   border-color: var(--accent) !important;
-  color: var(--accent) !important;
+  color: var(--gold-text) !important;
   background: rgba(255, 255, 255, 0.15) !important;
   transform: none !important;
   box-shadow: none !important;
@@ -9769,8 +9770,8 @@ textarea.gate-input {
 }
 
 [data-theme="light"] .lp-hero-gradient {
-  -webkit-text-fill-color: #a8841f !important;
-  color: #a8841f !important;
+  -webkit-text-fill-color: #705815 !important;
+  color: #705815 !important;
 }
 
 [data-theme="light"] .lp-hero-sub {
@@ -9949,6 +9950,10 @@ textarea.gate-input {
   color: #fff !important;
 }
 
+.lp-venues-section .lp-section-kicker {
+  color: var(--gold) !important;
+}
+
 .lp-venues-section .lp-feat-title {
   color: #f7f5f0 !important;
   font-weight: 700 !important;
@@ -10089,7 +10094,7 @@ textarea.gate-input {
   font-weight: 800 !important;
   letter-spacing: 0.14em !important;
   text-transform: uppercase !important;
-  color: var(--accent) !important;
+  color: var(--gold-text) !important;
   margin-bottom: 14px !important;
   background: none !important;
   border: none !important;
@@ -10176,12 +10181,13 @@ textarea.gate-input {
   --surface-2: #1f2226 !important;
   --text: #ece9e1 !important;
   --text-soft: #b4b0a7 !important;
-  --text-muted: #7a776f !important;
+  --text-muted: #88857c !important;
   --line: rgba(203, 164, 58, 0.35) !important;
   --line-soft: rgba(203, 164, 58, 0.16) !important;
   --accent: #cba43a !important;
   --accent-deep: #a8841f !important;
   --gold: #cba43a !important;
+  --gold-text: #cba43a !important;
   --gold-tint: rgba(203, 164, 58, 0.13) !important;
   --shadow: rgba(0, 0, 0, 0.6) !important;
   --scrim: rgba(10, 10, 10, 0.92) !important;
