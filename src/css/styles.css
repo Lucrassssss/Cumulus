@@ -9820,8 +9820,12 @@ textarea.gate-input {
   border-bottom: 1px solid var(--line-soft) !important;
   box-shadow: none !important;
   animation: navDrop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-  padding-left: calc(var(--lp-gutter) + env(safe-area-inset-left, 0px)) !important;
-  padding-right: calc(var(--lp-gutter) + env(safe-area-inset-right, 0px)) !important;
+  padding-left: calc(
+    var(--lp-gutter) + env(safe-area-inset-left, 0px)
+  ) !important;
+  padding-right: calc(
+    var(--lp-gutter) + env(safe-area-inset-right, 0px)
+  ) !important;
 }
 
 .lp-features-grid {
@@ -10695,5 +10699,24 @@ textarea.gate-input {
      visible). Restore the hide so nav fits: icon + Log in + Request Access. */
   .hide-mobile {
     display: none !important;
+  }
+
+  /* Better borders and padding for mobile to make it fit */
+  .lp-events-section {
+    padding: 40px 16px;
+  }
+  .lp-card-inner {
+    padding: 20px;
+    border-radius: 16px;
+  }
+  .lp-form-panel,
+  .lp-signup-card {
+    margin: 0 16px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+  }
+  .lp-nav-links {
+    gap: 14px;
+    font-size: 14px;
   }
 }
