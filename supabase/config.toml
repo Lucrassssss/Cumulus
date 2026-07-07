@@ -1,4 +1,12 @@
 
+# Sign-in code email — shows the raw 6-digit {{ .Token }} instead of a
+# clickable link, since the app's auth flow (authSendCode/authVerifyCode in
+# src/js/services.js) has users type the code back in rather than following
+# a URL. Same template covers both the OTP and magic-link send path.
+[auth.email.template.magic_link]
+subject = "Your Cumulus sign-in code"
+content_path = "./supabase/templates/magic_link.html"
+
 [functions.identity-webhook]
 enabled = true
 verify_jwt = false
