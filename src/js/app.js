@@ -2962,6 +2962,24 @@ function enterApp() {
   renderView();
   // Load real data in the background without blocking
   initApp();
+
+  // Safety net: the #cumulus-loader overlay is normally hidden by lmap's
+  // "idle" event inside initLeaflet(), but that path never fires if Mapbox
+  // GL JS's <script defer> hasn't finished loading yet when initLeaflet()
+  // runs (it bails out silently with no retry), or if WebGL/the map fails
+  // to initialize for any other reason (unsupported device, network error,
+  // missing token). With no retry, the loader — which fully covers the
+  // viewport at z-index 99999 — would otherwise stay stuck forever even
+  // though the app underneath is fully interactive (it's pointer-events:
+  // none). Force it gone after a generous timeout so a map failure never
+  // blocks the rest of the app from being seen.
+  setTimeout(() => {
+    const loader = document.getElementById("cumulus-loader");
+    if (loader) {
+      loader.style.opacity = "0";
+      setTimeout(() => loader.remove(), 500);
+    }
+  }, 8000);
 }
 
 function openCardEditor(eventId) {
@@ -5427,8 +5445,27 @@ function getDeviceTier() {
   return "mid"; // Standard phones get 3D optimized (No Antialiasing, No Trees)
 }
 
+// Retry state for initLeaflet() — see the comment inside for why this exists.
+let _initLeafletRetried = false;
+
 function initLeaflet() {
-  if (lmap || typeof mapboxgl === "undefined" || !mapboxConfigured()) return;
+  if (lmap) return;
+  // mapbox-gl.js loads via <script defer>, so it can still be mid-download
+  // the first time renderView() reaches "browse" (e.g. a fast session
+  // restore). Previously this just bailed with no retry, permanently
+  // orphaning the #cumulus-loader overlay since its removal is solely
+  // gated on this map's "idle" event. Retry once, shortly after, instead
+  // of giving up outright — renderView("browse") only calls this once per
+  // render, so without a retry a mistimed first call meant the map (and
+  // the loader hiding it) never had a second chance this session.
+  if (typeof mapboxgl === "undefined") {
+    if (!_initLeafletRetried) {
+      _initLeafletRetried = true;
+      setTimeout(initLeaflet, 300);
+    }
+    return;
+  }
+  if (!mapboxConfigured()) return;
   const host = document.getElementById("main-map");
   if (!host) return;
   mapboxgl.accessToken = MAPBOX_TOKEN;
