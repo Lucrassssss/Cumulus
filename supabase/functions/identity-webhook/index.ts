@@ -47,7 +47,13 @@ async function verifyStripeSignature(
 }
 
 export default {
-  fetch: withSupabase({ auth: ["publishable", "secret"] }, async (req, ctx) => {
+  // auth: "none" -- Stripe calls this endpoint with no Supabase credentials
+  // (it can't; it doesn't know our apikey), so requiring "publishable" or
+  // "secret" rejects every single delivery at the wrapper level with a 401
+  // before our own code -- including the Stripe signature check below, which
+  // is the actual authentication for this endpoint -- ever runs.
+  // ctx.supabaseAdmin (service role, bypasses RLS) is still available.
+  fetch: withSupabase({ auth: "none" }, async (req, ctx) => {
     const signature = req.headers.get("stripe-signature");
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
 
