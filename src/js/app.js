@@ -6133,6 +6133,10 @@ const _odFmt = (v) =>
       : Math.round(v).toString();
 
 async function clearAllTestData(confirmed) {
+  if (state.profileEmail !== "gondoxml@gmail.com") {
+    showToast("Owner only", "error");
+    return;
+  }
   if (!confirmed) {
     showConfirm(
       "Wipe all test data?",

@@ -50,12 +50,63 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const userId = getUserIdFromJWT(req.headers.get("Authorization"));
+  const authHeader = req.headers.get("Authorization");
+  const userId = getUserIdFromJWT(authHeader);
   if (!userId) {
     return new Response(JSON.stringify({ error: "Not authenticated" }), {
       status: 401,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
+  }
+
+  // Throttle: each call spins up a real (~$1-1.50) Stripe Identity session,
+  // so guard against spam-clicking or scripted abuse. Reads/writes go through
+  // PostgREST using the caller's own JWT, so RLS (id = auth.uid()) is what
+  // actually enforces "only your own row" — no service-role key needed here.
+  const COOLDOWN_MS = 5 * 60 * 1000;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const restHeaders = {
+    apikey: anonKey!,
+    Authorization: authHeader!,
+    "Content-Type": "application/json",
+  };
+
+  try {
+    const checkRes = await fetch(
+      `${supabaseUrl}/rest/v1/users?id=eq.${userId}&select=age_verified_at,last_verification_attempt_at`,
+      { headers: restHeaders },
+    );
+    const rows = await checkRes.json();
+    const row = rows?.[0];
+    if (row?.age_verified_at) {
+      return new Response(
+        JSON.stringify({ error: "Already age-verified" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      );
+    }
+    if (row?.last_verification_attempt_at) {
+      const elapsed = Date.now() - new Date(row.last_verification_attempt_at).getTime();
+      if (elapsed < COOLDOWN_MS) {
+        const waitSec = Math.ceil((COOLDOWN_MS - elapsed) / 1000);
+        return new Response(
+          JSON.stringify({ error: `Please wait ${waitSec}s before trying again` }),
+          { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } },
+        );
+      }
+    }
+    // Record the attempt before calling Stripe, closing the race window
+    // between two rapid clicks both passing the check above.
+    await fetch(`${supabaseUrl}/rest/v1/users?id=eq.${userId}`, {
+      method: "PATCH",
+      headers: restHeaders,
+      body: JSON.stringify({ last_verification_attempt_at: new Date().toISOString() }),
+    });
+  } catch (err: any) {
+    return new Response(
+      JSON.stringify({ error: "Could not verify eligibility" }),
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } },
+    );
   }
 
   const secretKey = Deno.env.get("STRIPE_SECRET_KEY");
