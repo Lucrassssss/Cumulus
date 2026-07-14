@@ -8709,7 +8709,22 @@ function getFeaturedBadges() {
 
 function openExpandedCard() {
   const old = document.getElementById("card-xl-overlay");
-  if (old) old.remove();
+  if (old) {
+    // Same cleanup as closeExpandedCard() — without this, reopening the
+    // card (e.g. via closeBadgePicker()'s rebuild) leaks the window-level
+    // deviceorientation listener on every open, each one left driving a
+    // sheen transform on the now-detached card forever.
+    if (_sheenHandler) {
+      window.removeEventListener("deviceorientation", _sheenHandler);
+      _sheenHandler = null;
+    }
+    if (_sheenMouseHandler && _sheenCard) {
+      _sheenCard.removeEventListener("mousemove", _sheenMouseHandler);
+      _sheenMouseHandler = null;
+      _sheenCard = null;
+    }
+    old.remove();
+  }
   const card = state.myCard;
   let cardExt = {
     motto: "",
