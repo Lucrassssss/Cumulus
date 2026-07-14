@@ -3952,6 +3952,112 @@ async function loadRealEvents() {
     computeEventDates(mapped);
     EVENTS.push(mapped);
   });
+  // DEV-ONLY VISUAL FIXTURE — never runs outside localhost, and never runs if
+  // the real backend actually returned rows. Lets the design-pass work see
+  // pins/cards/detail views without needing a live Supabase seed. Safe to
+  // delete this call + loadDevFixtureEvents() below any time; it is not
+  // wired to any production path (GH Pages / cumulusapp.co never match the
+  // hostname check).
+  if (
+    EVENTS.length === 0 &&
+    /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
+  ) {
+    loadDevFixtureEvents();
+  }
+}
+
+// DEV-ONLY: synthetic events for local visual QA. See comment above the call
+// site in loadRealEvents(). Not loaded from any file shipped differently to
+// prod — this function simply never executes off localhost.
+function loadDevFixtureEvents() {
+  const now = Date.now();
+  const hrs = (n) => new Date(now + n * 3600000).toISOString();
+  const fixtures = [
+    {
+      id: "dev-1",
+      title: "Rooftop Jazz & Wine",
+      category: "Live Music",
+      host: "Nightjar Sessions",
+      venue: "The Curtain Rooftop",
+      area: "Shoreditch",
+      address: "45 Curtain Rd, London EC2A 3PT",
+      lat: 51.5259,
+      lon: -0.0813,
+      startTime: hrs(3),
+      endTime: hrs(6),
+      desc: "An intimate rooftop set as the sun goes down over Shoreditch — small-batch wine, low light, a five-piece band.",
+      capacity: 60,
+      price: 12,
+    },
+    {
+      id: "dev-2",
+      title: "Community Board Game Night",
+      category: "Board Games",
+      host: "Dice & Slice",
+      venue: "Draughts Café",
+      area: "Hackney",
+      address: "337 Acton Mews, London E8 4EA",
+      lat: 51.5361,
+      lon: -0.0731,
+      startTime: hrs(20),
+      endTime: hrs(23),
+      desc: "Drop-in board games with a huge library on hand — bring a friend or come solo, tables are shared.",
+      capacity: 40,
+      price: 0,
+    },
+    {
+      id: "dev-3",
+      title: "Sunrise Run Club",
+      category: "Wellness & Outdoors",
+      host: "Thames Path Runners",
+      venue: "South Bank",
+      area: "Southbank",
+      address: "Queen's Walk, London SE1 9PP",
+      lat: 51.5054,
+      lon: -0.1173,
+      startTime: hrs(-2),
+      endTime: hrs(-0.5),
+      desc: "A 5k along the river, all paces welcome, coffee after at the usual spot.",
+      capacity: 25,
+      price: 0,
+    },
+    {
+      id: "dev-4",
+      title: "Life Drawing: Open Studio",
+      category: "Creative",
+      host: "Studio Ochre",
+      venue: "Ochre Studio",
+      area: "Peckham",
+      address: "133 Copeland Rd, London SE15 3SN",
+      lat: 51.4729,
+      lon: -0.0663,
+      startTime: hrs(28),
+      endTime: hrs(31),
+      desc: "Untutored life drawing, all levels, materials provided. Bring your own board if you have one.",
+      capacity: 18,
+      price: 8,
+    },
+    {
+      id: "dev-5",
+      title: "Neighbourhood Supper Club",
+      category: "Food & Drink",
+      host: "Table for Twelve",
+      venue: "The Ivy House Kitchen",
+      area: "Nunhead",
+      address: "40 Stuart Rd, London SE15 3BE",
+      lat: 51.4593,
+      lon: -0.0568,
+      startTime: hrs(50),
+      endTime: hrs(53),
+      desc: "A long-table supper cooked by a rotating neighbourhood host — this week, a seasonal British menu.",
+      capacity: 12,
+      price: 28,
+    },
+  ];
+  fixtures.forEach((ev) => {
+    computeEventDates(ev);
+    EVENTS.push(ev);
+  });
 }
 
 async function loadAllRsvps() {
