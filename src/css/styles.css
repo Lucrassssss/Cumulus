@@ -11182,16 +11182,20 @@ body,
 }
 
 .detail-hero {
-  background-size: 112% auto !important;
+  background-size: cover !important;
+  /* Ken-Burns drift via compositor-only transform (scale/translate) instead
+     of animating background-position, which triggers repaints every frame.
+     The hero is an empty image div, so transforming it moves nothing else. */
   animation: detailHeroDrift 14s var(--ease-out) infinite alternate;
+  will-change: transform;
 }
 
 @keyframes detailHeroDrift {
   0% {
-    background-position: 50% 35%;
+    transform: scale(1.04) translateY(-1.4%);
   }
   100% {
-    background-position: 50% 55%;
+    transform: scale(1.12) translateY(1.4%);
   }
 }
 
