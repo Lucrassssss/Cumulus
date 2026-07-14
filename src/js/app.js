@@ -4015,8 +4015,8 @@ function loadDevFixtureEvents() {
       address: "Queen's Walk, London SE1 9PP",
       lat: 51.5054,
       lon: -0.1173,
-      startTime: hrs(-2),
-      endTime: hrs(-0.5),
+      startTime: hrs(-1),
+      endTime: hrs(2),
       desc: "A 5k along the river, all paces welcome, coffee after at the usual spot.",
       capacity: 25,
       price: 0,
@@ -5061,6 +5061,29 @@ function attachMapLayers() {
   });
   updateClusterPaint();
 
+  // Live-pulse ring: a WebGL circle rendered BEHIND the pin symbols, shown
+  // ONLY for events whose status is "live" (happening right now). Non-live
+  // pins get no ring. Radius/opacity are animated by the rAF loop in
+  // updateLivePulse(); static event pins stay completely still.
+  lmap.addLayer({
+    id: "live-pulse",
+    type: "circle",
+    source: "events-source",
+    filter: [
+      "all",
+      ["!", ["has", "point_count"]],
+      ["==", ["get", "status"], "live"],
+    ],
+    paint: {
+      "circle-color": ["get", "color"],
+      "circle-opacity": 0,
+      "circle-radius": 8,
+      "circle-stroke-color": ["get", "color"],
+      "circle-stroke-width": 2,
+      "circle-stroke-opacity": 0.5,
+    },
+  });
+
   // Native WebGL symbol layer to render all individual event pins directly in WebGL
   lmap.addLayer({
     id: "unclustered-events",
@@ -5132,6 +5155,54 @@ function attachMapLayers() {
   if (state.view === "browse") setTimeout(refreshMarkers, 0);
 }
 
+// ── Live-pulse animation ──────────────────────────────────────────────────
+// Drives the "live-pulse" circle layer so pins for events happening RIGHT NOW
+// breathe an outward ring. Only runs while at least one live event is on the
+// map; stops entirely otherwise (no idle rAF burn). Honours reduced-motion by
+// painting a single static ring instead of animating.
+let _livePulseRAF = null;
+function stopLivePulse() {
+  if (_livePulseRAF) {
+    cancelAnimationFrame(_livePulseRAF);
+    _livePulseRAF = null;
+  }
+}
+function updateLivePulse() {
+  if (!lmap || !lmap.getLayer("live-pulse")) return;
+  const hasLive = getFilteredEvents().some((ev) => eventStatus(ev) === "live");
+  if (!hasLive) {
+    stopLivePulse();
+    return;
+  }
+  const reduce =
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) {
+    stopLivePulse();
+    try {
+      lmap.setPaintProperty("live-pulse", "circle-radius", 15);
+      lmap.setPaintProperty("live-pulse", "circle-stroke-opacity", 0.45);
+    } catch (e) {}
+    return;
+  }
+  if (_livePulseRAF) return; // already animating
+  const PERIOD = 2200; // ms per breath
+  function tick(ts) {
+    if (!lmap || !lmap.getLayer("live-pulse")) {
+      _livePulseRAF = null;
+      return;
+    }
+    const t = (ts % PERIOD) / PERIOD; // 0 → 1
+    const eased = 1 - Math.pow(1 - t, 3); // ease-out-cubic expansion
+    try {
+      lmap.setPaintProperty("live-pulse", "circle-radius", 9 + eased * 15);
+      lmap.setPaintProperty("live-pulse", "circle-stroke-opacity", 0.55 * (1 - t));
+    } catch (e) {}
+    _livePulseRAF = requestAnimationFrame(tick);
+  }
+  _livePulseRAF = requestAnimationFrame(tick);
+}
+
 function refreshMarkers() {
   if (!lmap || typeof mapboxgl === "undefined") return;
   const src = lmap.getSource("events-source");
@@ -5147,6 +5218,7 @@ function refreshMarkers() {
 
   const visibleEvents = getFilteredEvents();
   updateMapEmptyState(visibleEvents.length);
+  updateLivePulse();
 
   if (!lmapFitted && geo.features.length > 0) {
     const coords = geo.features.map((f) => f.geometry.coordinates);
@@ -5239,6 +5311,7 @@ async function fetchVisibleEvents() {
   const filteredGeo = buildEventsGeoJSON();
   src.setData(filteredGeo);
   updateMapEmptyState(filteredGeo.features.length);
+  updateLivePulse();
 }
 
 // Debounce helper — executes fn at most once every `wait` ms after last call
@@ -8019,6 +8092,7 @@ function renderView() {
   }
 
   showMapLayer(false);
+  stopLivePulse(); // halt the live-pin rAF while the map isn't on screen
   app.classList.remove("map-home");
   document.body.classList.remove("no-scroll");
   if (state.view === "detail")
