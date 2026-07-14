@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-14T00:00:00Z",
+  "title": "Design System: Cumulus",
+  "extensions": {
+    "colorMeta": {
+      "accent": { "role": "primary", "displayName": "Parchment Gold", "canonical": "oklch(58% 0.11 85)", "tonalRamp": ["#3a2d08", "#5e4a0e", "#7e6210", "#9c7b18", "#b8934a", "#cba43a", "#e0c988", "#f2e6c4"] },
+      "bg": { "role": "neutral", "displayName": "Parchment Cream", "canonical": "oklch(92% 0.008 90)", "tonalRamp": ["#0d0e10", "#191a1c", "#45474c", "#6a6862", "#9c998f", "#c9c6bb", "#e1ded6", "#eceae4"] },
+      "surface": { "role": "neutral", "displayName": "Card Parchment", "canonical": "oklch(96% 0.006 90)", "tonalRamp": ["#16181b", "#1f2226", "#3a3c3f", "#6a6862", "#a8a59b", "#ccc9bf", "#ebe8e1", "#f7f6f2"] },
+      "silver": { "role": "secondary", "displayName": "Silver", "canonical": "oklch(60% 0.01 250)", "tonalRamp": ["#2c2e31", "#454850", "#5e636b", "#7e848c", "#9aa0a8", "#b6bbc1", "#d3d6da", "#eceef0"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Event titles, hero headings, primary CTAs. DM Sans, weight 700." },
+      "body": { "displayName": "Body", "purpose": "Descriptions, list content, general copy. Inter variable, optical sizing on." },
+      "mono": { "displayName": "Label/Mono", "purpose": "Timestamps, curator codes, technical fragments. DM Mono." }
+    },
+    "shadows": [
+      { "name": "card-hover", "value": "0 8px 28px var(--shadow)", "purpose": "Card lift on hover, paired with translateY(-3px)." },
+      { "name": "elevated-stack", "value": "0 1px 2px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.06), 0 16px 40px rgba(0,0,0,.05)", "purpose": "Prominent hover/expanded states." },
+      { "name": "button-glow", "value": "0 2px 8px rgba(0,0,0,.14), 0 6px 20px rgba(0,0,0,.1)", "purpose": "Primary button rest shadow, gold-tinted on hover." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Default easing for hover/lift transitions." },
+      { "name": "spring", "value": "cubic-bezier(0.34, 1.56, 0.64, 1)", "purpose": "Bouncy feedback for taps/ripples." },
+      { "name": "dur-fast", "value": "0.14s", "purpose": "Micro-interactions (button shine, ripple)." },
+      { "name": "dur-med", "value": "0.26s", "purpose": "Card lift, standard transitions." }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Gold gradient pill CTA with a diagonal shine sweep on hover.",
+      "html": "<button class=\"ds-btn-primary\">RSVP</button>",
+      "css": ".ds-btn-primary { position: relative; overflow: hidden; border: none; padding: 11px 24px; font-family: 'DM Sans', Inter, sans-serif; font-weight: 700; font-size: 14px; color: #0a0a0a; background: linear-gradient(135deg, #9c7b18 0%, #7e6210 100%); border-radius: 999px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.14), 0 6px 20px rgba(0,0,0,.1); transition: transform .2s cubic-bezier(0.22,1,0.36,1), box-shadow .28s cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.18) 50%, transparent 60%); background-size: 200% 100%; background-position: 200% 0; transition: background-position .45s ease; } .ds-btn-primary:hover::after { background-position: -40% 0; } .ds-btn-primary:hover { box-shadow: 0 8px 24px rgba(156,123,24,.25); } .ds-btn-primary:focus-visible { outline: 2px solid #9c7b18; outline-offset: 2px; }"
+    },
+    {
+      "name": "Event Card",
+      "kind": "card",
+      "refersTo": "event-card",
+      "description": "Live-map event card, flat at rest, lifts on hover.",
+      "html": "<div class=\"ds-event-card\"><div class=\"ds-event-card-title\">Rooftop Jazz Night</div><div class=\"ds-event-card-meta\">Shoreditch · Tonight, 8pm</div></div>",
+      "css": ".ds-event-card { background: #f7f6f2; border-radius: 14px; padding: 16px; transition: transform .18s ease, box-shadow .18s ease; } .ds-event-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(25,26,28,.08); } .ds-event-card-title { font-family: 'DM Sans', sans-serif; font-weight: 700; color: #191a1c; margin-bottom: 4px; } .ds-event-card-meta { font-family: 'DM Mono', monospace; font-size: 13px; color: #6a6862; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Parchment & Gold Rule",
+    "overview": "Cumulus reads as a warm, sun-worn sheet of city paper with a thread of gold running through it. By day, the surface is a soft parchment cream; by night — driven by actual London time — it flips to a near-black sky, and the gold accent warms slightly as if catching different light at a different hour. The interface is meant to feel like a physical object tied to the city outside the user's window, never a dashboard. This system explicitly rejects generic corporate SaaS chrome and try-hard nightlife/club-app energy. Gold is the one accent color and it is used sparingly and consistently across both themes.",
+    "keyCharacteristics": [
+      "One accent (gold/ochre) carries identity across both light and dark themes; never joined by a second saturated hue.",
+      "Day/night is real, driven by time-of-day, not user preference.",
+      "Buttons and cards are tactile and inviting: they lift, shine, and respond to touch.",
+      "Shadows are soft, diffuse, and ambient — they bloom on interaction, not at rest."
+    ],
+    "rules": [
+      { "name": "The One Thread Rule", "body": "Gold is the only accent color in the system. It appears consistently across both day and night themes so the identity never breaks when the sky changes.", "section": "colors" },
+      { "name": "The Flat-By-Default Rule", "body": "Nothing casts a shadow at rest. Depth is earned only through interaction — a hover, a press, a focus ring.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep gold as the single accent across both light and dark themes.",
+      "Do use soft, multi-layer, low-opacity shadows for any hover/elevation state.",
+      "Do let buttons and cards feel physically responsive on interaction.",
+      "Do keep event pins and details visible regardless of perk/curator-code gating."
+    ],
+    "donts": [
+      "Don't introduce a second saturated accent color alongside gold.",
+      "Don't use generic corporate SaaS chrome.",
+      "Don't reach for nightlife/club-app energy, even for curator-gated features.",
+      "Don't give cards or surfaces a resting shadow.",
+      "Don't use border-left/border-right colored stripes as an accent treatment."
+    ]
+  }
+}
