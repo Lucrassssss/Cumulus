@@ -10947,3 +10947,73 @@ body,
     transform: none !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   POLISH PASS 3 — gate / first-run auth screen.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Request Access ↔ Log in tab: the active underline eases in on switch
+   instead of just appearing, so the click reads as a deliberate move. */
+.auth-mode-btn.active::after {
+  animation: authTabIn 0.24s var(--ease-out) both;
+}
+@keyframes authTabIn {
+  0% {
+    transform: scaleX(0.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+/* Join as attendee / Become a host segmented control: give the active
+   pill a small confident pop and a press state on the inactive side. */
+.gate-type-btn.active {
+  animation: gateTypePop 0.2s var(--ease-out);
+}
+@keyframes gateTypePop {
+  0% {
+    transform: scale(0.94);
+  }
+  60% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.gate-type-btn:not(.active):active {
+  background: var(--line-soft) !important;
+}
+
+/* Cumulus Pass preview card: settles in with the rest of the modal
+   content rather than sitting static while everything around it moves. */
+.lp-pass-preview {
+  animation: passPreviewIn 0.5s var(--ease-out) both;
+  animation-delay: 0.05s;
+}
+@keyframes passPreviewIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modal open: soften the scale-in curve so it settles rather than snaps. */
+.lp-signup-modal {
+  transition: transform 0.34s var(--ease-out) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-mode-btn.active::after,
+  .gate-type-btn.active,
+  .lp-pass-preview {
+    animation: none !important;
+  }
+}
