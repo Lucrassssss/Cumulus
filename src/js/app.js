@@ -2955,6 +2955,13 @@ function enterApp() {
   document.body.style.overflow = "";
   const app = document.getElementById("app");
   app.style.display = "";
+  // The 5 ambient .bg-blot decorations + grain overlay are landing-page-only
+  // texture: position:fixed, 96px blur filter, continuously transform-
+  // animating (42s loops) for the life of the tab. They were never scoped to
+  // the gate/landing screen, so they kept compositing (blur recompute) behind
+  // the ENTIRE app for the whole session — a steady background tax on every
+  // view, not just the map. Hide them for good once real app UI is showing.
+  document.body.classList.add("app-active");
   // Always boot to the map — never restore a stale tab from memory
   state.view = "browse";
   EVENTS.forEach((ev) => computeEventDates(ev));
@@ -4265,6 +4272,7 @@ async function signOut(confirmed) {
   document.getElementById("app").style.display = "none";
   document.getElementById("nav-container").innerHTML = "";
   document.getElementById("view-container").innerHTML = "";
+  document.body.classList.remove("app-active"); // bring landing decor back
   renderGate();
 }
 // Back-compat alias — older call sites referenced resetProfile by name.

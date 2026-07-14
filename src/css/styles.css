@@ -8819,6 +8819,21 @@ textarea {
   opacity: 0.045 !important;
 }
 
+/* PERF FIX: .bg-blot / .bg-grain live outside #gate-root and #app in
+   index.html, so without this rule they kept blurring + transform-
+   animating (5 elements, continuous 42s loops, 96px blur filter) behind
+   the ENTIRE app for the whole session, not just the landing screen they
+   were designed for. That's a constant compositor/filter tax on every
+   view (map, lists, detail, modals) — measured as ~32fps average and
+   36% dropped frames during normal navigation before this fix. Landing
+   keeps its ambient texture; the moment real app UI is up, both are
+   fully removed from the render tree. */
+body.app-active .bg-blot,
+body.app-active .bg-grain {
+  display: none !important;
+  animation: none !important;
+}
+
 .lp-blob {
   position: absolute;
   border-radius: 50%;
