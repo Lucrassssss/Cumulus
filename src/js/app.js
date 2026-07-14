@@ -4184,8 +4184,10 @@ function onSearchInput() {
   if (state.view !== "browse") {
     state.view = "browse";
     state.selectedEventId = null;
+    renderView();
+    return;
   }
-  renderView();
+  _debouncedSearchRefresh();
 }
 function destroyMainMap() {
   if (lmap) {
@@ -5334,6 +5336,11 @@ function debounce(fn, wait) {
 // Register the debounced bbox fetch on map moveend (registered once in
 // attachMapLayers so it survives style reloads cleanly)
 const _debouncedFetchVisible = debounce(fetchVisibleEvents, 300);
+
+// Live search-as-you-type only needs the map pins re-filtered (getFilteredEvents()
+// reads #search-input live) - not a full renderView(), which was rebuilding the
+// filter-chip bar and scheduling a lmap.resize() on every single keystroke.
+const _debouncedSearchRefresh = debounce(refreshMarkers, 150);
 
 // Empty-state overlay on the map when no events are visible — distinguishes
 // "no events exist yet" from "your filters/search matched nothing".
