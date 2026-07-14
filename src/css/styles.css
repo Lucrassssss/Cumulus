@@ -231,6 +231,13 @@ body.no-scroll {
 }
 
 @keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }
 
 .attendee-list {
@@ -468,6 +475,14 @@ body.no-scroll {
 }
 
 @keyframes msgSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .msg-row-new {
@@ -1240,6 +1255,13 @@ body.no-scroll {
 }
 
 @keyframes hotPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
 }
 
 .pin-bubble-wrap {
@@ -1343,9 +1365,25 @@ body.no-scroll {
 }
 
 @keyframes viewSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes gateEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .panel:hover::after {
@@ -1492,9 +1530,25 @@ body.no-scroll {
 }
 
 @keyframes clusterPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes popupIn {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .stagger-item {
@@ -1502,6 +1556,14 @@ body.no-scroll {
 }
 
 @keyframes staggerFade {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .ticket-band {
@@ -1574,6 +1636,36 @@ body.no-scroll {
 }
 
 @keyframes captionSlideUp {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Ambient background blots (.blot-a/b/e reference drift1/drift2, which
+   were referenced but never defined anywhere — the whole background
+   never moved). Subtle, slow, transform-only so it reads as ambient
+   texture rather than a distraction. */
+@keyframes drift1 {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(3%, -4%) scale(1.05);
+  }
+}
+
+@keyframes drift2 {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(-4%, 3%) scale(1.04);
+  }
 }
 
 .map-filters {
@@ -1639,9 +1731,21 @@ body.no-scroll {
 
 
 @keyframes drift3 {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(-3%, -3%) scale(1.06);
+  }
 }
 
 @keyframes drift4 {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(4%, 2%) scale(1.03);
+  }
 }
 
 .bg-grain {
@@ -1730,9 +1834,25 @@ body.no-scroll {
 }
 
 @keyframes toastIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes toastOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
 }
 
 .gate-field-error {
@@ -1759,6 +1879,15 @@ body.no-scroll {
   animation: fadeIn 0.18s ease both;
 }
 
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 .cu-confirm-sheet {
   background: var(--surface);
   border-radius: 20px 20px 0 0;
@@ -1766,6 +1895,17 @@ body.no-scroll {
   width: 100%;
   max-width: 480px;
   animation: slideUp 0.22s var(--ease-expo) both;
+}
+
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .cu-confirm-title {
@@ -1797,12 +1937,6 @@ body.no-scroll {
   color: var(--text);
   border: 1px solid var(--line);
   box-shadow: none;
-}
-
-@keyframes fadeIn {
-}
-
-@keyframes slideUp {
 }
 
 .chat-countdown-wrap {
@@ -1857,6 +1991,12 @@ body.no-scroll {
 }
 
 @keyframes ceOverlayIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .ce-overlay {
@@ -1954,6 +2094,14 @@ body.no-scroll {
 }
 
 @keyframes ceShellIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .ce-left {
@@ -2159,6 +2307,12 @@ body.no-scroll {
 }
 
 @keyframes passShimmer {
+  0% {
+    transform: translateX(0) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(260%) skewX(-18deg);
+  }
 }
 
 .ce-card-body {
@@ -3274,6 +3428,14 @@ body.no-scroll {
 }
 
 @keyframes navDrop {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .lp-nav-logo {
@@ -3341,6 +3503,14 @@ body.no-scroll {
 }
 
 @keyframes heroFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .lp-events-section {
@@ -3416,6 +3586,15 @@ body.no-scroll {
 }
 
 @keyframes pulseBadge {
+  0%,
+  100% {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.3),
+      0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
 }
 
 .lp-cat-chip {
@@ -3611,6 +3790,12 @@ body.no-scroll {
 }
 
 @keyframes commFloat {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-7px);
+  }
 }
 
 .lp-comm-avatars {
@@ -3748,6 +3933,12 @@ body.no-scroll {
 }
 
 @keyframes passShimmer {
+  0% {
+    transform: translateX(0) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(260%) skewX(-18deg);
+  }
 }
 
 .lp-pass-watermark {
@@ -5818,6 +6009,15 @@ body.no-scroll {
 }
 
 @keyframes navTabPop {
+  0% {
+    transform: scale(0.85);
+  }
+  60% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .panel:active {
@@ -5829,6 +6029,15 @@ body.no-scroll {
 }
 
 @keyframes segTabPop {
+  0% {
+    transform: scale(0.92);
+  }
+  60% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .prof-action-row:active {
@@ -5841,9 +6050,15 @@ body.no-scroll {
 }
 
 @keyframes pillPop {
-}
-
-@keyframes viewSlideUp {
+  0% {
+    transform: scale(0.9);
+  }
+  60% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .view-enter {
@@ -5851,9 +6066,25 @@ body.no-scroll {
 }
 
 @keyframes toastIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes toastOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
 }
 
 .cu-toast {
@@ -5887,6 +6118,13 @@ body.no-scroll {
 }
 
 @keyframes floatAvatar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
 }
 
 .prof-avatar-float {
@@ -9610,6 +9848,12 @@ textarea.gate-input {
 }
 
 @keyframes lpCldDrift {
+  0% {
+    transform: translate3d(-110vw, 0, 0);
+  }
+  100% {
+    transform: translate3d(110vw, 0, 0);
+  }
 }
 
 .lp-cloud-scrim {
@@ -10371,6 +10615,14 @@ textarea.gate-input {
 }
 
 @keyframes dioRise {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .lp-dio-back {
@@ -10382,9 +10634,23 @@ textarea.gate-input {
 }
 
 @keyframes dioRiseBack {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 0.92;
+    transform: translateY(0);
+  }
 }
 
 @keyframes dioFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .lp-hero-kicker {
@@ -10454,6 +10720,13 @@ textarea.gate-input {
 }
 
 @keyframes dioBeacon {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }
 
 .map-moving .dio-beacon,
