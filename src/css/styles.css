@@ -2067,11 +2067,20 @@ body.no-scroll {
   font-weight: 700;
   cursor: pointer;
   font-family: var(--font-sans);
-  transition: opacity 0.15s;
+  transition:
+    transform 0.15s var(--ease-out),
+    box-shadow 0.15s var(--ease-out),
+    opacity 0.15s;
+}
+
+.ce-topbar-save:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
 .ce-topbar-save:active {
   opacity: 0.78;
+  transform: translateY(0) scale(0.97);
 }
 
 .ce-topbar-skip {
