@@ -1387,6 +1387,14 @@ body.no-scroll {
 }
 
 @keyframes rippleAnim {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
 }
 
 .logo-wrap:hover {
@@ -10693,5 +10701,122 @@ textarea.gate-input {
   .lp-nav-links {
     gap: 14px;
     font-size: 14px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   POLISH PASS — tactility, micro-interactions & smoother theme flip.
+   Additive layer: transform/opacity-first, all motion reduced-safe.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Primary button: keep the gold gradient alive on hover (was flattening
+   to a solid tone) and let the shadow bloom read as a warmer gold glow. */
+.btn:not(.btn-outline):not(.btn-text):hover {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 92%, #fff) 0%,
+    var(--accent-deep) 100%
+  ) !important;
+  box-shadow:
+    0 2px 6px var(--shadow),
+    0 14px 34px -10px color-mix(in srgb, var(--accent) 60%, transparent) !important;
+}
+
+/* Give the light-sweep a cleaner ease so it reads as a wipe, not a fade. */
+.btn::after {
+  transition: background-position 0.6s var(--ease-out) !important;
+}
+
+/* Category filter chips — flat at rest, tactile on interaction: a soft
+   lift + ambient shadow bloom on hover, a crisp settle on press. */
+.mchip {
+  transition:
+    border-color 0.16s var(--ease-out),
+    background 0.16s var(--ease-out),
+    color 0.16s var(--ease-out),
+    transform 0.16s var(--ease-out),
+    box-shadow 0.22s var(--ease-out) !important;
+  will-change: transform;
+}
+.mchip:hover {
+  transform: translateY(-1.5px) !important;
+  box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--accent) 30%, transparent) !important;
+}
+.mchip:active {
+  transform: translateY(0) scale(0.96) !important;
+  box-shadow: none !important;
+}
+.mchip.active:hover {
+  box-shadow: 0 6px 18px -5px color-mix(in srgb, var(--accent) 55%, transparent) !important;
+}
+
+/* Bottom-nav press feedback: the icon dips slightly when tapped. */
+.nav-link:active .nav-icon {
+  transform: translateY(1px) scale(0.92) !important;
+  transition: transform 0.1s var(--ease-out) !important;
+}
+
+/* Live caption dot: add an outward pulse ring bloom behind the blink so
+   "Live" reads as a real-time heartbeat, not a static swatch. */
+.cap-live .dot {
+  position: relative;
+}
+.cap-live .dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #e23b3b;
+  animation: capLivePulse 1.9s var(--ease-out) infinite;
+  pointer-events: none;
+}
+@keyframes capLivePulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: scale(3.4);
+    opacity: 0;
+  }
+}
+
+/* Softer, eased day/night flip on the core chrome surfaces so the 6am/6pm
+   theme change glides rather than snapping between palettes. */
+body,
+.top-bar,
+.map-caption,
+.nav-cloud,
+.mchip,
+.detail-card {
+  transition:
+    background-color 0.55s var(--ease-out),
+    color 0.55s var(--ease-out),
+    border-color 0.55s var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn::after,
+  .btn-ripple {
+    animation: none !important;
+    transition: none !important;
+  }
+  .mchip:hover,
+  .mchip:active,
+  .nav-link:active .nav-icon {
+    transform: none !important;
+  }
+  .cap-live .dot::after {
+    animation: none !important;
+    display: none;
+  }
+  body,
+  .top-bar,
+  .map-caption,
+  .nav-cloud,
+  .mchip,
+  .detail-card {
+    transition: none !important;
   }
 }
