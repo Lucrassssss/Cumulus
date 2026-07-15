@@ -2129,7 +2129,15 @@ const DIORAMA_FRONT_SVG = `
   <rect x="0" y="330" width="2400" height="10" fill="var(--dio-front)"/>
 </svg>`;
 
+// Per-element scroll-reveal observers created below in renderGate() - tracked
+// so a re-render (sign-out back to the landing page, prefill re-render, etc.)
+// can disconnect the previous batch instead of leaking one IntersectionObserver
+// per feature/venue card every time the gate is rendered.
+let _gateRevealObservers = [];
+
 function renderGate(prefillName, prefillEmail) {
+  _gateRevealObservers.forEach((o) => o.disconnect());
+  _gateRevealObservers = [];
   const loader = document.getElementById("cumulus-loader");
   if (loader) {
     loader.style.opacity = "0";
@@ -2439,6 +2447,7 @@ function renderGate(prefillName, prefillEmail) {
         },
         { threshold: 0.2 },
       );
+      _gateRevealObservers.push(obs);
       obs.observe(el);
     });
     document.querySelectorAll(".lp-feat-card").forEach((el, i) => {
@@ -2457,6 +2466,7 @@ function renderGate(prefillName, prefillEmail) {
         },
         { threshold: 0.15 },
       );
+      _gateRevealObservers.push(obs);
       obs.observe(el);
     });
   });
@@ -4184,8 +4194,10 @@ function onSearchInput() {
   if (state.view !== "browse") {
     state.view = "browse";
     state.selectedEventId = null;
+    renderView();
+    return;
   }
-  renderView();
+  _debouncedSearchRefresh();
 }
 function destroyMainMap() {
   if (lmap) {
@@ -5334,6 +5346,11 @@ function debounce(fn, wait) {
 // Register the debounced bbox fetch on map moveend (registered once in
 // attachMapLayers so it survives style reloads cleanly)
 const _debouncedFetchVisible = debounce(fetchVisibleEvents, 300);
+
+// Live search-as-you-type only needs the map pins re-filtered (getFilteredEvents()
+// reads #search-input live) - not a full renderView(), which was rebuilding the
+// filter-chip bar and scheduling a lmap.resize() on every single keystroke.
+const _debouncedSearchRefresh = debounce(refreshMarkers, 150);
 
 // Empty-state overlay on the map when no events are visible — distinguishes
 // "no events exist yet" from "your filters/search matched nothing".
@@ -8709,7 +8726,22 @@ function getFeaturedBadges() {
 
 function openExpandedCard() {
   const old = document.getElementById("card-xl-overlay");
-  if (old) old.remove();
+  if (old) {
+    // Same cleanup as closeExpandedCard() — without this, reopening the
+    // card (e.g. via closeBadgePicker()'s rebuild) leaks the window-level
+    // deviceorientation listener on every open, each one left driving a
+    // sheen transform on the now-detached card forever.
+    if (_sheenHandler) {
+      window.removeEventListener("deviceorientation", _sheenHandler);
+      _sheenHandler = null;
+    }
+    if (_sheenMouseHandler && _sheenCard) {
+      _sheenCard.removeEventListener("mousemove", _sheenMouseHandler);
+      _sheenMouseHandler = null;
+      _sheenCard = null;
+    }
+    old.remove();
+  }
   const card = state.myCard;
   let cardExt = {
     motto: "",
@@ -10810,8 +10842,20 @@ renderView = function () {
 };
 
 // --- Scroll reveal via IntersectionObserver ---
+// Every non-"browse" renderView() schedules a fresh call to this (see the
+// renderView wrapper below). Elements that intersect get unobserved
+// individually, but any that never scroll into view before the next
+// renderView() replaces #view-container's contents were left registered on
+// the old observer forever - it was never disconnected, so it kept holding
+// those now-detached panels alive. Track the live observer and disconnect
+// the previous one before starting a new one so at most one is ever active.
+let _revealObserver = null;
 function setupReveal(root) {
   if (!window.IntersectionObserver) return;
+  if (_revealObserver) {
+    _revealObserver.disconnect();
+    _revealObserver = null;
+  }
   const els = (root || document).querySelectorAll(
     ".panel, .section-title, .connect-header, .back-btn",
   );
@@ -10826,6 +10870,7 @@ function setupReveal(root) {
     },
     { threshold: 0.08 },
   );
+  _revealObserver = obs;
   els.forEach((el) => {
     el.classList.add("reveal");
     obs.observe(el);
