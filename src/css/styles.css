@@ -11438,3 +11438,16 @@ body,
     animation: none !important;
   }
 }
+
+/* view-enter fires on every navigation and stagger-item/list-item-stagger
+   fire on every panel/list within it, so this is the most-triggered
+   motion in the app, yet had no reduced-motion guard at all. Freeze in
+   place (still visible, just no slide/pop/stagger delay). */
+@media (prefers-reduced-motion: reduce) {
+  .view-enter,
+  .stagger-item,
+  .list-item-stagger > * {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}

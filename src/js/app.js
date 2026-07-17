@@ -9,7 +9,7 @@ const EVENTS = [];
 // Used only as scannability accents (dots, badges, markers, borders);
 // all interactive chrome (buttons/nav/CTAs) stays yellow.
 const CATS = {
-  Creative: { color: "#CBA43A", textColor: "#765E1F" }, // gold
+  Creative: { color: "#FFCF33", textColor: "#765E1F" }, // gold
   Gaming: { color: "#35C98A", textColor: "#1D6C4A" }, // emerald
   "Movie Nights": { color: "#F0913E", textColor: "#984D0C" }, // orange
   "Board Games": { color: "#2FB6C4", textColor: "#1B6A72" }, // teal
@@ -859,12 +859,12 @@ const CARD_THEMES = CARD_BG_STYLES.map((s) => {
     id: s.id,
     name: s.name,
     bg: s.bg,
-    accent: "#CBA43A",
+    accent: "#FFCF33",
     text: isDark ? "#fff" : "#1e293b",
     textSoft: isDark ? "rgba(255,255,255,0.6)" : "rgba(30,41,59,0.58)",
     border: isDark ? "rgba(232,184,75,0.25)" : "rgba(205,154,22,0.20)",
     pattern: "lightning",
-    color: isDark ? "#CBA43A" : "#A8841F",
+    color: isDark ? "#FFCF33" : "#E0A800",
   };
 });
 
@@ -1509,7 +1509,7 @@ let state = {
 let cardDraft = {
   theme: "obsidian",
   bgStyle: "obsidian",
-  accentColor: "#CBA43A",
+  accentColor: "#FFCF33",
   pattern: "constellation",
   patternOpacity: 0.35,
   bio: "",
@@ -1607,7 +1607,7 @@ function getBgStyle(id) {
 }
 function resolveCardColors(bgStyleId, accentHex) {
   const style = getBgStyle(bgStyleId);
-  const acc = accentHex || "#CBA43A";
+  const acc = accentHex || "#FFCF33";
   const isDark = style.dark;
   return {
     bg: style.bg,
@@ -1879,8 +1879,8 @@ async function start() {
       if (gateRoot) {
         gateRoot.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;
           background:var(--bg,#0d0e1a);flex-direction:column;gap:16px">
-          <div style="width:36px;height:36px;border:3px solid rgba(203,164,58,0.25);
-            border-top-color:#CBA43A;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+          <div style="width:36px;height:36px;border:3px solid rgba(255,207,51,0.25);
+            border-top-color:#FFCF33;border-radius:50%;animation:spin 0.8s linear infinite"></div>
           <span style="color:rgba(255,255,255,0.5);font-size:13px;font-family:sans-serif">Resuming session…</span>
         </div>`;
       }
@@ -3022,7 +3022,7 @@ function openCardEditor(eventId, welcome) {
     savedPhoto = localStorage.getItem("card_photo:" + state.profileName) || "";
   } catch (e) {}
   const savedBg = ext.bgStyle || ex?.theme || "obsidian";
-  const savedAccent = ext.accentColor || ex?.accentColor || "#CBA43A";
+  const savedAccent = ext.accentColor || ex?.accentColor || "#FFCF33";
   const savedOpacity = ext.patternOpacity != null ? ext.patternOpacity : 0.35;
   cardDraft = ex
     ? {
@@ -3041,7 +3041,7 @@ function openCardEditor(eventId, welcome) {
     : {
         theme: "obsidian",
         bgStyle: "obsidian",
-        accentColor: "#CBA43A",
+        accentColor: "#FFCF33",
         pattern: "constellation",
         patternOpacity: 0.35,
         bio: "",
@@ -3857,7 +3857,7 @@ async function saveCard() {
     name: state.profileName,
     theme: cardDraft.bgStyle || cardDraft.theme,
     bgStyle: cardDraft.bgStyle || cardDraft.theme,
-    accentColor: cardDraft.accentColor || "#CBA43A",
+    accentColor: cardDraft.accentColor || "#FFCF33",
     bio: cardDraft.bio.trim(),
     interests: cardDraft.interests.trim(),
     fact: cardDraft.fact.trim(),
@@ -4565,14 +4565,14 @@ async function uploadNightShot(evId, input) {
 
 function _buildChatMsgHtml(msg) {
   const myCard = state.myCard;
-  let _myExt = { bgStyle: "obsidian", accentColor: "#CBA43A" };
+  let _myExt = { bgStyle: "obsidian", accentColor: "#FFCF33" };
   try {
     const r = localStorage.getItem("card_ext:" + state.profileName);
     if (r) _myExt = { ..._myExt, ...JSON.parse(r) };
   } catch (e) {}
   const _myCols = resolveCardColors(
     _myExt.bgStyle || myCard?.theme || "obsidian",
-    _myExt.accentColor || myCard?.accentColor || "#CBA43A",
+    _myExt.accentColor || myCard?.accentColor || "#FFCF33",
   );
   const isOwn = msg.name === state.profileName;
   const nameCol = isOwn ? _myCols.accent : "var(--text-muted)";
@@ -4964,7 +4964,7 @@ function openActiveEventMarker(evId) {
   if (!ev || ev.lat == null || ev.lon == null) return;
 
   const catData = CATS[ev.category] || {};
-  const color = catData.color || "#CBA43A";
+  const color = catData.color || "#FFCF33";
   const status = eventStatus(ev);
 
   // ── WebGL Lightning Beacon (replaces DOM evpin marker entirely) ──────────
@@ -5014,9 +5014,9 @@ function openActiveEventMarker(evId) {
 function updateClusterPaint() {
   if (!lmap || !lmap.getLayer("clusters")) return;
   const dk = state.theme === "dark";
-  const c0 = dk ? "#CBA43A" : "#A8841F";
-  const c1 = dk ? "#A8841F" : "#7E6210";
-  const c2 = dk ? "#7E6210" : "#8A5C0A";
+  const c0 = dk ? "#FFCF33" : "#E0A800";
+  const c1 = dk ? "#E0A800" : "#966A0A";
+  const c2 = dk ? "#966A0A" : "#8A5C0A";
   lmap.setPaintProperty("clusters", "circle-color", [
     "step",
     ["get", "point_count"],
@@ -5057,11 +5057,11 @@ function attachMapLayers() {
       "circle-color": [
         "step",
         ["get", "point_count"],
-        "#CBA43A",
+        "#FFCF33",
         10,
-        "#A8841F",
+        "#E0A800",
         30,
-        "#7E6210",
+        "#966A0A",
       ],
       "circle-radius": ["step", ["get", "point_count"], 20, 10, 24, 30, 28],
       "circle-stroke-width": 2,
@@ -8435,7 +8435,7 @@ function renderConnect(id) {
     motto: "",
     pattern: "lines",
     areas: [],
-    accentColor: "#CBA43A",
+    accentColor: "#FFCF33",
     bgStyle: "obsidian",
   };
   try {
@@ -8444,7 +8444,7 @@ function renderConnect(id) {
   } catch (e) {}
   const _myCols = resolveCardColors(
     _myExt.bgStyle || myCard?.theme || "obsidian",
-    _myExt.accentColor || myCard?.accentColor || "#CBA43A",
+    _myExt.accentColor || myCard?.accentColor || "#FFCF33",
   );
   const _myAccent = _myCols.accent;
   const yourCardHtml = myCard
@@ -8680,7 +8680,7 @@ function getAllBadges() {
       name: b.name,
       glyph: b.glyph,
       desc: b.desc,
-      color: (CATS[b.cat] || { color: "#CBA43A" }).color,
+      color: (CATS[b.cat] || { color: "#FFCF33" }).color,
       earned: myCats.has(b.cat),
       kind: "Category",
     }),
@@ -8691,7 +8691,7 @@ function getAllBadges() {
       name: b.name,
       glyph: b.glyph,
       desc: b.desc,
-      color: "#CBA43A",
+      color: "#FFCF33",
       earned: state.specialBadges.includes(b.id),
       kind: "Special",
     }),
@@ -8706,7 +8706,7 @@ function getCardExt() {
     motto: "",
     pattern: "lines",
     areas: [],
-    accentColor: "#CBA43A",
+    accentColor: "#FFCF33",
     bgStyle: "obsidian",
     badges: [],
   };
@@ -8740,7 +8740,7 @@ function openExpandedCard() {
     motto: "",
     pattern: "lines",
     areas: [],
-    accentColor: "#CBA43A",
+    accentColor: "#FFCF33",
     bgStyle: "obsidian",
   };
   try {
@@ -8752,7 +8752,7 @@ function openExpandedCard() {
     cardPhoto = localStorage.getItem("card_photo:" + state.profileName) || "";
   } catch (e) {}
 
-  const accent = cardExt.accentColor || card?.accentColor || "#CBA43A";
+  const accent = cardExt.accentColor || card?.accentColor || "#FFCF33";
   const accentAlpha = (a, op) => {
     const m = a.match(/^#([0-9a-f]{6})$/i);
     if (!m) return `rgba(255,255,255,${op})`;
@@ -9051,7 +9051,7 @@ function renderProfile() {
     motto: "",
     pattern: "lines",
     areas: [],
-    accentColor: "#CBA43A",
+    accentColor: "#FFCF33",
     bgStyle: "obsidian",
     patternOpacity: 0.18,
   };
@@ -9095,7 +9095,7 @@ function renderProfile() {
   function profileCardHtml(c, ext) {
     const cols = resolveCardColors(
       ext.bgStyle || c?.theme || "obsidian",
-      ext.accentColor || c?.accentColor || "#CBA43A",
+      ext.accentColor || c?.accentColor || "#FFCF33",
     );
     const { bg, accent, text: textCol, textSoft } = cols;
     const pat = CARD_PATTERNS[ext.pattern || "lightning"] || "";
@@ -9182,7 +9182,7 @@ function renderProfile() {
   };
   const recentEvHtml = recentEvents
     .map((ev) => {
-      const c2 = CATS[ev.category] || { color: "#CBA43A" };
+      const c2 = CATS[ev.category] || { color: "#FFCF33" };
       const mutedBg = hexToRgba(c2.color, 0.09);
       const shortTitle =
         ev.title.length > 28 ? ev.title.substring(0, 26) + "…" : ev.title;
@@ -9232,7 +9232,7 @@ function renderProfile() {
     </div>
 
     <!-- Stats row -->
-    <div class="prof-stats-row">
+    <div class="prof-stats-row list-item-stagger">
       <div class="pstat"><div class="pstat-num">${count}</div><div class="pstat-lbl">Events</div></div>
       <div class="pstat"><div class="pstat-num">${state.friends.length}</div><div class="pstat-lbl">Friends</div></div>
       <div class="pstat"><div class="pstat-num">${myTickets.length}</div><div class="pstat-lbl">Tickets</div></div>
@@ -9448,7 +9448,7 @@ function renderAchievements() {
   const evTilesHtml = allEvents.length
     ? allEvents
         .map((ev) => {
-          const c2 = CATS[ev.category] || { color: "#CBA43A" };
+          const c2 = CATS[ev.category] || { color: "#FFCF33" };
           const shortTitle =
             ev.title.length > 28 ? ev.title.substring(0, 26) + "…" : ev.title;
           const evDate = ev.startsAt
@@ -9464,7 +9464,7 @@ function renderAchievements() {
               : status === "upcoming"
                 ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c2.color};margin-right:4px;opacity:0.7;"></span>`
                 : "";
-          return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:${hexToRgba(c2.color, 0.08)};border:1px solid var(--line);border-left:2px solid ${c2.color};" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
+          return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:${hexToRgba(c2.color, 0.08)};border:1px solid ${c2.color}28;" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
           <div style="font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;">${escapeHtml(shortTitle)}</div>
           <div style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;">${statusDot}${escapeHtml(ev.category)}</div>
           ${evDate ? `<div style="font-size:10px;color:${c2.color};font-weight:600;margin-top:4px;">${evDate}</div>` : ""}
@@ -9488,13 +9488,13 @@ function renderAchievements() {
     <!-- Milestones -->
     <div class="profile-section">
       <div class="profile-section-label">Milestones</div>
-      <div class="badge-grid">${milestoneCells}${allRounderCell}</div>
+      <div class="badge-grid list-item-stagger">${milestoneCells}${allRounderCell}</div>
     </div>
 
     <!-- Categories explored -->
     <div class="profile-section">
       <div class="profile-section-label">Categories explored</div>
-      <div class="badge-grid">${categoryCells}</div>
+      <div class="badge-grid list-item-stagger">${categoryCells}</div>
     </div>
 
     ${
@@ -9502,7 +9502,7 @@ function renderAchievements() {
         ? `
     <div class="profile-section">
       <div class="profile-section-label">Special &amp; community badges</div>
-      <div class="badge-grid">${specialCells}</div>
+      <div class="badge-grid list-item-stagger">${specialCells}</div>
     </div>`
         : ""
     }
@@ -10593,7 +10593,7 @@ function renderSocialTab() {
     // check; flipping it just swaps which client-side view renders below,
     // it grants no real access. Remove before real users onboard.
     const adminPreviewToggle = state._verifiedAdmin
-      ? `<div style="margin:12px 0;padding:10px 12px;border-radius:10px;background:rgba(203,164,58,0.12);border:1px dashed rgba(203,164,58,0.4);display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      ? `<div style="margin:12px 0;padding:10px 12px;border-radius:10px;background:rgba(255,207,51,0.12);border:1px dashed rgba(255,207,51,0.4);display:flex;align-items:center;justify-content:space-between;gap:8px;">
           <span style="font-size:12px;color:var(--text-muted);">TEST: admin bypass is <strong>${state.isAdmin ? "ON" : "OFF"}</strong></span>
           <button class="btn btn-outline" style="min-height:32px;padding:0 12px;font-size:12px;" onclick="toggleAdminPreview()">${state.isAdmin ? "Preview as member" : "Preview as admin"}</button>
         </div>`
