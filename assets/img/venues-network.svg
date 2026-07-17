@@ -10,16 +10,16 @@
       <stop offset="1" stop-color="#CBA43A" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="vnAmbient" cx="68%" cy="40%" r="60%">
-      <stop offset="0" stop-color="#CBA43A" stop-opacity="0.16"/>
+      <stop offset="0" stop-color="#CBA43A" stop-opacity="0.26"/>
       <stop offset="1" stop-color="#CBA43A" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
-  <rect width="1600" height="900" fill="#08080C"/>
+  <rect width="1600" height="900" fill="#0d0e10"/>
   <rect width="1600" height="900" fill="url(#vnAmbient)"/>
 
   <!-- faint map graticule -->
-  <g stroke="#CBA43A" stroke-width="1" opacity="0.055">
+  <g stroke="#CBA43A" stroke-width="1" opacity="0.09">
     <line x1="0" y1="120" x2="1600" y2="90"/>
     <line x1="0" y1="280" x2="1600" y2="260"/>
     <line x1="0" y1="440" x2="1600" y2="470"/>
@@ -33,7 +33,7 @@
   </g>
 
   <!-- soft borough-boundary hints -->
-  <g stroke="#C6CAD1" stroke-width="1.2" opacity="0.09" fill="none">
+  <g stroke="#C6CAD1" stroke-width="1.2" opacity="0.14" fill="none">
     <path d="M60,140 C220,110 340,180 420,270 C480,340 460,430 380,470"/>
     <path d="M900,60 C1040,90 1140,70 1260,130 C1360,180 1380,260 1330,330"/>
     <path d="M1060,520 C1180,560 1300,540 1420,600 C1500,640 1540,700 1500,760"/>
@@ -41,10 +41,10 @@
 
   <!-- Thames, abstracted -->
   <path d="M-40,580 C280,540 440,660 700,610 C960,560 1100,470 1380,510 C1500,528 1560,560 1650,548"
-        fill="none" stroke="url(#vnRiver)" stroke-width="42" stroke-linecap="round" opacity="0.20"/>
+        fill="none" stroke="url(#vnRiver)" stroke-width="42" stroke-linecap="round" opacity="0.32"/>
 
   <!-- network connections -->
-  <g stroke="#CBA43A" stroke-width="1.4" opacity="0.30">
+  <g stroke="#CBA43A" stroke-width="1.4" opacity="0.46">
     <line x1="560" y1="520" x2="640" y2="420"/>
     <line x1="640" y1="420" x2="720" y2="560"/>
     <line x1="720" y1="560" x2="500" y2="600"/>
@@ -65,20 +65,20 @@
 
   <!-- event pins: quiet nodes -->
   <g fill="#E7E4DC">
-    <circle cx="120" cy="180" r="2.6" opacity="0.34"/>
-    <circle cx="260" cy="340" r="3" opacity="0.4"/>
-    <circle cx="90"  cy="620" r="2.6" opacity="0.34"/>
-    <circle cx="560" cy="520" r="3.2" opacity="0.46"/>
-    <circle cx="640" cy="420" r="2.8" opacity="0.4"/>
-    <circle cx="500" cy="600" r="2.8" opacity="0.4"/>
-    <circle cx="980" cy="300" r="3" opacity="0.42"/>
-    <circle cx="1060" cy="420" r="2.8" opacity="0.4"/>
-    <circle cx="1230" cy="480" r="3" opacity="0.42"/>
-    <circle cx="1300" cy="380" r="2.8" opacity="0.4"/>
-    <circle cx="1120" cy="600" r="2.8" opacity="0.38"/>
-    <circle cx="860"  cy="460" r="2.8" opacity="0.38"/>
-    <circle cx="1500" cy="460" r="2.8" opacity="0.38"/>
-    <circle cx="1560" cy="380" r="2.6" opacity="0.34"/>
+    <circle cx="120" cy="180" r="2.6" opacity="0.5"/>
+    <circle cx="260" cy="340" r="3" opacity="0.58"/>
+    <circle cx="90"  cy="620" r="2.6" opacity="0.5"/>
+    <circle cx="560" cy="520" r="3.2" opacity="0.65"/>
+    <circle cx="640" cy="420" r="2.8" opacity="0.58"/>
+    <circle cx="500" cy="600" r="2.8" opacity="0.58"/>
+    <circle cx="980" cy="300" r="3" opacity="0.6"/>
+    <circle cx="1060" cy="420" r="2.8" opacity="0.58"/>
+    <circle cx="1230" cy="480" r="3" opacity="0.6"/>
+    <circle cx="1300" cy="380" r="2.8" opacity="0.58"/>
+    <circle cx="1120" cy="600" r="2.8" opacity="0.55"/>
+    <circle cx="860"  cy="460" r="2.8" opacity="0.55"/>
+    <circle cx="1500" cy="460" r="2.8" opacity="0.55"/>
+    <circle cx="1560" cy="380" r="2.6" opacity="0.5"/>
   </g>
 
   <!-- event pins: live / featured, with soft halo -->
