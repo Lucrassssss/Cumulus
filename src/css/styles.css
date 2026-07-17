@@ -11432,3 +11432,26 @@ body,
     animation: none !important;
   }
 }
+
+/* The live-pulse dot (blink) and ambient landing blobs (drift1-4, heroBlob)
+   run as infinite loops with no reduced-motion guard anywhere else in this
+   file — freeze them here rather than at each of their ~10 call sites. */
+@media (prefers-reduced-motion: reduce) {
+  .cap-live .dot,
+  .live-chip .dot,
+  .tip-live,
+  .evtip-inner .tip-live,
+  .lp-live-dot,
+  .lp-comm-dot {
+    animation: none !important;
+  }
+
+  .blot-a,
+  .blot-b,
+  .blot-c,
+  .blot-d,
+  .blot-e,
+  .lp-blob {
+    animation: none !important;
+  }
+}
