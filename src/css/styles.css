@@ -6200,6 +6200,17 @@ body.no-scroll {
   border-radius: 4px;
 }
 
+::selection {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  color: var(--text);
+}
+
+.lp-hero-title,
+.lp-section-title,
+.lp-join-headline {
+  text-wrap: balance;
+}
+
 .hp-panel {
   background: var(--surface-2);
   border: 1px solid var(--line);
