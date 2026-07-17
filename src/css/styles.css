@@ -3740,9 +3740,7 @@ body.no-scroll {
 }
 
 .lp-vstat:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.16);
-  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .lp-join-section {
@@ -7453,22 +7451,25 @@ select.gate-input {
 }
 
 .lp-vstat-num {
-  font-size: 42px !important;
-  font-weight: 900 !important;
+  font-size: 36px !important;
+  font-weight: 800 !important;
   line-height: 1 !important;
-  letter-spacing: -0.06em !important;
+  letter-spacing: -0.04em !important;
   color: #fff !important;
   display: block !important;
-  margin-bottom: 4px !important;
+  margin-bottom: 0 !important;
+  flex-shrink: 0;
 }
 
 .lp-vstat-label {
-  font-size: 10px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.12em !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.1em !important;
   text-transform: uppercase !important;
-  color: rgba(255, 255, 255, 0.45) !important;
-  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.55) !important;
+  margin-top: 0;
+  text-align: right;
 }
 
 .lp-venues-cta:hover {
@@ -10071,9 +10072,9 @@ textarea.gate-input {
   /* Clear the notch/Dynamic Island + status bar (needs viewport-fit=cover,
      already set in index.html) instead of rendering underneath it. */
   padding-top: calc(12px + env(safe-area-inset-top, 0px));
-  backdrop-filter: blur(16px) saturate(1.3) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
-  background: color-mix(in srgb, var(--bg) 70%, transparent) !important;
+  backdrop-filter: blur(22px) saturate(1.5) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.5) !important;
+  background: color-mix(in srgb, var(--bg) 55%, transparent) !important;
   border-bottom: 1px solid var(--line-soft) !important;
   box-shadow: none !important;
   animation: navDrop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -10184,22 +10185,30 @@ textarea.gate-input {
 }
 
 .lp-venues-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0 !important;
+  align-self: center;
+  min-width: 0;
 }
 
 .lp-vstat {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: var(--r-md) !important;
-  padding: 20px !important;
-  text-align: center;
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
-  backdrop-filter: blur(4px) !important;
+  background: none !important;
+  border: none !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 0 !important;
+  padding: 22px 6px !important;
+  text-align: left;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  transition: background 0.2s ease;
+  backdrop-filter: none !important;
+}
+
+.lp-vstat:last-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
 .lp-venues-section .lp-section-title {

@@ -2191,7 +2191,6 @@ function renderGate(prefillName, prefillEmail) {
     <!-- ── FEATURES ── -->
     <section class="lp-features" id="lp-features-anchor">
       <div style="text-align:center;margin-bottom:52px;">
-        <div class="lp-section-kicker">Everything you need</div>
         <h2 class="lp-section-title">One pass. Your whole city.</h2>
       </div>
       <div class="lp-features-grid">
@@ -2244,16 +2243,15 @@ function renderGate(prefillName, prefillEmail) {
     <section style="padding:80px 24px;background:var(--bg);position:relative;overflow:hidden;">
       <div style="max-width:860px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:52px;align-items:center;">
         <div>
-          <div class="lp-join-eyebrow">Your community pass</div>
           <h2 class="lp-join-headline">This isn't about events.<br>It's about <em>your people.</em></h2>
           <p class="lp-join-body">Cumulus was built on one belief — the best things happen when people who live near each other actually meet. Not online. In the same room, at the same table, under the same open sky.</p>
           <div class="lp-join-proof" style="margin-top:24px;">
             <div class="lp-proof-avs">
-              <div class="lp-proof-av" style="background:#6366F1;">A</div>
-              <div class="lp-proof-av" style="background:#10B981;">P</div>
-              <div class="lp-proof-av" style="background:#F97316;">T</div>
-              <div class="lp-proof-av" style="background:#EC4899;">M</div>
-              <div class="lp-proof-av" style="background:#8B5CF6;">J</div>
+              <div class="lp-proof-av">A</div>
+              <div class="lp-proof-av">P</div>
+              <div class="lp-proof-av">T</div>
+              <div class="lp-proof-av">M</div>
+              <div class="lp-proof-av">J</div>
             </div>
             <span class="lp-proof-text">Londoners already building their community on Cumulus</span>
           </div>
@@ -2262,39 +2260,39 @@ function renderGate(prefillName, prefillEmail) {
         <div class="lp-community-stack">
           <div class="lp-comm-card lp-comm-c1">
             <div class="lp-comm-avatars">
-              <div class="lp-comm-av" style="background:#6366F1;">AR</div>
-              <div class="lp-comm-av" style="background:#10B981;">PS</div>
-              <div class="lp-comm-av" style="background:#F97316;">TB</div>
+              <div class="lp-comm-av">AR</div>
+              <div class="lp-comm-av">PS</div>
+              <div class="lp-comm-av">TB</div>
             </div>
             <div class="lp-comm-text">
               <div class="lp-comm-title">Jazz in the Park</div>
               <div class="lp-comm-sub">Herne Hill · 40 going</div>
             </div>
-            <div class="lp-comm-dot" style="background:#10B981;"></div>
+            <div class="lp-comm-dot"></div>
           </div>
           <div class="lp-comm-card lp-comm-c2">
             <div class="lp-comm-avatars">
-              <div class="lp-comm-av" style="background:#EC4899;">ML</div>
-              <div class="lp-comm-av" style="background:#8B5CF6;">JC</div>
+              <div class="lp-comm-av">ML</div>
+              <div class="lp-comm-av">JC</div>
             </div>
             <div class="lp-comm-text">
               <div class="lp-comm-title">Ceramics &amp; Chill</div>
               <div class="lp-comm-sub">Bermondsey · 25 going</div>
             </div>
-            <div class="lp-comm-dot" style="background:#8B5CF6;"></div>
+            <div class="lp-comm-dot"></div>
           </div>
           <div class="lp-comm-card lp-comm-c3">
             <div class="lp-comm-avatars">
-              <div class="lp-comm-av" style="background:#EF4444;">SO</div>
-              <div class="lp-comm-av" style="background:#D9A52E;">OW</div>
-              <div class="lp-comm-av" style="background:#3B82F6;">CD</div>
+              <div class="lp-comm-av">SO</div>
+              <div class="lp-comm-av">OW</div>
+              <div class="lp-comm-av">CD</div>
               <div class="lp-comm-av lp-comm-av-more">+12</div>
             </div>
             <div class="lp-comm-text">
               <div class="lp-comm-title">Supper Club — Fulham</div>
               <div class="lp-comm-sub">Fulham · 26 going</div>
             </div>
-            <div class="lp-comm-dot" style="background:#EF4444;"></div>
+            <div class="lp-comm-dot"></div>
           </div>
         </div>
       </div>
