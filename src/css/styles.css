@@ -1393,14 +1393,29 @@ body.no-scroll {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(1100px 620px at 92% -10%, var(--gold-tint), transparent 60%),
-    radial-gradient(700px 420px at 100% 6%, var(--gold-tint), transparent 55%),
+    conic-gradient(
+      from 205deg at 78% 18%,
+      transparent 0deg,
+      var(--gold-tint) 28deg,
+      transparent 70deg,
+      transparent 190deg,
+      rgba(126, 132, 140, 0.07) 235deg,
+      transparent 290deg
+    ),
+    radial-gradient(1300px 820px at 18% -12%, var(--gold-tint), transparent 58%),
+    radial-gradient(1000px 640px at 108% 22%, var(--gold-tint), transparent 55%),
     radial-gradient(
-      820px 460px at -12% 108%,
+      1150px 560px at 42% 118%,
       rgba(126, 132, 140, 0.08),
-      transparent 60%
+      transparent 62%
+    ),
+    linear-gradient(
+      118deg,
+      transparent 22%,
+      color-mix(in srgb, var(--gold) 7%, transparent) 48%,
+      transparent 74%
     );
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 [data-theme="dark"] #app[data-view="social"]::before,
@@ -1409,16 +1424,31 @@ body.no-scroll {
 [data-theme="dark"] #app[data-view="calendar-day"]::before,
 [data-theme="dark"] #app[data-view="profile"]::before,
 [data-theme="dark"] #app[data-view="achievements"]::before {
-  /* Night sky: the gold glow reads as electric against near-black. */
+  /* Night sky: the gold marbling reads as electric veins against near-black. */
   background:
-    radial-gradient(1100px 620px at 92% -10%, var(--gold-tint), transparent 60%),
-    radial-gradient(700px 420px at 100% 6%, var(--gold-tint), transparent 55%),
+    conic-gradient(
+      from 205deg at 78% 18%,
+      transparent 0deg,
+      var(--gold-tint) 28deg,
+      transparent 70deg,
+      transparent 190deg,
+      rgba(198, 202, 209, 0.09) 235deg,
+      transparent 290deg
+    ),
+    radial-gradient(1300px 820px at 18% -12%, var(--gold-tint), transparent 58%),
+    radial-gradient(1000px 640px at 108% 22%, var(--gold-tint), transparent 55%),
     radial-gradient(
-      820px 460px at -12% 108%,
-      rgba(126, 132, 140, 0.1),
-      transparent 60%
+      1150px 560px at 42% 118%,
+      rgba(198, 202, 209, 0.1),
+      transparent 62%
+    ),
+    linear-gradient(
+      118deg,
+      transparent 22%,
+      color-mix(in srgb, var(--gold) 10%, transparent) 48%,
+      transparent 74%
     );
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
 @keyframes gateEntrance {
