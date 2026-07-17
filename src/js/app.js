@@ -1520,6 +1520,9 @@ let cardDraft = {
   areas: [],
 };
 let cardEditorEventId = null;
+// True while the card editor is showing as the first-run welcome step
+// (new member building their pass while the map initialises behind it).
+let cardEditorWelcome = false;
 let lmap = null,
   lmapFitted = false;
 let hostMap = null,
@@ -2729,6 +2732,9 @@ async function submitGate() {
 
 // Pending onboarding context between "send code" and "verify code".
 let _pendingAuth = null;
+// Set when a brand-new member finishes OTP verification: enterApp() opens
+// the card builder as a welcome step instead of dead loader time.
+let _welcomeCardPending = false;
 
 // ── Real auth, step 2: verify the code, then finalise onboarding ──────────
 async function verifyGateCode() {
@@ -2829,6 +2835,7 @@ async function verifyGateCode() {
     return;
   }
 
+  _welcomeCardPending = !p.isLogin;
   _pendingAuth = null;
   document.body.style.overflow = "";
   document.getElementById("gate-root").innerHTML = "";
@@ -2968,6 +2975,19 @@ function enterApp() {
   // Load real data in the background without blocking
   initApp();
 
+  // First-run: a brand-new member builds their pass while the map
+  // initialises behind the overlay — the dead loader wait becomes the
+  // account/card setup step. Returning logins go straight to the map.
+  if (_welcomeCardPending) {
+    _welcomeCardPending = false;
+    const loader = document.getElementById("cumulus-loader");
+    if (loader) {
+      loader.style.opacity = "0";
+      setTimeout(() => loader.remove(), 500);
+    }
+    openCardEditor(null, true);
+  }
+
   // Safety net: the #cumulus-loader overlay is normally hidden by lmap's
   // "idle" event inside initLeaflet(), but that path never fires if Mapbox
   // GL JS's <script defer> hasn't finished loading yet when initLeaflet()
@@ -2987,8 +3007,9 @@ function enterApp() {
   }, 8000);
 }
 
-function openCardEditor(eventId) {
+function openCardEditor(eventId, welcome) {
   cardEditorEventId = eventId ?? null;
+  cardEditorWelcome = !!welcome;
   const ex = state.myCard;
   // Load extended fields from localStorage
   let ext = {};
@@ -3617,12 +3638,13 @@ function renderCardEditor() {
     <!-- Top bar -->
     <div class="ce-topbar">
       <button class="ce-topbar-back" onclick="closeCardEditor()">←</button>
-      <div class="ce-topbar-title">Card builder</div>
+      <div class="ce-topbar-title">${cardEditorWelcome ? "Welcome — build your pass" : "Card builder"}</div>
       <div style="display:flex;gap:6px;align-items:center;">
-        ${allowSkip ? `<button class="ce-topbar-skip" onclick="skipCard()">Skip</button>` : ""}
+        ${allowSkip ? `<button class="ce-topbar-skip" onclick="skipCard()">Skip</button>` : cardEditorWelcome ? `<button class="ce-topbar-skip" onclick="closeCardEditor()">Skip for now</button>` : ""}
         <button class="ce-topbar-save" onclick="saveCard()">Save</button>
       </div>
     </div>
+    ${cardEditorWelcome ? `<div class="ce-welcome-note">This is the pass you'll carry to every event — make it yours while the map warms up behind. You can change it any time from your Pass.</div>` : ""}
 
     <!-- Split: preview | controls -->
     <div class="ce-shell">
@@ -3641,7 +3663,7 @@ function renderCardEditor() {
           ${
             allowSkip
               ? `<button class="btn btn-outline" onclick="skipCard()">Skip</button>`
-              : `<button class="btn btn-outline" onclick="closeCardEditor()">Cancel</button>`
+              : `<button class="btn btn-outline" onclick="closeCardEditor()">${cardEditorWelcome ? "Skip for now" : "Cancel"}</button>`
           }
         </div>
       </div>

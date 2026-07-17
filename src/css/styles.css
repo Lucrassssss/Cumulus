@@ -2022,6 +2022,16 @@ body.no-scroll {
   flex-shrink: 0;
 }
 
+.ce-welcome-note {
+  padding: 10px 20px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-soft);
+  background: var(--gold-tint);
+  border-bottom: 1px solid var(--line-soft);
+  flex-shrink: 0;
+}
+
 .ce-topbar-back {
   width: 36px;
   height: 36px;
