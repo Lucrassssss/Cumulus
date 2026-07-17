@@ -10073,7 +10073,7 @@ function renderMyTickets() {
   if (!myTickets.length)
     return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="connect-header"><h2>My Tickets</h2><p>All your event bookings</p></div>
-    <div class="empty-state">No tickets yet — browse events and book your first one.</div>`;
+    <div class="empty-state">No tickets yet — browse events and book your first one.<br><br><button class="btn" onclick="goBrowse()">Browse Events</button></div>`;
   const cards = [...myTickets]
     .reverse()
     .map((t) => {

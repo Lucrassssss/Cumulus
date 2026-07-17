@@ -1662,11 +1662,54 @@ body.no-scroll {
 }
 
 .empty-state {
+  position: relative;
   text-align: center;
   padding: 60px 20px;
   color: var(--text-muted);
   font-size: 14px;
   animation: viewSlideUp 0.4s var(--ease-pop) both;
+}
+
+/* A quiet gold bloom behind empty-state copy so "nothing here" reads as
+   an intentional pause rather than a blank/broken panel. Purely ambient —
+   no literal icon, since .empty-state covers unrelated contexts (no
+   tickets, restricted, event-not-found) that shouldn't share one glyph. */
+.empty-state::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  width: 130px;
+  height: 130px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--accent) 16%, transparent) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: -1;
+  animation: emptyStateBloom 4.5s ease-in-out infinite;
+}
+
+@keyframes emptyStateBloom {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .empty-state::before {
+    animation: none;
+    opacity: 0.7;
+  }
 }
 
 .live-chip .dot {
