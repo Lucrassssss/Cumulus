@@ -1376,11 +1376,14 @@ body.no-scroll {
 }
 
 /* ── Ambient view backdrops (Social / Calendar / Profile families) ──
-   Gold-forward glow wash behind the scrollable tabs — no raster clouds
-   (the corner cloud bitmaps read as clutter and were removed). Deliberately
-   static — one cheap paint, no filters, no animation (the animated
-   bg-blots were scoped out of the app for perf). z-index:-1 tucks the
-   layer behind every surface and card. */
+   Gold-forward marbled wash behind the scrollable tabs — no raster clouds
+   (the corner cloud bitmaps read as clutter and were removed). Oversized
+   10% past the viewport on every edge so the slow drift/rotate below never
+   exposes an edge; transform-only animation (translate + rotate + scale),
+   no filter, no blur — the same perf lesson that killed the old animated
+   bg-blots (continuous blur behind the whole app cost ~32fps) still
+   applies, but this is compositor-only and scoped to six tabs, not the
+   whole session. z-index:-1 tucks the layer behind every surface/card. */
 #app[data-view="social"]::before,
 #app[data-view="friends"]::before,
 #app[data-view="calendar"]::before,
@@ -1389,18 +1392,18 @@ body.no-scroll {
 #app[data-view="achievements"]::before {
   content: "";
   position: fixed;
-  inset: 0;
+  inset: -10%;
   z-index: -1;
   pointer-events: none;
   background:
     conic-gradient(
       from 205deg at 78% 18%,
       transparent 0deg,
-      var(--gold-tint) 28deg,
-      transparent 70deg,
-      transparent 190deg,
-      rgba(126, 132, 140, 0.07) 235deg,
-      transparent 290deg
+      color-mix(in srgb, var(--gold) 26%, transparent) 32deg,
+      transparent 78deg,
+      transparent 186deg,
+      rgba(126, 132, 140, 0.12) 232deg,
+      transparent 292deg
     ),
     radial-gradient(1300px 820px at 18% -12%, var(--gold-tint), transparent 58%),
     radial-gradient(1000px 640px at 108% 22%, var(--gold-tint), transparent 55%),
@@ -1411,11 +1414,12 @@ body.no-scroll {
     ),
     linear-gradient(
       118deg,
-      transparent 22%,
-      color-mix(in srgb, var(--gold) 7%, transparent) 48%,
-      transparent 74%
+      transparent 20%,
+      color-mix(in srgb, var(--gold) 13%, transparent) 48%,
+      transparent 76%
     );
-  opacity: 0.8;
+  opacity: 0.85;
+  animation: marbleDrift 30s ease-in-out infinite alternate;
 }
 
 [data-theme="dark"] #app[data-view="social"]::before,
@@ -1429,11 +1433,11 @@ body.no-scroll {
     conic-gradient(
       from 205deg at 78% 18%,
       transparent 0deg,
-      var(--gold-tint) 28deg,
-      transparent 70deg,
-      transparent 190deg,
-      rgba(198, 202, 209, 0.09) 235deg,
-      transparent 290deg
+      color-mix(in srgb, var(--gold) 34%, transparent) 32deg,
+      transparent 78deg,
+      transparent 186deg,
+      rgba(198, 202, 209, 0.14) 232deg,
+      transparent 292deg
     ),
     radial-gradient(1300px 820px at 18% -12%, var(--gold-tint), transparent 58%),
     radial-gradient(1000px 640px at 108% 22%, var(--gold-tint), transparent 55%),
@@ -1444,11 +1448,34 @@ body.no-scroll {
     ),
     linear-gradient(
       118deg,
-      transparent 22%,
-      color-mix(in srgb, var(--gold) 10%, transparent) 48%,
-      transparent 74%
+      transparent 20%,
+      color-mix(in srgb, var(--gold) 18%, transparent) 48%,
+      transparent 76%
     );
-  opacity: 0.95;
+  opacity: 0.97;
+}
+
+@keyframes marbleDrift {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate(-3.5%, 2.5%) rotate(8deg) scale(1.07);
+  }
+  100% {
+    transform: translate(2.5%, -2%) rotate(-6deg) scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app[data-view="social"]::before,
+  #app[data-view="friends"]::before,
+  #app[data-view="calendar"]::before,
+  #app[data-view="calendar-day"]::before,
+  #app[data-view="profile"]::before,
+  #app[data-view="achievements"]::before {
+    animation: none;
+  }
 }
 
 @keyframes gateEntrance {
