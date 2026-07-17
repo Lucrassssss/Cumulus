@@ -4,7 +4,7 @@
   "title": "Design System: Cumulus",
   "extensions": {
     "colorMeta": {
-      "accent": { "role": "primary", "displayName": "Parchment Gold", "canonical": "oklch(58% 0.11 85)", "tonalRamp": ["#3a2d08", "#5e4a0e", "#7e6210", "#9c7b18", "#b8934a", "#cba43a", "#e0c988", "#f2e6c4"] },
+      "accent": { "role": "primary", "displayName": "Thunderstorm Gold", "canonical": "oklch(64% 0.16 85)", "tonalRamp": ["#3a2a00", "#5c4300", "#805e00", "#c08a00", "#e0a800", "#ffcf33", "#ffdd70", "#fff0bd"] },
       "bg": { "role": "neutral", "displayName": "Parchment Cream", "canonical": "oklch(92% 0.008 90)", "tonalRamp": ["#0d0e10", "#191a1c", "#45474c", "#6a6862", "#9c998f", "#c9c6bb", "#e1ded6", "#eceae4"] },
       "surface": { "role": "neutral", "displayName": "Card Parchment", "canonical": "oklch(96% 0.006 90)", "tonalRamp": ["#16181b", "#1f2226", "#3a3c3f", "#6a6862", "#a8a59b", "#ccc9bf", "#ebe8e1", "#f7f6f2"] },
       "silver": { "role": "secondary", "displayName": "Silver", "canonical": "oklch(60% 0.01 250)", "tonalRamp": ["#2c2e31", "#454850", "#5e636b", "#7e848c", "#9aa0a8", "#b6bbc1", "#d3d6da", "#eceef0"] }

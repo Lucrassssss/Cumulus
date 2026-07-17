@@ -9,10 +9,10 @@ colors:
   text: "#191a1c"
   text-soft: "#45474c"
   text-muted: "#6a6862"
-  accent: "#9c7b18"
-  accent-deep: "#7e6210"
-  gold: "#9c7b18"
-  gold-text: "#7c6213"
+  accent: "#c08a00"
+  accent-deep: "#966a0a"
+  gold: "#c08a00"
+  gold-text: "#7a5900"
   silver: "#7e848c"
   silver-deep: "#5e636b"
   bg-dark: "#0d0e10"
@@ -22,8 +22,8 @@ colors:
   text-dark: "#ece9e1"
   text-soft-dark: "#b4b0a7"
   text-muted-dark: "#88857c"
-  accent-dark: "#cba43a"
-  accent-deep-dark: "#a8841f"
+  accent-dark: "#ffcf33"
+  accent-deep-dark: "#e0a800"
 typography:
   display:
     fontFamily: "DM Sans, Inter, -apple-system, BlinkMacSystemFont, sans-serif"
@@ -63,7 +63,7 @@ components:
 
 **Creative North Star: "The Parchment & Gold Rule"**
 
-Cumulus reads as a warm, sun-worn sheet of city paper with a thread of gold running through it. By day, the surface is a soft parchment cream (`#eceae4`); by night — driven by actual London time, not a manual toggle — it flips to a near-black sky (`#0d0e10`), and the gold accent warms slightly (`#9c7b18` → `#cba43a`) as if catching different light at a different hour. The interface is meant to feel like a physical object tied to the city outside the user's window, never a dashboard.
+Cumulus reads as a warm, sun-worn sheet of city paper with a live wire of gold running through it. By day, the surface is a soft parchment cream (`#eceae4`) and the gold is a rich, saturated amber (`#c08a00`) — vivid enough to pop off the paper without breaking contrast. By night — driven by actual London time, not a manual toggle — the surface flips to a near-black sky (`#0d0e10`) and the gold turns electric (`#ffcf33`), a thunderstorm-yellow that glows against the dark the way the muted daytime version never could. The interface is meant to feel like a physical object tied to the city outside the user's window, never a dashboard.
 
 This system explicitly rejects generic corporate SaaS chrome (dashboard-blue, stock icons, enterprise panels) and try-hard nightlife/club-app energy (neon, aggressive gradients). Gold is the one accent color and it is used sparingly and consistently across both themes — it never competes with a second bright hue.
 
@@ -78,7 +78,7 @@ This system explicitly rejects generic corporate SaaS chrome (dashboard-blue, st
 A warm neutral parchment paired with a single gold accent that survives the day/night flip; no secondary or tertiary hue is introduced.
 
 ### Primary
-- **Parchment Gold** (`#9c7b18` light / `#cba43a` dark): the one accent — buttons, links, active states, borders on emphasis. Used sparingly; it is the thread that ties both themes together, never a background fill.
+- **Parchment Gold** (`#c08a00` light / `#ffcf33` dark): the one accent — buttons, links, active states, borders on emphasis, and the ambient glow behind the Social/Calendar/Profile tabs. Saturated enough to pop rather than sit quietly, but still one thread, not a second color; it never becomes a background fill. Vivid yellow physically cannot hold contrast against a light parchment page (yellow is inherently a high-luminance hue), so the light-mode value is pushed as rich/saturated as the cream background allows without failing the 3:1 UI-component floor; the dark-mode value has the contrast headroom to go genuinely electric against the near-black sky, which is where this system's "pop" reads loudest.
 
 ### Neutral
 - **Parchment Cream** (`#eceae4` / dark: `#0d0e10`): the app background — the "paper" the whole interface sits on.
