@@ -8103,6 +8103,11 @@ async function _publishApprovedEvent(rec) {
 function renderView() {
   const app = document.getElementById("app");
   const container = document.getElementById("view-container");
+  // Lets CSS scope per-view chrome (e.g. the ambient tab backdrops)
+  // without touching the render functions themselves. Lives on #app, not
+  // #view-container: the container's will-change:transform makes it a
+  // fixed-position containing block, which would clip a viewport layer.
+  app.dataset.view = state.view;
   if (state.view !== "host") destroyHostMap();
 
   if (state.view === "browse") {

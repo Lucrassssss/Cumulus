@@ -1375,6 +1375,71 @@ body.no-scroll {
   }
 }
 
+/* ── Ambient view backdrops (Social / Calendar / Profile families) ──
+   Faint cumulus clouds + gold/silver marbled washes behind the
+   scrollable tabs. Deliberately static — one cheap paint, no filters,
+   no animation (the animated bg-blots were scoped out of the app for
+   perf). z-index:-1 tucks the layer behind every surface and card. */
+#app[data-view="social"]::before,
+#app[data-view="friends"]::before,
+#app[data-view="calendar"]::before,
+#app[data-view="calendar-day"]::before,
+#app[data-view="profile"]::before,
+#app[data-view="achievements"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    url("../../assets/clouds/cloud2.webp") no-repeat right -14% top -6% / 48vw
+      auto,
+    url("../../assets/clouds/cloud4.webp") no-repeat left -20% bottom 8% / 54vw
+      auto,
+    radial-gradient(1000px 520px at 88% -8%, var(--gold-tint), transparent 62%),
+    radial-gradient(
+      820px 460px at -12% 108%,
+      rgba(126, 132, 140, 0.08),
+      transparent 60%
+    );
+  opacity: 0.45;
+  /* Dissolve the clouds toward the middle of the screen so the source
+     bitmaps' rectangular edges never show (same trick as the landing
+     hero's cloud bank). */
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    transparent 36%,
+    transparent 64%,
+    #000 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    transparent 36%,
+    transparent 64%,
+    #000 100%
+  );
+}
+
+[data-theme="dark"] #app[data-view="social"]::before,
+[data-theme="dark"] #app[data-view="friends"]::before,
+[data-theme="dark"] #app[data-view="calendar"]::before,
+[data-theme="dark"] #app[data-view="calendar-day"]::before,
+[data-theme="dark"] #app[data-view="profile"]::before,
+[data-theme="dark"] #app[data-view="achievements"]::before {
+  /* Night sky stays clear: no raster clouds (their bitmap edges glow
+     against near-black), just the gold + silver washes. */
+  background:
+    radial-gradient(1000px 520px at 88% -8%, var(--gold-tint), transparent 62%),
+    radial-gradient(
+      820px 460px at -12% 108%,
+      rgba(126, 132, 140, 0.1),
+      transparent 60%
+    );
+  opacity: 0.85;
+}
+
 @keyframes gateEntrance {
   0% {
     opacity: 0;
@@ -1601,7 +1666,7 @@ body.no-scroll {
   padding: 60px 20px;
   color: var(--text-muted);
   font-size: 14px;
-  animation: viewSlideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: viewSlideUp 0.4s var(--ease-pop) both;
 }
 
 .live-chip .dot {
@@ -1831,28 +1896,6 @@ body.no-scroll {
   border-color: var(--accent);
   color: var(--gold-text);
   background: color-mix(in srgb, var(--accent) 8%, var(--surface));
-}
-
-@keyframes toastIn {
-  0% {
-    opacity: 0;
-    transform: translateY(12px) scale(0.96);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes toastOut {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(8px) scale(0.96);
-  }
 }
 
 .gate-field-error {
@@ -2323,15 +2366,6 @@ body.no-scroll {
   );
   transform: skewX(-18deg);
   animation: passShimmer 5s ease-in-out infinite;
-}
-
-@keyframes passShimmer {
-  0% {
-    transform: translateX(0) skewX(-18deg);
-  }
-  100% {
-    transform: translateX(260%) skewX(-18deg);
-  }
 }
 
 .ce-card-body {
@@ -6079,7 +6113,7 @@ body.no-scroll {
 }
 
 .view-enter {
-  animation: viewSlideUp var(--dur-slow) var(--ease-expo) both;
+  animation: viewSlideUp var(--dur-slow) var(--ease-pop) both;
 }
 
 @keyframes toastIn {
@@ -6117,7 +6151,7 @@ body.no-scroll {
     0 2px 8px rgba(0, 0, 0, 0.08) !important;
   max-width: 320px;
   text-align: center;
-  animation: toastIn 0.4s var(--ease-expo) both !important;
+  animation: toastIn 0.4s var(--ease-pop) both !important;
   pointer-events: auto;
   white-space: nowrap;
   backdrop-filter: blur(16px);
@@ -6333,7 +6367,7 @@ body.no-scroll {
 }
 
 .gate-host-extra {
-  animation: viewSlideUp 0.28s var(--ease-expo) both;
+  animation: viewSlideUp 0.32s var(--ease-pop) both;
 }
 
 .host-cat-grid {
@@ -6384,7 +6418,7 @@ body.no-scroll {
 .gate-host-success {
   text-align: center;
   padding: 24px 16px;
-  animation: viewSlideUp 0.35s var(--ease-expo) both;
+  animation: viewSlideUp 0.35s var(--ease-pop) both;
 }
 
 .gate-host-success-icon {
@@ -10412,6 +10446,8 @@ textarea.gate-input {
   --space-lg: 24px;
   --space-xl: 40px;
   --transition-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Gentle overshoot: entrances/tab pops land with a small spring. */
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
   --font-display:
     "DM Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: "DM Mono", "SFMono-Regular", "Consolas", monospace;
