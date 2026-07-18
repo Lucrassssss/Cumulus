@@ -4910,6 +4910,18 @@ let activePopup = null,
   activePopupEventId = null;
 let activeHtmlMarker = null;
 let activeBeacon = null; // current lightning beacon (WebGL, replaces DOM marker)
+let hoverPopup = null,
+  hoverPopupEventId = null; // pointer-hover preview, separate from the click/selected popup above
+
+function removeHoverPopup() {
+  if (hoverPopup) {
+    try {
+      hoverPopup.remove();
+    } catch (e) {}
+    hoverPopup = null;
+    hoverPopupEventId = null;
+  }
+}
 
 function removeActiveHtmlMarker() {
   // Destroy WebGL beacon if one is live
@@ -4949,39 +4961,45 @@ function closeActivePopup() {
 
 let htmlMarkerRefs = {};
 
+// Classic teardrop map-pin silhouette: white outer pin (border/shadow edge),
+// category-colour inner pin, white circle "head-hole" near the top. The tip
+// sits near the bottom of the canvas so icon-anchor:'bottom' on the symbol
+// layer plants the tip — not the visual centre — on the event's coordinate.
 function loadWebGLIcons() {
   if (!lmap) return;
+  const outerPin = new Path2D(
+    "M18 2C10.27 2 4 8.27 4 16c0 10.8 14 28 14 28s14-17.2 14-28C32 8.27 25.73 2 18 2Z",
+  );
+  const innerPin = new Path2D(
+    "M18 5C11.9 5 7 9.9 7 16c0 9.3 11 26 11 26s11-16.7 11-26C29 9.9 24.1 5 18 5Z",
+  );
   Object.entries(CATS).forEach(([name, cat]) => {
-    const size = 32;
+    const w = 36,
+      h = 46;
     const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
+    canvas.width = w;
+    canvas.height = h;
     const ctx = canvas.getContext("2d");
+    ctx.save();
     ctx.shadowColor = "rgba(0,0,0,0.35)";
-    ctx.shadowBlur = 4;
+    ctx.shadowBlur = 3;
     ctx.shadowOffsetY = 2;
-    ctx.beginPath();
-    ctx.arc(size / 2, size / 2, 10, 0, Math.PI * 2);
     ctx.fillStyle = "#ffffff";
-    ctx.fill();
-    ctx.shadowColor = "transparent";
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetY = 0;
-    ctx.beginPath();
-    ctx.arc(size / 2, size / 2, 8, 0, Math.PI * 2);
+    ctx.fill(outerPin);
+    ctx.restore();
     ctx.fillStyle = cat.color;
-    ctx.fill();
+    ctx.fill(innerPin);
     ctx.beginPath();
-    ctx.arc(size / 2, size / 2, 2.5, 0, Math.PI * 2);
+    ctx.arc(18, 16, 4.5, 0, Math.PI * 2);
     ctx.fillStyle = "#ffffff";
     ctx.fill();
     // ctx.getImageData() reads the actual pixel buffer back from the canvas
     // as a flat Uint8ClampedArray — the format Mapbox addImage() requires.
-    const imageData = ctx.getImageData(0, 0, size, size);
+    const imageData = ctx.getImageData(0, 0, w, h);
     try {
       lmap.addImage("pin-" + name, {
-        width: size,
-        height: size,
+        width: w,
+        height: h,
         data: imageData.data,
       });
     } catch (e) {}
@@ -5151,6 +5169,7 @@ function attachMapLayers() {
     layout: {
       "icon-image": ["concat", "pin-", ["get", "category"]],
       "icon-size": 1.0,
+      "icon-anchor": "bottom",
       "icon-allow-overlap": true,
       "icon-ignore-placement": true,
     },
@@ -5163,6 +5182,7 @@ function attachMapLayers() {
     });
     if (!features.length) return;
     const evId = features[0].properties.id;
+    removeHoverPopup();
     openActiveEventMarker(evId);
   });
   lmap.on("mouseenter", "unclustered-events", () => {
@@ -5170,6 +5190,35 @@ function attachMapLayers() {
   });
   lmap.on("mouseleave", "unclustered-events", () => {
     lmap.getCanvas().style.cursor = "";
+    removeHoverPopup();
+  });
+
+  // Hover preview (pointer/mouse devices only — touch never fires mousemove
+  // here) — shows the same info as the click popup, without the click's
+  // lightning-beacon "selected" effect. Click still behaves exactly as
+  // before; this is purely additive.
+  lmap.on("mousemove", "unclustered-events", (e) => {
+    const features = lmap.queryRenderedFeatures(e.point, {
+      layers: ["unclustered-events"],
+    });
+    if (!features.length) return;
+    const evId = features[0].properties.id;
+    if (evId === hoverPopupEventId || evId === activePopupEventId) return;
+    removeHoverPopup();
+    const ev = EVENTS.find((e2) => String(e2.id) === String(evId));
+    if (!ev || ev.lon == null || ev.lat == null) return;
+    hoverPopup = new mapboxgl.Popup({
+      offset: { top: [0, 8], bottom: [0, -14], left: [14, 0], right: [-14, 0] },
+      closeButton: false,
+      closeOnClick: false,
+      className: "evtip-popup",
+      anchor: "bottom",
+      maxWidth: "240px",
+    })
+      .setLngLat([ev.lon, ev.lat])
+      .setHTML(pinTooltipHtml(ev))
+      .addTo(lmap);
+    hoverPopupEventId = ev.id;
   });
 
   // Cluster click → zoom in
@@ -9620,6 +9669,11 @@ function miniEventCardHtml(ev) {
   </div>`;
 }
 
+function setCalendarViewMode(mode) {
+  state.calendarViewMode = mode;
+  renderView();
+}
+
 function renderCalendar() {
   const weeks = buildCalendarWeeks(CALENDAR_YEAR, CALENDAR_MONTH);
   const eventsByDay = {};
@@ -9633,6 +9687,26 @@ function renderCalendar() {
     }
   });
   monthEvents.sort((a, b) => a.startsAt - b.startsAt);
+
+  const header = `
+    <div class="connect-header cal-header">
+      <button class="cal-nav-btn" onclick="changeCalendarMonth(-1)" aria-label="Previous month">←</button>
+      <div>
+        <div class="prof-about-label" style="margin-bottom:2px;">Event Calendar</div>
+        <h2>${MONTH_NAMES[CALENDAR_MONTH]} ${CALENDAR_YEAR}</h2>
+        <p>What's on this month</p>
+      </div>
+      <button class="cal-nav-btn" onclick="changeCalendarMonth(1)" aria-label="Next month">→</button>
+    </div>
+    <div class="social-seg cal-mode-seg">
+      <button class="social-seg-btn${state.calendarViewMode === "list" ? "" : " active"}" onclick="setCalendarViewMode('month')">Month</button>
+      <button class="social-seg-btn${state.calendarViewMode === "list" ? " active" : ""}" onclick="setCalendarViewMode('list')">List</button>
+    </div>`;
+
+  if (state.calendarViewMode === "list") {
+    return header + renderCalendarEventList(monthEvents);
+  }
+
   const now = new Date();
   const todayDay =
     now.getFullYear() === CALENDAR_YEAR && now.getMonth() === CALENDAR_MONTH
@@ -9675,17 +9749,85 @@ function renderCalendar() {
           <button class="btn" onclick="goBrowse()">Browse events</button>
         </div>
       </div>`;
-  return `
-    <div class="connect-header cal-header">
-      <button class="cal-nav-btn" onclick="changeCalendarMonth(-1)" aria-label="Previous month">←</button>
-      <div><h2>${MONTH_NAMES[CALENDAR_MONTH]} ${CALENDAR_YEAR}</h2><p>What's on this month</p></div>
-      <button class="cal-nav-btn" onclick="changeCalendarMonth(1)" aria-label="Next month">→</button>
-    </div>
+  return (
+    header +
+    `
     <div class="calendar-scroll"><div class="calendar-inner">
       <div class="calendar-header-row">${WEEKDAY_LABELS.map((d) => `<div class="calendar-weekday">${d}</div>`).join("")}</div>
       <div class="calendar-grid">${cellsHtml}</div>
     </div></div>
-    ${agendaHtml}`;
+    ${agendaHtml}`
+  );
+}
+
+// Searchable flat list of the currently-navigated month's events, grouped by
+// date — the Dice/Eventbrite-style alternative to the month grid. The search
+// box re-filters client-side (no full renderView()) so typing never loses
+// focus; it's a local filter, separate from the global map #search-input.
+function renderCalendarEventList(monthEvents) {
+  return `<div class="cal-list">
+    <input id="cal-list-search" class="search-input" style="width:100%;margin-bottom:16px;" placeholder="Search this month's events…" oninput="filterCalendarList()" autocomplete="off"/>
+    <div id="cal-list-items">${calendarListItemsHtml(monthEvents, "")}</div>
+  </div>`;
+}
+
+function calendarListItemsHtml(events, query) {
+  const q = (query || "").toLowerCase().trim();
+  const filtered = q
+    ? events.filter((ev) =>
+        (ev.title + ev.venue + ev.area + ev.category + (ev.host || ""))
+          .toLowerCase()
+          .includes(q),
+      )
+    : events;
+  if (!filtered.length) {
+    return `<div class="map-empty-card" role="status" style="max-width:100%;margin:0 auto;">
+      <div class="me-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></div>
+      <div class="me-title">${q ? "No events match" : "Nothing on the calendar yet"}</div>
+      <div class="me-sub">${q ? "Try a different search term." : "Events posted for this month will show up here."}</div>
+    </div>`;
+  }
+  const groups = [];
+  let lastKey = null;
+  filtered.forEach((ev) => {
+    if (ev.date !== lastKey) {
+      groups.push({ key: ev.date, items: [] });
+      lastKey = ev.date;
+    }
+    groups[groups.length - 1].items.push(ev);
+  });
+  return groups
+    .map(
+      (g) => `<div class="cal-list-group">
+        <div class="cal-list-date">${escapeHtml(g.key)}</div>
+        ${g.items.map(calendarListRowHtml).join("")}
+      </div>`,
+    )
+    .join("");
+}
+
+function calendarListRowHtml(ev) {
+  const c = CATS[ev.category] || { color: "var(--accent)" };
+  const att = attendeesFor(ev.id);
+  return `<div class="panel cal-list-row" style="--corner:${c.color};" onclick="openEvent(${ev.id})" role="button" tabindex="0">
+    <div class="cal-list-row-main">
+      <div class="cal-list-row-title">${escapeHtml(ev.title)}</div>
+      <div class="cal-list-row-sub">${ev.time} · ${escapeHtml(ev.venue)}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""} · ${att.length} going</div>
+    </div>
+    <span class="event-badge" style="--cat:${c.color};--cat-text:${c.textColor};margin-bottom:0;flex-shrink:0;">${ev.category}</span>
+  </div>`;
+}
+
+function filterCalendarList() {
+  const input = document.getElementById("cal-list-search");
+  const container = document.getElementById("cal-list-items");
+  if (!input || !container) return;
+  const monthEvents = [];
+  EVENTS.forEach((ev) => {
+    if (getEventDay(ev, CALENDAR_YEAR, CALENDAR_MONTH)) monthEvents.push(ev);
+  });
+  monthEvents.sort((a, b) => a.startsAt - b.startsAt);
+  container.innerHTML = calendarListItemsHtml(monthEvents, input.value);
 }
 
 // ════════════════════════════════════════════════
