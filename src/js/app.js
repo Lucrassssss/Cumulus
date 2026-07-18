@@ -1458,8 +1458,23 @@ const INTEREST_PRESETS = [
 ];
 
 const nowObj = new Date();
-const CALENDAR_YEAR = nowObj.getFullYear();
-const CALENDAR_MONTH = nowObj.getMonth();
+let CALENDAR_YEAR = nowObj.getFullYear();
+let CALENDAR_MONTH = nowObj.getMonth();
+function changeCalendarMonth(delta) {
+  let m = CALENDAR_MONTH + delta;
+  let y = CALENDAR_YEAR;
+  while (m < 0) {
+    m += 12;
+    y--;
+  }
+  while (m > 11) {
+    m -= 12;
+    y++;
+  }
+  CALENDAR_MONTH = m;
+  CALENDAR_YEAR = y;
+  renderView();
+}
 const MONTH_NAMES = [
   "January",
   "February",
@@ -1476,6 +1491,15 @@ const MONTH_NAMES = [
 ];
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const BLOT_SVG = `<svg class="blot-icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill="var(--gold)" d="M10 1c2 1 4 2 5 4.5 1 2.3 1 4.6-0.3 6.6-1.3 2-3.6 3.3-5.7 4.8-1-1.3-2.7-2-4.2-3.2C2.8 12 1.3 9.8 1.8 7.3 2.3 4.7 4.7 3 7 1.8 8 1.3 9 0.7 10 1Z"/></svg>`;
+// Consistent stroke-icon replacements for the 🔒/✓ emoji used as structural
+// state indicators (locked/complete) throughout the app — matches the
+// Phosphor-style icon set introduced on the landing page/nav.
+function lockIconSvg(size = 16) {
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-0.15em;"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>`;
+}
+function checkIconSvg(size = 16) {
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-0.15em;"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg>`;
+}
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 let state = {
@@ -4650,9 +4674,12 @@ async function redeemBadge() {
   renderView();
   showToast(`Unlocked: ${match.name}`, "success");
 }
-function getEventDay(ev) {
-  const m = ev.date.match(/(d{1,2})/);
-  return m ? parseInt(m[1], 10) : null;
+function getEventDay(ev, year, monthIdx) {
+  if (ev.startsAt == null) return null;
+  const d = new Date(ev.startsAt);
+  if (year != null && d.getFullYear() !== year) return null;
+  if (monthIdx != null && d.getMonth() !== monthIdx) return null;
+  return d.getDate();
 }
 function buildCalendarWeeks(year, monthIdx) {
   const firstDay = new Date(year, monthIdx, 1);
@@ -5722,7 +5749,12 @@ function initLeaflet() {
     new mapboxgl.NavigationControl({ showCompass: true, showZoom: true }),
     "top-right",
   );
-  lmap.addControl(new WeatherControl(), "top-right");
+  // Dev-only: manual weather-state cycling button for testing. Real users
+  // always get applyRealWeather()'s live London weather; never show the
+  // test control off localhost (same gate as loadDevFixtureEvents() above).
+  if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+    lmap.addControl(new WeatherControl(), "top-right");
+  }
 
   // Prevent DOM thrashing (throttled via requestAnimationFrame)
   let movestartScheduled = false;
@@ -7217,7 +7249,7 @@ function _renderOwnerLivePanel() {
 function renderOwnerDash() {
   const isOwner = state.profileEmail === "gondoxml@gmail.com";
   if (!isOwner)
-    return `<div class="empty-state" style="padding:40px 20px;text-align:center;"><div style="font-size:32px;margin-bottom:12px;">🔒</div><div style="font-weight:700;margin-bottom:6px;">Restricted</div><div style="color:var(--text-muted);font-size:13px;">Owner access only.</div></div>`;
+    return `<div class="empty-state" style="padding:40px 20px;text-align:center;"><div style="margin-bottom:12px;color:var(--text-muted);">${lockIconSvg(32)}</div><div style="font-weight:700;margin-bottom:6px;">Restricted</div><div style="color:var(--text-muted);font-size:13px;">Owner access only.</div></div>`;
 
   const p = OD_PRESETS[_odCur];
   return `
@@ -8295,7 +8327,7 @@ function renderPerkPanel(ev) {
     </div>`;
   }
   return `<div class="perk-panel locked">
-    <div class="perk-head"><span class="perk-badge">🔒 Members' perks</span><span class="perk-status">Locked</span></div>
+    <div class="perk-head"><span class="perk-badge">${lockIconSvg(13)} Members' perks</span><span class="perk-status">Locked</span></div>
     <div class="perk-blurb">This event carries members-only perks — guestlist, a welcome drink, and the back room. Unlock them with a curator code, or check in at the venue when you arrive.</div>
     <div class="perk-actions">
       <button class="btn perk-btn-primary" onclick="promptCuratorUnlock()">Enter curator code</button>
@@ -8376,7 +8408,7 @@ function renderDetail(id) {
     : `<span class="event-badge" style="background:#14713622;color:#147136 !important;border:1px solid #14713644;margin-left:6px;font-size:10px;">Free</span>`;
   let bookBtn = "";
   if (ticket) {
-    bookBtn = `<button class="btn" style="background:transparent;border:2px solid #147136;color:#147136;box-shadow:none;width:100%;" onclick="openViewTicket(${id})">✓ You have a ticket — View it</button>`;
+    bookBtn = `<button class="btn" style="background:transparent;border:2px solid #147136;color:#147136;box-shadow:none;width:100%;" onclick="openViewTicket(${id})">${checkIconSvg(15)} You have a ticket — View it</button>`;
   } else if (isFull) {
     bookBtn = `<button class="btn" style="background:var(--surface-2);color:var(--text-muted);cursor:not-allowed;width:100%;">Sold Out</button>`;
   } else {
@@ -8599,10 +8631,10 @@ function renderConnect(id) {
         : `<div class="panel" style="padding:22px 20px;text-align:center;">
       ${
         eventStatus(ev) === "past"
-          ? `<div style="font-size:22px;margin-bottom:8px;">🔒</div>
+          ? `<div style="margin-bottom:8px;color:var(--text-muted);">${lockIconSvg(22)}</div>
          <div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:5px;">Chat archived</div>
          <div style="font-size:12.5px;color:var(--text-muted);line-height:1.6;">This event has ended and the chat is now read-only.</div>`
-          : `<div style="font-size:28px;margin-bottom:8px;">🔒</div>
+          : `<div style="margin-bottom:8px;color:var(--text-muted);">${lockIconSvg(28)}</div>
          <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:4px;">Chat opens in</div>
          <div class="chat-countdown-wrap">
            <div class="chat-cd-seg"><span class="chat-cd-num" id="chat-cd-d-${id}">--</span><span class="chat-cd-unit">days</span></div>
@@ -8921,8 +8953,8 @@ function openBadgePicker() {
       <span class="bpick-coin"><span class="bpick-coin-glyph">${b.glyph}</span></span>
       <span class="bpick-name">${escapeHtml(b.name)}</span>
       <span class="bpick-kind">${b.kind}</span>
-      ${isChosen ? `<span class="bpick-check">✓</span>` : ""}
-      ${isLocked ? `<span class="bpick-lock">🔒</span>` : ""}
+      ${isChosen ? `<span class="bpick-check">${checkIconSvg(13)}</span>` : ""}
+      ${isLocked ? `<span class="bpick-lock">${lockIconSvg(14)}</span>` : ""}
     </button>`;
   const earnedHtml = earned.length
     ? earned.map((b) => cell(b, chosen.includes(b.id), false)).join("")
@@ -8979,7 +9011,7 @@ function toggleFeaturedBadge(id) {
     if (chosen && !chk) {
       chk = document.createElement("span");
       chk.className = "bpick-check";
-      chk.textContent = "✓";
+      chk.innerHTML = checkIconSvg(13);
       cell.appendChild(chk);
     } else if (!chosen && chk) {
       chk.remove();
@@ -9575,16 +9607,32 @@ function toggleProfileInterest(tag) {
   });
 }
 
+// Compact real-event preview card reused wherever a screen needs to show
+// live events instead of empty space (Calendar agenda, Social teaser).
+function miniEventCardHtml(ev) {
+  const c = CATS[ev.category] || { color: "var(--accent)" };
+  return `<div class="lp-comm-card mini-ev-card" onclick="openEvent(${ev.id})" role="button" tabindex="0">
+    <span class="cal-agenda-dot" style="background:${c.color};"></span>
+    <div class="lp-comm-text">
+      <div class="lp-comm-title">${escapeHtml(ev.title)}</div>
+      <div class="lp-comm-sub">${escapeHtml(ev.date)} · ${escapeHtml(ev.venue || ev.area || "")}</div>
+    </div>
+  </div>`;
+}
+
 function renderCalendar() {
   const weeks = buildCalendarWeeks(CALENDAR_YEAR, CALENDAR_MONTH);
   const eventsByDay = {};
+  const monthEvents = [];
   EVENTS.forEach((ev) => {
-    const d = getEventDay(ev);
+    const d = getEventDay(ev, CALENDAR_YEAR, CALENDAR_MONTH);
     if (d) {
       if (!eventsByDay[d]) eventsByDay[d] = [];
       eventsByDay[d].push(ev);
+      monthEvents.push(ev);
     }
   });
+  monthEvents.sort((a, b) => a.startsAt - b.startsAt);
   const now = new Date();
   const todayDay =
     now.getFullYear() === CALENDAR_YEAR && now.getMonth() === CALENDAR_MONTH
@@ -9615,12 +9663,29 @@ function renderCalendar() {
         .join(""),
     )
     .join("");
+  const agendaHtml = monthEvents.length
+    ? `<div class="cal-agenda">
+        ${monthEvents.slice(0, 6).map(miniEventCardHtml).join("")}
+      </div>`
+    : `<div class="cal-agenda cal-agenda-empty">
+        <div class="map-empty-card" role="status" style="max-width:100%;">
+          <div class="me-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5.5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg></div>
+          <div class="me-title">Nothing on the calendar yet</div>
+          <div class="me-sub">Events you RSVP to or host will show up here automatically.</div>
+          <button class="btn" onclick="goBrowse()">Browse events</button>
+        </div>
+      </div>`;
   return `
-    <div class="connect-header"><h2>${MONTH_NAMES[CALENDAR_MONTH]} ${CALENDAR_YEAR}</h2><p>What's on this month</p></div>
+    <div class="connect-header cal-header">
+      <button class="cal-nav-btn" onclick="changeCalendarMonth(-1)" aria-label="Previous month">←</button>
+      <div><h2>${MONTH_NAMES[CALENDAR_MONTH]} ${CALENDAR_YEAR}</h2><p>What's on this month</p></div>
+      <button class="cal-nav-btn" onclick="changeCalendarMonth(1)" aria-label="Next month">→</button>
+    </div>
     <div class="calendar-scroll"><div class="calendar-inner">
       <div class="calendar-header-row">${WEEKDAY_LABELS.map((d) => `<div class="calendar-weekday">${d}</div>`).join("")}</div>
       <div class="calendar-grid">${cellsHtml}</div>
-    </div></div>`;
+    </div></div>
+    ${agendaHtml}`;
 }
 
 // ════════════════════════════════════════════════
@@ -10059,7 +10124,7 @@ function renderConfirmed() {
     )
     .join("");
   return `<div style="text-align:center;padding:20px 0 16px;">
-      <div style="width:58px;height:58px;border-radius:50%;background:#22C55E;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:24px;box-shadow:0 4px 18px rgba(34,197,94,0.3);">✓</div>
+      <div style="width:58px;height:58px;border-radius:50%;background:#22C55E;color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 18px rgba(34,197,94,0.3);">${checkIconSvg(28)}</div>
       <div style="font-size:21px;font-weight:800;color:var(--text);">${totalPaid ? "Payment confirmed!" : "You're registered!"}</div>
       <div style="font-size:12.5px;color:var(--text-muted);margin-top:3px;">${tickets.length} ticket${tickets.length !== 1 ? "s" : ""} · ${totalPaid ? `£${totalPaid.toFixed(2)} total` : "Free"}</div>
     </div>
@@ -10140,7 +10205,7 @@ function renderCalendarDay() {
   });
   const eventsByDay = {};
   EVENTS.forEach((ev) => {
-    const d = getEventDay(ev);
+    const d = getEventDay(ev, CALENDAR_YEAR, CALENDAR_MONTH);
     if (d) {
       if (!eventsByDay[d]) eventsByDay[d] = [];
       eventsByDay[d].push(ev);
@@ -10179,7 +10244,7 @@ function renderCalendarDay() {
       <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
         ${
           ticket
-            ? `<button class="btn btn-small" style="background:#22C55E;" onclick="openViewTicket(${ev.id})">✓ View Ticket</button>`
+            ? `<button class="btn btn-small" style="background:#22C55E;" onclick="openViewTicket(${ev.id})">${checkIconSvg(13)} View Ticket</button>`
             : `<button class="btn btn-small" style="background:${c.color};" onclick="openBook(${ev.id})">${price ? "Book Now" : "Register Free"}</button>`
         }
         <button class="btn btn-outline btn-small" onclick="downloadICS(${ev.id})">+ Add to Calendar</button>
@@ -10483,7 +10548,7 @@ function renderHostChecklist(progress) {
           <li style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(9,9,11,0.6); padding: 16px;">
             <div style="display: flex; align-items: flex-start; gap: 12px;">
               <span style="margin-top: 2px; flex-shrink: 0;" aria-hidden>
-                ${progress.ageVerified ? '<span style="font-size: 20px;">✅</span>' : '<span style="font-size: 20px;">🔒</span>'}
+                ${progress.ageVerified ? `<span style="color:#4ade80;">${checkIconSvg(20)}</span>` : `<span style="color:#a1a1aa;">${lockIconSvg(20)}</span>`}
               </span>
               <div style="min-width: 0; flex: 1;">
                 <h3 style="font-size: 14px; font-weight: 600; color: ${progress.ageVerified ? "#a1a1aa" : "#f4f4f5"}; text-decoration: ${progress.ageVerified ? "line-through" : "none"};">Verify you're 18 or over</h3>
@@ -10508,7 +10573,7 @@ function renderHostChecklist(progress) {
           <li style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(9,9,11,0.6); padding: 16px;">
             <div style="display: flex; align-items: flex-start; gap: 12px;">
               <span style="margin-top: 2px; flex-shrink: 0;" aria-hidden>
-                ${progress.eventsCheckedIn >= progress.eventsRequired ? '<span style="font-size: 20px;">✅</span>' : '<span style="font-size: 20px;">🔒</span>'}
+                ${progress.eventsCheckedIn >= progress.eventsRequired ? `<span style="color:#4ade80;">${checkIconSvg(20)}</span>` : `<span style="color:#a1a1aa;">${lockIconSvg(20)}</span>`}
               </span>
               <div style="min-width: 0; flex: 1;">
                 <h3 style="font-size: 14px; font-weight: 600; color: ${progress.eventsCheckedIn >= progress.eventsRequired ? "#a1a1aa" : "#f4f4f5"}; text-decoration: ${progress.eventsCheckedIn >= progress.eventsRequired ? "line-through" : "none"};">Check in at a real event</h3>
@@ -10533,7 +10598,7 @@ function renderHostChecklist(progress) {
           <li style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(9,9,11,0.6); padding: 16px;">
             <div style="display: flex; align-items: flex-start; gap: 12px;">
               <span style="margin-top: 2px; flex-shrink: 0;" aria-hidden>
-                ${progress.connections >= progress.connectionsRequired ? '<span style="font-size: 20px;">✅</span>' : '<span style="font-size: 20px;">🔒</span>'}
+                ${progress.connections >= progress.connectionsRequired ? `<span style="color:#4ade80;">${checkIconSvg(20)}</span>` : `<span style="color:#a1a1aa;">${lockIconSvg(20)}</span>`}
               </span>
               <div style="min-width: 0; flex: 1;">
                 <h3 style="font-size: 14px; font-weight: 600; color: ${progress.connections >= progress.connectionsRequired ? "#a1a1aa" : "#f4f4f5"}; text-decoration: ${progress.connections >= progress.connectionsRequired ? "line-through" : "none"};">Make 3 mutual connections</h3>
@@ -10703,7 +10768,12 @@ function renderSocialTab() {
           </div>`;
           })
           .join("")
-      : `<div class="panel" style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;line-height:1.6;">No friends yet.<br>Scan someone's QR code at an event to add them.</div>`;
+      : `<div class="map-empty-card" role="status" style="max-width:100%;margin:0 auto;">
+          <div class="me-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c.6-3.2 3-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.3"/><path d="M15.8 13.2c2 .2 3.6 1.7 4.1 4.3"/></svg></div>
+          <div class="me-title">No friends yet</div>
+          <div class="me-sub">Scan someone's QR code at an event to add them — or browse events to find your people.</div>
+          <button class="btn" onclick="goBrowse()">Browse events</button>
+        </div>`;
 
     return `
       <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Your friends &amp; connections</p></div>
@@ -10759,7 +10829,7 @@ function renderSocialTab() {
                     const d = Math.ceil(
                       (chatUnlockTime(ev) - Date.now()) / 86400000,
                     );
-                    return `<div style="font-size:12px;color:var(--accent);font-weight:600;">🔒 Chat opens in ${d > 0 ? `${d} day${d !== 1 ? "s" : ""}` : "less than a day"}</div>`;
+                    return `<div style="font-size:12px;color:var(--accent);font-weight:600;">${lockIconSvg(13)} Chat opens in ${d > 0 ? `${d} day${d !== 1 ? "s" : ""}` : "less than a day"}</div>`;
                   })()
           }
         </div>
@@ -10782,17 +10852,27 @@ function renderSocialTab() {
         <button class="btn btn-small" style="width:100%;" onclick="openCardEditor(null)">Create my card</button>
       </div>`;
 
-  if (!evList.length)
+  if (!evList.length) {
+    const trending = EVENTS.filter((e) => eventStatus(e) !== "past")
+      .sort((a, b) => a.startsAt - b.startsAt)
+      .slice(0, 3);
     return `
     <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Connect with people at events</p></div>
     ${seg}
     <div class="section-title" style="margin-top:0;">Your card</div>
     ${myCardBanner}
-    <div class="empty-state" style="margin-top:16px;">
-      <div style="font-weight:700;margin-bottom:6px;">No events yet</div>
-      <div style="font-size:13px;color:var(--text-muted);margin-bottom:18px;">RSVP to events to join their group chats and meet other attendees.</div>
+    <div class="map-empty-card" role="status" style="max-width:100%;margin:20px auto 0;">
+      <div class="me-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H9l-4 4V5Z"/><path d="M8 9h8M8 12h5"/></svg></div>
+      <div class="me-title">No events yet</div>
+      <div class="me-sub">RSVP to events to join their group chats and meet other attendees.</div>
       <button class="btn" onclick="goBrowse()">Browse events</button>
-    </div>`;
+    </div>
+    ${
+      trending.length
+        ? `<div class="section-title">Trending near you</div>${trending.map(miniEventCardHtml).join("")}`
+        : ""
+    }`;
+  }
 
   return `
     <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>${upcoming.length} upcoming · ${past.length} past</p></div>

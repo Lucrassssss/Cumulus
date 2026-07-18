@@ -9185,6 +9185,67 @@ body.app-active .bg-grain {
   background: color-mix(in srgb, var(--accent) 8%, var(--surface-2)) !important;
 }
 
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cal-header > div {
+  text-align: center;
+  flex: 1;
+}
+
+.cal-nav-btn {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.14s ease,
+    border-color 0.14s ease,
+    transform 0.14s ease;
+}
+
+.cal-nav-btn:hover {
+  border-color: var(--accent);
+  background: var(--surface-2);
+  transform: translateY(-1px);
+}
+
+.cal-agenda {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mini-ev-card {
+  cursor: pointer;
+  width: 100%;
+}
+
+.cal-agenda-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cal-agenda-empty {
+  display: flex;
+  justify-content: center;
+}
+
 .lp-features,
 .lp-footer {
   padding-left: var(--lp-gutter) !important;
