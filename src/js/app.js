@@ -4709,6 +4709,7 @@ function buildEventsGeoJSON() {
       )
       .map((ev) => ({
         type: "Feature",
+        id: ev.id, // top-level id required for setFeatureState() (pin-scale animation)
         geometry: { type: "Point", coordinates: [ev.lon, ev.lat] },
         properties: {
           id: ev.id,
@@ -4923,6 +4924,95 @@ function removeHoverPopup() {
   }
 }
 
+// ── Pin bounce animation ────────────────────────────────────────────────
+// Mapbox GL only allows feature-state expressions on PAINT properties, not
+// layout properties — icon-size is layout, so per-pin animated scale isn't
+// possible on the WebGL symbol layer itself (confirmed: attempting it throws
+// "feature-state data expressions are not supported with layout
+// properties"). Two different techniques cover the two cases instead:
+//   1. Entrance: a single synchronized rAF loop scales the WHOLE layer's
+//      icon-size 0→1 with overshoot — a "the map pops in" moment, played
+//      once on first load rather than per-pin.
+//   2. Hover/click: a single reusable DOM element, styled with the exact
+//      same pre-rendered pin image (captured as a data URL alongside the
+//      WebGL icon in loadWebGLIcons), positioned over the hovered pin via
+//      map.project() and CSS-transitioned with a bounce easing — real
+//      per-pin scale, just done in the DOM instead of WebGL.
+function easeOutBack(t) {
+  const c1 = 1.70158,
+    c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+}
+let _pinLayerAnim = null;
+function tweenPinLayerSize(from, to, duration, easing) {
+  if (!lmap) return;
+  if (_pinLayerAnim) cancelAnimationFrame(_pinLayerAnim);
+  const start = performance.now();
+  function frame(now) {
+    const t = Math.max(0, Math.min(1, (now - start) / duration));
+    const size = Math.max(0, from + (to - from) * easing(t));
+    try {
+      lmap.setLayoutProperty("unclustered-events", "icon-size", size);
+    } catch (e) {}
+    if (t < 1) _pinLayerAnim = requestAnimationFrame(frame);
+    else _pinLayerAnim = null;
+  }
+  _pinLayerAnim = requestAnimationFrame(frame);
+}
+let _pinsEverLoaded = false;
+// Plays the whole-layer pop-in once, the first time any pins ever appear
+// (real initial load, or the first data arriving after a slow network) —
+// not replayed on every incidental refresh/filter change.
+function bounceInPinLayer(features) {
+  if (_pinsEverLoaded || !features.length) return;
+  _pinsEverLoaded = true;
+  tweenPinLayerSize(0, 1, 550, easeOutBack);
+}
+
+// Data-URL cache of each category's pin image, captured in loadWebGLIcons —
+// reused by the DOM hover-overlay so it's pixel-identical to the WebGL pin.
+const pinImageDataUrls = {};
+
+let _pinOverlayEl = null;
+function ensurePinOverlay() {
+  if (_pinOverlayEl) return _pinOverlayEl;
+  const host = document.getElementById("main-map");
+  if (!host) return null;
+  const el = document.createElement("div");
+  el.className = "pin-hover-overlay";
+  el.innerHTML = `<img alt="" />`;
+  host.appendChild(el);
+  _pinOverlayEl = el;
+  return el;
+}
+let _pinOverlayEvId = null;
+function positionPinOverlay(lngLat) {
+  if (!_pinOverlayEl || !lmap) return;
+  const p = lmap.project(lngLat);
+  _pinOverlayEl.style.transform = `translate(${p.x - 20}px, ${p.y - 50}px)`;
+}
+function showPinOverlay(ev) {
+  const el = ensurePinOverlay();
+  if (!el) return;
+  _pinOverlayEvId = ev.id;
+  const img = el.querySelector("img");
+  img.src = pinImageDataUrls[ev.category] || "";
+  positionPinOverlay([ev.lon, ev.lat]);
+  el.style.display = "block";
+  // Force layout before adding the class so the scale transition plays
+  void el.offsetWidth;
+  el.classList.add("grown");
+}
+function hidePinOverlay() {
+  if (!_pinOverlayEl) return;
+  _pinOverlayEl.classList.remove("grown");
+  const el = _pinOverlayEl;
+  setTimeout(() => {
+    if (_pinOverlayEvId == null) el.style.display = "none";
+  }, 220);
+  _pinOverlayEvId = null;
+}
+
 function removeActiveHtmlMarker() {
   // Destroy WebGL beacon if one is live
   if (activeBeacon) {
@@ -4961,21 +5051,119 @@ function closeActivePopup() {
 
 let htmlMarkerRefs = {};
 
+// Small bold glyph per category, drawn in the category colour inside the
+// pin's white head-hole — filled geometric shapes (not thin strokes), since
+// strokes disappear at this scale. cx/cy is the hole centre, r ~ hole radius.
+function drawCategoryGlyph(ctx, name, cx, cy, r) {
+  ctx.beginPath();
+  if (name === "Creative") {
+    // 4-point sparkle
+    ctx.moveTo(cx, cy - r);
+    ctx.quadraticCurveTo(cx + r * 0.25, cy - r * 0.25, cx + r, cy);
+    ctx.quadraticCurveTo(cx + r * 0.25, cy + r * 0.25, cx, cy + r);
+    ctx.quadraticCurveTo(cx - r * 0.25, cy + r * 0.25, cx - r, cy);
+    ctx.quadraticCurveTo(cx - r * 0.25, cy - r * 0.25, cx, cy - r);
+    ctx.closePath();
+    ctx.fill();
+  } else if (name === "Gaming") {
+    // D-pad cross
+    const t = r * 0.5;
+    ctx.rect(cx - t, cy - r, t * 2, r * 2);
+    ctx.rect(cx - r, cy - t, r * 2, t * 2);
+    ctx.fill();
+  } else if (name === "Movie Nights") {
+    // play triangle
+    ctx.moveTo(cx - r * 0.55, cy - r * 0.8);
+    ctx.lineTo(cx - r * 0.55, cy + r * 0.8);
+    ctx.lineTo(cx + r * 0.85, cy);
+    ctx.closePath();
+    ctx.fill();
+  } else if (name === "Board Games") {
+    // bold diamond — reads clearly at small scale where dice pips just blur
+    ctx.moveTo(cx, cy - r * 0.9);
+    ctx.lineTo(cx + r * 0.9, cy);
+    ctx.lineTo(cx, cy + r * 0.9);
+    ctx.lineTo(cx - r * 0.9, cy);
+    ctx.closePath();
+    ctx.fill();
+  } else if (name === "Meetups") {
+    // two clearly-separated dots (not touching, so they don't blur into one blob)
+    ctx.arc(cx - r * 0.52, cy, r * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx + r * 0.52, cy, r * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (name === "Food & Drink") {
+    // coupe glass: triangle bowl + stem + base
+    ctx.moveTo(cx - r * 0.75, cy - r * 0.65);
+    ctx.lineTo(cx + r * 0.75, cy - r * 0.65);
+    ctx.lineTo(cx, cy + r * 0.15);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillRect(cx - r * 0.09, cy + r * 0.15, r * 0.18, r * 0.45);
+    ctx.fillRect(cx - r * 0.42, cy + r * 0.55, r * 0.84, r * 0.14);
+  } else if (name === "Live Music") {
+    // eighth note: notehead + stem
+    ctx.ellipse(
+      cx - r * 0.32,
+      cy + r * 0.42,
+      r * 0.42,
+      r * 0.32,
+      -0.35,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+    ctx.fillRect(cx + r * 0.05, cy - r * 0.75, r * 0.16, r * 1.2);
+  } else if (name === "Wellness & Outdoors") {
+    // sun — bold circle + 4 short thick rays; more small-scale contrast
+    // than a smooth leaf curve, which just blurred into a plain blob
+    ctx.arc(cx, cy, r * 0.42, 0, Math.PI * 2);
+    ctx.fill();
+    const rayW = r * 0.26,
+      rayLen = r * 0.38,
+      gap = r * 0.5;
+    [0, 90, 180, 270].forEach((deg) => {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate((deg * Math.PI) / 180);
+      ctx.beginPath();
+      ctx.moveTo(-rayW / 2, -gap);
+      ctx.lineTo(rayW / 2, -gap);
+      ctx.lineTo(0, -gap - rayLen);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    });
+  } else if (name === "Tech & Talks") {
+    // lightning bolt
+    ctx.moveTo(cx + r * 0.12, cy - r * 0.85);
+    ctx.lineTo(cx - r * 0.5, cy + r * 0.05);
+    ctx.lineTo(cx - r * 0.08, cy + r * 0.05);
+    ctx.lineTo(cx - r * 0.12, cy + r * 0.85);
+    ctx.lineTo(cx + r * 0.5, cy - r * 0.12);
+    ctx.lineTo(cx + r * 0.08, cy - r * 0.12);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
 // Classic teardrop map-pin silhouette: white outer pin (border/shadow edge),
-// category-colour inner pin, white circle "head-hole" near the top. The tip
-// sits near the bottom of the canvas so icon-anchor:'bottom' on the symbol
-// layer plants the tip — not the visual centre — on the event's coordinate.
+// category-colour inner pin, white circle "head-hole" near the top with a
+// small category glyph inside it. The tip sits near the bottom of the canvas
+// so icon-anchor:'bottom' on the symbol layer plants the tip — not the
+// visual centre — on the event's coordinate.
 function loadWebGLIcons() {
   if (!lmap) return;
   const outerPin = new Path2D(
-    "M18 2C10.27 2 4 8.27 4 16c0 10.8 14 28 14 28s14-17.2 14-28C32 8.27 25.73 2 18 2Z",
+    "M20 3C11.72 3 5 9.72 5 18c0 11.6 15 31 15 31s15-19.4 15-31C35 9.72 28.28 3 20 3Z",
   );
   const innerPin = new Path2D(
-    "M18 5C11.9 5 7 9.9 7 16c0 9.3 11 26 11 26s11-16.7 11-26C29 9.9 24.1 5 18 5Z",
+    "M20 6C13.4 6 8 11.4 8 18c0 9.6 12 27 12 27s12-17.4 12-27C32 11.4 26.6 6 20 6Z",
   );
   Object.entries(CATS).forEach(([name, cat]) => {
-    const w = 36,
-      h = 46;
+    const w = 40,
+      h = 50;
     const canvas = document.createElement("canvas");
     canvas.width = w;
     canvas.height = h;
@@ -4990,9 +5178,11 @@ function loadWebGLIcons() {
     ctx.fillStyle = cat.color;
     ctx.fill(innerPin);
     ctx.beginPath();
-    ctx.arc(18, 16, 4.5, 0, Math.PI * 2);
+    ctx.arc(20, 18, 7.2, 0, Math.PI * 2);
     ctx.fillStyle = "#ffffff";
     ctx.fill();
+    ctx.fillStyle = cat.color;
+    drawCategoryGlyph(ctx, name, 20, 18, 5.6);
     // ctx.getImageData() reads the actual pixel buffer back from the canvas
     // as a flat Uint8ClampedArray — the format Mapbox addImage() requires.
     const imageData = ctx.getImageData(0, 0, w, h);
@@ -5003,6 +5193,7 @@ function loadWebGLIcons() {
         data: imageData.data,
       });
     } catch (e) {}
+    pinImageDataUrls[name] = canvas.toDataURL();
   });
 }
 
@@ -5183,6 +5374,7 @@ function attachMapLayers() {
     if (!features.length) return;
     const evId = features[0].properties.id;
     removeHoverPopup();
+    hidePinOverlay();
     openActiveEventMarker(evId);
   });
   lmap.on("mouseenter", "unclustered-events", () => {
@@ -5191,12 +5383,15 @@ function attachMapLayers() {
   lmap.on("mouseleave", "unclustered-events", () => {
     lmap.getCanvas().style.cursor = "";
     removeHoverPopup();
+    hidePinOverlay();
   });
 
   // Hover preview (pointer/mouse devices only — touch never fires mousemove
   // here) — shows the same info as the click popup, without the click's
   // lightning-beacon "selected" effect. Click still behaves exactly as
-  // before; this is purely additive.
+  // before; this is purely additive. The DOM overlay pin (same image as the
+  // WebGL icon, see showPinOverlay) gives a real per-pin hover-grow bounce
+  // that a WebGL layout property can't do on its own.
   lmap.on("mousemove", "unclustered-events", (e) => {
     const features = lmap.queryRenderedFeatures(e.point, {
       layers: ["unclustered-events"],
@@ -5207,6 +5402,7 @@ function attachMapLayers() {
     removeHoverPopup();
     const ev = EVENTS.find((e2) => String(e2.id) === String(evId));
     if (!ev || ev.lon == null || ev.lat == null) return;
+    showPinOverlay(ev);
     hoverPopup = new mapboxgl.Popup({
       offset: { top: [0, 8], bottom: [0, -14], left: [14, 0], right: [-14, 0] },
       closeButton: false,
@@ -5219,6 +5415,12 @@ function attachMapLayers() {
       .setHTML(pinTooltipHtml(ev))
       .addTo(lmap);
     hoverPopupEventId = ev.id;
+  });
+  lmap.on("move", () => {
+    if (_pinOverlayEvId != null) {
+      const ev = EVENTS.find((e2) => String(e2.id) === String(_pinOverlayEvId));
+      if (ev) positionPinOverlay([ev.lon, ev.lat]);
+    }
   });
 
   // Cluster click → zoom in
@@ -5322,6 +5524,7 @@ function refreshMarkers() {
 
   const geo = buildEventsGeoJSON();
   src.setData(geo);
+  bounceInPinLayer(geo.features);
 
   const visibleEvents = getFilteredEvents();
   updateMapEmptyState(visibleEvents.length);

@@ -964,6 +964,30 @@ body.no-scroll {
   box-shadow: 0 10px 26px var(--shadow);
 }
 
+.pin-hover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 50px;
+  pointer-events: none;
+  z-index: 3;
+  display: none;
+}
+
+.pin-hover-overlay img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform-origin: 50% 100%;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.3));
+}
+
+.pin-hover-overlay.grown img {
+  transform: scale(1.18);
+}
+
 .map-empty {
   position: absolute;
   inset: 0;
