@@ -32,7 +32,8 @@ body.no-scroll {
 .nav-icon {
   width: 22px;
   height: 22px;
-  fill: currentColor;
+  fill: none;
+  stroke: currentColor;
   transition: transform 0.18s ease;
 }
 
@@ -4012,27 +4013,25 @@ body.no-scroll {
   border-radius: 14px;
 }
 
-.lp-proof-avs {
-  display: flex;
-}
-
-.lp-proof-av {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 2px solid var(--surface);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 800;
-  display: flex;
+.lp-join-live {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  margin-left: -9px;
+  gap: 5px;
   flex-shrink: 0;
+  font-family: "DM Mono", var(--font-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #cc1e1e;
 }
 
-.lp-proof-av:first-child {
-  margin-left: 0;
+.lp-join-live .d {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e23b3b;
+  animation: blink 1.3s ease-in-out infinite;
 }
 
 .lp-proof-text {
@@ -8347,8 +8346,7 @@ textarea:focus {
   color: #0a0a0a !important;
 }
 
-.lp-comm-av,
-.lp-proof-av {
+.lp-comm-av {
   background: var(--accent) !important;
   color: #0a0a0a !important;
 }
@@ -8420,12 +8418,6 @@ textarea:focus {
 
 .bottom-nav::after {
   background: var(--accent) !important;
-}
-
-[data-theme="dark"] .lp-trust-strip span {
-  background: rgba(232, 184, 75, 0.06) !important;
-  border-color: rgba(232, 184, 75, 0.18) !important;
-  color: rgba(240, 235, 224, 0.7) !important;
 }
 
 [data-theme="dark"] .lp-hero-btn-secondary {
@@ -10134,23 +10126,6 @@ textarea.gate-input {
   color: var(--gold) !important;
 }
 
-.lp-trust-strip span {
-  display: inline-block !important;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.09) !important;
-  border: 1.5px solid var(--line) !important;
-  border-radius: 5px !important;
-  padding: 5px 12px !important;
-  box-shadow: 0 2px 8px var(--shadow);
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.04em !important;
-  color: rgba(247, 245, 240, 0.92) !important;
-  border-color: rgba(255, 255, 255, 0.18) !important;
-  backdrop-filter: blur(6px) !important;
-}
-
 .lp-hero-btn-secondary {
   padding: 0 24px !important;
   font-size: 14px !important;
@@ -10194,15 +10169,7 @@ textarea.gate-input {
 }
 
 [data-theme="light"] .lp-hero-kicker {
-  background: rgba(24, 20, 14, 0.06) !important;
-  border-color: rgba(24, 20, 14, 0.14) !important;
-  color: var(--text) !important;
-}
-
-[data-theme="light"] .lp-trust-strip span {
-  background: rgba(24, 20, 14, 0.05) !important;
-  border-color: rgba(24, 20, 14, 0.12) !important;
-  color: rgba(28, 24, 18, 0.86) !important;
+  color: var(--gold-text) !important;
 }
 
 [data-theme="light"] .lp-hero-btn-secondary {
@@ -10585,19 +10552,19 @@ textarea.gate-input {
   --hero-img: url("../../assets/img/hero-rooftops.svg");
   --hero-sky: linear-gradient(
     180deg,
-    #4fa8de 0%,
-    #8cc9ec 32%,
-    #c6e3f4 60%,
-    #ede9d6 86%,
-    #f2e3bc 100%
+    #f6efd9 0%,
+    #f2e8d0 30%,
+    #ece2c4 55%,
+    #e7ddc0 78%,
+    #eceae4 100%
   );
-  --dio-back: #aec5d8;
-  --dio-front: #7b90a4;
-  --dio-front-2: #8ca0b2;
-  --dio-chimney: #e4ebf1;
-  --dio-face: #d9e4ec;
+  --dio-back: #c9c0ab;
+  --dio-front: #7d7259;
+  --dio-front-2: #948870;
+  --dio-chimney: #f2ead6;
+  --dio-face: #efe6d2;
   --dio-win: #f4cd6e;
-  --dio-clock: #f7fafc;
+  --dio-clock: #f7f0dc;
   --dio-glow-op: 0;
 }
 
@@ -10856,25 +10823,25 @@ textarea.gate-input {
   display: inline-flex !important;
   align-items: center !important;
   gap: 8px;
-  font-size: 10px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.06em !important;
+  font-family: "DM Mono", var(--font-mono), monospace !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.09em !important;
   text-transform: uppercase;
-  color: #fff !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1.5px solid color-mix(in srgb, var(--accent) 40%, transparent) !important;
-  border-radius: 6px !important;
-  padding: 5px 14px !important;
-  margin-bottom: 32px !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin-bottom: 28px !important;
   animation: heroFadeUp 0.9s 0.12s var(--ease-out) both !important;
   box-shadow: none !important;
-  backdrop-filter: blur(10px) !important;
+  backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   align-self: center !important;
   width: auto !important;
   max-width: 100% !important;
   white-space: nowrap !important;
-  border-color: rgba(255, 255, 255, 0.22) !important;
 }
 
 .lp-hero-title {
@@ -10905,17 +10872,73 @@ textarea.gate-input {
   animation: heroFadeUp 0.9s 0.46s var(--ease-out) both !important;
 }
 
-.lp-trust-strip {
+.lp-hero-pins {
   display: flex !important;
-  gap: 8px !important;
+  gap: 12px !important;
   flex-wrap: wrap !important;
   justify-content: center;
-  margin-top: 28px !important;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 0.3px;
+  margin-top: 40px !important;
   animation: heroFadeUp 0.9s 0.58s var(--ease-out) both !important;
+}
+
+.lp-hero-pin {
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  min-width: 148px;
+  padding: 10px 14px 9px;
+  background: rgba(8, 8, 24, 0.93);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+}
+
+.lp-hero-pin::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--c, var(--accent));
+  opacity: 0.9;
+}
+
+.lp-hero-pin-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #e23b3b;
+}
+
+.lp-hero-pin-live .d {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #e23b3b;
+  animation: blink 1.3s ease-in-out infinite;
+}
+
+.lp-hero-pin-title {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+
+.lp-hero-pin-meta {
+  display: block;
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 @keyframes dioBeacon {

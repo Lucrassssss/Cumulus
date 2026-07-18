@@ -88,6 +88,9 @@ A warm neutral parchment paired with a single gold accent that survives the day/
 - **Muted Ink** (`#6a6862` / dark: `#88857c`): tertiary text, timestamps, meta.
 - **Silver** (`#7e848c` / dark: `#c6cad1`): a secondary neutral accent used sparingly alongside gold for icons or muted UI chrome that shouldn't compete with the gold accent.
 
+### Marketing Hero Sky & Diorama
+The landing-page hero's sky (`--hero-sky`) and London-skyline diorama (`--dio-back/-front/-front-2/-chimney/-face`) are built from the same warm parchment/ink family as the rest of the system, not a separate palette — light mode is a warm cream-to-gold haze ending exactly at `--bg` so it blends into the page below; dark mode is near-black with gold-lit windows (`--dio-win`). Never reintroduce a blue/cool-toned sky or skyline — that reads as generic stock-SaaS hero art and breaks the One Thread Rule.
+
 ### Named Rules
 **The One Thread Rule.** Gold is the only accent color in the system. It appears consistently across both day and night themes so the identity never breaks when the sky changes — silver and grays support it, they never replace it.
 
@@ -137,7 +140,10 @@ Tactile and inviting: buttons and cards are built to feel physically responsive 
 - Fixed nav bar (`--nav-h: 72px`), respects safe-area insets on mobile (notch/home-indicator aware). Uses the display font for wayfinding labels; gold marks the active/current state.
 
 ### Map & Live Indicator (signature component)
-The map is the product, not chrome around it. A "Live" pulse indicator (dot + label) marks real-time event activity directly on the map caption bar, reinforcing that pins represent things happening now, in this city, not a static listing.
+The map is the product, not chrome around it. A "Live" pulse indicator (dot + label) marks real-time event activity directly on the map caption bar, reinforcing that pins represent things happening now, in this city, not a static listing. The marketing hero echoes this directly: instead of decorative-only trust badges, it shows small pin-style cards (`.lp-hero-pin`) styled like real map-tooltip popups (`.evtip-inner`), so the hero previews the actual product rather than generic illustration alone.
+
+### Icons
+Stroke-based, Phosphor-style line icons only (`fill:none`, `stroke:currentColor`, `stroke-width:1.75`, rounded caps/joins) — never filled Material-style glyphs, and never emoji for structural/navigational icons (nav tabs, filter chips). Decorative/personality copy (perk list, host-teaser flourishes) may still use emoji sparingly where it reads as product voice rather than UI chrome.
 
 ## 6. Do's and Don'ts
 
