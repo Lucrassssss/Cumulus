@@ -10563,7 +10563,7 @@ textarea.gate-input {
   --dio-front-2: #948870;
   --dio-chimney: #f2ead6;
   --dio-face: #efe6d2;
-  --dio-win: #f4cd6e;
+  --dio-win: #e3d4a8;
   --dio-clock: #f7f0dc;
   --dio-glow-op: 0;
 }
@@ -10663,7 +10663,7 @@ textarea.gate-input {
 }
 
 .dio-wins {
-  opacity: 0;
+  opacity: 0.55;
   transition: opacity 1.4s ease;
 }
 
@@ -10684,7 +10684,7 @@ textarea.gate-input {
 }
 
 .dio-face-lines {
-  opacity: 0.5;
+  opacity: 0.65;
   transition: opacity 1.2s ease;
 }
 
@@ -10694,7 +10694,7 @@ textarea.gate-input {
 
 .dio-lattice {
   stroke: var(--dio-face);
-  opacity: 0.4;
+  opacity: 0.6;
   transition:
     stroke 0.9s ease,
     opacity 1.2s ease;
