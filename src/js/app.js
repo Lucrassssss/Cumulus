@@ -9990,6 +9990,19 @@ function renderConfirmed() {
       </div>`
     : "";
 
+  // Wallet passes aren't real yet — no Apple/Google signing credentials
+  // exist for this project — so they show as an honest "Coming soon"
+  // rather than a fake button. Email backup is the one that actually works.
+  const walletSection = `<div class="hp-panel" style="margin-top:20px;">
+    <div class="hp-title">🎟️ Ticket backup</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Keep a copy of your own ticket (${t0.ticketId}) somewhere else too.</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="btn btn-outline" onclick="emailMyTicket('${t0.ticketId}')">Email my ticket</button>
+      <button class="btn btn-outline" disabled style="opacity:0.5;cursor:not-allowed;" title="Coming soon">Add to Apple Wallet — Coming soon</button>
+      <button class="btn btn-outline" disabled style="opacity:0.5;cursor:not-allowed;" title="Coming soon">Add to Google Wallet — Coming soon</button>
+    </div>
+  </div>`;
+
   return `<div style="text-align:center;padding:20px 0 16px;">
       <div style="width:58px;height:58px;border-radius:50%;background:#22C55E;color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 18px rgba(34,197,94,0.3);">${checkIconSvg(28)}</div>
       <div style="font-size:21px;font-weight:800;color:var(--text);">${totalPaid ? "Payment confirmed!" : "You're registered!"}</div>
@@ -9997,11 +10010,76 @@ function renderConfirmed() {
     </div>
     ${ticketCards}
     ${squadSection}
+    ${walletSection}
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;">
       <button class="btn" style="background:${c.color};" onclick="downloadICS(${ev.id})">+ Add to Calendar</button>
       <button class="btn btn-text" onclick="openTicketsTab()">View all my tickets →</button>
     </div>
     <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:14px;">Free cancellation up to 24 hours before the event · <a href="terms.html" target="_blank" style="color:var(--gold-text);">See full policy</a></p>`;
+}
+
+// Emails the signed-in user a backup of their own ticket (QR + details) via
+// the email-ticket edge function — the real fallback while Apple/Google
+// Wallet passes are still "Coming soon" (no signing credentials exist for
+// this project). Renders a throwaway, off-screen QR with the same QRCode
+// library already used elsewhere to get a clean data URL to attach.
+async function emailMyTicket(ticketId) {
+  const t =
+    (bookingDraft.confirmedTickets || []).find(
+      (x) => x.ticketId === ticketId,
+    ) || myTickets.find((x) => x.ticketId === ticketId);
+  if (!t) {
+    showToast("Ticket not found", "error");
+    return;
+  }
+  const ev = EVENTS.find((e) => e.id === t.eventId);
+  if (!ev || !state.profileEmail) {
+    showToast("No email on file for this account", "error");
+    return;
+  }
+  showToast("Sending…", "info");
+
+  const holder = document.createElement("div");
+  holder.style.display = "none";
+  document.body.appendChild(holder);
+  let qrDataUrl = null;
+  try {
+    new QRCode(holder, {
+      text: ticketId,
+      width: 240,
+      height: 240,
+      colorDark: "#000",
+      colorLight: "#fff",
+      correctLevel: QRCode.CorrectLevel.M,
+    });
+    // Read the <canvas> directly, not the library's <img> — the img's src
+    // is set asynchronously after the canvas draws, so it's empty this
+    // early; the canvas itself is drawn synchronously.
+    const canvas = holder.querySelector("canvas");
+    qrDataUrl = canvas ? canvas.toDataURL("image/png") : null;
+  } catch (e) {}
+  holder.remove();
+  if (!qrDataUrl) {
+    showToast("Could not generate a QR code", "error");
+    return;
+  }
+
+  try {
+    const { error } = await sb.functions.invoke("email-ticket", {
+      body: {
+        recipientEmail: state.profileEmail,
+        ticketId,
+        eventTitle: ev.title,
+        eventDate: `${ev.date} · ${ev.time}`,
+        venue: ev.venue,
+        qrDataUrl,
+      },
+    });
+    if (error) throw error;
+    showToast("Ticket emailed!", "success");
+  } catch (e) {
+    showToast("Could not send the email — try again", "error");
+  }
 }
 
 // ─── Render: My Tickets list ──────────────────────────────────────────────
