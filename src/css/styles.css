@@ -7014,6 +7014,14 @@ select.gate-input {
   border-color: transparent;
 }
 
+.host-reviewed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #147136;
+  font-weight: 700;
+}
+
 .detail-card [style*="📅"] {
   display: inline-flex !important;
   align-items: center !important;
@@ -10350,6 +10358,10 @@ textarea.gate-input {
   color: rgba(28, 24, 18, 0.82) !important;
 }
 
+[data-theme="light"] .lp-hero-trust-note {
+  color: rgba(28, 24, 18, 0.62) !important;
+}
+
 [data-theme="light"] .lp-hero-kicker {
   color: var(--gold-text) !important;
 }
@@ -11067,6 +11079,18 @@ textarea.gate-input {
   max-width: 560px !important;
   margin: 0 auto 36px !important;
   animation: heroFadeUp 0.9s 0.34s var(--ease-out) both !important;
+}
+
+.lp-hero-trust-note {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: rgba(247, 245, 240, 0.7) !important;
+  margin: 14px 0 0 !important;
+  animation: heroFadeUp 0.9s 0.5s var(--ease-out) both !important;
 }
 
 .lp-hero-actions {

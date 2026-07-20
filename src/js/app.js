@@ -2206,6 +2206,7 @@ function renderGate(prefillName, prefillEmail) {
           <button class="btn lp-hero-btn-primary" onclick="showLpSignup()">Unlock the Map →</button>
           <button class="btn btn-outline lp-hero-btn-secondary" onclick="document.getElementById('lp-features-anchor').scrollIntoView({behavior:'smooth'})">How it works ↓</button>
         </div>
+        <p class="lp-hero-trust-note">${checkIconSvg(12)} Every public host is reviewed before their event goes live</p>
         <div class="lp-hero-pins" aria-hidden="true">
           <div class="lp-hero-pin" style="--c:#8FC63D;">
             <span class="lp-hero-pin-live"><span class="d"></span>Live</span>
@@ -8719,8 +8720,12 @@ function renderHostByline(ev) {
   const following = isFollowingHost(hostKey);
   const safeKey = escapeHtml(String(hostKey)).replace(/'/g, "&#39;");
   const safeName = escapeHtml(ev.host).replace(/'/g, "&#39;");
+  // Only claim "reviewed" for a real DB-backed host (went through the actual
+  // approval flow) — never shown for hostId-less fixture/test data, so this
+  // is never a fabricated trust signal.
+  const reviewed = ev.hostId != null;
   return `<span class="detail-host-byline">
-    <span>By ${escapeHtml(ev.host)}${hostCount >= 2 ? ` · ${hostCount} events hosted` : ""}</span>
+    <span>By ${escapeHtml(ev.host)}${hostCount >= 2 ? ` · ${hostCount} events hosted` : ""}${reviewed ? ` <span class="host-reviewed-badge" title="Host reviewed by Cumulus">${checkIconSvg(11)} Reviewed</span>` : ""}</span>
     <button class="btn-follow-host${following ? " following" : ""}" onclick="toggleFollowHost('${safeKey}','${safeName}')">${following ? "Following" : "Follow"}</button>
   </span>`;
 }
@@ -9671,6 +9676,10 @@ function renderProfile() {
         <span class="prof-action-label">Edit name &amp; email</span>
         <span class="prof-action-right">›</span>
       </button>
+      <button class="prof-action-row" onclick="window.location.href='mailto:hello@cumulusapp.co'">
+        <span class="prof-action-label">Help &amp; Support</span>
+        <span class="prof-action-right">›</span>
+      </button>
       <button class="prof-action-row prof-action-signout" onclick="signOut()">
         <span class="prof-action-label">Sign out</span>
         <span class="prof-action-right">›</span>
@@ -10546,7 +10555,8 @@ function renderBook() {
       }
       <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:var(--text);padding-top:10px;border-top:1px solid var(--line);"><span>Total</span><span style="color:${c.color};">${finalTotal ? `£${finalTotal.toFixed(2)}` : "Free"}</span></div>
     </div>
-    <button class="btn" style="width:100%;background:${c.color};padding:14px;font-size:15px;" onclick="${isFree ? `registerFree(${ev.id})` : `proceedToCheckout()`}">${isFree ? "Register Free →" : `Continue to Payment · £${finalTotal.toFixed(2)} →`}</button>`;
+    <button class="btn" style="width:100%;background:${c.color};padding:14px;font-size:15px;" onclick="${isFree ? `registerFree(${ev.id})` : `proceedToCheckout()`}">${isFree ? "Register Free →" : `Continue to Payment · £${finalTotal.toFixed(2)} →`}</button>
+    <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:10px;">Free cancellation up to 24 hours before the event (Cumulus's standard policy, unless the host states otherwise) · <a href="terms.html" target="_blank" style="color:var(--gold-text);">See full policy</a></p>`;
 }
 
 // ─── Render: Mock payment ────────────────────────────────────────────────
@@ -10629,7 +10639,8 @@ function renderConfirmed() {
       <button class="btn" style="background:${c.color};" onclick="downloadICS(${ev.id})">+ Add to Calendar</button>
       <button class="btn btn-outline" onclick="openSocialForEvent(${ev.id})">Join Group Chat</button>
       <button class="btn btn-text" onclick="openTicketsTab()">View all my tickets →</button>
-    </div>`;
+    </div>
+    <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:14px;">Free cancellation up to 24 hours before the event · <a href="terms.html" target="_blank" style="color:var(--gold-text);">See full policy</a></p>`;
 }
 
 // ─── Render: My Tickets list ──────────────────────────────────────────────
@@ -10670,12 +10681,41 @@ function renderMyTickets() {
           <button class="btn btn-small" style="background:${c.color};" onclick="openViewTicket(${ev.id})">Ticket</button>
         </div>
       </div>
+      ${
+        status !== "past" && ev.startsAt - Date.now() >= 24 * 3600000
+          ? `<button class="btn-text" style="width:100%;margin-top:8px;color:#E23B3B;font-size:12px;" onclick="cancelTicket('${t.ticketId}')">Cancel booking</button>`
+          : ""
+      }
     </div>`;
     })
     .join("");
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="connect-header"><h2>My Tickets</h2><p>${myTickets.length} booking${myTickets.length !== 1 ? "s" : ""}</p></div>
     ${cards}`;
+}
+
+// Real self-serve cancellation, mirroring deleteEvent()'s Supabase-delete
+// pattern. Gated to >=24h before the event, matching the policy copy shown
+// at booking/confirmation (renderBook/renderConfirmed).
+async function cancelTicket(ticketId) {
+  const t = myTickets.find((x) => x.ticketId === ticketId);
+  if (!t) return;
+  const ev = EVENTS.find((e) => e.id === t.eventId);
+  if (ev && ev.startsAt - Date.now() < 24 * 3600000) {
+    showToast("Cancellations close 24 hours before the event.", "error");
+    return;
+  }
+  if (!confirm("Cancel this booking? This can't be undone.")) return;
+  myTickets = myTickets.filter((x) => x.ticketId !== ticketId);
+  if (state.userId) {
+    await sb
+      .from("tickets")
+      .delete()
+      .eq("ticket_id", ticketId)
+      .eq("user_id", state.userId);
+  }
+  showToast("Booking cancelled", "success");
+  renderView();
 }
 
 // ════════════════════════════════════════════════
