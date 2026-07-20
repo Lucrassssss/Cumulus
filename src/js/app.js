@@ -5054,6 +5054,32 @@ let htmlMarkerRefs = {};
 // Small bold glyph per category, drawn in the category colour inside the
 // pin's white head-hole — filled geometric shapes (not thin strokes), since
 // strokes disappear at this scale. cx/cy is the hole centre, r ~ hole radius.
+// Small inline-SVG versions of the same category glyph concepts drawn onto
+// the map pins (drawCategoryGlyph below) — used on filter chips so pins and
+// chips read as the same icon language. Kept as separate small SVGs (rather
+// than reusing the pins' rendered PNGs) so chips don't depend on the map's
+// canvas/WebGL icons having finished generating first.
+const CATEGORY_CHIP_ICON_PATHS = {
+  Creative:
+    '<path d="M8 1c.7 2.3 1.7 3.3 4 4-2.3.7-3.3 1.7-4 4-.7-2.3-1.7-3.3-4-4 2.3-.7 3.3-1.7 4-4Z"/>',
+  Gaming:
+    '<path d="M6.3 1h3.4v3.3H13v3.4H9.7V11H6.3V7.7H3V4.3h3.3V1Z"/>',
+  "Movie Nights": '<path d="M4.2 2v12l8.6-6-8.6-6Z"/>',
+  "Board Games": '<path d="M8 1.5 13 8 8 14.5 3 8 8 1.5Z"/>',
+  Meetups: '<circle cx="5.3" cy="8" r="2.4"/><circle cx="10.7" cy="8" r="2.4"/>',
+  "Food & Drink":
+    '<path d="M4 2.5h8L8.7 7.4v3.1h1.5v1.3H5.8v-1.3h1.5V7.4L4 2.5Z"/>',
+  "Live Music":
+    '<ellipse cx="5.6" cy="10.6" rx="2.2" ry="1.6" transform="rotate(-25 5.6 10.6)"/><rect x="7.5" y="1.8" width="1.3" height="8.8" rx="0.4"/>',
+  "Wellness & Outdoors":
+    '<circle cx="8" cy="8" r="2.3"/><g stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M8 2v1.7M8 12.3V14M2 8h1.7M12.3 8H14M3.5 3.5l1.2 1.2M11.3 11.3l1.2 1.2M12.5 3.5l-1.2 1.2M4.7 11.3l-1.2 1.2"/></g>',
+  "Tech & Talks": '<path d="M8.8 1 3.6 8.8h3l-.4 6.2 5.6-8.6h-3.2L8.8 1Z"/>',
+};
+function categoryChipIconSvg(name) {
+  const inner = CATEGORY_CHIP_ICON_PATHS[name] || "";
+  return `<svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor" style="display:inline-block;vertical-align:-2px;">${inner}</svg>`;
+}
+
 function drawCategoryGlyph(ctx, name, cx, cy, r) {
   ctx.beginPath();
   if (name === "Creative") {
@@ -8477,7 +8503,36 @@ function getFilteredEvents() {
     list = list.filter((ev) => attendeesFor(ev.id).some(isFriend));
   if (state.liveOnly) list = list.filter((ev) => eventStatus(ev) === "live");
   if (state.hotOnly) list = list.filter((ev) => isHotEvent(ev));
+  if (state.dateFilter && state.dateFilter !== "all")
+    list = list.filter((ev) => eventInDateRange(ev, state.dateFilter));
   return list;
+}
+// Shared by the map's Today/This weekend chips and the Calendar List quick
+// filters — one definition of "today" and "this weekend" for the whole app.
+function eventInDateRange(ev, range) {
+  if (ev.startsAt == null) return false;
+  const d = new Date(ev.startsAt);
+  const now = new Date();
+  const startOfDay = (date) =>
+    new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  if (range === "today") {
+    return startOfDay(d) === startOfDay(now);
+  }
+  if (range === "weekend") {
+    const day = now.getDay(); // 0 Sun .. 6 Sat
+    const satOffset = (6 - day + 7) % 7;
+    const sat = startOfDay(
+      new Date(now.getFullYear(), now.getMonth(), now.getDate() + satOffset),
+    );
+    const sunEnd = sat + 2 * 86400000; // through end of Sunday
+    const t = startOfDay(d);
+    return t >= sat && t < sunEnd;
+  }
+  return true;
+}
+function setDateFilter(mode) {
+  state.dateFilter = state.dateFilter === mode ? "all" : mode;
+  renderView();
 }
 function toggleLiveOnly() {
   state.liveOnly = !state.liveOnly;
@@ -8508,12 +8563,14 @@ function refreshFilters() {
   html += Object.entries(CATS)
     .map(([cat, c]) => {
       const a = state.selectedCategory === cat;
-      return `<button class="mchip ${a ? "active" : ""}" style="${a ? `background:${c.color};color:#fff;border-color:transparent;` : ""}" onclick="setCategory('${cat}')"><span class="mdot" style="background:${c.color}"></span>${cat}</button>`;
+      return `<button class="mchip ${a ? "active" : ""}" style="${a ? `background:${c.color};color:#fff;border-color:transparent;` : ""}" onclick="setCategory('${cat}')"><span style="color:${a ? "#fff" : c.color};display:inline-flex;">${categoryChipIconSvg(cat)}</span>${cat}</button>`;
     })
     .join("");
   html += `<button class="mchip ${state.friendsOnly ? "active" : ""}" style="${state.friendsOnly ? "background:var(--gold);color:#1a1400;border-color:transparent;" : ""}" onclick="toggleFriendsOnly()"><span class="star" style="display:inline-flex;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6-4.5-4.2 6.1-.7L12 3.5Z"/></svg></span> Friends</button>`;
   html += `<button class="mchip ${state.liveOnly ? "active" : ""}" style="${state.liveOnly ? "background:#E23B3B;color:#fff;border-color:transparent;" : ""}" onclick="toggleLiveOnly()"><span style="width:6px;height:6px;border-radius:50%;background:${state.liveOnly ? "#fff" : "#E23B3B"};display:inline-block;margin-right:2px;animation:${state.liveOnly ? "blink 1.3s ease-in-out infinite" : "none"}"></span>Live</button>`;
   html += `<button class="mchip ${state.hotOnly ? "active" : ""}" style="${state.hotOnly ? "background:#F97316;color:#fff;border-color:transparent;" : ""}" onclick="toggleHotOnly()"><span style="display:inline-flex;color:#F97316;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c2 3 5 6 5 10a5 5 0 0 1-10 0c0-1.8.7-3 1.6-4.1.2 1.3.9 2 1.8 2.3-.4-2.7.4-5.3 1.6-8.2Z"/></svg></span> Hot</button>`;
+  html += `<button class="mchip ${state.dateFilter === "today" ? "active" : ""}" style="${state.dateFilter === "today" ? "background:var(--accent);color:#fff;border-color:transparent;" : ""}" onclick="setDateFilter('today')">Today</button>`;
+  html += `<button class="mchip ${state.dateFilter === "weekend" ? "active" : ""}" style="${state.dateFilter === "weekend" ? "background:var(--accent);color:#fff;border-color:transparent;" : ""}" onclick="setDateFilter('weekend')">This weekend</button>`;
   el.innerHTML = html;
   // Finances now live in Profile → Admin & Finances (no floating map button)
   const fab = document.getElementById("owner-fin-fab");
@@ -8636,6 +8693,38 @@ function checkInToEvent(id) {
   );
 }
 
+function shareEvent(id) {
+  const ev = EVENTS.find((e) => e.id === id);
+  if (!ev) return;
+  const text = `${ev.title} — ${ev.date}, ${ev.venue}${ev.area ? ", " + ev.area : ""}. Find it on Cumulus.`;
+  const url = "https://cumulusapp.co/";
+  if (navigator.share) {
+    navigator.share({ title: ev.title, text, url }).catch(() => {});
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(`${text} ${url}`).then(
+      () => showToast("Copied to clipboard", "success"),
+      () => showToast("Couldn't copy — try again"),
+    );
+  } else {
+    showToast("Share not supported on this browser");
+  }
+}
+
+// Host credibility + follow, shown inline in the event byline. The events-
+// hosted count is computed from EVENTS actually loaded this session (real
+// data, not a fabricated backend stat) and only shown once it's meaningful.
+function renderHostByline(ev) {
+  const hostKey = ev.hostId || ev.host;
+  const hostCount = EVENTS.filter((e) => e.host === ev.host).length;
+  const following = isFollowingHost(hostKey);
+  const safeKey = escapeHtml(String(hostKey)).replace(/'/g, "&#39;");
+  const safeName = escapeHtml(ev.host).replace(/'/g, "&#39;");
+  return `<span class="detail-host-byline">
+    <span>By ${escapeHtml(ev.host)}${hostCount >= 2 ? ` · ${hostCount} events hosted` : ""}</span>
+    <button class="btn-follow-host${following ? " following" : ""}" onclick="toggleFollowHost('${safeKey}','${safeName}')">${following ? "Following" : "Follow"}</button>
+  </span>`;
+}
+
 function renderDetail(id) {
   const ev = EVENTS.find((e) => e.id === id);
   if (!ev) return `<div class="empty-state">Event not found.</div>`;
@@ -8670,14 +8759,16 @@ function renderDetail(id) {
   const going = attendees.includes(state.profileName);
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="panel detail-card" style="--corner:${c.color};">
-      <div class="detail-hero" style="background-image:url('${catImg(ev.category)}');"></div>
+      <div class="detail-hero" style="background-image:url('${catImg(ev.category)}');">
+        <button class="detail-share-btn" onclick="shareEvent(${ev.id})" aria-label="Share event"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.7l7.6-4.4M8.2 13.3l7.6 4.4"/></svg></button>
+      </div>
       <span class="event-badge" style="--cat:${c.color};--cat-text:${c.textColor};">${ev.category}</span>${statusChip}${capBadge}${priceBadge}
       <h2 class="detail-title">${ev.title}</h2>
       <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;flex-wrap:wrap;">
         <span style="font-size:14px;font-weight:700;color:${c.textColor};">📅 ${ev.date}</span>
         <span style="font-size:13px;font-weight:600;color:var(--text);">· ${ev.time}</span>
       </div>
-      <div class="detail-meta-row"><span>${ev.venue}${ev.area ? `, ${ev.area}` : ""}</span><span>By ${escapeHtml(ev.host)}</span></div>
+      <div class="detail-meta-row"><span>${ev.venue}${ev.area ? `, ${ev.area}` : ""}</span>${renderHostByline(ev)}</div>
       <div class="detail-desc">${ev.desc}</div>
       ${bookBtn}
       ${renderPerkPanel(ev)}
@@ -8914,6 +9005,39 @@ async function removeFriend(name) {
       .eq("user_id", state.userId)
       .eq("friend_name", name);
   }
+  renderView();
+}
+
+// Follow a host to flag interest in their future events. Stored locally per
+// profile (same pattern as profile_about:/profile_interests:) rather than a
+// new backend table — lightweight preference, not core transactional data.
+function getFollowedHosts() {
+  try {
+    const r = localStorage.getItem("followed_hosts:" + state.profileName);
+    return r ? JSON.parse(r) : [];
+  } catch (e) {
+    return [];
+  }
+}
+function isFollowingHost(hostKey) {
+  return getFollowedHosts().includes(hostKey);
+}
+function toggleFollowHost(hostKey, hostName) {
+  const list = getFollowedHosts();
+  const idx = list.indexOf(hostKey);
+  if (idx === -1) {
+    list.push(hostKey);
+    showToast(`Following ${hostName}`, "success");
+  } else {
+    list.splice(idx, 1);
+    showToast(`Unfollowed ${hostName}`, "success");
+  }
+  try {
+    localStorage.setItem(
+      "followed_hosts:" + state.profileName,
+      JSON.stringify(list),
+    );
+  } catch (e) {}
   renderView();
 }
 
@@ -9861,6 +9985,18 @@ function toggleProfileInterest(tag) {
 
 // Compact real-event preview card reused wherever a screen needs to show
 // live events instead of empty space (Calendar agenda, Social teaser).
+// Small urgency pill shown on card-style event rows when few spaces remain
+// (<=15% of capacity) — reuses the exact spacesLeft calc from renderDetail().
+function almostFullBadgeHtml(ev) {
+  if (!ev.capacity) return "";
+  const going = attendeesFor(ev.id).length;
+  const spacesLeft = Math.max(0, ev.capacity - going);
+  if (spacesLeft > 0 && spacesLeft <= Math.ceil(ev.capacity * 0.15)) {
+    return `<span class="badge-almost-full">Almost full</span>`;
+  }
+  return "";
+}
+
 function miniEventCardHtml(ev) {
   const c = CATS[ev.category] || { color: "var(--accent)" };
   return `<div class="lp-comm-card mini-ev-card" onclick="openEvent(${ev.id})" role="button" tabindex="0">
@@ -9869,6 +10005,7 @@ function miniEventCardHtml(ev) {
       <div class="lp-comm-title">${escapeHtml(ev.title)}</div>
       <div class="lp-comm-sub">${escapeHtml(ev.date)} · ${escapeHtml(ev.venue || ev.area || "")}</div>
     </div>
+    ${almostFullBadgeHtml(ev)}
   </div>`;
 }
 
@@ -9968,21 +10105,33 @@ function renderCalendar() {
 // box re-filters client-side (no full renderView()) so typing never loses
 // focus; it's a local filter, separate from the global map #search-input.
 function renderCalendarEventList(monthEvents) {
+  const df = state.calListDateFilter || "all";
   return `<div class="cal-list">
+    <div class="social-seg cal-mode-seg" style="max-width:280px;">
+      <button class="social-seg-btn${df === "today" ? " active" : ""}" onclick="setCalListDateFilter('today')">Today</button>
+      <button class="social-seg-btn${df === "weekend" ? " active" : ""}" onclick="setCalListDateFilter('weekend')">This weekend</button>
+      <button class="social-seg-btn${df === "all" ? " active" : ""}" onclick="setCalListDateFilter('all')">All</button>
+    </div>
     <input id="cal-list-search" class="search-input" style="width:100%;margin-bottom:16px;" placeholder="Search this month's events…" oninput="filterCalendarList()" autocomplete="off"/>
     <div id="cal-list-items">${calendarListItemsHtml(monthEvents, "")}</div>
   </div>`;
 }
+function setCalListDateFilter(mode) {
+  state.calListDateFilter = state.calListDateFilter === mode ? "all" : mode;
+  renderView();
+}
 
 function calendarListItemsHtml(events, query) {
   const q = (query || "").toLowerCase().trim();
-  const filtered = q
+  const df = state.calListDateFilter || "all";
+  let filtered = q
     ? events.filter((ev) =>
         (ev.title + ev.venue + ev.area + ev.category + (ev.host || ""))
           .toLowerCase()
           .includes(q),
       )
     : events;
+  if (df !== "all") filtered = filtered.filter((ev) => eventInDateRange(ev, df));
   if (!filtered.length) {
     return `<div class="map-empty-card" role="status" style="max-width:100%;margin:0 auto;">
       <div class="me-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></div>
@@ -10017,6 +10166,7 @@ function calendarListRowHtml(ev) {
       <div class="cal-list-row-title">${escapeHtml(ev.title)}</div>
       <div class="cal-list-row-sub">${ev.time} · ${escapeHtml(ev.venue)}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""} · ${att.length} going</div>
     </div>
+    ${almostFullBadgeHtml(ev)}
     <span class="event-badge" style="--cat:${c.color};--cat-text:${c.textColor};margin-bottom:0;flex-shrink:0;">${ev.category}</span>
   </div>`;
 }
@@ -10384,7 +10534,8 @@ function renderBook() {
         : ""
     }
     <div class="panel" style="--corner:${c.color};padding:16px 20px;background:${hexToRgba(c.color, 0.05)};margin-bottom:18px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:10px;">Order summary</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:2px;">Order summary</div>
+      <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:10px;">The price you see here is exactly what you'll pay — no surprise fees at checkout.</div>
       <div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--text-soft);margin-bottom:6px;"><span>${sel.label}${!isFree ? ` × ${qty}` : ""}</span><span>${sel.price ? `£${baseTotal.toFixed(2)}` : "Free"}</span></div>
       ${
         !isFree

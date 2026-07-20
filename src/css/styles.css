@@ -6983,6 +6983,37 @@ select.gate-input {
   border-bottom: 1px solid var(--ch-divider) !important;
 }
 
+.detail-host-byline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-follow-host {
+  padding: 3px 11px;
+  border-radius: 999px;
+  border: 1.5px solid var(--accent);
+  background: transparent;
+  color: var(--gold-text);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
+}
+
+.btn-follow-host:hover {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.btn-follow-host.following {
+  background: var(--accent);
+  color: #0a0a0a;
+  border-color: transparent;
+}
+
 .detail-card [style*="📅"] {
   display: inline-flex !important;
   align-items: center !important;
@@ -9265,6 +9296,19 @@ body.app-active .bg-grain {
   flex-shrink: 0;
 }
 
+.badge-almost-full {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #e23b3b 14%, transparent);
+  color: #e23b3b;
+  border: 1px solid color-mix(in srgb, #e23b3b 30%, transparent);
+  white-space: nowrap;
+}
+
 .cal-agenda-empty {
   display: flex;
   justify-content: center;
@@ -10581,6 +10625,29 @@ textarea.gate-input {
   position: relative;
   overflow: hidden;
   box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+
+.detail-share-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background 0.14s ease;
+}
+
+.detail-share-btn:hover {
+  background: rgba(0, 0, 0, 0.65);
 }
 
 .detail-hero::after {
