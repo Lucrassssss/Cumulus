@@ -22,3 +22,11 @@ enabled = true
 # gateway must reject missing/expired/invalid tokens before our code runs.
 verify_jwt = true
 entrypoint = "./functions/create-verification-session/index.ts"
+
+[functions.notify-admin-new-event]
+enabled = true
+# false: called by our own Postgres trigger via pg_net, not a signed-in
+# member — trust is established by the NOTIFY_WEBHOOK_SECRET check inside
+# the function instead, same pattern as identity-webhook.
+verify_jwt = false
+entrypoint = "./functions/notify-admin-new-event/index.ts"
