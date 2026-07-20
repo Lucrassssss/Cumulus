@@ -3,9 +3,15 @@
  * no signed-in member behind this request — it's server-to-server, exactly
  * like identity-webhook — so trust is established by comparing the
  * Authorization header against NOTIFY_WEBHOOK_SECRET rather than a user JWT
- * (see verify_jwt = false in config.toml). */
+ * (see verify_jwt = false in config.toml).
+ *
+ * This is a NOTIFICATION ONLY — approval itself happens inside the app's own
+ * admin Review tab (openReview() / _buildEventApprovalCard() in app.js),
+ * which already lists every pending_events row and can approve/reject it.
+ * The app has no URL routing, so the email can't deep-link to that specific
+ * row — it links to the app's home page and tells the admin where to go. */
 
-const PROJECT_REF = "xyzrvgbdnevllwvxqcka";
+const APP_URL = "https://cumulusapp.co/";
 
 // Constant-time compare so a mismatched secret can't be timed byte-by-byte.
 function safeEqual(a: string, b: string): boolean {
@@ -15,10 +21,6 @@ function safeEqual(a: string, b: string): boolean {
     mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
   }
   return mismatch === 0;
-}
-
-function studioSqlLink(sql: string): string {
-  return `https://supabase.com/dashboard/project/${PROJECT_REF}/sql/new?content=${encodeURIComponent(sql)}`;
 }
 
 function fmtLondon(iso: string | null): string {
@@ -76,11 +78,6 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  const id = record.id as string;
-  const reviewSql = `select * from pending_events where id = '${id}';`;
-  const approveSql = `update pending_events set status = 'approved' where id = '${id}';`;
-  const rejectSql = `update pending_events set status = 'rejected' where id = '${id}';`;
-
   const title = record.title || "(untitled event)";
   const host = record.host_name || "(unknown host)";
   const venue = [record.venue, record.area].filter(Boolean).join(", ") || "—";
@@ -103,13 +100,11 @@ Deno.serve(async (req: Request) => {
         <tr><td style="padding:4px 12px 4px 0;color:#666;">Price</td><td>${escapeHtml(price)}</td></tr>
       </table>
       <p style="margin:20px 0 8px;color:#666;font-size:13px;">
-        These links open Supabase's SQL editor pre-filled with the statement —
-        review it, then click Run to confirm.
+        This is a notification only. Sign in to the Cumulus admin account and
+        open the Review tab to approve or reject it.
       </p>
       <p style="margin:0;">
-        <a href="${studioSqlLink(reviewSql)}" style="margin-right:16px;">Review row</a>
-        <a href="${studioSqlLink(approveSql)}" style="margin-right:16px;color:#147136;">Approve</a>
-        <a href="${studioSqlLink(rejectSql)}" style="color:#b3261e;">Reject</a>
+        <a href="${APP_URL}">Open Cumulus →</a>
       </p>
     </div>`;
 
