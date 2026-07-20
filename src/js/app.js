@@ -3894,6 +3894,8 @@ async function initApp() {
   await loadMyTickets();
   await loadAllRsvps();
   await checkSquadClaim();
+  await checkStripeCheckoutReturn();
+  await checkConnectReturn();
 
   if (!state.myCard) {
     const cardRaw = await localGet(`card:${state.profileName}`);
@@ -3936,6 +3938,7 @@ async function loadRealEvents() {
       capacity: ev.capacity,
       price: ev.price || 0,
       nightShotUrl: ev.night_shot_url || null,
+      status: ev.status || "active",
     };
     computeEventDates(mapped);
     EVENTS.push(mapped);
@@ -4195,6 +4198,7 @@ async function signOut(confirmed) {
   state.rsvps = {};
   myTickets = [];
   state.hostPayouts = undefined; // re-fetch fresh for whoever signs in next
+  state.myConnectStatus = undefined;
   // Admin flags must NOT survive a sign-out — otherwise the next account
   // signed into this tab inherits the previous admin's bypass.
   state.isAdmin = false;
@@ -7390,6 +7394,124 @@ function renderHostPayoutsPanel() {
   </div>`;
 }
 
+// state.myConnectStatus follows the same lazy-cache pattern as
+// state.hostPayouts (undefined = not fetched, null = in flight, object =
+// loaded). Separate from state.hostPayouts because it reads `users`, not
+// `event_payouts`.
+function renderConnectStatusPanel() {
+  if (state.myConnectStatus === undefined) {
+    state.myConnectStatus = null;
+    fetchMyConnectStatus(state.userId).then((data) => {
+      state.myConnectStatus = data || {};
+      renderView();
+    });
+  }
+  const s = state.myConnectStatus;
+  if (s === null) {
+    return `<div class="hp-panel" style="margin-top:16px;">
+      <div class="hp-title">🏦 Payout account</div>
+      <div style="font-size:12px;color:var(--text-muted);">Loading…</div>
+    </div>`;
+  }
+  const connected = !!s.stripe_connect_payouts_enabled;
+  const pending = !!s.stripe_connect_account_id && !connected;
+  return `<div class="hp-panel" style="margin-top:16px;">
+    <div class="hp-title">🏦 Payout account</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">${
+      connected
+        ? "Your bank account is connected — payouts release automatically on the schedule above."
+        : pending
+          ? "Stripe is still verifying your details. This usually takes a few minutes — refresh this page to check again."
+          : "Connect a bank account with Stripe so we have somewhere to actually send your payouts. Free events don't need this."
+    }</div>
+    ${
+      connected
+        ? `<div class="hp-tier-row"><span class="hp-tier-label">Status</span><span class="hp-tier-fee" style="color:#147136">Connected</span></div>`
+        : `<button class="btn btn-outline" style="width:100%;" onclick="beginConnectOnboarding()">${pending ? "Finish setup" : "Connect payout account"} →</button>`
+    }
+  </div>`;
+}
+
+async function beginConnectOnboarding() {
+  showToast("Redirecting to Stripe…", "info");
+  const res = await startConnectOnboarding();
+  if (!res || res.error || !res.url) {
+    showToast(res?.error || "Could not start onboarding — try again", "error");
+    return;
+  }
+  location.href = res.url;
+}
+
+// Boot-time handler for the browser coming back from Stripe Connect
+// onboarding (connect-onboarding's refresh_url/return_url). Neither URL
+// guarantees onboarding actually finished — account.updated (stripe-webhook)
+// is the real source of truth — this just refreshes the cached status so a
+// completed setup shows up without a manual reload.
+async function checkConnectReturn() {
+  const params = new URLSearchParams(location.search);
+  const status = params.get("connect");
+  if (!status) return;
+  history.replaceState(null, "", location.pathname);
+  if (status === "return" || status === "refresh") {
+    state.myConnectStatus = undefined; // force a re-fetch next render
+    showToast("Checking your payout account status…", "info");
+  }
+}
+
+// Lists this host's own upcoming/live events with a "Cancel & refund" action
+// — the frontend entry point for cancel-event-refund. Past events aren't
+// offered here: cancelling something that already happened doesn't refund
+// anyone anything meaningful and event_payouts for a past event may already
+// be released.
+function renderMyHostedEventsCancelPanel() {
+  if (!state.userId) return "";
+  const mine = EVENTS.filter(
+    (e) =>
+      e.hostId === state.userId &&
+      e.status !== "cancelled" &&
+      eventStatus(e) !== "past",
+  );
+  if (!mine.length) return "";
+  const rows = mine
+    .map(
+      (ev) => `<div class="hp-tier-row">
+        <span class="hp-tier-label">${escapeHtml(ev.title)} · ${ev.date}</span>
+        <button class="btn btn-outline btn-small" style="min-height:32px;padding:0 12px;color:#b3261e;border-color:#b3261e;" onclick="hostCancelEvent('${ev.id}','${escapeHtml(ev.title).replace(/'/g, "&#39;")}')">Cancel &amp; refund</button>
+      </div>`,
+    )
+    .join("");
+  return `<div class="hp-panel" style="margin-top:16px;">
+    <div class="hp-title">⚠️ Cancel an event</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">Cancelling refunds every ticket automatically and takes the event off the map. This can't be undone.</div>
+    ${rows}
+  </div>`;
+}
+
+async function hostCancelEvent(eventId, title) {
+  if (
+    !confirm(
+      `Cancel "${title}"? Every ticket will be refunded automatically. This cannot be undone.`,
+    )
+  )
+    return;
+  showToast("Cancelling and refunding…", "info");
+  const res = await cancelEventRefund(eventId);
+  if (!res || !res.ok) {
+    showToast(res?.error || "Could not cancel the event — try again", "error");
+    return;
+  }
+  const ev = EVENTS.find((e) => e.id === eventId);
+  if (ev) ev.status = "cancelled";
+  showToast(
+    res.warning
+      ? "Event cancelled — some refunds need manual follow-up, see console."
+      : "Event cancelled and refunded.",
+    res.warning ? "error" : "success",
+  );
+  if (res.warning) console.warn("cancel-event-refund:", res);
+  renderView();
+}
+
 function openOwnerDash() {
   pushNav();
   state.view = "owner-dash";
@@ -8061,6 +8183,10 @@ function getFilteredEvents() {
     document.getElementById("search-input")?.value || ""
   ).toLowerCase();
   let list = EVENTS.filter((ev) => {
+    // Cancelled events stay in EVENTS (a ticket-holder can still open one
+    // from My Tickets to see the cancellation notice) but never show up on
+    // the map or in browse/search results.
+    if (ev.status === "cancelled") return false;
     const hasLocation = ev.lat != null && ev.lon != null;
     const mc =
       state.selectedCategory === "all" ||
@@ -8188,6 +8314,30 @@ function shareEvent(id) {
 // Squad ticketing: a share link for one unclaimed ticket from a multi-ticket
 // purchase. Opening it (see checkSquadClaim() at boot) calls claim_ticket(),
 // which race-safely reassigns that specific ticket to whoever claims it.
+// Self-serve ticket transfer: puts a fresh claim link on a ticket the caller
+// owns (start_ticket_transfer RPC) and shares it the same way a Squad claim
+// link works — claim_ticket() (pivot migration) already reassigns ownership
+// to whoever opens it, transfer or squad-share alike.
+async function transferMyTicket(ticketCode, eventTitle) {
+  const res = await startTicketTransfer(ticketCode);
+  if (!res || !res.ok) {
+    showToast(res?.error || "Could not start the transfer — try again", "error");
+    return;
+  }
+  const url = `${location.origin}${location.pathname}?claim=${res.claim_code}`;
+  const text = `Here's my ticket to ${eventTitle} on Cumulus — tap to claim it:`;
+  if (navigator.share) {
+    navigator.share({ title: "Transfer a Cumulus ticket", text, url }).catch(() => {});
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(`${text} ${url}`).then(
+      () => showToast("Transfer link copied — send it to whoever's taking the ticket", "success"),
+      () => showToast("Couldn't copy — try again"),
+    );
+  } else {
+    showToast("Share not supported on this browser");
+  }
+}
+
 function shareSquadTicket(code, eventTitle) {
   const url = `${location.origin}${location.pathname}?claim=${code}`;
   const text = `You're on my squad for ${eventTitle} on Cumulus — tap to claim your ticket:`;
@@ -8263,7 +8413,9 @@ function renderDetail(id) {
     ? `<span class="event-badge" style="background:var(--surface-2);color:var(--text) !important;border:1px solid var(--line);margin-left:6px;font-size:10px;">From £${price}</span>`
     : `<span class="event-badge" style="background:#14713622;color:#147136 !important;border:1px solid #14713644;margin-left:6px;font-size:10px;">Free</span>`;
   let bookBtn = "";
-  if (ticket) {
+  if (ev.status === "cancelled") {
+    bookBtn = `<div style="background:#b3261e18;border:1px solid #b3261e55;color:#b3261e;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;text-align:center;">This event was cancelled${ticket ? " — your ticket has been refunded." : "."}</div>`;
+  } else if (ticket) {
     bookBtn = `<button class="btn" style="background:transparent;border:2px solid #147136;color:#147136;box-shadow:none;width:100%;" onclick="openViewTicket(${id})">${checkIconSvg(15)} You have a ticket — View it</button>`;
   } else if (isFull) {
     bookBtn = `<button class="btn" style="background:var(--surface-2);color:var(--text-muted);cursor:not-allowed;width:100%;">Sold Out</button>`;
@@ -9688,76 +9840,82 @@ async function registerFree(evId) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-async function processPayment() {
-  const name = (document.getElementById("pay-name")?.value || "").trim();
-  const card = (document.getElementById("pay-card")?.value || "").replace(
-    /s/g,
-    "",
-  );
-  const expiry = document.getElementById("pay-expiry")?.value || "";
-  const cvv = (document.getElementById("pay-cvv")?.value || "").trim();
-  if (!name || card.length < 15 || expiry.length < 4 || cvv.length < 3) {
-    showToast("Please fill in all payment details correctly.", "error");
-    return;
-  }
+// Redirects to a real Stripe Checkout Session. Ticket rows are created ONLY
+// by stripe-webhook once Stripe confirms payment — this function never
+// writes to the tickets table itself. checkStripeCheckoutReturn() (boot)
+// picks the tickets up again once the browser comes back from Stripe.
+async function startStripeCheckout() {
+  const ev = EVENTS.find((e) => e.id === bookingDraft.eventId);
+  if (!ev) return;
   const btn = document.getElementById("pay-btn");
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<span style="opacity:.7">Processing…</span>';
+    btn.innerHTML = '<span style="opacity:.7">Redirecting to Stripe…</span>';
   }
-  await new Promise((r) => setTimeout(r, 1800));
-  const ev = EVENTS.find((e) => e.id === bookingDraft.eventId);
-  const sel =
-    ticketTypes(ev).find((t) => t.id === bookingDraft.type) ||
-    ticketTypes(ev)[0];
-  const baseId = generateTicketId();
-  const n = bookingDraft.qty;
-  const platformFee = sel.platformFee || 0;
-  const totalCharged = sel.price + platformFee;
-  const squadId = await createSquadIfNeeded(ev.id, n);
-  const newTickets = Array.from({ length: n }, (_, i) => ({
-    ticketId: n > 1 ? `${baseId}-${String(i + 1).padStart(2, "0")}` : baseId,
-    seatNum: n > 1 ? i + 1 : null,
-    totalSeats: n > 1 ? n : null,
-    bookingId: baseId,
-    eventId: ev.id,
-    type: sel.id,
-    typeLabel: sel.label,
-    pricePerTicket: sel.price,
-    platformFee,
-    total: totalCharged,
-    purchaserName: state.profileName,
-    purchasedAt: Date.now(),
-    squadId,
-    claimCode: i > 0 ? generateClaimCode() : null,
-  }));
-  myTickets.push(...newTickets);
-  await _insertTickets(newTickets);
-  const list = state.rsvps[ev.id] || [];
-  if (!list.includes(state.profileName)) {
-    await sb.from("rsvps").insert({
-      event_id: ev.id,
-      user_id: state.userId,
-      user_name: state.profileName,
-    });
-    state.rsvps[ev.id] = [...list, state.profileName];
+  const res = await createCheckoutSession(ev.id, bookingDraft.qty);
+  if (!res || res.error || !res.url) {
+    showToast(res?.error || "Could not start checkout — try again", "error");
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = "Pay with card →";
+    }
+    return;
   }
-  bookingDraft.confirmedTickets = newTickets;
-  navStack = [];
-  state.view = "confirmed";
-  renderNav();
-  renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  location.href = res.url;
 }
 
-function formatCardNumber(el) {
-  let v = el.value.replace(/D/g, "").slice(0, 16);
-  el.value = v.replace(/(.{4})/g, "$1 ").trim();
-}
-function formatExpiry(el) {
-  let v = el.value.replace(/D/g, "").slice(0, 4);
-  if (v.length > 2) v = v.slice(0, 2) + "/" + v.slice(2);
-  el.value = v;
+// Boot-time handler for the browser coming back from Stripe Checkout.
+// Mirrors checkSquadClaim()'s URL-param pattern (read, strip, act).
+// success_url/cancel_url are set in create-checkout-session.
+async function checkStripeCheckoutReturn() {
+  const params = new URLSearchParams(location.search);
+  const sessionId = params.get("session_id");
+  const status = params.get("checkout");
+  if (!status) return;
+  history.replaceState(null, "", location.pathname);
+
+  if (status === "cancelled") {
+    showToast("Payment was cancelled — no charge was made.", "info");
+    return;
+  }
+  if (status !== "success" || !sessionId) return;
+  if (!state.userId) return; // returning signed-out isn't wired up — keep simple for now
+
+  showToast("Confirming your payment…", "info");
+  // stripe-webhook creates the ticket rows asynchronously, so this may need
+  // a couple of tries before they exist yet.
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const rows = await fetchTicketsBySession(sessionId);
+    if (rows && rows.length > 0) {
+      await loadMyTickets();
+      bookingDraft.confirmedTickets = rows.map((t) => ({
+        ticketId: t.ticket_id,
+        bookingId: t.booking_id,
+        seatNum: t.seat_num,
+        totalSeats: t.total_seats,
+        eventId: t.event_id,
+        type: t.ticket_type,
+        typeLabel: t.type_label,
+        pricePerTicket: t.price_per_ticket,
+        total: t.total,
+        purchaserName: t.purchaser_name,
+        purchasedAt: new Date(t.purchased_at).getTime(),
+        squadId: t.squad_id,
+        claimCode: t.claim_code,
+      }));
+      navStack = [];
+      state.view = "confirmed";
+      renderNav();
+      renderView();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  showToast(
+    "Payment confirmed — your ticket is finishing up. Check My Tickets in a moment.",
+    "info",
+  );
 }
 
 function afterRenderConfirmed() {
@@ -9879,6 +10037,9 @@ function renderBook() {
 }
 
 // ─── Render: Mock payment ────────────────────────────────────────────────
+// Real Stripe Checkout redirect (create-checkout-session computes the
+// authoritative price server-side from the events table — the numbers
+// rendered here are for display only, never sent as the charge amount).
 function renderCheckout() {
   const ev = EVENTS.find((e) => e.id === bookingDraft.eventId);
   if (!ev) return "";
@@ -9891,21 +10052,13 @@ function renderCheckout() {
   ).toFixed(2);
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="connect-header"><h2>Payment</h2><p>${escapeHtml(ev.title)} · ${sel.label} × ${bookingDraft.qty}</p></div>
-    <div style="background:var(--gold-tint);border:1px solid var(--gold);border-radius:14px;padding:13px 16px;margin-bottom:20px;font-size:13px;color:var(--text-soft);line-height:1.6;">
-      <strong style="color:var(--text);">Test mode</strong> — use card <strong>4242 4242 4242 4242</strong>, any future expiry (e.g. 12/28), any 3-digit CVV.
-    </div>
     <div class="panel intro-form" style="--corner:${c.color};">
-      <label class="intro-field-label">Name on card</label>
-      <input id="pay-name" class="gate-input" placeholder="Name on card" value="${escapeHtml(state.profileName)}" autocomplete="cc-name"/>
-      <label class="intro-field-label">Card number</label>
-      <input id="pay-card" class="gate-input" placeholder="1234 5678 9012 3456" maxlength="19" inputmode="numeric" oninput="formatCardNumber(this)" autocomplete="cc-number"/>
-      <div style="display:flex;gap:12px;">
-        <div style="flex:1;"><label class="intro-field-label">Expiry</label><input id="pay-expiry" class="gate-input" placeholder="MM/YY" maxlength="5" inputmode="numeric" oninput="formatExpiry(this)" autocomplete="cc-exp"/></div>
-        <div style="flex:1;"><label class="intro-field-label">CVV</label><input id="pay-cvv" class="gate-input" placeholder="123" maxlength="4" inputmode="numeric" autocomplete="cc-csc"/></div>
-      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-soft);margin-bottom:6px;"><span>${sel.label} × ${bookingDraft.qty}</span><span>£${(sel.price * bookingDraft.qty).toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-soft);margin-bottom:10px;"><span>Booking fee</span><span>£${((sel.platformFee || 0) * bookingDraft.qty).toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:var(--text);padding-top:10px;border-top:1px solid var(--line);"><span>Total</span><span>£${total}</span></div>
     </div>
-    <button id="pay-btn" class="btn" style="width:100%;background:${c.color};padding:14px;font-size:15px;margin-top:4px;" onclick="processPayment()">Pay £${total} →</button>
-    <div style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:10px;">Secure test payment — no real charge will occur.</div>`;
+    <button id="pay-btn" class="btn" style="width:100%;background:${c.color};padding:14px;font-size:15px;margin-top:14px;" onclick="startStripeCheckout()">Pay with card — £${total} →</button>
+    <div style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:10px;">You'll be redirected to Stripe's secure checkout.</div>`;
 }
 
 // ─── Render: Ticket confirmation ─────────────────────────────────────────
@@ -10098,8 +10251,13 @@ function renderMyTickets() {
         </div>
       </div>
       ${
+        status !== "past"
+          ? `<button class="btn-text" style="width:100%;margin-top:8px;font-size:12px;" onclick="transferMyTicket('${t.ticketId}','${escapeHtml(ev.title).replace(/'/g, "&#39;")}')">Transfer this ticket →</button>`
+          : ""
+      }
+      ${
         status !== "past" && ev.startsAt - Date.now() >= 24 * 3600000
-          ? `<button class="btn-text" style="width:100%;margin-top:8px;color:#E23B3B;font-size:12px;" onclick="cancelTicket('${t.ticketId}')">Cancel booking</button>`
+          ? `<button class="btn-text" style="width:100%;margin-top:4px;color:#E23B3B;font-size:12px;" onclick="cancelTicket('${t.ticketId}')">Cancel booking</button>`
           : ""
       }
     </div>`;
@@ -10354,7 +10512,9 @@ function renderHostView() {
     </div>
 
     <button id="host-submit-btn" class="btn" style="width:100%;margin-bottom:16px;font-size:15px;" onclick="submitHostEvent()">${state.isAdmin ? "Publish event →" : "Submit for review →"}</button>
-    ${renderHostPayoutsPanel()}`;
+    ${renderHostPayoutsPanel()}
+    ${renderConnectStatusPanel()}
+    ${renderMyHostedEventsCancelPanel()}`;
 }
 
 // ══════════════════════════════════════════════

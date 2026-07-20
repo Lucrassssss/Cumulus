@@ -22,13 +22,6 @@ window.CUMULUS_CONFIG = Object.assign(
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5enJ2Z2JkbmV2bGx3dnhxY2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NDM0NTAsImV4cCI6MjA5NzQxOTQ1MH0.jfSmMobPUV1tTg2cmyAvTGuRmAyd9C5r-pooMVpSV6E",
     MAPBOX_TOKEN:
       "pk.eyJ1IjoibHVjcmFzc3Nzc3MiLCJhIjoiY21xam1pcTJ4MGt0dTJzcXhobnQyZ3owMiJ9.RpRNYuS-zJnNdZ3wOGl61g",
-    // Stripe PUBLISHABLE key (pk_test_/pk_live_) — safe to expose, same as
-    // the keys above. Powers stripe.verifyIdentity() in startAgeVerification()
-    // (src/js/app.js). The matching SECRET key lives only in the
-    // create-verification-session and identity-webhook Edge Function secrets,
-    // never here.
-    STRIPE_PUBLISHABLE_KEY:
-      "pk_test_51TpuRZBs14TCxohdNaOJh8Vb5vhs4YVeWXn64aCMwzAZnlGKhyiRrYNyCrjL8PkUDjBBdhzfMa8eIx0SGKUxHE2c00oKuUafY2",
   },
   window.CUMULUS_CONFIG || {},
 );

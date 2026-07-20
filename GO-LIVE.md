@@ -100,6 +100,23 @@ are stuck disabled, open a **new chat** and paste:
 ## Still on the roadmap (code, not config)
 
 - Verify the map's day/night relight on the live site (Mapbox is blocked in CI).
+- **Stripe Connect — needs a real account, not code.** Schema + 5 Edge
+  Functions are written (`supabase/migrations/20260721000000_stripe_connect_scaffolding.sql`;
+  see ARCHITECTURE.md → "Payments — Stripe Connect scaffolding") but
+  NOT LIVE-TESTED anywhere. Before any of it can process a real purchase:
+  1. Enable **Connect** on the platform's Stripe account (Dashboard →
+     Connect → Get started).
+  2. Set Edge Function secrets: `STRIPE_SECRET_KEY` (likely already set,
+     reused from the now-deleted create-verification-session),
+     `STRIPE_CHECKOUT_WEBHOOK_SECRET` (new — create a webhook endpoint
+     pointed at `stripe-webhook`, subscribed to `checkout.session.completed`
+     and `account.updated`, and use the `whsec_...` it gives you).
+  3. Run one real test-mode purchase end to end and confirm a ticket row
+     actually appears.
+  4. Decide how `release-payout` gets called on a schedule — nothing in
+     this repo currently triggers it automatically (Supabase Cron / pg_cron
+     / an external scheduler hitting it with `RELEASE_PAYOUT_CRON_SECRET`
+     are all options, none chosen yet).
 
 (The velvet-rope hosting-eligibility checklist and curator-code perk gating
 that used to be tracked here were removed outright by the

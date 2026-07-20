@@ -161,6 +161,89 @@ local flow when Auth isn't configured, so the app runs before go-live. Migration
 in Supabase, apply the migration, sign in once as the owner, then add that
 `auth.users` row to `public.admins`.
 
+## Payments — Stripe Connect scaffolding (NOT LIVE-TESTED)
+
+Every "£" figure the app showed before this section existed was bookkeeping
+only — the pivot migration's own comment said so plainly, and the checkout
+screen literally rendered a fake card-number form that never touched Stripe.
+This section adds real Stripe Connect wiring: schema
+(`supabase/migrations/20260721000000_stripe_connect_scaffolding.sql`) plus
+five Edge Functions. None of it has been exercised against a live Stripe
+account from this sandbox — there is no Stripe/Supabase MCP access here.
+Treat every function below as "written to the same conventions as the rest
+of this codebase, but unverified" until someone runs a real test-mode
+purchase through it.
+
+**Model: separate charges and transfers, not destination charges.** Checkout
+collects the full amount (ticket price + booking fee) onto the *platform's*
+Stripe account. The host's net share moves to their own Connect account
+later, once `event_payouts.scheduled_release_at` has passed — the existing
+24h/48h trust-tier logic from the pivot migration decides *when*; this only
+adds *where*. Chosen over destination charges because a host doesn't need a
+fully verified Connect account before their first ticket can sell, which
+matches the "frictionless" positioning better than gating checkout on host
+onboarding.
+
+**create-checkout-session** (`verify_jwt = true`): looks up the event's
+`price` server-side (the client sends only `eventId`/`qty` — price is never
+trusted from the request body), computes the booking fee with a fee-tier
+function that **must be kept in sync by hand** with `getCumulusFee()` in
+`app.js` (£0 free / ≤£15 → £1.50 / ≤£40 → £2.50 / ≤£71 → £3.50 / else
+£4.50), creates a Stripe Checkout Session, and returns its hosted `url` for
+`location.href` to redirect to. No Stripe.js/Elements anywhere client-side.
+
+**stripe-webhook** (`verify_jwt = false`, HMAC-verified like the deleted
+identity-webhook was): the *only* place tickets get created for a paid
+purchase — `checkout.session.completed` creates the ticket rows (+ an
+`event_squads` row if `qty > 1`, mirroring the old client-side
+`createSquadIfNeeded()`), which fires the existing `sync_event_payout_trg`
+automatically. Idempotent on `stripe_checkout_session_id` (Stripe redelivers
+webhooks). Also handles `account.updated` to flip a host's
+`stripe_connect_charges_enabled`/`payouts_enabled` once Stripe actually
+verifies their Connect account — `connect-onboarding` only ever *starts*
+that process, it can't mark an account usable itself.
+
+**connect-onboarding** (`verify_jwt = true`): creates a Stripe Connect
+Express account for the calling member (if they don't have one) and an
+Account Link, so `release-payout` has a `destination` to transfer to.
+
+**release-payout** (`verify_jwt = false`, dual auth mode — a member JWT
+processes only that host's own due payouts, or a
+`RELEASE_PAYOUT_CRON_SECRET` bearer token processes every due payout across
+all hosts): calls `stripe.transfers.create()` for `event_payouts` rows past
+their release time, then marks them `released`. **Important consequence:**
+`get_host_payouts()` (pivot migration) used to lazily flip a due row to
+`released` just by being read — that's now wrong (it would mark a payout
+released with no transfer having happened, and `release-payout` would then
+never see that row again). The migration redefines `get_host_payouts()` as
+a pure read; only `release-payout` may transition a payout's status now.
+Nothing in this repo calls `release-payout` on a schedule — wiring a cron
+(Supabase Cron / pg_cron / external scheduler) is still open.
+
+**cancel-event-refund** (`verify_jwt = true`, host-of-event or admin only):
+refunds every *unique* Stripe payment intent behind an event's active
+tickets (grouped, not per-ticket — a Squad purchase shares one intent), then
+calls `finalize_event_cancellation()` (SQL, `service_role`-only) to mark the
+event/tickets cancelled and zero out any still-`pending` payout. A payout
+already `released` means the transfer to the host already happened — clawing
+that back needs a *separate* reverse-transfer call this function does not
+make; out of scope for this pass. Partial refund failures don't block
+finalization (the event isn't happening either way) — the response's
+`warning`/`refunds` fields tell the caller what needs manual follow-up.
+
+**Self-serve ticket transfer**: `start_ticket_transfer(p_ticket_code text)`
+generalises the Squad claim-code mechanism to any ticket a member owns —
+puts a fresh, unclaimed `claim_code` on it; the existing `claim_ticket()` RPC
+needs no changes since it already reassigns `user_id` on redemption. Takes
+the human-readable `ticket_id` (text), not the UUID primary key, because
+that's what the frontend already carries everywhere.
+
+**Not built in this pass**: real Apple/Google Wallet passes (still an
+honest "Coming soon" — no signing credentials exist for this project; see
+the confirmation-screen comment in `app.js`), and any automated *scheduled*
+trigger for `release-payout` (it works today, but only when a host's own
+JWT calls it or something external hits it with the cron secret).
+
 ## Security model (important)
 
 There is no server to hide keys behind, so the keys in `config.js` are the
