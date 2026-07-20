@@ -1517,16 +1517,10 @@ let state = {
   myCard: null,
   rsvps: {},
   attendeeCards: {},
-  chats: {},
   friends: [],
-  friendsOnly: false,
   goingOpen: {},
   liveOnly: false,
   hotOnly: false,
-  curatorVerified: false,
-  curatorCode: null,
-  curatorTier: null,
-  checkedInEventId: null,
   isAdmin: false, // set to true after admin OTP verification — bypasses all gates
   bgLoading: false,
 };
@@ -1806,9 +1800,6 @@ function attendeesFor(id) {
 }
 function isFriend(name) {
   return state.friends.includes(name);
-}
-function myFriendCode() {
-  return codeFor(state.profileName || "ME", state.profileId || "000000");
 }
 
 /* toggleTheme removed */
@@ -2200,10 +2191,10 @@ function renderGate(prefillName, prefillEmail) {
           <span class="lp-live-dot"></span>
           London · Community events club
         </div>
-        <h1 class="lp-hero-title">Find your people.<br><span class="lp-hero-gradient">Unlock the city.</span></h1>
-        <p class="lp-hero-sub">Cumulus is London's community events club — a live map of what's on across the city. Every event is visible to everyone; perks like guestlists and welcome drinks unlock with a curator code or a check-in at the door.</p>
+        <h1 class="lp-hero-title">Find what's on.<br><span class="lp-hero-gradient">Zero fees for hosts.</span></h1>
+        <p class="lp-hero-sub">Cumulus is a live map of grassroots events across London. Every event is public — no invite, no curator code. Hosts keep 100% of their ticket price.</p>
         <div class="lp-hero-actions">
-          <button class="btn lp-hero-btn-primary" onclick="showLpSignup()">Unlock the Map →</button>
+          <button class="btn lp-hero-btn-primary" onclick="showLpSignup()">Explore the Map →</button>
           <button class="btn btn-outline lp-hero-btn-secondary" onclick="document.getElementById('lp-features-anchor').scrollIntoView({behavior:'smooth'})">How it works ↓</button>
         </div>
         <p class="lp-hero-trust-note">${checkIconSvg(12)} Every public host is reviewed before their event goes live</p>
@@ -2385,9 +2376,9 @@ function renderGate(prefillName, prefillEmail) {
           <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">Tell us about your venue or events. Applications are reviewed by our team — approved hosts can post public events, sell tickets, and access host analytics.</div>
         </div>
 
-        <div class="lp-form-eyebrow" id="gate-form-eyebrow">Curated access · Takes 20 seconds</div>
+        <div class="lp-form-eyebrow" id="gate-form-eyebrow">Free to join · Takes 20 seconds</div>
         <h3 class="lp-form-title" id="gate-form-title">Request your access</h3>
-        <p class="lp-form-sub" id="gate-form-sub">Cumulus runs on curator codes. Enter yours to unlock the map — or check in at any listed venue to earn one.</p>
+        <p class="lp-form-sub" id="gate-form-sub">Every event on Cumulus is public — join in seconds, no invite needed.</p>
 
         <div class="gate-field" id="gate-name-field">
           <label class="gate-label" for="gate-name">Full name</label>
@@ -2396,11 +2387,6 @@ function renderGate(prefillName, prefillEmail) {
         <div class="gate-field">
           <label class="gate-label" for="gate-email">Email address</label>
           <input id="gate-email" class="gate-input" type="email" placeholder="you@email.com" value="${escapeHtml(prefillEmail || "")}" autocomplete="email"/>
-        </div>
-        <div class="gate-field" id="gate-curator-field">
-          <label class="gate-label" for="gate-curator">Curator code</label>
-          <input id="gate-curator" class="gate-input gate-curator-input" placeholder="CUR-XXXX-XXXX" autocomplete="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()"/>
-          <p class="gate-fineprint">A code from a Cumulus curator or venue host. No code yet? Check in at any listed venue to receive one.</p>
         </div>
 
         <!-- Host-only extra fields -->
@@ -2510,7 +2496,6 @@ function switchAuthMode(mode) {
   hide("gate-attendee-preview", isLogin || _signupType === "host");
   hide("gate-host-preview", isLogin || _signupType !== "host");
   hide("gate-host-fields", isLogin || _signupType !== "host");
-  _updateCuratorVisibility();
   const eyebrow = document.getElementById("gate-form-eyebrow");
   const title = document.getElementById("gate-form-title");
   const sub = document.getElementById("gate-form-sub");
@@ -2531,16 +2516,6 @@ function switchAuthMode(mode) {
   }
 }
 
-// The curator code is required only when a NEW member is requesting access
-// as an attendee — not on login, and not on a host application (hosts are
-// vetted through the review queue instead).
-function _updateCuratorVisibility() {
-  const el = document.getElementById("gate-curator-field");
-  if (el)
-    el.style.display =
-      _authMode === "signup" && _signupType === "attendee" ? "" : "none";
-}
-
 function switchSignupType(type) {
   _signupType = type;
   _hostCats = [];
@@ -2556,7 +2531,6 @@ function switchSignupType(type) {
     type === "host" ? "" : "none";
   document.getElementById("gate-host-fields").style.display =
     type === "host" ? "" : "none";
-  _updateCuratorVisibility();
   const eyebrow = document.getElementById("gate-form-eyebrow");
   const title = document.getElementById("gate-form-title");
   const sub = document.getElementById("gate-form-sub");
@@ -2573,15 +2547,15 @@ function switchSignupType(type) {
       trust.innerHTML =
         "<span>Free to apply</span><span>·</span><span>Reviewed within 48 hrs</span><span>·</span><span>No lock-in</span>";
   } else {
-    if (eyebrow) eyebrow.textContent = "Curated access · Takes 20 seconds";
+    if (eyebrow) eyebrow.textContent = "Free to join · Takes 20 seconds";
     if (title) title.textContent = "Request your access";
     if (sub)
       sub.textContent =
-        "Cumulus runs on curator codes. Enter yours to unlock the map — or check in at any listed venue to earn one.";
-    if (label) label.textContent = "Unlock the map →";
+        "Every event on Cumulus is public — join in seconds, no invite needed.";
+    if (label) label.textContent = "Join Cumulus →";
     if (trust)
       trust.innerHTML =
-        "<span>Everyone welcome</span><span>·</span><span>Members keep 100%</span><span>·</span><span>Leave anytime</span>";
+        "<span>Everyone welcome</span><span>·</span><span>Zero host fees</span><span>·</span><span>Leave anytime</span>";
   }
   // Reset chip selections
   document
@@ -2714,17 +2688,10 @@ async function submitGate() {
     }
   }
 
-  // Curator code — read here, validated below only once we know this is a
-  // brand-new attendee (existing members logging back in don't need one).
-  const curatorCode =
-    !isLogin && _signupType === "attendee"
-      ? (document.getElementById("gate-curator")?.value || "").trim()
-      : "";
-
   // ── Real auth, step 1: email the one-time code ──────────────────────────
-  // We don't create/validate anything yet — curator check, name and host
-  // application all happen in verifyGateCode() once we hold a real session
-  // (auth.uid()), so RLS is satisfied and nothing can be forged client-side.
+  // We don't create/validate anything yet — name and host application both
+  // happen in verifyGateCode() once we hold a real session (auth.uid()), so
+  // RLS is satisfied and nothing can be forged client-side.
   const btn = document.querySelector(".lp-claim-btn");
   const label = () => btn && btn.querySelector("#gate-claim-label");
   const origLabel = label() ? label().textContent : "Continue →";
@@ -2748,7 +2715,6 @@ async function submitGate() {
     isLogin,
     name,
     email,
-    curatorCode,
     signupType: _signupType,
     bizName,
     hostDesc,
@@ -2812,25 +2778,6 @@ async function verifyGateCode() {
       state.profileId = generateUniqueId();
     }
   } else {
-    // New attendee — members-only curator gate, validated server-side now that
-    // we're authenticated (SECURITY DEFINER RPC; the codes table stays hidden).
-    if (p.signupType === "attendee") {
-      const cur = await validateCuratorCode(p.curatorCode);
-      if (!cur.valid) {
-        reEnable();
-        otpErr(
-          cur.reason === "inactive"
-            ? "That curator code is no longer active — ask your host for a current one."
-            : cur.reason === "unknown"
-              ? "We don’t recognise that curator code. Check it, or check in at a venue to receive one."
-              : "Enter a valid curator code (CUR-XXXX-XXXX), or check in at a venue to receive one.",
-        );
-        return;
-      }
-      state.curatorVerified = true;
-      state.curatorCode = cur.code;
-      state.curatorTier = cur.tier || "standard";
-    }
     state.profileName =
       p.name || (profile && profile.name) || p.email.split("@")[0];
     state.profileEmail = p.email;
@@ -3262,7 +3209,7 @@ function updateCardPreview() {
   }
 }
 function renderCardEditor() {
-  const allowSkip = cardEditorEventId !== null;
+  const allowSkip = true;
   const t = resolveCardColors(
     cardDraft.bgStyle || cardDraft.theme,
     cardDraft.accentColor,
@@ -3924,22 +3871,13 @@ async function saveCard() {
   }
   document.getElementById("card-editor-root").innerHTML = "";
   renderNav();
-  if (cardEditorEventId !== null) {
-    openConnect(cardEditorEventId);
-  } else {
-    renderView();
-  }
+  renderView();
 }
 function skipCard() {
   document.getElementById("card-editor-root").innerHTML = "";
-  if (cardEditorEventId !== null) openConnect(cardEditorEventId);
 }
 function closeCardEditor() {
   document.getElementById("card-editor-root").innerHTML = "";
-}
-function openConnectGateway(id) {
-  if (state.myCard) openConnect(id);
-  else openCardEditor(id);
 }
 
 async function initApp() {
@@ -3970,7 +3908,6 @@ async function initApp() {
     }
   }
 
-  await loadFriends();
   // Refresh view quietly once real data is in (still on map = update markers)
   if (state.view === "browse") renderView();
 }
@@ -4125,30 +4062,6 @@ async function loadAllRsvps() {
   });
 }
 
-async function loadFriends() {
-  if (!state.userId) return;
-  const { data } = await sb
-    .from("friends")
-    .select("friend_name")
-    .eq("user_id", state.userId);
-  if (data) {
-    const fromDb = data.map((f) => f.friend_name);
-    // Merge: keep in-session additions not yet in DB, avoid duplicates
-    const merged = [...new Set([...fromDb, ...state.friends])];
-    state.friends = merged;
-  }
-}
-
-async function addFriend(friendName, friendUserId) {
-  if (state.friends.includes(friendName)) return;
-  await sb.from("friends").insert({
-    user_id: state.userId,
-    friend_id: friendUserId,
-    friend_name: friendName,
-  });
-  state.friends.push(friendName);
-  renderView();
-}
 
 function renderNav() {
   const activeTab = [
@@ -4162,12 +4075,9 @@ function renderNav() {
     "achievements",
   ].includes(state.view)
     ? "profile"
-    : ["social", "friends", "host"].includes(state.view)
-      ? "social"
-      : ["calendar", "calendar-day"].includes(state.view)
-        ? "calendar"
-        : state.view;
-  const unread = getUnreadSocialCount();
+    : ["calendar", "calendar-day"].includes(state.view)
+      ? "calendar"
+      : state.view;
   const navContainer = document.getElementById("nav-container");
 
   // First render: build the full DOM once
@@ -4175,7 +4085,6 @@ function renderNav() {
     const icons = {
       browse: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5 5-2Z"/></svg>`,
       tickets: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/></svg>`,
-      social: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c.6-3.2 3-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.3"/><path d="M15.8 13.2c2 .2 3.6 1.7 4.1 4.3"/></svg>`,
       calendar: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><rect x="3.5" y="5.5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>`,
       host: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>`,
       profile: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1-4 4-6 7.5-6s6.5 2 7.5 6"/></svg>`,
@@ -4183,7 +4092,7 @@ function renderNav() {
     };
     const NAV_TABS = [
       { label: "Explore", v: "browse", action: "goBrowse()" },
-      { label: "Social", v: "social", action: "navStack=[];openSocialTab()" },
+      { label: "Host", v: "host", action: "navStack=[];openHost()" },
       {
         label: "Calendar",
         v: "calendar",
@@ -4195,14 +4104,13 @@ function renderNav() {
       <div class="top-bar">
         <div class="logo-wrap" onclick="goBrowse()" role="button" tabindex="0" aria-label="Cumulus home">${BLOT_SVG}<span class="logo hide-mobile">Cumulus</span></div>
         <input id="search-input" class="search-input" placeholder="Search events..." oninput="onSearchInput()" autocomplete="off"/>
-        
+
       </div>
       <div class="bottom-nav">
         ${NAV_TABS.map(
           ({ label, v, action }) => `
           <button class="nav-link" data-nav="${v}" onclick="${action}" style="position:relative;">
             ${icons[v] || ""}
-            <span class="nav-social-badge" style="display:none;position:absolute;top:4px;right:calc(50% - 22px);background:#E23B3B;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:8px;align-items:center;justify-content:center;padding:0 3px;border:1.5px solid var(--surface);"></span>
             <span>${label}</span>
           </button>`,
         ).join("")}
@@ -4214,18 +4122,6 @@ function renderNav() {
     btn.classList.toggle("active-cloud-tab", btn.dataset.nav === activeTab);
   });
 
-  // Patch social badge without touching other buttons
-  const socialBadge = navContainer.querySelector(
-    '[data-nav="social"] .nav-social-badge',
-  );
-  if (socialBadge) {
-    if (unread > 0) {
-      socialBadge.textContent = unread;
-      socialBadge.style.display = "flex";
-    } else {
-      socialBadge.style.display = "none";
-    }
-  }
 }
 
 function onSearchInput() {
@@ -4289,13 +4185,6 @@ async function signOut(confirmed) {
   try {
     localStorage.removeItem("prefs");
   } catch (e) {}
-  // Unsubscribe from all realtime channels
-  Object.values(chatSubscriptions).forEach((sub) => {
-    try {
-      sb.removeChannel(sub);
-    } catch (e) {}
-  });
-  Object.keys(chatSubscriptions).forEach((k) => delete chatSubscriptions[k]);
   // Reset in-memory state
   state.userId = null;
   state.profileName = "";
@@ -4307,14 +4196,12 @@ async function signOut(confirmed) {
   state.editingProfile = false;
   state.view = "browse";
   state.rsvps = {};
-  state.chats = {};
   myTickets = [];
-  // Admin flags and cached hosting eligibility must NOT survive a sign-out —
-  // otherwise the next account signed into this tab inherits the previous
-  // admin's bypass (full host form visible immediately, no checklist).
+  state.hostPayouts = undefined; // re-fetch fresh for whoever signs in next
+  // Admin flags must NOT survive a sign-out — otherwise the next account
+  // signed into this tab inherits the previous admin's bypass.
   state.isAdmin = false;
   state._verifiedAdmin = false;
-  state.hostingProgress = null;
   destroyMainMap();
   destroyHostMap();
   document.getElementById("app").style.display = "none";
@@ -4373,12 +4260,6 @@ function openProfile() {
   renderView();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
-function openFriends() {
-  state.view = "friends";
-  renderNav();
-  renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
 function openCalendar() {
   pushNav();
   state.editingProfile = false;
@@ -4393,254 +4274,14 @@ function openHost() {
   renderView();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
-function openConnect(id) {
-  pushNav();
-  state.view = "connect";
-  state.selectedEventId = id;
-  loadConnectData(id).then(() => {
-    renderNav();
-    renderView();
-  });
-}
-
-const chatSubscriptions = {};
-
-async function loadConnectData(id) {
-  // Load attendee cards from Supabase users table
-  const attendees = attendeesFor(id);
-  const cardsMap = {};
-  if (attendees.length) {
-    const { data: cards } = await sb
-      .from("users")
-      .select("name,card_theme,card_bio,card_interests,card_fact")
-      .in("name", attendees);
-    if (cards)
-      cards.forEach((c) => {
-        cardsMap[c.name] = {
-          theme: c.card_theme || "crimson",
-          bio: c.card_bio || "",
-          interests: c.card_interests || "",
-          fact: c.card_fact || "",
-        };
-      });
-  }
-  state.attendeeCards[id] = cardsMap;
-
-  // Load existing chat messages
-  const { data: messages } = await sb
-    .from("chat_messages")
-    .select("user_name,text,created_at")
-    .eq("event_id", id)
-    .order("created_at", { ascending: true });
-  state.chats[id] = (messages || []).map((m) => ({
-    name: m.user_name,
-    text: m.text,
-    ts: new Date(m.created_at).getTime(),
-  }));
-
-  // Subscribe to new messages in real-time (one subscription per event)
-  if (!chatSubscriptions[id]) {
-    chatSubscriptions[id] = sb
-      .channel(`chat:${id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "chat_messages",
-          filter: `event_id=eq.${id}`,
-        },
-        (payload) => {
-          const msg = {
-            name: payload.new.user_name,
-            text: payload.new.text,
-            ts: new Date(payload.new.created_at).getTime(),
-          };
-          if (!state.chats[id]) state.chats[id] = [];
-          // Remove matching optimistic copy (our own send echoed back by realtime)
-          const optIdx = state.chats[id].findIndex(
-            (m) => m._opt && m.name === msg.name && m.text === msg.text,
-          );
-          if (optIdx !== -1) {
-            state.chats[id][optIdx] = msg; // silently replace optimistic with confirmed — no re-render needed
-          } else {
-            state.chats[id].push(msg);
-            if (state.view === "connect" && state.selectedEventId === id) {
-              _appendChatMsg(msg); // surgical append — no full re-render flicker
-            }
-            renderNav();
-          }
-        },
-      )
-      .subscribe();
-  }
-}
-
-function peekAttendee(evId, name) {
-  const cardsMap = state.attendeeCards[evId] || {};
-  const card = cardsMap[name];
-  const person = personByName(name);
-  const fr = isFriend(name);
-  let ca = "var(--accent)",
-    cbg = "var(--surface)",
-    cborder = "var(--line)",
-    ctext = "var(--text)",
-    ctextSoft = "var(--text-muted)";
-  if (card) {
-    const ct = getTheme(card.theme);
-    if (ct) {
-      ca = ct.accent;
-      cbg = ct.bg;
-      cborder = ct.border;
-      ctext = ct.text;
-      ctextSoft = ct.textSoft || ct.text;
-    }
-  }
-  const ava = initials(name);
-  const bio = card?.bio || person?.blurb || "";
-  const interests = card?.interests
-    ? card.interests
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : [];
-  const fact = card?.fact || "";
-  const tagsHtml = interests
-    .map(
-      (t) =>
-        `<span class="attendee-full-tag" style="background:${ca}22;border-color:${ca}55;color:${ctext};">${escapeHtml(t)}</span>`,
-    )
-    .join("");
-  let photo = "";
-  try {
-    if (name === state.profileName)
-      photo = localStorage.getItem("card_photo:" + name) || "";
-  } catch (e) {}
-  const avatarHtml = photo
-    ? `<div class="attendee-full-ava" style="background:${ca};overflow:hidden;"><img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="${escapeHtml(name)}"/></div>`
-    : `<div class="attendee-full-ava" style="background:${ca};">${ava}</div>`;
-  const cardHtml = `<div class="attendee-full-card" style="background:${cbg};border:1px solid ${cborder};">
-    <div class="attendee-full-card-header">
-      ${avatarHtml}
-      <div style="flex:1;min-width:0;">
-        <div class="attendee-full-name" style="color:${ctext};">${escapeHtml(name)}${fr ? ' <span style="color:var(--gold);">★</span>' : ""}</div>
-        ${fact ? `<div class="attendee-full-sub" style="color:${ctextSoft};">${escapeHtml(fact)}</div>` : ""}
-      </div>
-    </div>
-    ${bio ? `<div class="attendee-full-bio" style="color:${ctextSoft};">${escapeHtml(bio)}</div>` : ""}
-    ${tagsHtml ? `<div class="attendee-full-tags">${tagsHtml}</div>` : ""}
-    <div class="attendee-card-wm" style="color:${ca};">${ava}</div>
-  </div>`;
-  let ov = document.getElementById("attendee-peek-overlay");
-  if (!ov) {
-    ov = document.createElement("div");
-    ov.id = "attendee-peek-overlay";
-    ov.className = "attendee-peek-ov";
-    ov.innerHTML = `<div class="attendee-peek-sheet"><div class="attendee-peek-handle"></div><div class="attendee-peek-body"><div class="attendee-peek-close-row"><span class="attendee-peek-label">Attendee Profile</span><button class="attendee-peek-close" onclick="closeAttendeePeek()" aria-label="Close">✕</button></div><div id="attendee-peek-content"></div></div></div>`;
-    ov.addEventListener("click", (e) => {
-      if (e.target === ov) closeAttendeePeek();
-    });
-    document.body.appendChild(ov);
-  }
-  document.getElementById("attendee-peek-content").innerHTML = cardHtml;
-  requestAnimationFrame(() => {
-    ov.classList.add("open");
-  });
-}
-
+// No-op if the overlay was never created (peekAttendee, its only creator,
+// was removed with the per-event Connect/chat feature) — kept only because
+// the global Escape-key handler calls every close* function defensively.
 function closeAttendeePeek() {
   const ov = document.getElementById("attendee-peek-overlay");
   if (ov) ov.classList.remove("open");
 }
 
-function toggleGoingSection(id) {
-  if (!state.goingOpen) state.goingOpen = {};
-  state.goingOpen[id] = !state.goingOpen[id];
-  renderView();
-}
-
-async function uploadNightShot(evId, input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async function (e) {
-    const raw = e.target.result;
-    const img = new Image();
-    img.src = raw;
-    await new Promise((r) => {
-      img.onload = r;
-    });
-    const canvas = document.createElement("canvas");
-    const maxW = 900;
-    const scale = Math.min(1, maxW / img.naturalWidth);
-    canvas.width = Math.round(img.naturalWidth * scale);
-    canvas.height = Math.round(img.naturalHeight * scale);
-    canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-    const compressed = canvas.toDataURL("image/jpeg", 0.82);
-    localStorage.setItem("night_shot:" + evId, compressed);
-    try {
-      await sb
-        .from("events")
-        .update({ night_shot_url: compressed })
-        .eq("id", evId);
-    } catch (_) {}
-    const ev = EVENTS.find((e) => e.id === evId);
-    if (ev) ev.nightShotUrl = compressed;
-    renderView();
-  };
-  reader.readAsDataURL(file);
-}
-
-function _buildChatMsgHtml(msg) {
-  const myCard = state.myCard;
-  let _myExt = { bgStyle: "obsidian", accentColor: "#FFCF33" };
-  try {
-    const r = localStorage.getItem("card_ext:" + state.profileName);
-    if (r) _myExt = { ..._myExt, ...JSON.parse(r) };
-  } catch (e) {}
-  const _myCols = resolveCardColors(
-    _myExt.bgStyle || myCard?.theme || "obsidian",
-    _myExt.accentColor || myCard?.accentColor || "#FFCF33",
-  );
-  const isOwn = msg.name === state.profileName;
-  const nameCol = isOwn ? _myCols.accent : "var(--text-muted)";
-  return `<div class="msg-row ${isOwn ? "own" : ""}"><div class="msg-col ${isOwn ? "own" : ""}">
-    <div class="msg-sender" style="color:${nameCol};">${escapeHtml(msg.name.split(" ")[0])}</div>
-    <div class="msg-bubble ${isOwn ? "own" : "other"}" style="${isOwn ? `background:${_myCols.bg};color:${_myCols.text};` : ""}">${escapeHtml(msg.text)}</div>
-  </div></div>`;
-}
-function _appendChatMsg(msg) {
-  const cm = document.getElementById("chat-messages");
-  if (!cm) return;
-  const empty = cm.querySelector(".chat-empty-state");
-  if (empty) empty.remove();
-  const wrap = document.createElement("div");
-  wrap.innerHTML = _buildChatMsgHtml(msg);
-  const node = wrap.firstElementChild;
-  node.classList.add("msg-row-new");
-  cm.appendChild(node);
-  cm.scrollTo({ top: cm.scrollHeight, behavior: "smooth" });
-}
-
-async function sendChat(id) {
-  const input = document.getElementById("chat-input");
-  const text = input.value.trim();
-  if (!text) return;
-  input.value = "";
-  const msg = { name: state.profileName, text, ts: Date.now(), _opt: true };
-  if (!state.chats[id]) state.chats[id] = [];
-  state.chats[id].push(msg);
-  _appendChatMsg(msg);
-  await sb.from("chat_messages").insert({
-    event_id: id,
-    user_id: state.userId,
-    user_name: state.profileName,
-    text,
-  });
-}
-function handleChatKey(e, id) {
-  if (e.key === "Enter") sendChat(id);
-}
 function getMyEvents() {
   return EVENTS.filter((ev) =>
     (state.rsvps[ev.id] || []).includes(state.profileName),
@@ -5684,7 +5325,6 @@ function updateMapEmptyState(count) {
     state.selectedCategory !== "all" ||
     state.liveOnly ||
     state.hotOnly ||
-    state.friendsOnly ||
     !!(document.getElementById("search-input")?.value || "").trim();
   el.innerHTML = filtered
     ? `<div class="map-empty-card" role="status">
@@ -5705,7 +5345,6 @@ function clearMapFilters() {
   state.selectedCategory = "all";
   state.liveOnly = false;
   state.hotOnly = false;
-  state.friendsOnly = false;
   const si = document.getElementById("search-input");
   if (si) si.value = "";
   refreshFilters();
@@ -6274,13 +5913,6 @@ function selectAutocompleteAddress(lat, lon, fullAddress, name) {
 }
 
 async function submitHostEvent() {
-  let visibility = _hostType;
-  if (_hostType === "private") {
-    const role =
-      (state.hostingProgress && state.hostingProgress.role) || "eventee";
-    visibility = role === "partner_host" ? "host_private" : "connections_only";
-  }
-
   const title = (document.getElementById("host-title")?.value || "").trim();
   const cat = document.getElementById("host-cat")?.value;
   const startDate = document.getElementById("host-start-date")?.value;
@@ -6309,217 +5941,136 @@ async function submitHostEvent() {
     return;
   }
 
-  if (_hostType === "public") {
-    // Admin bypasses the approval queue — events go live immediately.
-    // Everyone else goes via pending_events for owner review.
-    if (state.isAdmin) {
-      const pubAddress =
-        document.getElementById("host-address-search")?.value || "";
-      const abtn = document.getElementById("host-submit-btn");
-      if (abtn) {
-        abtn.disabled = true;
-        abtn.textContent = "Publishing…";
-      }
-      const { data: aData, error: aErr } = await sb
-        .from("events")
-        .insert({
-          title,
-          category: cat,
-          visibility: visibility,
-          host_id: state.userId,
-          host_name: state.profileName,
-          venue,
-          area: areaName || "London",
-          address: pubAddress,
-          lat: newEventLat,
-          lon: newEventLon,
-          start_time: stDate.toISOString(),
-          end_time: enDate.toISOString(),
-          starts_at: stDate.toISOString(),
-          ends_at: enDate.toISOString(),
-          description: desc,
-          capacity: parseInt(capStr, 10),
-          price: priceVal,
-        })
-        .select()
-        .single();
-      if (abtn) {
-        abtn.disabled = false;
-        abtn.textContent = "Publish event →";
-      }
-      if (aErr) {
-        showToast("Failed to publish event — " + aErr.message, "error");
-        return;
-      }
-      // Inject into local EVENTS array so map updates immediately
-      const aEv = {
-        id: aData.id,
-        title: aData.title,
-        category: aData.category,
-        host: aData.host_name,
-        hostId: aData.host_id,
-        venue: aData.venue,
-        area: aData.area,
-        address: aData.address,
-        lat: aData.lat,
-        lon: aData.lon,
-        startTime: aData.start_time,
-        endTime: aData.end_time,
-        desc: aData.description,
-        capacity: aData.capacity,
-        price: priceVal,
-      };
-      computeEventDates(aEv);
-      EVENTS.push(aEv);
-      await sb
-        .from("rsvps")
-        .insert({
-          event_id: aData.id,
-          user_id: state.userId,
-          user_name: state.profileName,
-        })
-        .catch(() => {});
-      state.rsvps[aData.id] = [state.profileName];
-      showToast("Event published live to the map!", "success");
-      openEvent(aData.id);
-      return;
-    }
-
-    // Non-admin: queue in pending_events for owner approval
+  // Every event is public. Admin submissions publish immediately; everyone
+  // else goes via pending_events for a quick review (see the notify-admin
+  // edge function, which emails on every new pending row).
+  if (state.isAdmin) {
     const pubAddress =
       document.getElementById("host-address-search")?.value || "";
-    const pending = {
-      title,
-      category: cat,
-      visibility: visibility,
-      host_id: state.userId || null,
-      host_name: state.profileName || "",
-      host_email: state.profileEmail || "",
-      venue,
-      area: areaName || "London",
-      address: pubAddress,
-      lat: newEventLat,
-      lon: newEventLon,
-      start_time: stDate.toISOString(),
-      end_time: enDate.toISOString(),
-      starts_at: stDate.toISOString(),
-      ends_at: enDate.toISOString(),
-      description: desc,
-      capacity: parseInt(capStr, 10),
+    const abtn = document.getElementById("host-submit-btn");
+    if (abtn) {
+      abtn.disabled = true;
+      abtn.textContent = "Publishing…";
+    }
+    const { data: aData, error: aErr } = await sb
+      .from("events")
+      .insert({
+        title,
+        category: cat,
+        host_id: state.userId,
+        host_name: state.profileName,
+        venue,
+        area: areaName || "London",
+        address: pubAddress,
+        lat: newEventLat,
+        lon: newEventLon,
+        start_time: stDate.toISOString(),
+        end_time: enDate.toISOString(),
+        description: desc,
+        capacity: parseInt(capStr, 10),
+        price: priceVal,
+      })
+      .select()
+      .single();
+    if (abtn) {
+      abtn.disabled = false;
+      abtn.textContent = "Publish event →";
+    }
+    if (aErr) {
+      showToast("Failed to publish event — " + aErr.message, "error");
+      return;
+    }
+    // Inject into local EVENTS array so map updates immediately
+    const aEv = {
+      id: aData.id,
+      title: aData.title,
+      category: aData.category,
+      host: aData.host_name,
+      hostId: aData.host_id,
+      venue: aData.venue,
+      area: aData.area,
+      address: aData.address,
+      lat: aData.lat,
+      lon: aData.lon,
+      startTime: aData.start_time,
+      endTime: aData.end_time,
+      desc: aData.description,
+      capacity: aData.capacity,
       price: priceVal,
-      status: "pending",
-      created_at: new Date().toISOString(),
     };
-    const pbtn = document.getElementById("host-submit-btn");
-    if (pbtn) {
-      pbtn.disabled = true;
-      pbtn.textContent = "Submitting…";
-    }
-    let saved = false;
-    try {
-      const { error } = await sb.from("pending_events").insert(pending);
-      if (!error) saved = true;
-    } catch (e) {}
-    if (!saved) {
-      try {
-        const arr = JSON.parse(
-          localStorage.getItem("pending_events_local") || "[]",
-        );
-        arr.push({ ...pending, id: "local_" + Date.now() });
-        localStorage.setItem("pending_events_local", JSON.stringify(arr));
-        saved = true;
-      } catch (e) {}
-    }
-    if (pbtn) {
-      pbtn.disabled = false;
-      pbtn.textContent = "Submit for review →";
-    }
-    showToast(
-      saved
-        ? "Submitted for review — we'll approve it shortly."
-        : "Could not submit — please try again.",
-      saved ? "success" : "error",
-    );
-    if (saved) {
-      state.view = "browse";
-      renderNav();
-      renderView();
-    }
+    computeEventDates(aEv);
+    EVENTS.push(aEv);
+    await sb
+      .from("rsvps")
+      .insert({
+        event_id: aData.id,
+        user_id: state.userId,
+        user_name: state.profileName,
+      })
+      .catch(() => {});
+    state.rsvps[aData.id] = [state.profileName];
+    showToast("Event published live to the map!", "success");
+    openEvent(aData.id);
     return;
   }
 
-  const address = document.getElementById("host-address-search")?.value || "";
-
-  const btn = document.getElementById("host-submit-btn");
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = "Creating…";
-  }
-
-  const { data, error } = await sb
-    .from("events")
-    .insert({
-      title,
-      category: cat,
-      visibility: visibility,
-      host_id: state.userId,
-      host_name: state.profileName,
-      venue,
-      area: areaName || "London",
-      address,
-      lat: newEventLat,
-      lon: newEventLon,
-      start_time: stDate.toISOString(),
-      end_time: enDate.toISOString(),
-      starts_at: stDate.toISOString(),
-      ends_at: enDate.toISOString(),
-      description: desc,
-      capacity: parseInt(capStr, 10),
-      price: priceVal,
-    })
-    .select()
-    .single();
-
-  if (btn) {
-    btn.disabled = false;
-    btn.textContent = "Create private event →";
-  }
-  if (error) {
-    showToast("Failed to create event. Please try again.", "error");
-    return;
-  }
-
-  // Add to local EVENTS array so map updates immediately without a page reload
-  const newEvent = {
-    id: data.id,
-    title: data.title,
-    category: data.category,
-    host: data.host_name,
-    hostId: data.host_id,
-    venue: data.venue,
-    area: data.area,
-    address: data.address,
-    lat: data.lat,
-    lon: data.lon,
-    startTime: data.start_time,
-    endTime: data.end_time,
-    desc: data.description,
-    capacity: data.capacity,
+  // Non-admin: queue in pending_events for owner approval
+  const pubAddress =
+    document.getElementById("host-address-search")?.value || "";
+  const pending = {
+    title,
+    category: cat,
+    host_id: state.userId || null,
+    host_name: state.profileName || "",
+    host_email: state.profileEmail || "",
+    venue,
+    area: areaName || "London",
+    address: pubAddress,
+    lat: newEventLat,
+    lon: newEventLon,
+    start_time: stDate.toISOString(),
+    end_time: enDate.toISOString(),
+    description: desc,
+    capacity: parseInt(capStr, 10),
     price: priceVal,
+    status: "pending",
+    created_at: new Date().toISOString(),
   };
-  computeEventDates(newEvent);
-  EVENTS.push(newEvent);
-
-  // Auto-RSVP the host
-  await sb.from("rsvps").insert({
-    event_id: data.id,
-    user_id: state.userId,
-    user_name: state.profileName,
-  });
-  state.rsvps[data.id] = [state.profileName];
-
-  showToast("Event created and pinned to the map!", "success");
-  openEvent(data.id);
+  const pbtn = document.getElementById("host-submit-btn");
+  if (pbtn) {
+    pbtn.disabled = true;
+    pbtn.textContent = "Submitting…";
+  }
+  let saved = false;
+  try {
+    const { error } = await sb.from("pending_events").insert(pending);
+    if (!error) saved = true;
+  } catch (e) {}
+  if (!saved) {
+    try {
+      const arr = JSON.parse(
+        localStorage.getItem("pending_events_local") || "[]",
+      );
+      arr.push({ ...pending, id: "local_" + Date.now() });
+      localStorage.setItem("pending_events_local", JSON.stringify(arr));
+      saved = true;
+    } catch (e) {}
+  }
+  if (pbtn) {
+    pbtn.disabled = false;
+    pbtn.textContent = "Submit for review →";
+  }
+  showToast(
+    saved
+      ? "Submitted for review — we'll approve it shortly."
+      : "Could not submit — please try again.",
+    saved ? "success" : "error",
+  );
+  if (saved) {
+    state.view = "browse";
+    renderNav();
+    renderView();
+  }
 }
 
 function showMapLayer(visible) {
@@ -7781,9 +7332,38 @@ function renderOwnerDash() {
 // ═══════════════════════════════════════════════════════
 // HOST PAYOUTS PANEL
 // ═══════════════════════════════════════════════════════
+// state.hostPayouts is a lazy cache: undefined = not yet fetched (kicks off
+// fetchHostPayouts() and re-renders when it lands), array = fetched (empty
+// array included). fetchHostPayouts() also lazily flips any row past its
+// scheduled_release_at to 'released' server-side before returning.
 function renderHostPayoutsPanel() {
-  // Host-facing only. The per-ticket platform fee schedule is company-internal
-  // (see the owner Finances dashboard) and is deliberately NOT shown here.
+  if (state.hostPayouts === undefined) {
+    state.hostPayouts = null; // guard against a double-fetch while in flight
+    fetchHostPayouts().then((rows) => {
+      state.hostPayouts = rows;
+      renderView();
+    });
+  }
+
+  const rows = state.hostPayouts;
+  const statusLabel = { pending: "Held", released: "Released", disputed: "Disputed" };
+  const statusColor = { pending: "var(--text-muted)", released: "#147136", disputed: "#b3261e" };
+  const payoutRows = (rows || [])
+    .map((p) => {
+      const ev = EVENTS.find((e) => e.id === p.event_id);
+      const when =
+        p.status === "released"
+          ? `Released ${new Date(p.released_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`
+          : `Releases ${new Date(p.scheduled_release_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`;
+      return `<div class="hp-tier-row">
+        <span class="hp-tier-label">${escapeHtml(ev ? ev.title : "Event")} · £${Number(p.net_amount).toFixed(2)}</span>
+        <span class="hp-tier-fee" style="color:${statusColor[p.status] || "var(--text-muted)"}">${statusLabel[p.status] || p.status} · ${when}</span>
+      </div>`;
+    })
+    .join("");
+
+  // Bookkeeping only — no payment processor is wired up in this codebase yet,
+  // so this tracks WHEN/WHOM a payout would go to, but never moves real money.
   return `
   <div class="hp-panel">
     <div class="hp-title">💸 Your payouts explained</div>
@@ -7797,8 +7377,15 @@ function renderHostPayoutsPanel() {
       <span class="hp-tier-fee" style="color:var(--text-muted)">Added at checkout · paid by the buyer</span>
     </div>
     <div style="margin-top:12px;padding:10px 12px;background:var(--surface-2);border-radius:10px;font-size:11px;color:var(--text-muted);line-height:1.6;">
-      <strong style="color:var(--text);">Payout timeline:</strong> Funds are held in escrow until 48 hours after your event ends, then released directly to your Stripe account. Graduated hosts (3+ events, zero disputes) get all friction removed.
+      <strong style="color:var(--text);">Payout timeline:</strong> Funds release 24 hours after your event ends once you've hosted 3+ dispute-free events — 48 hours before that, as a fraud-protection buffer.
     </div>
+    ${
+      rows === null
+        ? `<div style="margin-top:12px;font-size:12px;color:var(--text-muted);">Loading your payouts…</div>`
+        : rows && rows.length
+          ? `<div style="margin-top:12px;">${payoutRows}</div>`
+          : `<div style="margin-top:12px;font-size:12px;color:var(--text-muted);">No ticket sales yet — payouts appear here once your event starts selling.</div>`
+    }
   </div>`;
 }
 
@@ -8158,8 +7745,6 @@ async function adminVerifyCode() {
     state._verifiedAdmin = true;
     showToast("Admin verified — all gates bypassed", "success");
     if (sub) sub.textContent = "Admin session active — full access";
-    // Reset hostingProgress so the host view re-renders with eligible:true
-    state.hostingProgress = null;
     closeAdminSignIn();
   } else {
     showToast(
@@ -8329,7 +7914,6 @@ async function _publishApprovedEvent(rec) {
       .insert({
         title: rec.title,
         category: rec.category,
-        visibility: rec.visibility || "public",
         host_id: rec.host_id,
         host_name: rec.host_name,
         venue: rec.venue,
@@ -8339,8 +7923,6 @@ async function _publishApprovedEvent(rec) {
         lon: rec.lon,
         start_time: rec.start_time,
         end_time: rec.end_time,
-        starts_at: rec.starts_at || rec.start_time,
-        ends_at: rec.ends_at || rec.end_time,
         description: rec.description,
         capacity: rec.capacity,
         price: rec.price || 0,
@@ -8354,7 +7936,6 @@ async function _publishApprovedEvent(rec) {
           .insert({
             title: rec.title,
             category: rec.category,
-            visibility: rec.visibility || "public",
             host_id: null,
             host_name: rec.host_name,
             venue: rec.venue,
@@ -8364,8 +7945,6 @@ async function _publishApprovedEvent(rec) {
             lon: rec.lon,
             start_time: rec.start_time,
             end_time: rec.end_time,
-            starts_at: rec.starts_at || rec.start_time,
-            ends_at: rec.ends_at || rec.end_time,
             description: rec.description,
             capacity: rec.capacity,
             price: rec.price || 0,
@@ -8444,19 +8023,12 @@ function renderView() {
   document.body.classList.remove("no-scroll");
   if (state.view === "detail")
     container.innerHTML = renderDetail(state.selectedEventId);
-  else if (state.view === "connect") {
-    container.innerHTML = renderConnect(state.selectedEventId);
-    const _cdEv = EVENTS.find((e) => e.id === state.selectedEventId);
-    if (_cdEv && !chatIsOpen(_cdEv) && eventStatus(_cdEv) !== "past")
-      setTimeout(() => startChatCountdown(_cdEv.id, chatUnlockTime(_cdEv)), 0);
-  } else if (state.view === "profile") container.innerHTML = renderProfile();
+  else if (state.view === "profile") container.innerHTML = renderProfile();
   else if (state.view === "achievements")
     container.innerHTML = renderAchievements();
-  else if (state.view === "friends") {
-    container.innerHTML = renderSocialTab();
-  } else if (state.view === "calendar") container.innerHTML = renderCalendar();
+  else if (state.view === "calendar") container.innerHTML = renderCalendar();
   else if (state.view === "host") {
-    container.innerHTML = renderSocialTab();
+    container.innerHTML = renderHostView();
     if (mapboxConfigured()) setTimeout(initHostMap, 0);
   } else if (state.view === "book") container.innerHTML = renderBook();
   else if (state.view === "checkout") container.innerHTML = renderCheckout();
@@ -8468,9 +8040,7 @@ function renderView() {
   else if (state.view === "calendar-day")
     container.innerHTML = renderCalendarDay();
   else if (state.view === "tickets") container.innerHTML = renderTicketsTab();
-  else if (state.view === "social") {
-    container.innerHTML = renderSocialTab();
-  } else if (state.view === "owner-dash") {
+  else if (state.view === "owner-dash") {
     container.innerHTML = renderOwnerDash();
     setTimeout(initOwnerDash, 0);
   } else if (state.view === "review") {
@@ -8500,8 +8070,6 @@ function getFilteredEvents() {
         .includes(q);
     return hasLocation && mc && mq;
   });
-  if (state.friendsOnly)
-    list = list.filter((ev) => attendeesFor(ev.id).some(isFriend));
   if (state.liveOnly) list = list.filter((ev) => eventStatus(ev) === "live");
   if (state.hotOnly) list = list.filter((ev) => isHotEvent(ev));
   if (state.dateFilter && state.dateFilter !== "all")
@@ -8545,17 +8113,6 @@ function toggleHotOnly() {
   if (state.hotOnly) state.liveOnly = false;
   renderView();
 }
-function toggleFriendsOnly() {
-  state.friendsOnly = !state.friendsOnly;
-  if (state.friendsOnly) {
-    const any = EVENTS.some((ev) => attendeesFor(ev.id).some(isFriend));
-    if (!any)
-      showToast(
-        "No friends going to events yet. Add friends in the Social tab.",
-      );
-  }
-  renderView();
-}
 function refreshFilters() {
   const el = document.getElementById("map-filters");
   if (!el) return;
@@ -8567,7 +8124,6 @@ function refreshFilters() {
       return `<button class="mchip ${a ? "active" : ""}" style="${a ? `background:${c.color};color:#fff;border-color:transparent;` : ""}" onclick="setCategory('${cat}')"><span style="color:${a ? "#fff" : c.color};display:inline-flex;">${categoryChipIconSvg(cat)}</span>${cat}</button>`;
     })
     .join("");
-  html += `<button class="mchip ${state.friendsOnly ? "active" : ""}" style="${state.friendsOnly ? "background:var(--gold);color:#1a1400;border-color:transparent;" : ""}" onclick="toggleFriendsOnly()"><span class="star" style="display:inline-flex;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6-4.5-4.2 6.1-.7L12 3.5Z"/></svg></span> Friends</button>`;
   html += `<button class="mchip ${state.liveOnly ? "active" : ""}" style="${state.liveOnly ? "background:#E23B3B;color:#fff;border-color:transparent;" : ""}" onclick="toggleLiveOnly()"><span style="width:6px;height:6px;border-radius:50%;background:${state.liveOnly ? "#fff" : "#E23B3B"};display:inline-block;margin-right:2px;animation:${state.liveOnly ? "blink 1.3s ease-in-out infinite" : "none"}"></span>Live</button>`;
   html += `<button class="mchip ${state.hotOnly ? "active" : ""}" style="${state.hotOnly ? "background:#F97316;color:#fff;border-color:transparent;" : ""}" onclick="toggleHotOnly()"><span style="display:inline-flex;color:#F97316;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c2 3 5 6 5 10a5 5 0 0 1-10 0c0-1.8.7-3 1.6-4.1.2 1.3.9 2 1.8 2.3-.4-2.7.4-5.3 1.6-8.2Z"/></svg></span> Hot</button>`;
   html += `<button class="mchip ${state.dateFilter === "today" ? "active" : ""}" style="${state.dateFilter === "today" ? "background:var(--accent);color:#fff;border-color:transparent;" : ""}" onclick="setDateFilter('today')">Today</button>`;
@@ -8618,80 +8174,6 @@ function pinTooltipHtml(ev) {
       <span style="font-size:13px;opacity:0.85;">→</span>
     </div>
   </div>`;
-}
-
-// ── Members' perks (WCAG-safe gating) ─────────────────────────────────────
-// The event and its details are always fully visible. Only the *perks* are
-// gated: they unlock once the member is curator-verified or has checked in at
-// the venue. isPerkUnlocked / canCheckInAt live in the services layer.
-const MEMBER_PERKS = [
-  ["🥂", "Welcome drink", "A drink on the house when you arrive"],
-  ["✦", "Priority guestlist", "Skip the queue — your name's on the door"],
-  ["🗝", "The back room", "Access to members-only spaces at the venue"],
-];
-function renderPerkPanel(ev) {
-  if (isPerkUnlocked(state)) {
-    return `<div class="perk-panel unlocked">
-      <div class="perk-head"><span class="perk-badge">✦ Members' perks</span><span class="perk-status ok">Unlocked</span></div>
-      <div class="perk-list">${MEMBER_PERKS.map((p) => `<div class="perk-row"><span class="perk-ic">${p[0]}</span><div><div class="perk-name">${p[1]}</div><div class="perk-sub">${p[2]}</div></div></div>`).join("")}</div>
-    </div>`;
-  }
-  return `<div class="perk-panel locked">
-    <div class="perk-head"><span class="perk-badge">${lockIconSvg(13)} Members' perks</span><span class="perk-status">Locked</span></div>
-    <div class="perk-blurb">This event carries members-only perks — guestlist, a welcome drink, and the back room. Unlock them with a curator code, or check in at the venue when you arrive.</div>
-    <div class="perk-actions">
-      <button class="btn perk-btn-primary" onclick="promptCuratorUnlock()">Enter curator code</button>
-      <button class="btn btn-outline perk-btn-secondary" onclick="checkInToEvent(${ev.id})">Check in at the door</button>
-    </div>
-  </div>`;
-}
-async function promptCuratorUnlock() {
-  const code = prompt("Enter your curator code (CUR-XXXX-XXXX):");
-  if (code === null) return;
-  const res = await validateCuratorCode(code);
-  if (res.valid) {
-    state.curatorVerified = true;
-    state.curatorCode = res.code;
-    state.curatorTier = res.tier || "standard";
-    showToast("Curator code accepted — perks unlocked", "success");
-    renderView();
-  } else {
-    showToast(
-      res.reason === "inactive"
-        ? "That code is no longer active"
-        : res.reason === "unknown"
-          ? "We don't recognise that code"
-          : "That doesn't look like a valid curator code",
-      "error",
-    );
-  }
-}
-function checkInToEvent(id) {
-  const ev = EVENTS.find((e) => e.id === id);
-  if (!ev) return;
-  if (!navigator.geolocation) {
-    showToast("Location isn't available on this device", "error");
-    return;
-  }
-  showToast("Checking you in…", "info");
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const here = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-      if (
-        ev.lat != null &&
-        ev.lon != null &&
-        canCheckInAt(here, { lat: ev.lat, lon: ev.lon }, 200)
-      ) {
-        state.checkedInEventId = id;
-        showToast("Checked in — perks unlocked", "success");
-        renderView();
-      } else {
-        showToast("You need to be at the venue to check in", "error");
-      }
-    },
-    () => showToast("Couldn't get your location", "error"),
-    { enableHighAccuracy: true, timeout: 8000 },
-  );
 }
 
 function shareEvent(id) {
@@ -8776,7 +8258,6 @@ function renderDetail(id) {
       <div class="detail-meta-row"><span>${ev.venue}${ev.area ? `, ${ev.area}` : ""}</span>${renderHostByline(ev)}</div>
       <div class="detail-desc">${ev.desc}</div>
       ${bookBtn}
-      ${renderPerkPanel(ev)}
       <div class="attendee-section">
         <h3>${attendees.length} going${ev.capacity ? ` (Limit ${ev.capacity})` : ""}${friendsGoing.length ? ` · <span class="star">★</span> ${friendsGoing.length} friend${friendsGoing.length > 1 ? "s" : ""}` : ""}</h3>
         <div class="attendee-list">${
@@ -8790,7 +8271,6 @@ function renderDetail(id) {
             : `<span style="color:var(--text-muted);font-size:13px;">No bookings yet.</span>`
         }</div>
       </div>
-      ${going ? `<div style="margin-top:20px;"><button class="btn" style="background:${c.color};color:#fff;width:100%;" onclick="openConnectGateway(${id})">Open Connect Space →</button></div>` : `<div class="connect-note">Book a ticket to unlock the Connect Space — see who's going and chat before the event.</div>`}
       ${state.isAdmin || ev.hostId === state.userId ? `<div style="margin-top:10px;"><button class="btn btn-outline" style="color:#E23B3B;border-color:#E23B3B;width:100%;" onclick="if(confirm('Delete this event permanently?')) deleteEvent('${id}')">Delete Event</button></div>` : ""}
     </div>`;
 }
@@ -8806,212 +8286,7 @@ async function deleteEvent(id) {
   goBack();
 }
 
-function renderConnect(id) {
-  const ev = EVENTS.find((e) => e.id === id);
-  if (!ev) return `<div class="empty-state">Event not found.</div>`;
-  const c = CATS[ev.category];
-  const attendees = attendeesFor(id);
-  const cardsMap = state.attendeeCards[id] || {};
-  const chat = state.chats[id] || [];
-  const myCard = state.myCard;
-  let _myExt = {
-    motto: "",
-    pattern: "lines",
-    areas: [],
-    accentColor: "#FFCF33",
-    bgStyle: "obsidian",
-  };
-  try {
-    const _r = localStorage.getItem("card_ext:" + state.profileName);
-    if (_r) _myExt = { ..._myExt, ...JSON.parse(_r) };
-  } catch (e) {}
-  const _myCols = resolveCardColors(
-    _myExt.bgStyle || myCard?.theme || "obsidian",
-    _myExt.accentColor || myCard?.accentColor || "#FFCF33",
-  );
-  const _myAccent = _myCols.accent;
-  const yourCardHtml = myCard
-    ? `<div class="panel intro-card" style="--corner:${_myAccent};background:${_myCols.bg};border-color:${_myAccent}33;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-          <div class="intro-name" style="color:${_myCols.text};">${escapeHtml(myCard.name)}</div>
-        </div>
-        ${_myExt.motto ? `<div style="font-size:11px;font-style:italic;font-weight:700;color:${_myAccent};margin-bottom:6px;">"${escapeHtml(_myExt.motto)}"</div>` : ""}
-        ${myCard.bio ? `<div class="intro-field-label" style="color:${_myCols.textSoft};">About</div><div class="intro-field-val" style="color:${_myCols.textSoft};">${escapeHtml(myCard.bio)}</div>` : ""}
-        ${
-          myCard.interests
-            ? `<div class="intro-field-label" style="color:${_myCols.textSoft};">Interests</div><div class="interest-tags">${myCard.interests
-                .split(",")
-                .map(
-                  (t) =>
-                    `<span class="interest-tag" style="border-color:${_myAccent};color:${_myCols.text};">${escapeHtml(t.trim())}</span>`,
-                )
-                .join("")}</div>`
-            : ""
-        }
-        <div style="margin-top:12px;"><button class="btn btn-outline btn-small" style="width:100%;border-color:${_myAccent};color:${_myCols.text};" onclick="openCardEditor(null)">Edit your card</button></div>
-      </div>`
-    : `<div class="panel intro-form"><div style="font-weight:700;font-size:15px;margin-bottom:5px;color:var(--text);">No card yet</div><div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Create one and it'll show up here and at every future event automatically.</div><button class="btn btn-small" style="width:100%;" onclick="openCardEditor(${id})">Create your card</button></div>`;
-  const others = attendees.filter((n) => n !== state.profileName);
-  const goingOpen = !!(state.goingOpen && state.goingOpen[id]);
-  // Preview avatars (collapsed state)
-  const previewAvas = others
-    .slice(0, 5)
-    .map((name) => {
-      const card = cardsMap[name];
-      const ct = card ? getTheme(card.theme) : null;
-      const avaColor = ct ? ct.accent : "var(--accent)";
-      return `<div class="going-preview-ava" style="background:${avaColor};">${initials(name)}</div>`;
-    })
-    .join("");
-  // Full grid cards (expanded state)
-  const goingGridHtml = others.length
-    ? others
-        .map((name) => {
-          const card = cardsMap[name];
-          const fr = isFriend(name);
-          const person = personByName(name);
-          const ct = card ? getTheme(card.theme) : null;
-          const avaColor = ct ? ct.accent : "var(--accent)";
-          const cbg = ct ? ct.bg : "var(--surface)";
-          const cborder = ct ? ct.border : "var(--line)";
-          const ctext = ct ? ct.text : "var(--text)";
-          const ctextSoft = ct ? ct.textSoft : "var(--text-muted)";
-          const bioSnippet = card ? card.bio : person ? person.blurb : "";
-          const interests =
-            card && card.interests
-              ? card.interests
-                  .split(",")
-                  .map((s) => s.trim())
-                  .filter(Boolean)
-                  .slice(0, 2)
-              : [];
-          const tagsHtml = interests
-            .map(
-              (t) =>
-                `<span class="going-card-tag" style="border-color:${avaColor}55;color:${ctext};background:${avaColor}18;">${escapeHtml(t)}</span>`,
-            )
-            .join("");
-          const safeName = escapeHtml(name).replace(/'/g, "'");
-          return `<div class="going-card" style="background:${cbg};border-color:${cborder};" onclick="peekAttendee(${id},'${safeName}')" role="button" tabindex="0" aria-label="View ${escapeHtml(name)}">
-      <div class="going-card-ava" style="background:${avaColor};">${initials(name)}</div>
-      <div class="going-card-name" style="color:${ctext};">${escapeHtml(name)}${fr ? ` <span style="color:var(--gold);font-size:10px;">★</span>` : ""}</div>
-      ${bioSnippet ? `<div class="going-card-bio" style="color:${ctextSoft};">${escapeHtml(bioSnippet)}</div>` : ""}
-      ${tagsHtml ? `<div class="going-card-tags">${tagsHtml}</div>` : ""}
-    </div>`;
-        })
-        .join("")
-    : `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;text-align:center;grid-column:1/-1;">No one else has RSVP'd yet.</div>`;
-  const ownTheme = _myCols;
-  // Night Shot
-  const _nsUrl = ev.nightShotUrl || localStorage.getItem("night_shot:" + id);
-  const _isAttendee = attendees.includes(state.profileName);
-  const nightShotSection =
-    eventStatus(ev) === "past" && _isAttendee
-      ? `
-    <div class="section-title" style="color:#FCD34D;">The Night Shot</div>
-    <div class="night-shot-panel">
-      <div class="night-shot-glow"></div>
-      ${
-        _nsUrl
-          ? `<div class="night-shot-hd">The memory's in.</div>
-           <div class="night-shot-desc">${escapeHtml(ev.title)} · ${ev.date}</div>
-           <div class="night-shot-img-frame">
-             <img src="${_nsUrl}" class="night-shot-img" alt="Night Shot"/>
-             <div class="night-shot-watermark">
-               <div class="night-shot-watermark-badge">📸 ${escapeHtml(ev.title)}</div>
-               <div class="night-shot-watermark-badge">${ev.date}</div>
-             </div>
-           </div>`
-          : `<div class="night-shot-hd">Drop the Night Shot.</div>
-           <div class="night-shot-desc">One photo from the night. The memory lives here — and on every attendee's profile.</div>
-           <label class="night-shot-upload-zone">
-             <input type="file" accept="image/*" onchange="uploadNightShot(${id},this)"/>
-             <div style="font-size:30px;margin-bottom:8px;">📸</div>
-             <div style="font-size:14px;font-weight:700;color:#FCD34D;">Upload the Night Shot</div>
-             <div style="font-size:11.5px;color:#D4A843;margin-top:5px;opacity:0.85;">One upload, full stop.</div>
-           </label>`
-      }
-    </div>`
-      : "";
-  // Chat open countdown
-  const daysUntil = Math.ceil(
-    (chatUnlockTime(ev) - Date.now()) / (24 * 60 * 60 * 1000),
-  );
-  return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header">
-      <span class="event-badge" style="--cat:;">${ev.category}</span>
-      <h2>${ev.title}</h2>
-      <p style="margin-top:4px;"><span style="font-size:13px;font-weight:600;color:var(--text);">${ev.date} · ${ev.time}</span></p>
-      <p>${attendees.length} going · ${escapeHtml(ev.venue)}</p>
-    </div>
-    <div class="section-title">Your card</div>${yourCardHtml}
-    <div class="section-title">Who's going (${others.length})</div>
-    <div class="going-section-hdr" id="going-section" onclick="toggleGoingSection(${id})" role="button" tabindex="0" aria-expanded="${goingOpen ? "true" : "false"}">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div class="going-previews">${previewAvas || '<span style="font-size:12px;color:var(--text-muted);">None yet</span>'}</div>
-        <span style="font-size:13.5px;font-weight:700;color:var(--text);">${others.length} attendee${others.length !== 1 ? "s" : ""}</span>
-      </div>
-      <span style="font-size:13px;font-weight:600;color:var(--accent);">${goingOpen ? "Hide ↑" : "View all ↓"}</span>
-    </div>
-    ${goingOpen ? `<div class="going-grid">${goingGridHtml}</div>` : ""}
-    ${nightShotSection}
-    <div class="section-title">Group Chat</div>
-    ${
-      chatIsOpen(ev)
-        ? `<div class="panel chat-box">
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;padding:0 2px;">${attendees.length} member${attendees.length !== 1 ? "s" : ""} · Chat active for this event</div>
-      <div class="chat-messages" id="chat-messages">${
-        chat.length
-          ? chat
-              .map((m) => {
-                const isOwn = m.name === state.profileName;
-                const nameCol = isOwn ? _myAccent : "var(--text-muted)";
-                return `<div class="msg-row ${isOwn ? "own" : ""}"><div class="msg-col ${isOwn ? "own" : ""}">
-          <div class="msg-sender" style="color:${nameCol};">${escapeHtml(m.name.split(" ")[0])}</div>
-          <div class="msg-bubble ${isOwn ? "own" : "other"}" style="${isOwn ? `background:${ownTheme.bg};color:${ownTheme.text};` : ""}">${escapeHtml(m.text)}</div>
-        </div></div>`;
-              })
-              .join("")
-          : `<div class="chat-empty-state" style="color:var(--text-muted);font-size:13px;text-align:center;padding:28px 16px;">No messages yet — be the first to say something.</div>`
-      }</div>
-      <div class="chat-input-row"><input id="chat-input" class="chat-input" placeholder="Say something to the group…" onkeydown="handleChatKey(event,${id})"/><button class="btn" style="background:${c.color};color:#fff;" onclick="sendChat(${id})">Send</button></div>
-    </div>`
-        : `<div class="panel" style="padding:22px 20px;text-align:center;">
-      ${
-        eventStatus(ev) === "past"
-          ? `<div style="margin-bottom:8px;color:var(--text-muted);">${lockIconSvg(22)}</div>
-         <div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:5px;">Chat archived</div>
-         <div style="font-size:12.5px;color:var(--text-muted);line-height:1.6;">This event has ended and the chat is now read-only.</div>`
-          : `<div style="margin-bottom:8px;color:var(--text-muted);">${lockIconSvg(28)}</div>
-         <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:4px;">Chat opens in</div>
-         <div class="chat-countdown-wrap">
-           <div class="chat-cd-seg"><span class="chat-cd-num" id="chat-cd-d-${id}">--</span><span class="chat-cd-unit">days</span></div>
-           <span class="chat-cd-sep">:</span>
-           <div class="chat-cd-seg"><span class="chat-cd-num" id="chat-cd-h-${id}">--</span><span class="chat-cd-unit">hrs</span></div>
-           <span class="chat-cd-sep">:</span>
-           <div class="chat-cd-seg"><span class="chat-cd-num" id="chat-cd-m-${id}">--</span><span class="chat-cd-unit">min</span></div>
-           <span class="chat-cd-sep">:</span>
-           <div class="chat-cd-seg"><span class="chat-cd-num" id="chat-cd-s-${id}">--</span><span class="chat-cd-unit">sec</span></div>
-         </div>
-         <div style="font-size:13px;color:var(--text-muted);line-height:1.6;">The group chat unlocks 7 days before the event so you can meet your fellow attendees beforehand.</div>
-         <div class="chat-cd-date">${ev.date} · ${ev.time}</div>`
-      }
-    </div>`
-    }
-  `;
-}
 
-async function removeFriend(name) {
-  state.friends = state.friends.filter((f) => f !== name);
-  if (state.userId) {
-    await sb
-      .from("friends")
-      .delete()
-      .eq("user_id", state.userId)
-      .eq("friend_name", name);
-  }
-  renderView();
-}
 
 // Follow a host to flag interest in their future events. Stored locally per
 // profile (same pattern as profile_about:/profile_interests:) rather than a
@@ -9261,16 +8536,7 @@ function openExpandedCard() {
         <!-- Stats -->
         <div class="cpass-stats">
           <div class="cpass-stat"><span class="cpass-stat-num">${myEvents.length}</span><span class="cpass-stat-label">Events</span></div>
-          <div class="cpass-stat"><span class="cpass-stat-num">${state.friends.length}</span><span class="cpass-stat-label">Friends</span></div>
           <div class="cpass-stat"><span class="cpass-stat-num">${earnedTotal}</span><span class="cpass-stat-label">Badges</span></div>
-        </div>
-
-        <!-- QR to add friend -->
-        <div class="cpass-qr-block">
-          <div class="cpass-qr-frame">
-            <div class="cpass-qr" id="cpass-qr-el"></div>
-          </div>
-          <div class="cpass-qr-label">Scan to add me on Cumulus</div>
         </div>
 
         <!-- Footer pass band -->
@@ -9296,21 +8562,6 @@ function openExpandedCard() {
     if (ov)
       requestAnimationFrame(() => {
         ov.classList.add("open");
-        const qrEl = document.getElementById("cpass-qr-el");
-        if (qrEl) {
-          try {
-            new QRCode(qrEl, {
-              text: myFriendCode(),
-              width: 150,
-              height: 150,
-              colorDark: "#0A0A0A",
-              colorLight: "#ffffff",
-              correctLevel: QRCode.CorrectLevel.M,
-            });
-          } catch (e) {
-            qrEl.innerHTML = `<div style="font-size:7px;padding:4px;word-break:break-all;color:#000;">${myFriendCode()}</div>`;
-          }
-        }
         const sheenCard = document.getElementById("cpass-card");
         if (sheenCard) {
           window.__cpassCard = sheenCard;
@@ -10637,7 +9888,6 @@ function renderConfirmed() {
     ${ticketCards}
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;">
       <button class="btn" style="background:${c.color};" onclick="downloadICS(${ev.id})">+ Add to Calendar</button>
-      <button class="btn btn-outline" onclick="openSocialForEvent(${ev.id})">Join Group Chat</button>
       <button class="btn btn-text" onclick="openTicketsTab()">View all my tickets →</button>
     </div>
     <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:14px;">Free cancellation up to 24 hours before the event · <a href="terms.html" target="_blank" style="color:var(--gold-text);">See full policy</a></p>`;
@@ -10794,111 +10044,12 @@ function renderCalendarDay() {
     ${cards}`;
 }
 
-// ════════════════════════════════════════════════
-// CHAT LOCK
-// ════════════════════════════════════════════════
-function chatUnlockTime(ev) {
-  return ev.startsAt - 7 * 24 * 60 * 60 * 1000;
-}
-function chatIsOpen(ev) {
-  const st = eventStatus(ev);
-  if (st === "past") return false; // Close when ended
-  if (st === "live") return true;
-  return Date.now() >= chatUnlockTime(ev);
-}
-
-// ════════════════════════════════════════════════
-// CHAT COUNTDOWN TIMERS
-// ════════════════════════════════════════════════
-const _chatTimers = {};
-function pad2(n) {
-  return String(n).padStart(2, "0");
-}
-function startChatCountdown(evId, unlockTs) {
-  if (_chatTimers[evId]) {
-    clearInterval(_chatTimers[evId]);
-    delete _chatTimers[evId];
-  }
-  function tick() {
-    const dEl = document.getElementById("chat-cd-d-" + evId);
-    if (!dEl) {
-      clearInterval(_chatTimers[evId]);
-      delete _chatTimers[evId];
-      return;
-    }
-    const rem = unlockTs - Date.now();
-    if (rem <= 0) {
-      clearInterval(_chatTimers[evId]);
-      delete _chatTimers[evId];
-      renderView();
-      return;
-    }
-    const ts = Math.floor(rem / 1000);
-    const d = Math.floor(ts / 86400);
-    const h = Math.floor((ts % 86400) / 3600);
-    const m = Math.floor((ts % 3600) / 60);
-    const s = ts % 60;
-    dEl.textContent = d;
-    document.getElementById("chat-cd-h-" + evId).textContent = pad2(h);
-    document.getElementById("chat-cd-m-" + evId).textContent = pad2(m);
-    document.getElementById("chat-cd-s-" + evId).textContent = pad2(s);
-  }
-  tick();
-  _chatTimers[evId] = setInterval(tick, 1000);
-}
-
-let _socialSeenCount = {};
-function getUnreadSocialCount() {
-  const myEvIds = new Set([
-    ...myTickets.map((t) => t.eventId),
-    ...Object.keys(state.rsvps)
-      .filter((id) => (state.rsvps[id] || []).includes(state.profileName))
-      .map(Number),
-  ]);
-  let count = 0;
-  myEvIds.forEach((eid) => {
-    const ev = EVENTS.find((e) => e.id === eid);
-    if (!ev || !chatIsOpen(ev)) return;
-    const chat = state.chats[eid] || [];
-    const seen = _socialSeenCount[eid];
-    if (seen === undefined) {
-      count++; // newly opened chat
-    } else if (
-      chat.length > seen &&
-      chat[chat.length - 1].name !== state.profileName
-    ) {
-      count++; // new messages
-    }
-  });
-  return count;
-}
-function markSocialSeen(evId) {
-  _socialSeenCount[evId] = (state.chats[evId] || []).length;
-}
-
 // ── Nav helpers ──────────────────────────────────────────────────────────
 function openTicketsTab() {
   state.view = "tickets";
   renderNav();
   renderView();
   window.scrollTo({ top: 0, behavior: "smooth" });
-}
-function openSocialTab() {
-  state.view = "social";
-  renderNav();
-  renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-function openSocialForEvent(id) {
-  pushNav();
-  loadConnectData(id).then(() => {
-    markSocialSeen(id);
-    state.view = "connect";
-    state.selectedEventId = id;
-    renderNav();
-    renderView();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
 }
 
 // ── Tickets tab ──────────────────────────────────────────────────────────
@@ -10933,7 +10084,6 @@ function renderTicketsTab() {
         const c = CATS[ev.category];
         const tickets = byEvent[evId];
         const status = eventStatus(ev);
-        const chatOpen = chatIsOpen(ev);
         const total = tickets.reduce((s, t) => s + (t.total || 0), 0);
         return `<div class="panel" style="--corner:${c.color};padding:16px 18px;margin-bottom:12px;">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;">
@@ -10941,7 +10091,6 @@ function renderTicketsTab() {
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:5px;">
               <span class="event-badge" style="--cat:;margin-bottom:0;">${ev.category}</span>
               ${status === "live" ? `<span class="live-chip" style="margin-left:0;"><span class="dot"></span>Live</span>` : ""}
-              ${chatOpen && status !== "past" ? `<span style="font-size:9.5px;font-weight:700;color:var(--accent);background:rgba(232,184,75,0.12);padding:2px 7px;border-radius:999px;border:1px solid var(--accent);">Chat open</span>` : ""}
             </div>
             <div style="font-size:15px;font-weight:700;line-height:1.2;margin-bottom:4px;">${escapeHtml(ev.title)}</div>
             <div style="font-size:12px;color:var(--text-muted);">${ev.date} · ${ev.time}</div>
@@ -10954,7 +10103,6 @@ function renderTicketsTab() {
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn btn-small" style="background:${c.color};" onclick="openViewTicket(${evId})">View Ticket${tickets.length > 1 ? "s" : ""}</button>
-          ${chatOpen && status !== "past" ? `<button class="btn btn-outline btn-small" onclick="openSocialForEvent(${evId})">Join Chat</button>` : ""}
           <button class="btn btn-text btn-small" onclick="downloadICS(${evId})">+ Cal</button>
         </div>
       </div>`;
@@ -10973,450 +10121,74 @@ function renderTicketsTab() {
     ${renderGroup(past, "Past")}`;
 }
 
-// ── Social tab ────────────────────────────────────────────────────────────
-let _hostType = "private";
-function setHostType(t) {
-  _hostType = t;
-  document
-    .querySelectorAll(".host-type-btn")
-    .forEach((b) => b.classList.toggle("active", b.dataset.type === t));
-  const notice = document.getElementById("host-type-notice");
-  if (notice)
-    notice.textContent =
-      t === "private"
-        ? "Visible to your friends only — no approval needed."
-        : "Your event will go live after a short verification review.";
-  const btn = document.getElementById("host-submit-btn");
-  if (btn)
-    btn.textContent =
-      t === "private" ? "Create private event →" : "Submit for review →";
-}
-
-/* Real Stripe Identity flow: ask create-verification-session (server-side,
- * holds the Stripe secret key) for a session, launch Stripe's hosted modal
- * with the publishable key, then poll get_hosting_progress() briefly —
- * ageVerified only flips once Stripe's *signed* webhook reaches
- * identity-webhook, which can land a beat after the modal closes. */
-async function startAgeVerification() {
-  try {
-    const {
-      data: { session },
-    } = await sb.auth.getSession();
-    if (!session) return;
-
-    const { data, error } = await sb.functions.invoke(
-      "create-verification-session",
-      { method: "POST" },
-    );
-    if (error || !data?.client_secret) {
-      showToast("Could not start verification. Please try again.", "error");
-      return;
-    }
-
-    const pk = window.CUMULUS_CONFIG && window.CUMULUS_CONFIG.STRIPE_PUBLISHABLE_KEY;
-    if (!pk || typeof Stripe === "undefined") {
-      showToast("Verification is not available right now.", "error");
-      return;
-    }
-    const stripe = Stripe(pk);
-    const result = await stripe.verifyIdentity(data.client_secret);
-    if (result.error) {
-      showToast(result.error.message || "Verification cancelled.", "error");
-      return;
-    }
-
-    showToast("Verification submitted — checking status…", "info");
-    for (let i = 0; i < 5; i++) {
-      await new Promise((r) => setTimeout(r, 2000));
-      const p = await getHostingProgress();
-      state.hostingProgress = p;
-      if (p.ageVerified) break;
-    }
-    renderView();
-  } catch (e) {
-    showToast("Could not complete verification.", "error");
-  }
-}
-
-/* TEMP — lets a *confirmed* admin (state._verifiedAdmin, set only after a
- * real is_admin() RPC pass) flip state.isAdmin off to preview the ordinary
- * member's 3-step host checklist without signing into a second account, then
- * flip back on. Purely a client-side view switch: any RPC that actually
- * matters (event insert, approvals, etc.) still re-checks is_admin() on the
- * server regardless of this flag, so toggling it grants no real access.
- * Remove this function and its call site in renderSocialTab() before real
- * users onboard — it has no place in production UI. */
-function toggleAdminPreview() {
-  if (!state._verifiedAdmin) return;
-  state.isAdmin = !state.isAdmin;
-  state.hostingProgress = null; // force a fresh fetch/fabrication on next render
-  renderView();
-}
-
-function renderHostChecklist(progress) {
-  const completed = [
-    progress.ageVerified,
-    progress.eventsCheckedIn >= progress.eventsRequired,
-    progress.connections >= progress.connectionsRequired,
-  ].filter(Boolean).length;
-
+// Hosting is frictionless — no eligibility checklist, no connections/check-in
+// gate, no private/public split. Everyone can host; every event is public
+// (instantly for admins, via a quick pending_events review for everyone else —
+// see the notify-admin-new-event edge function, which emails on every
+// submission).
+function renderHostView() {
   return `
-    <div style="padding: 16px;">
-      <section aria-labelledby="hc-heading" class="mx-auto max-w-md rounded-2xl border border-white/10 p-6 text-zinc-100" style="margin-top:20px; padding: 24px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); background: #18181b; color: #f4f4f5;">
-        <header style="margin-bottom: 20px;">
-          <p style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: #fcd34d;">Members' track</p>
-          <h2 id="hc-heading" style="margin-top: 4px; font-size: 20px; font-weight: 700; letter-spacing: -0.025em;">Unlock private hosting</h2>
-          <p style="margin-top: 8px; font-size: 14px; color: #d4d4d8; line-height: 1.5;">
-            Complete three steps to host <span style="font-weight: 600;">connections-only</span> events. Progress is verified by Cumulus — no need to prove anything twice.
-          </p>
-          <div style="margin-top: 16px;">
-            <div role="progressbar" aria-valuenow="${completed}" aria-valuemin="0" aria-valuemax="3" aria-valuetext="${completed} of 3 steps complete" style="height: 8px; width: 100%; border-radius: 999px; background: rgba(255,255,255,0.1); overflow: hidden;">
-              <div style="height: 100%; border-radius: 999px; background: #fcd34d; width: ${(completed / 3) * 100}%; transition: width 0.5s;"></div>
-            </div>
-            <p style="margin-top: 8px; font-size: 14px; font-weight: 500; color: #e4e4e7;">${completed} of 3 complete</p>
-          </div>
-          <p aria-live="polite" class="sr-only">${completed} of 3 steps complete toward unlocking private hosting.</p>
-        </header>
+    <div class="connect-header" style="padding-top:16px;"><h2>Host an event</h2><p>Zero platform fee — you keep 100% of your ticket price.</p></div>
+    <div id="host-type-notice" class="host-notice">${
+      state.isAdmin
+        ? "⚡ Admin — event publishes immediately to the live map."
+        : "Your event goes live after a quick review, usually within a few hours."
+    }</div>
 
-        <ol style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
-          
-          <!-- Step 1: Age -->
-          <li style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(9,9,11,0.6); padding: 16px;">
-            <div style="display: flex; align-items: flex-start; gap: 12px;">
-              <span style="margin-top: 2px; flex-shrink: 0;" aria-hidden>
-                ${progress.ageVerified ? `<span style="color:#4ade80;">${checkIconSvg(20)}</span>` : `<span style="color:#a1a1aa;">${lockIconSvg(20)}</span>`}
-              </span>
-              <div style="min-width: 0; flex: 1;">
-                <h3 style="font-size: 14px; font-weight: 600; color: ${progress.ageVerified ? "#a1a1aa" : "#f4f4f5"}; text-decoration: ${progress.ageVerified ? "line-through" : "none"};">Verify you're 18 or over</h3>
-                <p style="margin-top: 4px; font-size: 12px; font-weight: 500;">
-                  ${progress.ageVerified ? '<span style="color: #4ade80;">Done</span>' : '<span style="color: #d4d4d8;">Not started</span>'}
-                </p>
-                ${
-                  !progress.ageVerified
-                    ? `
-                  <button type="button" onclick="startAgeVerification()" style="margin-top: 12px; display: inline-flex; min-height: 44px; align-items: center; gap: 8px; border-radius: 8px; background: rgba(255,255,255,0.1); padding: 0 12px; font-size: 14px; font-weight: 600; color: #f4f4f5; border: none; cursor: pointer;">
-                    Verify with your device
-                  </button>
-                `
-                    : ""
-                }
-              </div>
-            </div>
-            <span class="sr-only">Step 1 of 3, ${progress.ageVerified ? "complete" : "incomplete"}: verify your age with your device to continue.</span>
-          </li>
-
-          <!-- Step 2: Check-in -->
-          <li style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(9,9,11,0.6); padding: 16px;">
-            <div style="display: flex; align-items: flex-start; gap: 12px;">
-              <span style="margin-top: 2px; flex-shrink: 0;" aria-hidden>
-                ${progress.eventsCheckedIn >= progress.eventsRequired ? `<span style="color:#4ade80;">${checkIconSvg(20)}</span>` : `<span style="color:#a1a1aa;">${lockIconSvg(20)}</span>`}
-              </span>
-              <div style="min-width: 0; flex: 1;">
-                <h3 style="font-size: 14px; font-weight: 600; color: ${progress.eventsCheckedIn >= progress.eventsRequired ? "#a1a1aa" : "#f4f4f5"}; text-decoration: ${progress.eventsCheckedIn >= progress.eventsRequired ? "line-through" : "none"};">Check in at a real event</h3>
-                <p style="margin-top: 4px; font-size: 12px; font-weight: 500;">
-                  ${progress.eventsCheckedIn >= progress.eventsRequired ? '<span style="color: #4ade80;">Done</span>' : `<span style="color: #d4d4d8;">${progress.eventsCheckedIn} / ${progress.eventsRequired}</span>`}
-                </p>
-                ${
-                  progress.eventsCheckedIn < progress.eventsRequired
-                    ? `
-                  <button type="button" onclick="openSocialTab()" style="margin-top: 12px; display: inline-flex; min-height: 44px; align-items: center; gap: 8px; border-radius: 8px; background: rgba(255,255,255,0.1); padding: 0 12px; font-size: 14px; font-weight: 600; color: #f4f4f5; border: none; cursor: pointer;">
-                    Find an event near you
-                  </button>
-                `
-                    : ""
-                }
-              </div>
-            </div>
-            <span class="sr-only">Step 2 of 3, ${progress.eventsCheckedIn >= progress.eventsRequired ? "complete" : "incomplete"}: ${progress.eventsCheckedIn} of ${progress.eventsRequired} events attended in person.</span>
-          </li>
-
-          <!-- Step 3: Connections -->
-          <li style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(9,9,11,0.6); padding: 16px;">
-            <div style="display: flex; align-items: flex-start; gap: 12px;">
-              <span style="margin-top: 2px; flex-shrink: 0;" aria-hidden>
-                ${progress.connections >= progress.connectionsRequired ? `<span style="color:#4ade80;">${checkIconSvg(20)}</span>` : `<span style="color:#a1a1aa;">${lockIconSvg(20)}</span>`}
-              </span>
-              <div style="min-width: 0; flex: 1;">
-                <h3 style="font-size: 14px; font-weight: 600; color: ${progress.connections >= progress.connectionsRequired ? "#a1a1aa" : "#f4f4f5"}; text-decoration: ${progress.connections >= progress.connectionsRequired ? "line-through" : "none"};">Make 3 mutual connections</h3>
-                <p style="margin-top: 4px; font-size: 12px; font-weight: 500;">
-                  ${progress.connections >= progress.connectionsRequired ? '<span style="color: #4ade80;">Done</span>' : `<span style="color: #d4d4d8;">${progress.connections} / ${progress.connectionsRequired}</span>`}
-                </p>
-                ${
-                  progress.connections < progress.connectionsRequired
-                    ? `
-                  <button type="button" onclick="openFriends()" style="margin-top: 12px; display: inline-flex; min-height: 44px; align-items: center; gap: 8px; border-radius: 8px; background: rgba(255,255,255,0.1); padding: 0 12px; font-size: 14px; font-weight: 600; color: #f4f4f5; border: none; cursor: pointer;">
-                    Find people to connect with
-                  </button>
-                `
-                    : ""
-                }
-              </div>
-            </div>
-            <span class="sr-only">Step 3 of 3, ${progress.connections >= progress.connectionsRequired ? "complete" : "incomplete"}: ${progress.connections} of ${progress.connectionsRequired} connections accepted.</span>
-          </li>
-        </ol>
-      </section>
+    <div class="host-section">
+      <div class="host-section-title">Event basics</div>
+      <label class="intro-field-label">Title</label>
+      <input id="host-title" class="gate-input" placeholder="e.g., Summer Park Picnic"/>
+      <label class="intro-field-label">Category</label>
+      <select id="host-cat" class="gate-input">${Object.keys(CATS)
+        .map((c) => `<option value="${c}">${c}</option>`)
+        .join("")}</select>
+      <label class="intro-field-label">Description</label>
+      <textarea id="host-desc" class="gate-input" rows="3" placeholder="What's the vibe? What should people expect?"></textarea>
     </div>
-  `;
-}
 
-function renderSocialTab() {
-  const view = state.view;
-  const isOwner = state.profileEmail === "gondoxml@gmail.com";
-
-  const seg = `<div class="social-seg">
-    <button class="social-seg-btn${view === "social" ? " active" : ""}" onclick="openSocialTab()">Events</button>
-    <button class="social-seg-btn${view === "friends" ? " active" : ""}" onclick="openFriends()">Friends${state.friends.length ? ` (${state.friends.length})` : ""}</button>
-    <button class="social-seg-btn${view === "host" ? " active" : ""}" onclick="openHost()">Host</button>
-  </div>`;
-
-  // ── HOST content ──────────────────────────────────────────────────────
-  if (view === "host") {
-    if (!state.hostingProgress) {
-      // Admin: skip the server check — always eligible
-      if (state.isAdmin) {
-        state.hostingProgress = {
-          eligible: true,
-          ageVerified: true,
-          eventsCheckedIn: 1,
-          eventsRequired: 1,
-          connections: 3,
-          connectionsRequired: 3,
-        };
-      } else {
-        getHostingProgress().then((p) => {
-          state.hostingProgress = p;
-          renderView();
-        });
-        return `<div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Loading...</p></div>`;
-      }
-    }
-
-    // TEMP — admin-only preview toggle (see toggleAdminPreview()). Only ever
-    // rendered for a session that already passed the real is_admin() RPC
-    // check; flipping it just swaps which client-side view renders below,
-    // it grants no real access. Remove before real users onboard.
-    const adminPreviewToggle = state._verifiedAdmin
-      ? `<div style="margin:12px 0;padding:10px 12px;border-radius:10px;background:rgba(255,207,51,0.12);border:1px dashed rgba(255,207,51,0.4);display:flex;align-items:center;justify-content:space-between;gap:8px;">
-          <span style="font-size:12px;color:var(--text-muted);">TEST: admin bypass is <strong>${state.isAdmin ? "ON" : "OFF"}</strong></span>
-          <button class="btn btn-outline" style="min-height:32px;padding:0 12px;font-size:12px;" onclick="toggleAdminPreview()">${state.isAdmin ? "Preview as member" : "Preview as admin"}</button>
-        </div>`
-      : "";
-
-    // Admin always bypasses eligibility gate, even if hostingProgress said otherwise
-    if (!state.hostingProgress.eligible && !state.isAdmin) {
-      return `
-        <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Host an event for your community</p></div>
-        ${seg}
-        ${adminPreviewToggle}
-        ${renderHostChecklist(state.hostingProgress)}
-      `;
-    }
-
-    return `
-      <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Host an event for your community</p></div>
-      ${seg}
-      ${adminPreviewToggle}
-      <div class="host-type-seg">
-        <button class="host-type-btn${_hostType === "private" ? " active" : ""}" data-type="private" onclick="setHostType('private')">Private</button>
-        <button class="host-type-btn${_hostType === "public" ? " active" : ""}" data-type="public" onclick="setHostType('public')">Public</button>
-      </div>
-      <div id="host-type-notice" class="host-notice">${
-        _hostType === "private"
-          ? "Visible to your friends only — no approval needed."
-          : state.isAdmin
-            ? "⚡ Admin — event publishes immediately to the live map."
-            : "Your event will go live after a short verification review."
-      }</div>
-
-      <div class="host-section">
-        <div class="host-section-title">Event basics</div>
-        <label class="intro-field-label">Title</label>
-        <input id="host-title" class="gate-input" placeholder="e.g., Summer Park Picnic"/>
-        <label class="intro-field-label">Category</label>
-        <select id="host-cat" class="gate-input">${Object.keys(CATS)
-          .map((c) => `<option value="${c}">${c}</option>`)
-          .join("")}</select>
-        <label class="intro-field-label">Description</label>
-        <textarea id="host-desc" class="gate-input" rows="3" placeholder="What's the vibe? What should people expect?"></textarea>
-      </div>
-
-      <div class="host-section">
-        <div class="host-section-title">Date &amp; time</div>
-        <label class="intro-field-label">Start date</label>
-        <input id="host-start-date" type="date" class="gate-input"/>
-        <label class="intro-field-label">Start time</label>
-        <input id="host-start-time" type="time" class="gate-input"/>
-        <label class="intro-field-label" style="margin-top:14px;">End date</label>
-        <input id="host-end-date" type="date" class="gate-input"/>
-        <label class="intro-field-label">End time</label>
-        <input id="host-end-time" type="time" class="gate-input"/>
-      </div>
-
-      <div class="host-section" style="overflow:visible;">
-        <div class="host-section-title">Location</div>
-        <label class="intro-field-label">Search address</label>
-        <div style="position:relative;margin-bottom:10px;">
-          <input id="host-address-search" class="gate-input" placeholder="Street name or postcode..." oninput="handleAddressAutocomplete()" autocomplete="off"/>
-          <div id="autocomplete-results" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;max-height:200px;overflow-y:auto;z-index:2000;display:none;box-shadow:0 8px 20px var(--shadow);"></div>
-        </div>
-        <div id="host-map-picker"></div>
-        <div id="host-lat-lon-text" style="font-size:11px;color:var(--text-muted);margin:6px 0 10px;font-weight:600;">Default: Central London — search above or tap map to pin exact location</div>
-        <label class="intro-field-label">Venue name</label>
-        <input id="host-venue" class="gate-input" placeholder="e.g., The Rooftop, Community Hall"/>
-        <label class="intro-field-label">Area (optional)</label>
-        <input id="host-area" class="gate-input" placeholder="e.g., Shoreditch"/>
-      </div>
-
-      <div class="host-section">
-        <div class="host-section-title">Capacity</div>
-        <label class="intro-field-label">Max attendees</label>
-        <input id="host-capacity" type="number" min="1" class="gate-input" placeholder="e.g., 20"/>
-      </div>
-
-      <div class="host-section">
-        <div class="host-section-title">Pricing</div>
-        <label class="intro-field-label">Ticket Price (£) — You keep 100%</label>
-        <input id="host-price" type="number" min="0" step="0.01" class="gate-input" placeholder="e.g. 10 (Leave blank for free)"/>
-        <div class="host-notice">We add a flat, transparent platform fee to the buyer at checkout to cover processing. You keep every penny of your ticket price.</div>
-      </div>
-
-      <button id="host-submit-btn" class="btn" style="width:100%;margin-bottom:16px;font-size:15px;" onclick="submitHostEvent()">${_hostType === "private" ? "Create private event →" : "Submit for review →"}</button>
-      ${renderHostPayoutsPanel()}`;
-  }
-
-  // ── FRIENDS content ───────────────────────────────────────────────────
-  if (view === "friends") {
-    const friendCards = state.friends.length
-      ? state.friends
-          .map((n) => {
-            const p = personByName(n);
-            const evs = p
-              ? p.events
-                  .map((id) => EVENTS.find((e) => e.id === id))
-                  .filter(Boolean)
-              : [];
-            return `<div class="panel friend-card" style="--corner:var(--gold);">
-            <div class="fname"><span class="star">★</span> ${escapeHtml(n)}</div>
-            ${p ? `<div class="fblurb">${escapeHtml(p.blurb)}</div>` : ""}
-            <div class="fgoing">${evs.length ? `Going to: ${evs.map((e) => escapeHtml(e.title)).join(", ")}` : "No events listed"}</div>
-            <button class="btn btn-outline btn-small" style="width:100%;margin-top:4px;" onclick="removeFriend('${escapeHtml(n).replace(/'/g, "'")}')">Remove</button>
-          </div>`;
-          })
-          .join("")
-      : `<div class="map-empty-card" role="status" style="max-width:100%;margin:0 auto;">
-          <div class="me-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c.6-3.2 3-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.3"/><path d="M15.8 13.2c2 .2 3.6 1.7 4.1 4.3"/></svg></div>
-          <div class="me-title">No friends yet</div>
-          <div class="me-sub">Scan someone's QR code at an event to add them — or browse events to find your people.</div>
-          <button class="btn" onclick="goBrowse()">Browse events</button>
-        </div>`;
-
-    return `
-      <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Your friends &amp; connections</p></div>
-      ${seg}
-      <div class="section-title" style="margin-top:0;">Your friends (${state.friends.length})</div>
-      <div class="friends-grid">${friendCards}</div>`;
-  }
-
-  // ── EVENTS content ────────────────────────────────────────────────────
-  const myEvIds = new Set([
-    ...myTickets.map((t) => t.eventId),
-    ...Object.keys(state.rsvps)
-      .filter((id) => (state.rsvps[id] || []).includes(state.profileName))
-      .map(Number),
-  ]);
-  const evList = [...myEvIds]
-    .map((id) => EVENTS.find((e) => e.id === id))
-    .filter(Boolean)
-    .sort((a, b) => a.startsAt - b.startsAt);
-  const upcoming = evList.filter((e) => eventStatus(e) !== "past");
-  const past = evList.filter((e) => eventStatus(e) === "past");
-
-  const renderEvCard = (ev) => {
-    const c = CATS[ev.category];
-    const chat = state.chats[ev.id] || [];
-    const open = chatIsOpen(ev);
-    const status = eventStatus(ev);
-    const att = attendeesFor(ev.id);
-    const lastMsg = chat.length ? chat[chat.length - 1] : null;
-    const seen = _socialSeenCount[ev.id];
-    const isNewOpen = seen === undefined;
-    const hasUnread =
-      isNewOpen || (chat.length > seen && lastMsg?.name !== state.profileName);
-    return `<div class="panel" onclick="openSocialForEvent(${ev.id})" style="--corner:${open && status !== "past" ? c.color : "var(--line)"};padding:16px 18px;margin-bottom:10px;cursor:pointer;transition:transform .12s ease;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''" role="button" tabindex="0" aria-label="Open chat for ${escapeHtml(ev.title)}">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
-        <div style="flex:1;min-width:0;">
-          <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap;">
-            <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:${c.color};color:#fff;">${ev.category}</span>
-            ${status === "live" ? `<span class="live-chip" style="margin-left:0;"><span class="dot"></span>Live</span>` : ""}
-            ${hasUnread ? `<span style="font-size:9px;font-weight:800;background:#E23B3B;color:#fff;padding:1px 6px;border-radius:999px;">${isNewOpen && chat.length === 0 ? "Chat Open" : "New"}</span>` : ""}
-          </div>
-          <div style="font-size:14.5px;font-weight:700;line-height:1.2;margin-bottom:3px;">${escapeHtml(ev.title)}</div>
-          <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:2px;">${ev.date} · ${ev.time}</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:5px;">${escapeHtml(ev.venue)}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""} · ${att.length} going</div>
-          ${
-            open && status !== "past"
-              ? lastMsg
-                ? `<div style="font-size:12.5px;color:var(--text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong style="color:var(--text);">${escapeHtml(lastMsg.name.split(" ")[0])}:</strong> ${escapeHtml(lastMsg.text)}</div>`
-                : `<div style="font-size:12px;color:var(--text-muted);font-style:italic;">No messages yet — be the first to say hi</div>`
-              : status === "past"
-                ? `<div style="font-size:12px;color:var(--text-muted);">Event ended — chat closed</div>`
-                : (() => {
-                    const d = Math.ceil(
-                      (chatUnlockTime(ev) - Date.now()) / 86400000,
-                    );
-                    return `<div style="font-size:12px;color:var(--accent);font-weight:600;">${lockIconSvg(13)} Chat opens in ${d > 0 ? `${d} day${d !== 1 ? "s" : ""}` : "less than a day"}</div>`;
-                  })()
-          }
-        </div>
-        <div style="flex-shrink:0;color:var(--text-muted);font-size:18px;align-self:center;">›</div>
-      </div>
-    </div>`;
-  };
-
-  const myCardBanner = state.myCard
-    ? `<div class="panel" style="--corner:var(--accent);display:flex;align-items:center;gap:14px;padding:14px 16px;margin-bottom:4px;cursor:pointer;" onclick="openExpandedCard()" role="button" tabindex="0" aria-label="My Card and QR Code">
-        <div style="width:46px;height:46px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;font-weight:900;color:#fff;letter-spacing:-1px;">CU</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:14px;font-weight:700;color:var(--text);">My Card &amp; QR Code</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:1px;">Show this to connect with people at events</div>
-        </div>
-        <div style="font-size:20px;color:var(--text-muted);">›</div>
-      </div>`
-    : `<div class="panel" style="--corner:var(--accent);padding:14px 16px;margin-bottom:4px;">
-        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Set up your card to share at events</div>
-        <button class="btn btn-small" style="width:100%;" onclick="openCardEditor(null)">Create my card</button>
-      </div>`;
-
-  if (!evList.length) {
-    const trending = EVENTS.filter((e) => eventStatus(e) !== "past")
-      .sort((a, b) => a.startsAt - b.startsAt)
-      .slice(0, 3);
-    return `
-    <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>Connect with people at events</p></div>
-    ${seg}
-    <div class="section-title" style="margin-top:0;">Your card</div>
-    ${myCardBanner}
-    <div class="map-empty-card" role="status" style="max-width:100%;margin:20px auto 0;">
-      <div class="me-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H9l-4 4V5Z"/><path d="M8 9h8M8 12h5"/></svg></div>
-      <div class="me-title">No events yet</div>
-      <div class="me-sub">RSVP to events to join their group chats and meet other attendees.</div>
-      <button class="btn" onclick="goBrowse()">Browse events</button>
+    <div class="host-section">
+      <div class="host-section-title">Date &amp; time</div>
+      <label class="intro-field-label">Start date</label>
+      <input id="host-start-date" type="date" class="gate-input"/>
+      <label class="intro-field-label">Start time</label>
+      <input id="host-start-time" type="time" class="gate-input"/>
+      <label class="intro-field-label" style="margin-top:14px;">End date</label>
+      <input id="host-end-date" type="date" class="gate-input"/>
+      <label class="intro-field-label">End time</label>
+      <input id="host-end-time" type="time" class="gate-input"/>
     </div>
-    ${
-      trending.length
-        ? `<div class="section-title">Trending near you</div>${trending.map(miniEventCardHtml).join("")}`
-        : ""
-    }`;
-  }
 
-  return `
-    <div class="connect-header" style="padding-top:16px;"><h2>Social</h2><p>${upcoming.length} upcoming · ${past.length} past</p></div>
-    ${seg}
-    <div class="section-title" style="margin-top:0;">Your card</div>
-    ${myCardBanner}
-    ${upcoming.length ? `<div class="section-title">Upcoming</div>${upcoming.map(renderEvCard).join("")}` : ""}
-    ${past.length ? `<div class="section-title">Past</div>${past.map(renderEvCard).join("")}` : ""}`;
+    <div class="host-section" style="overflow:visible;">
+      <div class="host-section-title">Location</div>
+      <label class="intro-field-label">Search address</label>
+      <div style="position:relative;margin-bottom:10px;">
+        <input id="host-address-search" class="gate-input" placeholder="Street name or postcode..." oninput="handleAddressAutocomplete()" autocomplete="off"/>
+        <div id="autocomplete-results" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;max-height:200px;overflow-y:auto;z-index:2000;display:none;box-shadow:0 8px 20px var(--shadow);"></div>
+      </div>
+      <div id="host-map-picker"></div>
+      <div id="host-lat-lon-text" style="font-size:11px;color:var(--text-muted);margin:6px 0 10px;font-weight:600;">Default: Central London — search above or tap map to pin exact location</div>
+      <label class="intro-field-label">Venue name</label>
+      <input id="host-venue" class="gate-input" placeholder="e.g., The Rooftop, Community Hall"/>
+      <label class="intro-field-label">Area (optional)</label>
+      <input id="host-area" class="gate-input" placeholder="e.g., Shoreditch"/>
+    </div>
+
+    <div class="host-section">
+      <div class="host-section-title">Capacity</div>
+      <label class="intro-field-label">Max attendees</label>
+      <input id="host-capacity" type="number" min="1" class="gate-input" placeholder="e.g., 20"/>
+    </div>
+
+    <div class="host-section">
+      <div class="host-section-title">Pricing</div>
+      <label class="intro-field-label">Ticket Price (£) — You keep 100%</label>
+      <input id="host-price" type="number" min="0" step="0.01" class="gate-input" placeholder="e.g. 10 (Leave blank for free)"/>
+      <div class="host-notice">We add a flat, transparent platform fee to the buyer at checkout to cover processing. You keep every penny of your ticket price.</div>
+    </div>
+
+    <button id="host-submit-btn" class="btn" style="width:100%;margin-bottom:16px;font-size:15px;" onclick="submitHostEvent()">${state.isAdmin ? "Publish event →" : "Submit for review →"}</button>
+    ${renderHostPayoutsPanel()}`;
 }
 
 // Boot. Never let an unexpected rejection leave the user on a blank screen.
