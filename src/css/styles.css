@@ -95,19 +95,6 @@ body.no-scroll {
   line-height: 1.5;
 }
 
-.gate-curator-input {
-  font-family: "DM Mono", "SF Mono", ui-monospace, monospace;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-weight: 600;
-}
-
-.gate-curator-input::placeholder {
-  letter-spacing: 2px;
-  color: var(--text-muted);
-  opacity: 0.6;
-}
-
 .lp-signup-modal.otp-active > *:not(.lp-signup-close):not(#gate-otp-panel) {
   display: none !important;
 }
@@ -247,113 +234,6 @@ body.no-scroll {
   gap: 8px;
 }
 
-.attendee-chip.friend {
-  border-color: var(--gold);
-  color: var(--text);
-}
-
-.perk-panel {
-  margin-top: 16px;
-  border-radius: 16px;
-  padding: 16px 18px;
-  border: 1px solid var(--line);
-  background: var(--surface-2);
-}
-
-.perk-panel.unlocked {
-  border-color: color-mix(in srgb, var(--gold) 55%, transparent);
-  background: var(--gold-tint);
-}
-
-.perk-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.perk-badge {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.4px;
-  color: var(--text);
-}
-
-.perk-status {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 3px 9px;
-}
-
-.perk-status.ok {
-  color: var(--gold);
-  border-color: color-mix(in srgb, var(--gold) 50%, transparent);
-}
-
-.perk-blurb {
-  font-size: 12.5px;
-  color: var(--text-muted);
-  line-height: 1.6;
-  margin-bottom: 14px;
-}
-
-.perk-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.perk-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.perk-ic {
-  font-size: 18px;
-  line-height: 1.2;
-  flex-shrink: 0;
-  filter: saturate(0.85);
-}
-
-.perk-name {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.perk-sub {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.5;
-  margin-top: 1px;
-}
-
-.perk-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.perk-btn-primary {
-  flex: 1;
-  min-width: 150px;
-  background: var(--grad-gold, var(--accent));
-  color: #0a0a0a;
-  box-shadow: none;
-}
-
-.perk-btn-secondary {
-  flex: 1;
-  min-width: 150px;
-}
-
 .intro-form {
   padding: 20px;
   margin-bottom: 8px;
@@ -395,99 +275,6 @@ body.no-scroll {
   font-size: 11px;
   font-weight: 600;
   color: var(--text-soft);
-}
-
-.chat-box {
-  padding: 18px 18px 20px;
-  margin-top: 8px;
-}
-
-.chat-messages {
-  max-height: 360px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 4px 2px;
-  -webkit-overflow-scrolling: touch;
-}
-
-.msg-row {
-  display: flex;
-  width: 100%;
-}
-
-.msg-row.own {
-  justify-content: flex-end;
-}
-
-.msg-col {
-  display: flex;
-  flex-direction: column;
-  max-width: 76%;
-}
-
-.msg-col.own {
-  align-items: flex-end;
-}
-
-.msg-sender {
-  font-size: 10.5px;
-  font-weight: 700;
-  margin-bottom: 3px;
-  letter-spacing: 0.3px;
-}
-
-.msg-bubble.other {
-  background: var(--surface-2);
-  border: 1px solid var(--line-soft);
-  color: var(--text);
-  border-radius: 4px 18px 18px 18px;
-}
-
-.chat-input-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 14px;
-  align-items: center;
-}
-
-.chat-input {
-  flex: 1;
-  min-width: 0;
-  box-sizing: border-box;
-  border: 1px solid var(--line);
-  background: var(--surface-2);
-  border-radius: 999px;
-  padding: 10px 16px;
-  font-family: var(--font-sans);
-  font-size: 16px;
-  color: var(--text);
-  outline: none;
-}
-
-.chat-input:focus {
-  border-color: var(--accent);
-}
-
-.chat-input-row .btn {
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
-@keyframes msgSlideIn {
-  0% {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.msg-row-new {
-  animation: msgSlideIn 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .night-shot-panel {
@@ -864,41 +651,9 @@ body.no-scroll {
   margin-bottom: 14px;
 }
 
-.friends-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 14px;
-}
-
-.friend-card .fgoing {
-  font-size: 11px;
-  color: var(--text-soft);
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-
 .qr-box canvas,
 .qr-box img {
   border-radius: 6px;
-}
-
-.friend-code {
-  display: inline-block;
-  font-family: ui-monospace, Menlo, Consolas, monospace;
-  font-size: 12px;
-  font-weight: 700;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 7px 12px;
-  margin: 10px 0;
-  color: var(--text);
-  letter-spacing: 0.5px;
-  word-break: break-all;
-}
-
-.star {
-  color: var(--gold-text);
 }
 
 .calendar-header-row {
@@ -1119,13 +874,6 @@ body.no-scroll {
   font-weight: 500;
 }
 
-.tip-friend {
-  margin-top: 4px;
-  font-size: 10.5px;
-  font-weight: 800;
-  color: var(--gold);
-}
-
 .tip-hint {
   margin-top: 6px;
   font-size: 10px;
@@ -1235,26 +983,6 @@ body.no-scroll {
   border: 1.5px solid #fff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
   z-index: 3;
-}
-
-.evpin .pin-chat {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  background: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1.5px solid #fff;
-  z-index: 3;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
-}
-
-.evpin .pin-chat svg {
-  display: block;
 }
 
 .evpin.hot {
@@ -1413,8 +1141,7 @@ body.no-scroll {
    of rotate, no scale/filter/blur) — same perf discipline as before,
    compositor-only, scoped to six tabs, not the whole session. z-index:-1
    tucks it behind every surface/card. */
-#app[data-view="social"]::before,
-#app[data-view="friends"]::before,
+#app[data-view="host"]::before,
 #app[data-view="calendar"]::before,
 #app[data-view="calendar-day"]::before,
 #app[data-view="profile"]::before,
@@ -1459,8 +1186,7 @@ body.no-scroll {
   animation: starDrift 80s ease-in-out infinite alternate;
 }
 
-[data-theme="dark"] #app[data-view="social"]::before,
-[data-theme="dark"] #app[data-view="friends"]::before,
+[data-theme="dark"] #app[data-view="host"]::before,
 [data-theme="dark"] #app[data-view="calendar"]::before,
 [data-theme="dark"] #app[data-view="calendar-day"]::before,
 [data-theme="dark"] #app[data-view="profile"]::before,
@@ -1514,8 +1240,7 @@ body.no-scroll {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #app[data-view="social"]::before,
-  #app[data-view="friends"]::before,
+  #app[data-view="host"]::before,
   #app[data-view="calendar"]::before,
   #app[data-view="calendar-day"]::before,
   #app[data-view="profile"]::before,
@@ -1645,7 +1370,6 @@ body.no-scroll {
     background 0.18s ease !important;
 }
 
-.friend-card,
 .intro-card {
   transition:
     transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
@@ -2107,57 +1831,6 @@ body.no-scroll {
   color: var(--text);
   border: 1px solid var(--line);
   box-shadow: none;
-}
-
-.chat-countdown-wrap {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 10px;
-  margin: 14px 0 12px;
-}
-
-.chat-cd-seg {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
-
-.chat-cd-num {
-  font-size: 28px;
-  font-weight: 900;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  min-width: 2ch;
-  text-align: center;
-  letter-spacing: -1px;
-}
-
-.chat-cd-sep {
-  font-size: 24px;
-  font-weight: 900;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-.chat-cd-unit {
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.9px;
-}
-
-.chat-cd-date {
-  margin-top: 14px;
-  padding: 10px 14px;
-  background: var(--surface-2);
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--gold-text);
 }
 
 @keyframes ceOverlayIn {
@@ -2934,7 +2607,7 @@ body.no-scroll {
 
 .prof-stats-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin-bottom: 4px;
 }
@@ -4819,7 +4492,6 @@ body.no-scroll {
 
 #view-container,
 .ce-right,
-.chat-box,
 .gate-wrap {
   -webkit-overflow-scrolling: touch;
 }
@@ -4827,22 +4499,6 @@ body.no-scroll {
 .profile-id-card:hover {
   transform: none !important;
   box-shadow: inherit !important;
-}
-
-.msg-bubble {
-  padding: 10px 14px;
-  font-size: 14px;
-  line-height: 1.5;
-  border-radius: 16px;
-  word-break: break-word;
-  backdrop-filter: none;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  transition: transform 0.12s ease;
-}
-
-.msg-bubble.own {
-  border-radius: 18px 4px 18px 18px;
-  background: var(--accent);
 }
 
 .profile-section {
@@ -5313,13 +4969,6 @@ body.no-scroll {
   line-height: 1;
   pointer-events: none;
   z-index: 0;
-}
-
-.msg-ts {
-  font-size: 10px;
-  color: var(--text-muted);
-  margin-top: 2px;
-  opacity: 0.7;
 }
 
 #od-wrap {
@@ -6351,14 +6000,12 @@ body.no-scroll {
   animation-delay: 0.28s;
 }
 
-.chat-input,
 .gate-input {
   transition:
     border-color 0.18s var(--ease-expo),
     box-shadow 0.18s var(--ease-expo) !important;
 }
 
-.chat-input:focus,
 .gate-input:focus {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent) !important;
 }
@@ -6702,14 +6349,6 @@ body.no-scroll {
 
 .evtip-inner .tip-live .d {
   background: #e23b3b !important;
-}
-
-.evtip-inner .tip-friend {
-  color: #f0b429 !important;
-}
-
-.evtip-inner .star {
-  color: #f0b429 !important;
 }
 
 .tip-title {
@@ -7860,7 +7499,6 @@ select.gate-input {
 }
 
 .attendee-card,
-.friend-card,
 .intro-card {
   border-radius: 14px !important;
   transition:
@@ -7869,7 +7507,6 @@ select.gate-input {
 }
 
 .attendee-card:hover,
-.friend-card:hover,
 .intro-card:hover {
   transform: translateY(-2px) !important;
   box-shadow: 0 6px 24px var(--shadow) !important;
@@ -8267,34 +7904,6 @@ textarea:focus {
   border: 1.5px solid var(--line) !important;
   border-radius: 14px !important;
   padding: 18px 16px;
-}
-
-.friend-card {
-  padding: 16px !important;
-  border-radius: 14px !important;
-  border: 1.5px solid var(--line) !important;
-}
-
-[data-theme="dark"] .friend-card {
-  border-color: rgba(232, 232, 255, 0.08) !important;
-}
-
-.friend-card .fname {
-  font-weight: 800 !important;
-  font-size: 15px !important;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  letter-spacing: -0.02em !important;
-  margin-bottom: 4px !important;
-}
-
-.friend-card .fblurb {
-  font-size: 12.5px !important;
-  color: var(--text-soft) !important;
-  line-height: 1.55 !important;
-  margin: 4px 0 10px !important;
 }
 
 .panel.intro-form {
@@ -11409,9 +11018,9 @@ textarea.gate-input {
      links, and the in-app nav's "Cumulus" wordmark) but had NO matching CSS
      rule anywhere in this file — another casualty of the missing @media
      queries. Without it, the landing nav packed logo + 2 links + 2 buttons
-     into one unwrapping flex row: measured 511px of content in a 390px bar,
-     so "Request Access" rendered ~121px off the right edge (only "R"
-     visible). Restore the hide so nav fits: icon + Log in + Request Access. */
+     into one unwrapping flex row, overflowing a 390px bar and clipping the
+     "Join Cumulus" button off the right edge. Restore the hide so nav fits:
+     icon + Log in + Join Cumulus. */
   .hide-mobile {
     display: none !important;
   }
@@ -11680,7 +11289,7 @@ body,
    POLISH PASS 3 — gate / first-run auth screen.
    ══════════════════════════════════════════════════════════════════ */
 
-/* Request Access ↔ Log in tab: the active underline eases in on switch
+/* Sign up ↔ Log in tab: the active underline eases in on switch
    instead of just appearing, so the click reads as a deliberate move. */
 .auth-mode-btn.active::after {
   animation: authTabIn 0.24s var(--ease-out) both;

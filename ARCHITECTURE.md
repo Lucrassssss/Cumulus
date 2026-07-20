@@ -13,7 +13,7 @@ fact drives every architectural decision below.
 │   ├── css/styles.css    # all styles (single cascade, load-ordered)
 │   └── js/
 │       ├── config.js     # runtime config + Supabase client (`sb`)
-│       ├── services.js   # data-access + business logic (referral codes, perk gating)
+│       ├── services.js   # data-access + business logic (auth, ticket claims, host payouts)
 │       └── app.js        # UI rendering, state, Mapbox logic
 ├── assets/
 │   ├── clouds/           # cloud1–5.webp — drifting hero clouds
@@ -54,9 +54,11 @@ so it can use `sb`, and **before** `app.js` so the UI can call it.
 ```
  UI (app.js)                services.js                 backend
  ───────────                ───────────                 ───────
- onclick / render  ──call──▶ validateCuratorCode()  ──▶ sb → curator_codes
-                            isPerkUnlocked(state)         (Supabase / RLS)
-                            canCheckInAt(a,b,r)      ──▶ geolocation math
+ onclick / render  ──call──▶ authSendCode/authVerifyCode ──▶ sb.auth (OTP)
+                            fetchEventDetails(id)     ──▶ sb.rpc get_event_details
+                            claimTicket(code)         ──▶ sb.rpc claim_ticket
+                            fetchHostPayouts()        ──▶ sb.rpc get_host_payouts
+                            checkInTicket(id)         ──▶ sb.rpc check_in_ticket
         ◀── structured result (never throws) ──────
 ```
 
@@ -70,20 +72,33 @@ Rules for this layer:
 - **`sb` is used at call-time only**, never at parse-time, so a blocked
   Supabase CDN can't break script evaluation.
 
-Current contents: curator/referral-code validation (`validateCuratorCode`) and
-WCAG-safe **perk gating** (`isPerkUnlocked`, `distanceMeters`, `canCheckInAt`) —
-perks lock/unlock, but event pins and details are never hidden. Migrating the
-~40 inline `sb.from(...)` calls in `app.js` into this layer is the incremental
-path in Phase 2 item 2.
+Current contents: Supabase Auth email-OTP wiring (`authSendCode`/`authVerifyCode`,
+`adminSendCode`/`adminVerifyCode`), event/ticket data access (`fetchEventDetails`,
+`fetchEventsGeoJSON`, `fetchGuestlist`), and the frictionless-ticketing backend
+calls (`claimTicket`, `fetchHostPayouts`, `checkInTicket`, `currentUserRole`).
+Migrating the remaining inline `sb.from(...)` calls in `app.js` into this layer
+is the incremental path in Phase 2 item 2.
 
-**Secret Social Club wiring (uses this layer):**
+**Frictionless-ticketing wiring (uses this layer):**
 
-- Onboarding is invite-only — `submitGate()` requires a valid curator code
-  before creating a new attendee (`validateCuratorCode`); hosts and returning
-  members are unaffected.
-- Event detail shows a **Members' perks** panel: locked until the member is
-  curator-verified (`promptCuratorUnlock`) or has a geolocated check-in at the
-  venue (`checkInToEvent` → `canCheckInAt`). The event itself is always visible.
+- Onboarding is open — anyone can sign up with just a name and email, no
+  invite code or curator gate. Hosting is a single ungated form
+  (`renderHostView`); admins publish instantly, everyone else's event goes to
+  `pending_events` for a quick review. The velvet-rope hosting-eligibility
+  checklist (age verification, check-in, 3-connections gate) and curator-code
+  perk gating that used to live here were removed outright — see
+  `docs/velvet-rope/README.md` for the historical design.
+- Event detail is always fully visible and bookable to everyone — there is no
+  locked/unlocked panel of any kind.
+- Buying more than one ticket generates **Squad** claim codes
+  (`event_squads`/`claim_code`, Phase A backend): each extra ticket gets a
+  shareable claim link that reassigns it via `claimTicket()`/`claim_ticket()`.
+- Hosts get a **payouts panel** (`fetchHostPayouts` → `get_host_payouts`) with
+  a real 24h/48h trust-tier release schedule, and an **offline-first scanner**
+  (`checkInTicket` → `check_in_ticket`) for checking guests in at the door.
+- A ticket-backup email (Resend edge function) and honest, visibly-disabled
+  "Add to Apple/Google Wallet — Coming soon" buttons back up the QR ticket
+  when there's no wallet-pass signing in place yet.
 - Map (`app.js`) uses Mapbox Standard with a theme-linked `lightPreset`
   (`night`/`day`) and, on the explore map, hides commercial POI + transit
   labels (`applyMapChrome`) for the decluttered underground look. Event pins
@@ -92,10 +107,11 @@ path in Phase 2 item 2.
   GeoJSON hitbox — converting those to a pure symbol layer is a follow-up that
   needs live Mapbox verification (the CDN is blocked in the sandbox).
 
-Backend tables this layer expects (degrade gracefully to localStorage / format-
-only checks until they exist): `curator_codes` (code, curator_name, tier,
-active), `pending_events`, alongside the existing `users`, `events`, `rsvps`,
-`tickets`, `chat_messages`, `friends`, `host_applications`.
+Backend tables this layer expects: `pending_events`, `event_squads`,
+`event_payouts`, alongside the existing `users`, `events`, `rsvps`, `tickets`,
+`host_applications`. (`curator_codes`, `chat_messages`, and `friends` were
+dropped by the frictionless-ticketing pivot —
+`supabase/migrations/20260720010000_pivot_frictionless_ticketing.sql`.)
 
 **Events are real-data-only (no seed).** `app.js` no longer ships demo events —
 `EVENTS` starts empty and is filled at boot from the `events` table via
@@ -124,8 +140,8 @@ phases:
 - **Phase 2 — frontend (built, on the feature branch, pending live verify):**
   sign-up/login now go through `sb.auth` email OTP. `submitGate()` emails a
   6-digit code (`authSendCode`); a new `verifyGateCode()` exchanges it for a
-  session (`authVerifyCode`) and only THEN runs the curator gate + writes the
-  profile, so RLS always has an `auth.uid()`. `start()` restores via
+  session (`authVerifyCode`) and only THEN writes the profile, so RLS always
+  has an `auth.uid()`. `start()` restores via
   `sb.auth.getSession()` (with a cached-snapshot fallback for offline display);
   `config.js` persists/refreshes the session. This is on
   `claude/profile-card-customization-r4nptf` ONLY — it is deliberately NOT on
@@ -134,8 +150,8 @@ phases:
   Providers first), and apply BOTH migrations to a staging project, before
   merging to `main`.
 
-**Admin boundary (real auth).** Event approvals and curator-code management are
-gated **server-side** by RLS, not just the client-side owner-email check. An
+**Admin boundary (real auth).** Event approvals are gated **server-side** by
+RLS, not just the client-side owner-email check. An
 `admins` table + `is_admin()` back policies that require a Supabase **Auth**
 session; the owner obtains one via `promptAdminSignIn()` → `adminSendCode` /
 `adminVerifyCode` (email OTP). `pending_events` allows anyone to INSERT (submit)
@@ -158,16 +174,13 @@ There is no server to hide keys behind, so the keys in `config.js` are the
 `.env.example` documents these and how to inject per-environment values via
 `window.CUMULUS_CONFIG` (or a future build step) without editing source.
 
-**Known gap — RLS on the pre-existing tables.** This repo's migration history only
-covers `admins`, `curator_codes`, and `pending_events` (see above). The tables that
-predate this repo's migrations — `users`, `events`, `rsvps`, `tickets`,
-`chat_messages`, `friends`, `host_applications` — have no migration file here, so
-their Row Level Security policies aren't tracked or verifiable from the codebase.
-**Before going live, audit these in the Supabase dashboard** (Database → Tables →
-each table's RLS toggle + policies) and confirm the anon key can't read data it
-shouldn't (e.g. other users' emails, private chat messages, another attendee's
-ticket QR). Once confirmed, add a migration file capturing that state so it's
-tracked going forward.
+**RLS audit — resolved.** This was previously an open gap (pre-existing tables
+without a tracked migration). It has since been closed: RLS is hardened on
+every live table (`users`, `events`, `rsvps`, `tickets`, `host_applications`,
+`pending_events`, `admins`) and 13 leftover permissive `{public}` policies
+were found and dropped — see `GO-LIVE.md`. (`curator_codes`, `chat_messages`,
+and `friends` no longer exist; they were dropped by the frictionless-ticketing
+pivot.)
 
 ## Production readiness — app & website
 
@@ -208,7 +221,7 @@ per step, rather than in one mechanical sweep.
    `theme.js`, `map.js`, `cards.js`. Env vars come from `import.meta.env`.
 
 2. **Decouple data from DOM.** Introduce a `services/supabase.js` layer
-   (`getEvents`, `saveRsvp`, `loadFriends`, …) so render code never calls
+   (`getEvents`, `saveRsvp`, `claimTicket`, …) so render code never calls
    `sb.from(...)` directly. ~40 call sites — migrate a feature at a time.
 
 3. **Consolidate CSS / remove `!important`.** `styles.css` still contains

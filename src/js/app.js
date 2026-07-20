@@ -1517,7 +1517,6 @@ let state = {
   myCard: null,
   rsvps: {},
   attendeeCards: {},
-  friends: [],
   goingOpen: {},
   liveOnly: false,
   hotOnly: false,
@@ -1798,10 +1797,6 @@ function attendeesFor(id) {
   });
   return out;
 }
-function isFriend(name) {
-  return state.friends.includes(name);
-}
-
 /* toggleTheme removed */
 async function persistProfile() {
   if (!state.profileId) state.profileId = generateUniqueId();
@@ -2166,7 +2161,7 @@ function renderGate(prefillName, prefillEmail) {
         </div>
         <div class="lp-nav-auth">
           <button class="lp-nav-login" onclick="showLpLogin()">Log in</button>
-          <button class="btn lp-nav-btn" onclick="showLpSignup()">Request Access</button>
+          <button class="btn lp-nav-btn" onclick="showLpSignup()">Join Cumulus</button>
         </div>
       </div>
     </nav>
@@ -2232,13 +2227,13 @@ function renderGate(prefillName, prefillEmail) {
           <div class="lp-feat-photo" style="background-image:url('assets/img/pass.svg')"></div>
           <div class="lp-feat-card-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="11.5" r="1.8"/><path d="M5.8 16c.5-1.6 1.8-2.4 2.7-2.4s2.2.8 2.7 2.4"/><path d="M14 10h4M14 13h4"/></svg></div>
           <div class="lp-feat-card-title">Your digital pass</div>
-          <div class="lp-feat-card-desc">A personalised card you carry to every event. Share your QR code to connect instantly with people you meet in person.</div>
+          <div class="lp-feat-card-desc">A personalised Cumulus Pass you carry to every event — show your ticket QR at the door and collect a badge each time you turn up.</div>
         </div>
         <div class="lp-feat-card">
           <div class="lp-feat-photo" style="background-image:url('assets/img/connect.svg')"></div>
           <div class="lp-feat-card-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c.6-3.2 3-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.3"/><path d="M15.8 13.2c2 .2 3.6 1.7 4.1 4.3"/></svg></div>
-          <div class="lp-feat-card-title">Real connections</div>
-          <div class="lp-feat-card-desc">See who's going before you arrive. Meet people who share your interests. Build friendships that last beyond the event.</div>
+          <div class="lp-feat-card-title">Bring your squad</div>
+          <div class="lp-feat-card-desc">Buying more than one ticket? Share an instant claim link with each friend — everyone gets their own ticket, no faff at the door.</div>
         </div>
       </div>
     </section>
@@ -2249,11 +2244,11 @@ function renderGate(prefillName, prefillEmail) {
         <div class="lp-venues-text">
           <div class="lp-section-kicker" style="color:var(--gold);">For Venues &amp; Promoters</div>
           <h2 class="lp-section-title" style="color:#fff;">Your event.<br>Our audience.</h2>
-          <p style="color:rgba(255,255,255,0.72);font-size:15px;line-height:1.75;max-width:480px;">List your venue on Cumulus and reach thousands of active Londoners who are already looking for their next night out. We handle discovery, ticketing, pre-event buzz, and real-time attendee connection — you focus on the event.</p>
+          <p style="color:rgba(255,255,255,0.72);font-size:15px;line-height:1.75;max-width:480px;">List your venue on Cumulus and reach thousands of active Londoners who are already looking for their next night out. We handle discovery, ticketing, and payouts — you focus on the event.</p>
           <div class="lp-venue-features">
             <div class="lp-venue-feat"><div class="lp-feat-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg></div><div><div class="lp-feat-title">Map-first discovery</div><div class="lp-feat-desc">Your venue pinned and filterable across London's live event map.</div></div></div>
             <div class="lp-venue-feat"><div class="lp-feat-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/></svg></div><div><div class="lp-feat-title">Zero-fee ticketing</div><div class="lp-feat-desc">Hosts keep 100% of their price. Cumulus adds only a flat platform fee to the buyer — no percentage cuts, ever.</div></div></div>
-            <div class="lp-venue-feat"><div class="lp-feat-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H9l-4 4V5Z"/><path d="M8 9h8M8 12h5"/></svg></div><div><div class="lp-feat-title">Pre-event community</div><div class="lp-feat-desc">Attendees connect before they arrive — higher show rates, better energy.</div></div></div>
+            <div class="lp-venue-feat"><div class="lp-feat-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H9l-4 4V5Z"/><path d="M8 9h8M8 12h5"/></svg></div><div><div class="lp-feat-title">Squad ticketing</div><div class="lp-feat-desc">Groups buy together and share instant claim links — higher show-up rates, no faff at the door.</div></div></div>
             <div class="lp-venue-feat"><div class="lp-feat-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"><path d="M12 3.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6-4.5-4.2 6.1-.7L12 3.5Z"/></svg></div><div><div class="lp-feat-title">Featured placement</div><div class="lp-feat-desc">Major events get priority placement across the Cumulus platform.</div></div></div>
           </div>
           <button class="btn lp-venues-cta" onclick="showLpSignup()">Get started — it's free →</button>
@@ -2338,7 +2333,7 @@ function renderGate(prefillName, prefillEmail) {
 
         <!-- Auth mode: Sign up vs Log in -->
         <div class="auth-mode-sel">
-          <button class="auth-mode-btn active" id="am-signup" onclick="switchAuthMode('signup')">Request Access</button>
+          <button class="auth-mode-btn active" id="am-signup" onclick="switchAuthMode('signup')">Sign up</button>
           <button class="auth-mode-btn" id="am-login" onclick="switchAuthMode('login')">Log in</button>
         </div>
 
@@ -2377,7 +2372,7 @@ function renderGate(prefillName, prefillEmail) {
         </div>
 
         <div class="lp-form-eyebrow" id="gate-form-eyebrow">Free to join · Takes 20 seconds</div>
-        <h3 class="lp-form-title" id="gate-form-title">Request your access</h3>
+        <h3 class="lp-form-title" id="gate-form-title">Join Cumulus</h3>
         <p class="lp-form-sub" id="gate-form-sub">Every event on Cumulus is public — join in seconds, no invite needed.</p>
 
         <div class="gate-field" id="gate-name-field">
@@ -2411,14 +2406,14 @@ function renderGate(prefillName, prefillEmail) {
 
         <p id="gate-field-error" class="gate-field-error"></p>
         <button class="lp-claim-btn" onclick="submitGate()">
-          <span class="lp-claim-btn-text" id="gate-claim-label">Unlock the map →</span>
+          <span class="lp-claim-btn-text" id="gate-claim-label">Join Cumulus →</span>
           <div class="lp-claim-shimmer"></div>
         </button>
 
         <div class="lp-form-trust" id="gate-trust-strip">
-          <span>Discreet, always</span>
+          <span>Everyone welcome</span>
           <span>·</span>
-          <span>Members keep 100%</span>
+          <span>Zero host fees</span>
           <span>·</span>
           <span>Leave anytime</span>
         </div>
@@ -2548,7 +2543,7 @@ function switchSignupType(type) {
         "<span>Free to apply</span><span>·</span><span>Reviewed within 48 hrs</span><span>·</span><span>No lock-in</span>";
   } else {
     if (eyebrow) eyebrow.textContent = "Free to join · Takes 20 seconds";
-    if (title) title.textContent = "Request your access";
+    if (title) title.textContent = "Join Cumulus";
     if (sub)
       sub.textContent =
         "Every event on Cumulus is public — join in seconds, no invite needed.";
@@ -4195,7 +4190,6 @@ async function signOut(confirmed) {
   state.profileId = null;
   state.specialBadges = [];
   state.myCard = null;
-  state.friends = [];
   state.editingProfile = false;
   state.view = "browse";
   state.rsvps = {};
@@ -4360,7 +4354,6 @@ function buildEventsGeoJSON() {
           id: ev.id,
           color: CATS[ev.category].color,
           status: eventStatus(ev),
-          friend: attendeesFor(ev.id).some(isFriend) ? 1 : 0,
           category: ev.category,
         },
       })),
@@ -6222,7 +6215,7 @@ async function clearAllTestData(confirmed) {
   if (!confirmed) {
     showConfirm(
       "Wipe all test data?",
-      "This deletes every row in users, events, rsvps, tickets, chat_messages, and friends in Supabase. Seed events in the app are unaffected (they're hardcoded). Cannot be undone.",
+      "This deletes every row in users, events, rsvps, and tickets in Supabase. Seed events in the app are unaffected (they're hardcoded). Cannot be undone.",
       "Wipe everything",
       "clearAllTestData",
     );
@@ -6231,10 +6224,8 @@ async function clearAllTestData(confirmed) {
   showToast("Wiping…", "info");
   try {
     await Promise.all([
-      sb.from("chat_messages").delete().not("id", "is", null),
       sb.from("rsvps").delete().not("id", "is", null),
       sb.from("tickets").delete().not("id", "is", null),
-      sb.from("friends").delete().not("id", "is", null),
     ]);
     await sb.from("events").delete().not("id", "is", null);
     await sb.from("users").delete().not("id", "is", null);
@@ -7168,7 +7159,7 @@ function renderOwnerDash() {
     </div>
     <div class="section-b" id="od-sb-free">
       <div class="od-card">
-        <div class="od-sr"><div class="od-st"><span>Private events/mo (friends, cap 10)</span><span class="od-vp" id="od-lfe-p">—</span></div><input type="range" id="od-sl-fe-p" min="0" max="5000" step="1" value="${p.fep}"></div>
+        <div class="od-sr"><div class="od-st"><span>Small free events/mo (RSVP cap 10)</span><span class="od-vp" id="od-lfe-p">—</span></div><input type="range" id="od-sl-fe-p" min="0" max="5000" step="1" value="${p.fep}"></div>
         <div class="od-sr"><div class="od-st"><span>Avg. RSVPs (max 10)</span><span class="od-vp" id="od-lfr-p">—</span></div><input type="range" id="od-sl-fr-p" min="2" max="10" step="1" value="${p.frp}"></div>
         <div style="height:1px;background:#2A2B32;margin:8px 0"></div>
         <div class="od-sr"><div class="od-st"><span>Vetted organiser free events/mo</span><span class="od-vp" id="od-lfe-v">—</span></div><input type="range" id="od-sl-fe-v" min="0" max="3000" step="1" value="${p.fev}"></div>
@@ -8063,8 +8054,6 @@ function renderView() {
     renderEventApprovals();
     return;
   }
-  const cm = document.getElementById("chat-messages");
-  if (cm) cm.scrollTop = cm.scrollHeight;
 }
 
 function getFilteredEvents() {
@@ -8151,7 +8140,6 @@ function pinTooltipHtml(ev) {
   const status = eventStatus(ev);
   const c = CATS[ev.category];
   const att = attendeesFor(ev.id);
-  const friendsGoing = att.filter(isFriend);
   const statusBadge =
     status === "live"
       ? `<span class="tip-live"><span class="d"></span>LIVE NOW</span>`
@@ -8160,19 +8148,10 @@ function pinTooltipHtml(ev) {
   if (att.length === 0) {
     goingLine = `<div class="tip-going none">No one yet — be the first!</div>`;
   } else {
-    const names = att
-      .slice(0, 3)
-      .map((n) =>
-        isFriend(n)
-          ? `<span class="star">★</span> ${escapeHtml(n)}`
-          : escapeHtml(n),
-      );
+    const names = att.slice(0, 3).map(escapeHtml);
     const extra = att.length > 3 ? ` +${att.length - 3}` : "";
     goingLine = `<div class="tip-going"><strong>${att.length} going</strong> — ${names.join(", ")}${extra}</div>`;
   }
-  const friendLine = friendsGoing.length
-    ? `<div class="tip-friend">★ ${friendsGoing.map(escapeHtml).join(", ")} ${friendsGoing.length > 1 ? "are" : "is"} going</div>`
-    : "";
   const capLine = ev.capacity
     ? `<div class="tip-going" style="margin-top:2px;"><strong>${Math.max(0, ev.capacity - att.length)} spaces left</strong></div>`
     : "";
@@ -8181,7 +8160,7 @@ function pinTooltipHtml(ev) {
     <div class="tip-title">${escapeHtml(ev.title)}</div>
     <div class="tip-meta">${ev.date} · ${ev.time}</div>
     <div class="tip-meta">${escapeHtml(ev.venue)}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""}</div>
-    ${goingLine}${capLine}${friendLine}
+    ${goingLine}${capLine}
     <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;font-size:10.5px;font-weight:700;color:${c.color};letter-spacing:0.04em;">
       <span>Open &amp; RSVP</span>
       <span style="font-size:13px;opacity:0.85;">→</span>
@@ -8291,7 +8270,6 @@ function renderDetail(id) {
   } else {
     bookBtn = `<button class="btn" style="background:${c.color};color:#fff;width:100%;font-size:15px;" onclick="openBook(${id})">${price ? `Book Now · From £${price}` : "Register Free"} →</button>`;
   }
-  const friendsGoing = attendees.filter(isFriend);
   const going = attendees.includes(state.profileName);
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="panel detail-card" style="--corner:${c.color};">
@@ -8308,14 +8286,14 @@ function renderDetail(id) {
       <div class="detail-desc">${ev.desc}</div>
       ${bookBtn}
       <div class="attendee-section">
-        <h3>${attendees.length} going${ev.capacity ? ` (Limit ${ev.capacity})` : ""}${friendsGoing.length ? ` · <span class="star">★</span> ${friendsGoing.length} friend${friendsGoing.length > 1 ? "s" : ""}` : ""}</h3>
+        <h3>${attendees.length} going${ev.capacity ? ` (Limit ${ev.capacity})` : ""}</h3>
         <div class="attendee-list">${
           attendees.length
             ? attendees
-                .map((n) => {
-                  const fr = isFriend(n);
-                  return `<div class="attendee-chip ${fr ? "friend" : ""}"><div class="avatar" style="margin-left:0">${initials(n)}</div><span>${fr ? '<span class="star">★</span> ' : ""}${escapeHtml(n)}</span></div>`;
-                })
+                .map(
+                  (n) =>
+                    `<div class="attendee-chip"><div class="avatar" style="margin-left:0">${initials(n)}</div><span>${escapeHtml(n)}</span></div>`,
+                )
                 .join("")
             : `<span style="color:var(--text-muted);font-size:13px;">No bookings yet.</span>`
         }</div>
@@ -8950,7 +8928,6 @@ function renderProfile() {
     <!-- Stats row -->
     <div class="prof-stats-row list-item-stagger">
       <div class="pstat"><div class="pstat-num">${count}</div><div class="pstat-lbl">Events</div></div>
-      <div class="pstat"><div class="pstat-num">${state.friends.length}</div><div class="pstat-lbl">Friends</div></div>
       <div class="pstat"><div class="pstat-num">${myTickets.length}</div><div class="pstat-lbl">Tickets</div></div>
       <div class="pstat"><div class="pstat-num">${earnedCount}</div><div class="pstat-lbl">Badges</div></div>
     </div>
@@ -9019,7 +8996,7 @@ function renderProfile() {
           <span class="prof-action-label">Clear all users<span class="prof-action-sub">Delete every account &amp; email (keeps events)</span></span>
           <span class="prof-action-right">›</span>
         </button>
-        <button class="prof-action-row prof-action-danger" onclick="if(confirm('Delete ALL rows in users, events, rsvps, tickets, chat_messages, friends? This cannot be undone.')){clearAllTestData(true)}">
+        <button class="prof-action-row prof-action-danger" onclick="if(confirm('Delete ALL rows in users, events, rsvps, tickets? This cannot be undone.')){clearAllTestData(true)}">
           <span class="prof-action-label">Wipe all test data<span class="prof-action-sub">Users + events + everything</span></span>
           <span class="prof-action-right">›</span>
         </button>
@@ -10696,7 +10673,7 @@ renderView = function () {
     container.classList.add("view-enter");
     // Stagger child panels
     const panels = container.querySelectorAll(
-      ".panel, .friend-card, .intro-card, .badge-cell, .stat-box",
+      ".panel, .intro-card, .badge-cell, .stat-box",
     );
     panels.forEach((el, i) => {
       el.style.animationDelay = `${i * 0.045}s`;

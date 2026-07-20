@@ -10,17 +10,18 @@ connector, or tool can perform for you.
 
 - **Auth model migrated to Supabase Auth** (Phase 1 + 2). Sign-up/login use email
   OTP; every request carries a JWT.
-- **RLS hardened** on every table (`users`, `events`, `rsvps`, `tickets`,
-  `chat_messages`, `friends`, `host_applications`, `pending_events`,
-  `curator_codes`, `admins`). Writes are constrained to `auth.uid()`.
+- **RLS hardened** on every table that existed at the time (`users`, `events`,
+  `rsvps`, `tickets`, `host_applications`, `pending_events`, `admins`).
+  Writes are constrained to `auth.uid()`. (`chat_messages`, `friends`, and
+  `curator_codes` were dropped outright by the frictionless-ticketing pivot —
+  see `supabase/migrations/20260720010000_pivot_frictionless_ticketing.sql`.)
 - **Security hole closed:** 13 leftover wide-open `{public}` policies (incl.
   `public read users` / `public update users`) were dropped. Advisor: 0
   permissive public policies remain.
 - **Clean slate:** all demo/seed events and old pre-auth accounts deleted.
 - **Owner set up:** `gondoxml@gmail.com` is an admin + `partner_host`, with a
   real auth-linked profile.
-- **Curator codes:** 5 active (e.g. `CUR-CMLS-0001`).
-- Migrations of record: `supabase/migrations/2026070*.sql`.
+- Migrations of record: `supabase/migrations/2026070*.sql`, `2026072*.sql`.
 
 ---
 
@@ -98,6 +99,9 @@ are stuck disabled, open a **new chat** and paste:
 
 ## Still on the roadmap (code, not config)
 
-- Age-verification webhook (Stripe Identity / Yoti → `mark_age_verified`).
-- "Host a private event" checklist UI (`docs/velvet-rope/HostChecklist.tsx`).
 - Verify the map's day/night relight on the live site (Mapbox is blocked in CI).
+
+(The velvet-rope hosting-eligibility checklist and curator-code perk gating
+that used to be tracked here were removed outright by the
+frictionless-ticketing pivot — see `docs/velvet-rope/README.md` for the
+historical design they replaced.)

@@ -78,7 +78,7 @@ This system explicitly rejects generic corporate SaaS chrome (dashboard-blue, st
 A warm neutral parchment paired with a single gold accent that survives the day/night flip; no secondary or tertiary hue is introduced.
 
 ### Primary
-- **Parchment Gold** (`#c08a00` light / `#ffcf33` dark): the one accent — buttons, links, active states, borders on emphasis, and the ambient glow behind the Social/Calendar/Profile tabs. Saturated enough to pop rather than sit quietly, but still one thread, not a second color; it never becomes a background fill. Vivid yellow physically cannot hold contrast against a light parchment page (yellow is inherently a high-luminance hue), so the light-mode value is pushed as rich/saturated as the cream background allows without failing the 3:1 UI-component floor; the dark-mode value has the contrast headroom to go genuinely electric against the near-black sky, which is where this system's "pop" reads loudest.
+- **Parchment Gold** (`#c08a00` light / `#ffcf33` dark): the one accent — buttons, links, active states, borders on emphasis, and the ambient glow behind the Host/Calendar/Profile tabs. Saturated enough to pop rather than sit quietly, but still one thread, not a second color; it never becomes a background fill. Vivid yellow physically cannot hold contrast against a light parchment page (yellow is inherently a high-luminance hue), so the light-mode value is pushed as rich/saturated as the cream background allows without failing the 3:1 UI-component floor; the dark-mode value has the contrast headroom to go genuinely electric against the near-black sky, which is where this system's "pop" reads loudest.
 
 ### Neutral
 - **Parchment Cream** (`#eceae4` / dark: `#0d0e10`): the app background — the "paper" the whole interface sits on.
@@ -105,7 +105,7 @@ The landing-page hero's sky (`--hero-sky`) and London-skyline diorama (`--dio-ba
 ### Hierarchy
 - **Display** (700, DM Sans): event titles, hero headings, primary CTAs.
 - **Body** (400, Inter): descriptions, list content, general copy.
-- **Label/Mono** (400–500, DM Mono): timestamps, codes (e.g. curator codes), technical or data-like fragments where a monospace read adds precision.
+- **Label/Mono** (400–500, DM Mono): timestamps, codes (e.g. squad ticket claim codes), technical or data-like fragments where a monospace read adds precision.
 
 ## 4. Elevation
 
@@ -151,11 +151,11 @@ Stroke-based, Phosphor-style line icons only (`fill:none`, `stroke:currentColor`
 - **Do** keep gold as the single accent across both light and dark themes — it is the one thread that survives the day/night flip.
 - **Do** use soft, multi-layer, low-opacity shadows for any hover/elevation state; never a single hard drop shadow.
 - **Do** let buttons and cards feel physically responsive (lift, shine, ripple) on interaction — this system is tactile and inviting, not flat-minimalist.
-- **Do** keep event pins and details visible regardless of perk/curator-code gating — perks lock bonus content, never the core map.
+- **Do** keep every event pin and event detail fully visible and bookable to everyone — no invite code, curator gate, or unlock step ever stands between a user and the map.
 
 ### Don't:
 - **Don't** introduce a second saturated accent color alongside gold — no dashboard-blue, no neon, no competing hue.
 - **Don't** use generic corporate SaaS chrome: stock icons, enterprise dashboard panels, flat gray "tool" aesthetics.
-- **Don't** reach for nightlife/club-app energy — no neon glows, no aggressive gradients — even for "Secret Social Club" curator-gated features; keep it warm, not flashy.
+- **Don't** reach for nightlife/club-app energy — no neon glows, no aggressive gradients — and no "secret club" / invite-only framing anywhere; keep it warm and open, not flashy or exclusive.
 - **Don't** give cards or surfaces a resting shadow. Depth is earned by interaction, not sitting there by default.
 - **Don't** use `border-left`/`border-right` colored stripes as an accent treatment anywhere in the system.

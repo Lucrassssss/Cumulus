@@ -10,7 +10,7 @@ web
 
 ## Users
 
-Londoners discovering local community events near them — casual users who open the app to see what's happening nearby on a live map, RSVP, and check in when they arrive. A secondary layer of curator-code holders and referred members experience perks and gating on top of the same core map/event flow, but the primary audience is the everyday local looking for something to do in their city.
+Londoners discovering local community events near them — casual users who open the app to see what's happening nearby on a live map, RSVP, and buy a ticket in seconds. Every event is public, with no invite code or gating: the primary audience is the everyday local looking for something to do in their city. A secondary audience of hosts lists events (reviewed quickly, published instantly for admins) and keeps 100% of their ticket price.
 
 ## Product Purpose
 
@@ -22,18 +22,18 @@ A live map of your city's community, not a listings feed — Cumulus shows what'
 
 ## Brand Personality
 
-Warm, communal, local. The voice should feel like a friendly local tip-off, not a platform pitch — approachable and grounded in place (London-specific), never salesy or hype-driven. Perks and curator codes add a light layer of specialness without tipping into exclusivity-for-its-own-sake.
+Warm, communal, local. The voice should feel like a friendly local tip-off, not a platform pitch — approachable and grounded in place (London-specific), never salesy or hype-driven. Every event is public and joining is frictionless; the warmth comes from place and community, not from manufactured exclusivity.
 
 ## Anti-references
 
-Avoid generic corporate SaaS aesthetics — dashboard-blue palettes, stock icons, enterprise-tool chrome. Also avoid try-hard nightlife/club-app energy (neon, aggressive gradients); even where curator codes and "Secret Social Club" framing exist, the feel should stay warm and communal rather than flashy or exclusive-clubby.
+Avoid generic corporate SaaS aesthetics — dashboard-blue palettes, stock icons, enterprise-tool chrome. Also avoid try-hard nightlife/club-app energy (neon, aggressive gradients) and any "secret club" / invite-only framing — the feel should stay warm, communal, and open, never flashy or exclusive-clubby.
 
 ## Design Principles
 
 - Place and time are real, not decorative: the live day/night theme and map are the product, not garnish — never let chrome overshadow them.
 - Warmth over polish-for-its-own-sake: prefer friendly, local-feeling details (clouds, skyline, grain texture) over corporate slickness.
-- Perks feel like a bonus, not a gate: curator/referral gating should never make the core map or event discovery feel withheld — events and pins stay visible regardless of unlock status.
-- Design for the return visit: since success is repeat engagement and community growth, interactions (RSVP, check-in, referral) should feel satisfying enough to repeat, not just functional once.
+- Frictionless, never gated: every event and every pin is visible to everyone, with no invite code, curator gate, or unlock step standing between a user and the map.
+- Design for the return visit: since success is repeat engagement and community growth, interactions (RSVP, ticket claim, hosting) should feel satisfying enough to repeat, not just functional once.
 - Never look like a SaaS dashboard or a club-app: if in doubt, pull toward "friendly city guide," away from both extremes.
 
 ## Accessibility & Inclusion

@@ -27,8 +27,7 @@ async function setView(page, view) {
   await page.evaluate((v) => {
     /* global state, EVENTS, renderNav, renderView */
     state.view = v;
-    if ((v === "detail" || v === "connect") && EVENTS[0])
-      state.selectedEventId = EVENTS[0].id;
+    if (v === "detail" && EVENTS[0]) state.selectedEventId = EVENTS[0].id;
     renderNav();
     renderView();
   }, view);
@@ -69,19 +68,19 @@ async function seedFixtureEvent(page) {
 }
 
 test.describe("Cumulus smoke", () => {
-  test("landing renders with hero + separate nav auth (Log in / Request Access)", async ({
+  test("landing renders with hero + separate nav auth (Log in / Join Cumulus)", async ({
     page,
   }) => {
     await page.goto("/");
     await expect(page.locator(".lp-hero-title")).toContainText(
-      "Find your people",
+      "Find what's on",
     );
     const nav = page.locator(".lp-nav");
     await expect(
       nav.getByRole("button", { name: "Log in", exact: true }),
     ).toBeVisible();
     await expect(
-      nav.getByRole("button", { name: "Request Access", exact: true }),
+      nav.getByRole("button", { name: "Join Cumulus", exact: true }),
     ).toBeVisible();
     await expect(page.locator(".lp-nav-auth button")).toHaveCount(2);
     await expect(
@@ -143,37 +142,14 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator("#gate-name-field")).toBeVisible();
   });
 
-  test("members-only: curator code gates new attendee sign-up", async ({
-    page,
-  }) => {
+  test("sign-up form: frictionless, no gating fields", async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => showLpSignup());
-    // Curator field shows for attendee sign-up, hides on Log in / Host
-    await expect(page.locator("#gate-curator-field")).toBeVisible();
-    await page.evaluate(() => switchAuthMode("login"));
-    await expect(page.locator("#gate-curator-field")).toBeHidden();
-    await page.evaluate(() => {
-      switchAuthMode("signup");
-      switchSignupType("host");
-    });
-    await expect(page.locator("#gate-curator-field")).toBeHidden();
-    await page.evaluate(() => switchSignupType("attendee"));
-    await expect(page.locator("#gate-curator-field")).toBeVisible();
-
-    // Curator gate LOGIC (the real guard). Under the Phase-2 auth flow the
-    // curator check runs in verifyGateCode() AFTER the email OTP, which needs a
-    // live backend, so we assert the gating function directly (offline-safe):
-    //   • empty / malformed code  → rejected as a format failure
-    //   • well-formed code        → passes format (server decides valid/unknown)
-    const bad = await page.evaluate(
-      async () => await validateCuratorCode("nope"),
-    );
-    expect(bad.valid).toBe(false);
-    expect(bad.reason).toBe("format");
-    const good = await page.evaluate(
-      async () => (await validateCuratorCode("CUR-AB12-CD34")).reason,
-    );
-    expect(good).not.toBe("format");
+    // Attendee sign-up asks only for name + email — no curator/invite code
+    // field exists anywhere in the gate markup (removed with the pivot).
+    await expect(page.locator("#gate-name-field")).toBeVisible();
+    await expect(page.locator("#gate-email")).toBeVisible();
+    await expect(page.locator('[id*="curator"]')).toHaveCount(0);
 
     // Step-1 wiring: submitting emails a code. With the backend offline here it
     // must fail GRACEFULLY (surface an error, never crash) rather than sign the
@@ -190,7 +166,7 @@ test.describe("Cumulus smoke", () => {
     const labels = (
       await page.locator(".bottom-nav .nav-link").allInnerTexts()
     ).map((s) => s.trim().toUpperCase());
-    for (const tab of ["EXPLORE", "SOCIAL", "CALENDAR", "PROFILE"]) {
+    for (const tab of ["EXPLORE", "HOST", "CALENDAR", "PROFILE"]) {
       expect(
         labels.some((l) => l.includes(tab)),
         `${tab} tab present`,
@@ -198,11 +174,11 @@ test.describe("Cumulus smoke", () => {
     }
   });
 
-  test("core views render (social / calendar / profile)", async ({ page }) => {
+  test("core views render (host / calendar / profile)", async ({ page }) => {
     await page.goto("/");
     await enterApp(page);
-    await setView(page, "social");
-    await expect(page.locator(".social-seg")).toBeVisible();
+    await setView(page, "host");
+    await expect(page.locator(".host-section").first()).toBeVisible();
     await setView(page, "calendar");
     await expect(page.locator(".calendar-scroll")).toBeVisible();
     await setView(page, "profile");
@@ -223,7 +199,7 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator(".cpass-picker")).toBeVisible();
   });
 
-  test("perk gating: event visible, perks lock/unlock (WCAG-safe)", async ({
+  test("event detail: fully visible and bookable, no gating", async ({
     page,
   }) => {
     await page.goto("/");
@@ -232,27 +208,16 @@ test.describe("Cumulus smoke", () => {
     await page.evaluate((id) => {
       state.view = "detail";
       state.selectedEventId = id;
-      state.curatorVerified = false;
-      state.checkedInEventId = null;
       renderNav();
       renderView();
     }, evId);
-    // Event fully visible AND perks locked (content never hidden by the gate)
+    // Every event is public — content is never hidden behind a gate, and
+    // booking is a single, ungated action (no curator code, no perk unlock).
     await expect(page.locator(".detail-title")).toBeVisible();
-    await expect(page.locator(".perk-panel.locked")).toBeVisible();
+    await expect(page.locator(".attendee-section")).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /Enter curator code/i }),
+      page.getByRole("button", { name: /Register Free|Book Now/i }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: /Check in at the door/i }),
-    ).toBeVisible();
-    // Once verified, perks unlock
-    await page.evaluate(() => {
-      state.curatorVerified = true;
-      renderView();
-    });
-    await expect(page.locator(".perk-panel.unlocked")).toBeVisible();
-    await expect(page.locator(".perk-row")).toHaveCount(3);
   });
 
   test("day/night cycle sets a valid theme", async ({ page }) => {
