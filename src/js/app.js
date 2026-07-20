@@ -5215,10 +5215,13 @@ function refreshMarkers() {
 
 // ── Bounding-box event refresh via PostGIS RPC ────────────────────────────
 // fetchVisibleEvents() queries only the events within the current map
-// viewport using the get_events_geojson Postgres RPC. The result is a
-// pre-built GeoJSON FeatureCollection from the server — zero client-side
-// serialisation overhead. New events are merged into the in-memory EVENTS
-// array so calendar/social/detail views stay consistent.
+// viewport using the get_events_geojson Postgres RPC. The RPC is a
+// micro-payload (id/category/start_time + geometry only — see the Phase A
+// migration) so it stays cheap on every pan; loadRealEvents() already
+// hydrates the full EVENTS array once at boot, so almost every id here is
+// already known locally. The rare exception (an event someone else created
+// mid-session) gets its full row fetched individually via
+// fetchEventDetails() — never a whole-table refetch.
 //
 // The debounced moveend listener (300ms) batches rapid pans so we never
 // fire more than one RPC per camera settle. Falls back to the local
@@ -5247,8 +5250,8 @@ async function fetchVisibleEvents() {
     max_lat: ne.lat + latSpan,
   };
 
-  // Call the PostGIS RPC (defined in services.js) which returns a
-  // fully-formed GeoJSON FeatureCollection from the database
+  // Call the PostGIS RPC (defined in services.js) — a micro-payload
+  // FeatureCollection, id/category/start_time only
   const geojson = await fetchEventsGeoJSON(bbox);
 
   if (!geojson || !Array.isArray(geojson.features)) {
@@ -5257,36 +5260,40 @@ async function fetchVisibleEvents() {
     return;
   }
 
-  // Merge any new events from the bbox result into the in-memory EVENTS array
-  // so that other views (calendar, social, detail) remain consistent.
-  geojson.features.forEach((f) => {
-    const p = f.properties;
-    if (!p || !p.id) return;
-    if (EVENTS.find((e) => e.id === p.id)) return; // already loaded
-    const mapped = {
-      id: p.id,
-      title: p.title,
-      category: p.category,
-      host: p.host_name,
-      hostId: p.host_id,
-      venue: p.venue,
-      area: p.area,
-      address: p.address,
-      lat: p.lat,
-      lon: p.lon,
-      startTime: p.start_time,
-      endTime: p.end_time,
-      desc: p.description,
-      capacity: p.capacity,
-      price: p.price || 0,
-      nightShotUrl: p.night_shot_url || null,
-    };
-    computeEventDates(mapped);
-    EVENTS.push(mapped);
-  });
+  // Fetch full details only for ids we've genuinely never seen this session
+  const unseenIds = geojson.features
+    .map((f) => f.properties && f.properties.id)
+    .filter((id) => id && !EVENTS.find((e) => e.id === id));
 
-  // Apply client-side filters (category, live/hot/friends toggles, search)
-  // and push the resulting GeoJSON directly to the WebGL source
+  if (unseenIds.length) {
+    const rows = await Promise.all(unseenIds.map((id) => fetchEventDetails(id)));
+    rows.forEach((ev) => {
+      if (!ev || EVENTS.find((e) => e.id === ev.id)) return;
+      const mapped = {
+        id: ev.id,
+        title: ev.title,
+        category: ev.category,
+        host: ev.host_name,
+        hostId: ev.host_id,
+        venue: ev.venue,
+        area: ev.area,
+        address: ev.address,
+        lat: ev.lat,
+        lon: ev.lon,
+        startTime: ev.start_time,
+        endTime: ev.end_time,
+        desc: ev.description,
+        capacity: ev.capacity,
+        price: ev.price || 0,
+        nightShotUrl: ev.night_shot_url || null,
+      };
+      computeEventDates(mapped);
+      EVENTS.push(mapped);
+    });
+  }
+
+  // Apply client-side filters (category, live/hot toggles, search) and push
+  // the resulting GeoJSON directly to the WebGL source
   const filteredGeo = buildEventsGeoJSON();
   src.setData(filteredGeo);
   updateMapEmptyState(filteredGeo.features.length);
