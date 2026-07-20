@@ -3898,6 +3898,7 @@ async function initApp() {
 
   await loadMyTickets();
   await loadAllRsvps();
+  await checkSquadClaim();
 
   if (!state.myCard) {
     const cardRaw = await localGet(`card:${state.profileName}`);
@@ -8193,6 +8194,42 @@ function shareEvent(id) {
   }
 }
 
+// Squad ticketing: a share link for one unclaimed ticket from a multi-ticket
+// purchase. Opening it (see checkSquadClaim() at boot) calls claim_ticket(),
+// which race-safely reassigns that specific ticket to whoever claims it.
+function shareSquadTicket(code, eventTitle) {
+  const url = `${location.origin}${location.pathname}?claim=${code}`;
+  const text = `You're on my squad for ${eventTitle} on Cumulus — tap to claim your ticket:`;
+  if (navigator.share) {
+    navigator.share({ title: "Claim your Cumulus ticket", text, url }).catch(() => {});
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(`${text} ${url}`).then(
+      () => showToast("Claim link copied", "success"),
+      () => showToast("Couldn't copy — try again"),
+    );
+  } else {
+    showToast("Share not supported on this browser");
+  }
+}
+
+// Runs once at boot: if the URL carries a Squad claim link (?claim=CODE),
+// claim it for whoever is signed in and strip the param from the URL.
+async function checkSquadClaim() {
+  const params = new URLSearchParams(location.search);
+  const code = params.get("claim");
+  if (!code) return;
+  history.replaceState(null, "", location.pathname);
+  if (!state.userId) return; // claimed after sign-in isn't wired up — keep simple for now
+  const res = await claimTicket(code);
+  if (res && res.ok) {
+    showToast("Ticket claimed — welcome to the squad!", "success");
+    await loadMyTickets();
+    renderView();
+  } else {
+    showToast("That claim link isn't valid or was already used.", "error");
+  }
+}
+
 // Host credibility + follow, shown inline in the event byline. The events-
 // hosted count is computed from EVENTS actually loaded this session (real
 // data, not a fabricated backend stat) and only shown once it's meaningful.
@@ -9482,6 +9519,11 @@ function ticketTypes(ev) {
 function generateTicketId() {
   return "CU-" + Math.random().toString(36).slice(2, 8).toUpperCase();
 }
+// Squad ticket-claim link code — separate namespace from ticket IDs so a
+// leaked claim URL can't be confused with (or used as) a ticket lookup.
+function generateClaimCode() {
+  return Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
+}
 
 let myTickets = [];
 async function loadMyTickets() {
@@ -9508,6 +9550,8 @@ async function loadMyTickets() {
       total: t.total,
       purchaserName: t.purchaser_name,
       purchasedAt: new Date(t.purchased_at).getTime(),
+      squadId: t.squad_id,
+      claimCode: t.claim_code,
     }));
 }
 async function _insertTickets(tickets) {
@@ -9522,11 +9566,32 @@ async function _insertTickets(tickets) {
     ticket_type: t.type,
     type_label: t.typeLabel,
     price_per_ticket: t.pricePerTicket,
+    platform_fee: t.platformFee || 0,
     total: t.total,
     purchaser_name: t.purchaserName,
     purchased_at: new Date(t.purchasedAt).toISOString(),
+    squad_id: t.squadId || null,
+    claim_code: t.claimCode || null,
   }));
   await sb.from("tickets").insert(rows);
+}
+
+// A Squad is created once per multi-ticket purchase; the buyer keeps the
+// first ticket, every other ticket gets a claim_code for the "share with
+// your squad" link (claimTicket() reassigns it once someone opens the link).
+async function createSquadIfNeeded(eventId, qty) {
+  if (qty <= 1 || !state.userId) return null;
+  try {
+    const { data, error } = await sb
+      .from("event_squads")
+      .insert({ event_id: eventId, buyer_user_id: state.userId })
+      .select()
+      .single();
+    if (error || !data) return null;
+    return data.id;
+  } catch (e) {
+    return null;
+  }
 }
 function getTicketForEvent(evId) {
   return myTickets.find((t) => t.eventId === evId);
@@ -9590,6 +9655,7 @@ async function registerFree(evId) {
   if (!ev) return;
   const baseId = generateTicketId();
   const nf = bookingDraft.qty || 1;
+  const squadId = await createSquadIfNeeded(ev.id, nf);
   const freeTickets = Array.from({ length: nf }, (_, i) => ({
     ticketId: nf > 1 ? `${baseId}-${String(i + 1).padStart(2, "0")}` : baseId,
     seatNum: nf > 1 ? i + 1 : null,
@@ -9602,6 +9668,8 @@ async function registerFree(evId) {
     total: 0,
     purchaserName: state.profileName,
     purchasedAt: Date.now(),
+    squadId,
+    claimCode: i > 0 ? generateClaimCode() : null,
   }));
   myTickets.push(...freeTickets);
   await _insertTickets(freeTickets);
@@ -9649,6 +9717,7 @@ async function processPayment() {
   const n = bookingDraft.qty;
   const platformFee = sel.platformFee || 0;
   const totalCharged = sel.price + platformFee;
+  const squadId = await createSquadIfNeeded(ev.id, n);
   const newTickets = Array.from({ length: n }, (_, i) => ({
     ticketId: n > 1 ? `${baseId}-${String(i + 1).padStart(2, "0")}` : baseId,
     seatNum: n > 1 ? i + 1 : null,
@@ -9662,6 +9731,8 @@ async function processPayment() {
     total: totalCharged,
     purchaserName: state.profileName,
     purchasedAt: Date.now(),
+    squadId,
+    claimCode: i > 0 ? generateClaimCode() : null,
   }));
   myTickets.push(...newTickets);
   await _insertTickets(newTickets);
@@ -9880,12 +9951,32 @@ function renderConfirmed() {
     </div>`,
     )
     .join("");
+  // Squad ticketing: any ticket from this purchase still carrying a
+  // claim_code (i.e. index > 0, not yet claimed by someone else) gets a
+  // share link here — the buyer's own ticket (index 0) never has one.
+  const unclaimed = tickets.filter((t) => t.claimCode);
+  const squadSection = unclaimed.length
+    ? `<div class="hp-panel" style="margin-top:20px;">
+        <div class="hp-title">👥 Share with your squad</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">You bought ${tickets.length} tickets — send each link below to whoever's coming with you. Whoever opens it claims that ticket as their own.</div>
+        ${unclaimed
+          .map(
+            (t) => `<div class="hp-tier-row">
+              <span class="hp-tier-label">Ticket ${t.seatNum} of ${t.totalSeats}</span>
+              <button class="btn btn-outline btn-small" style="min-height:32px;padding:0 12px;" onclick="shareSquadTicket('${t.claimCode}','${escapeHtml(ev.title).replace(/'/g, "&#39;")}')">Share link</button>
+            </div>`,
+          )
+          .join("")}
+      </div>`
+    : "";
+
   return `<div style="text-align:center;padding:20px 0 16px;">
       <div style="width:58px;height:58px;border-radius:50%;background:#22C55E;color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 18px rgba(34,197,94,0.3);">${checkIconSvg(28)}</div>
       <div style="font-size:21px;font-weight:800;color:var(--text);">${totalPaid ? "Payment confirmed!" : "You're registered!"}</div>
       <div style="font-size:12.5px;color:var(--text-muted);margin-top:3px;">${tickets.length} ticket${tickets.length !== 1 ? "s" : ""} · ${totalPaid ? `£${totalPaid.toFixed(2)} total` : "Free"}</div>
     </div>
     ${ticketCards}
+    ${squadSection}
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;">
       <button class="btn" style="background:${c.color};" onclick="downloadICS(${ev.id})">+ Add to Calendar</button>
       <button class="btn btn-text" onclick="openTicketsTab()">View all my tickets →</button>
