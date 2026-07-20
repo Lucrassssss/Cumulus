@@ -187,3 +187,32 @@ async function fetchHostPayouts() {
     return [];
   }
 }
+
+/* Fetches the guestlist for one of the caller's own events. RLS
+ * (tickets_host_read) only returns rows for events the caller hosts, so an
+ * empty/error result here just means "not your event" rather than needing
+ * a separate authorisation check client-side. */
+async function fetchGuestlist(eventId) {
+  try {
+    const { data, error } = await sb
+      .from("tickets")
+      .select("ticket_id,purchaser_name,seat_num,total_seats,ticket_type,type_label,status")
+      .eq("event_id", eventId);
+    if (error) return null;
+    return data || [];
+  } catch (e) {
+    return null;
+  }
+}
+
+/* Marks one ticket checked-in via the check_in_ticket() RPC, which verifies
+ * server-side that the caller actually hosts that ticket's event. */
+async function checkInTicket(ticketId) {
+  try {
+    const { data, error } = await sb.rpc("check_in_ticket", { p_ticket_id: ticketId });
+    if (error) return { ok: false, error: error.message };
+    return data;
+  } catch (e) {
+    return { ok: false, error: "unavailable" };
+  }
+}

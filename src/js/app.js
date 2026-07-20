@@ -4074,6 +4074,8 @@ function renderNav() {
     "owner-dash",
     "review",
     "achievements",
+    "scan-picker",
+    "scan",
   ].includes(state.view)
     ? "profile"
     : ["calendar", "calendar-day"].includes(state.view)
@@ -8048,6 +8050,9 @@ function renderView() {
   else if (state.view === "calendar-day")
     container.innerHTML = renderCalendarDay();
   else if (state.view === "tickets") container.innerHTML = renderTicketsTab();
+  else if (state.view === "scan-picker")
+    container.innerHTML = renderScannerPicker();
+  else if (state.view === "scan") container.innerHTML = renderScanner();
   else if (state.view === "owner-dash") {
     container.innerHTML = renderOwnerDash();
     setTimeout(initOwnerDash, 0);
@@ -8967,6 +8972,14 @@ function renderProfile() {
         <span class="prof-action-label">My Tickets</span>
         <span class="prof-action-right">${myTickets.length > 0 ? myTickets.length + " " : ""}›</span>
       </button>
+      ${
+        canAccessScanner()
+          ? `<button class="prof-action-row" onclick="openScannerPicker()">
+        <span class="prof-action-label">Scan tickets<span class="prof-action-sub">Check guests in at the door</span></span>
+        <span class="prof-action-right">›</span>
+      </button>`
+          : ""
+      }
       <button class="prof-action-row" onclick="editProfile()">
         <span class="prof-action-label">Edit name &amp; email</span>
         <span class="prof-action-right">›</span>
@@ -10287,6 +10300,299 @@ function renderHostView() {
 
     <button id="host-submit-btn" class="btn" style="width:100%;margin-bottom:16px;font-size:15px;" onclick="submitHostEvent()">${state.isAdmin ? "Publish event →" : "Submit for review →"}</button>
     ${renderHostPayoutsPanel()}`;
+}
+
+// ══════════════════════════════════════════════
+// HOST SCANNER — offline-first ticket check-in
+// ══════════════════════════════════════════════
+// Protected in the sense that matters: the actual security boundary is
+// server-side (tickets_host_read RLS + check_in_ticket()'s host_id check),
+// not this client-side gate. The Profile entry point just decides whether
+// to *show* the door — see renderProfile()'s conditional row.
+//
+// Offline strategy: cache the guestlist in IndexedDB when the scanner opens
+// (while there's still signal), check people in against that cache so the
+// door works with no connection, queue each check-in locally, and flush the
+// queue on reconnect or next scanner open. This is a deliberate choice over
+// the Background Sync API — Background Sync has no support in iOS Safari,
+// a real chunk of any PWA's mobile users, so "retry on reconnect/reopen"
+// is the version that actually works everywhere.
+
+const SCANNER_DB_NAME = "cumulus_scanner";
+const SCANNER_DB_VERSION = 1;
+function openScannerDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(SCANNER_DB_NAME, SCANNER_DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains("guestlists"))
+        db.createObjectStore("guestlists"); // key: eventId, value: ticket[]
+      if (!db.objectStoreNames.contains("pending"))
+        db.createObjectStore("pending"); // key: ticketId, value: {eventId}
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbPut(store, key, value) {
+  const db = await openScannerDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, "readwrite");
+    tx.objectStore(store).put(value, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function idbGet(store, key) {
+  const db = await openScannerDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, "readonly");
+    const req = tx.objectStore(store).get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbDelete(store, key) {
+  const db = await openScannerDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, "readwrite");
+    tx.objectStore(store).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function idbGetAllKeys(store) {
+  const db = await openScannerDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, "readonly");
+    const req = tx.objectStore(store).getAllKeys();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+let scannerState = {
+  eventId: null,
+  guestlist: [],
+  search: "",
+  videoStream: null,
+  scanning: false,
+  detector: null,
+};
+
+// Am I even worth showing the "Scan tickets" entry to? Real access control
+// is server-side; this is purely so ordinary attendees don't see a dead
+// button. Any user hosting at least one loaded event, or an admin, passes.
+function canAccessScanner() {
+  return (
+    state.isAdmin || EVENTS.some((e) => e.hostId && e.hostId === state.userId)
+  );
+}
+
+function openScannerPicker() {
+  pushNav();
+  state.view = "scan-picker";
+  renderNav();
+  renderView();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function renderScannerPicker() {
+  const myEvents = EVENTS.filter(
+    (e) => state.isAdmin || (e.hostId && e.hostId === state.userId),
+  ).sort((a, b) => a.startsAt - b.startsAt);
+  const rows = myEvents.length
+    ? myEvents
+        .map(
+          (ev) => `<button class="prof-action-row" onclick="openScannerForEvent('${ev.id}')">
+        <span class="prof-action-label">${escapeHtml(ev.title)}<span class="prof-action-sub">${ev.date} · ${escapeHtml(ev.venue)}</span></span>
+        <span class="prof-action-right">›</span>
+      </button>`,
+        )
+        .join("")
+    : `<div class="empty-state">You're not hosting any loaded events yet.</div>`;
+  return `<button class="back-btn" onclick="goBack()">←</button>
+    <div class="connect-header"><h2>Scan tickets</h2><p>Pick an event to check guests in</p></div>
+    <div class="prof-action-list">${rows}</div>`;
+}
+
+async function openScannerForEvent(eventId) {
+  pushNav();
+  scannerState = {
+    eventId,
+    guestlist: [],
+    search: "",
+    videoStream: null,
+    scanning: false,
+    detector: null,
+  };
+  state.view = "scan";
+  renderNav();
+  renderView();
+
+  // Try the network first (freshest list); fall back to whatever's cached
+  // from a previous open if we're offline.
+  const fresh = await fetchGuestlist(eventId);
+  if (fresh) {
+    scannerState.guestlist = fresh;
+    await idbPut("guestlists", eventId, fresh);
+  } else {
+    const cached = await idbGet("guestlists", eventId);
+    scannerState.guestlist = cached || [];
+  }
+  await syncScannerQueue();
+  renderView();
+}
+
+function scannerSetSearch(q) {
+  scannerState.search = q;
+  renderScannerList();
+}
+
+// Patches just the guestlist rows, not the whole view — keeps the camera
+// feed (if running) from being torn down and restarted on every keystroke.
+function renderScannerList() {
+  const el = document.getElementById("scanner-list");
+  if (!el) return;
+  const q = scannerState.search.trim().toLowerCase();
+  const matches = scannerState.guestlist.filter(
+    (t) =>
+      !q ||
+      (t.purchaser_name || "").toLowerCase().includes(q) ||
+      (t.ticket_id || "").toLowerCase().includes(q),
+  );
+  el.innerHTML = matches.length
+    ? matches
+        .map(
+          (t) => `<div class="panel" style="padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div style="min-width:0;">
+          <div style="font-weight:700;font-size:14px;color:var(--text);">${escapeHtml(t.purchaser_name || "Guest")}</div>
+          <div style="font-size:11px;color:var(--text-muted);font-family:ui-monospace,monospace;">${escapeHtml(t.ticket_id)}${t.total_seats > 1 ? ` · seat ${t.seat_num}/${t.total_seats}` : ""}</div>
+        </div>
+        ${
+          t.status === "checked_in"
+            ? `<span style="font-size:11px;font-weight:700;color:#147136;flex-shrink:0;">${checkIconSvg(13)} Checked in</span>`
+            : `<button class="btn btn-small" style="flex-shrink:0;" onclick="checkInGuestlistTicket('${t.ticket_id}')">Check in</button>`
+        }
+      </div>`,
+        )
+        .join("")
+    : `<div class="empty-state">No matching guests.</div>`;
+}
+
+async function checkInGuestlistTicket(ticketId) {
+  const entry = scannerState.guestlist.find((t) => t.ticket_id === ticketId);
+  if (!entry) {
+    showToast("Not on this event's guestlist", "error");
+    return;
+  }
+  if (entry.status === "checked_in") {
+    showToast("Already checked in", "info");
+    return;
+  }
+  // Optimistic — works offline. Queue it, then try to sync immediately.
+  entry.status = "checked_in";
+  await idbPut("guestlists", scannerState.eventId, scannerState.guestlist);
+  await idbPut("pending", ticketId, { eventId: scannerState.eventId });
+  renderScannerList();
+  showToast(`${entry.purchaser_name || "Guest"} checked in`, "success");
+  syncScannerQueue();
+}
+
+async function syncScannerQueue() {
+  if (!navigator.onLine) return;
+  let keys;
+  try {
+    keys = await idbGetAllKeys("pending");
+  } catch (e) {
+    return;
+  }
+  for (const ticketId of keys) {
+    const res = await checkInTicket(ticketId);
+    if (res && res.ok) {
+      await idbDelete("pending", ticketId);
+    }
+    // Leave failed ones queued — a real error (not_found/forbidden) will
+    // just keep failing, but that's rare (would mean the ticket was
+    // cancelled or the event reassigned) and safe to leave for a human to
+    // notice rather than silently dropping the queued check-in.
+  }
+  const remaining = await idbGetAllKeys("pending").catch(() => []);
+  const badge = document.getElementById("scanner-pending-badge");
+  if (badge) {
+    badge.textContent = remaining.length
+      ? `${remaining.length} pending sync`
+      : "";
+    badge.style.display = remaining.length ? "" : "none";
+  }
+}
+window.addEventListener("online", () => {
+  if (state.view === "scan") syncScannerQueue();
+});
+
+function stopScannerCamera() {
+  if (scannerState.videoStream) {
+    scannerState.videoStream.getTracks().forEach((t) => t.stop());
+    scannerState.videoStream = null;
+  }
+  scannerState.scanning = false;
+}
+
+async function startScannerCamera() {
+  if (typeof BarcodeDetector === "undefined") {
+    showToast("Camera scanning isn't supported on this browser — use search below", "info");
+    return;
+  }
+  const video = document.getElementById("scanner-video");
+  if (!video) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" },
+    });
+    scannerState.videoStream = stream;
+    video.srcObject = stream;
+    await video.play();
+    scannerState.detector = new BarcodeDetector({ formats: ["qr_code"] });
+    scannerState.scanning = true;
+    scanFrame(video);
+  } catch (e) {
+    showToast("Couldn't access the camera — use search below instead", "error");
+  }
+}
+
+async function scanFrame(video) {
+  if (!scannerState.scanning) return;
+  try {
+    const codes = await scannerState.detector.detect(video);
+    if (codes.length) {
+      const ticketId = codes[0].rawValue.trim();
+      await checkInGuestlistTicket(ticketId);
+    }
+  } catch (e) {
+    // detect() can throw transiently mid-frame — just try again next tick
+  }
+  if (scannerState.scanning) setTimeout(() => scanFrame(video), 600);
+}
+
+function renderScanner() {
+  const ev = EVENTS.find((e) => e.id === scannerState.eventId);
+  const checkedInCount = scannerState.guestlist.filter(
+    (t) => t.status === "checked_in",
+  ).length;
+  setTimeout(() => renderScannerList(), 0);
+  return `<button class="back-btn" onclick="stopScannerCamera();goBack()">←</button>
+    <div class="connect-header"><h2>${ev ? escapeHtml(ev.title) : "Scan tickets"}</h2><p>${checkedInCount} / ${scannerState.guestlist.length} checked in</p></div>
+    <span id="scanner-pending-badge" style="display:none;font-size:11px;font-weight:700;color:var(--accent);"></span>
+    <div class="panel" style="padding:16px;margin-bottom:14px;text-align:center;">
+      <video id="scanner-video" muted playsinline style="width:100%;max-width:320px;border-radius:12px;background:#000;display:${scannerState.scanning ? "block" : "none"};margin:0 auto 10px;"></video>
+      ${
+        scannerState.scanning
+          ? `<button class="btn btn-outline" onclick="stopScannerCamera();renderView();">Stop camera</button>`
+          : `<button class="btn" onclick="startScannerCamera()">Start camera scan</button>`
+      }
+    </div>
+    <input class="gate-input" placeholder="Search by name or ticket ID…" oninput="scannerSetSearch(this.value)" style="margin-bottom:12px;"/>
+    <div id="scanner-list"></div>`;
 }
 
 // Boot. Never let an unexpected rejection leave the user on a blank screen.
