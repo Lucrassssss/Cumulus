@@ -1384,27 +1384,50 @@ async function startStripeCheckout() {
   const btn = document.getElementById("pay-btn");
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<span style="opacity:.7">Redirecting to Stripe…</span>';
+    btn.innerHTML = '<span style="opacity:.7">Preparing secure checkout…</span>';
   }
-  const res = await createCheckoutSession(
-    ev.id,
-    bookingDraft.qty,
-    bookingDraft.marketingOptIn,
-  );
-  if (!res || res.error || !res.url) {
-    showToast(res?.error || "Could not start checkout — try again", "error");
+  
+  try {
+    const res = await createCheckoutSession(
+      ev.id,
+      bookingDraft.qty,
+      bookingDraft.marketingOptIn,
+    );
+    if (!res || res.error || !res.clientSecret) {
+      throw new Error(res?.error || "Could not start checkout");
+    }
+
+    // Initialize Stripe Elements
+    if (!window.stripeInstance) {
+      window.stripeInstance = Stripe(window.CUMULUS_CONFIG.STRIPE_PUBLISHABLE_KEY);
+    }
+    const checkout = await window.stripeInstance.initEmbeddedCheckout({
+      clientSecret: res.clientSecret,
+    });
+    
+    // Replace the button area with the Stripe embedded form
+    const container = document.getElementById("stripe-checkout-embedded");
+    if (container) {
+      if (btn) btn.style.display = 'none'; // hide the old pay button
+      // hide the intro form
+      const introForm = document.querySelector('.intro-form');
+      if (introForm) introForm.style.display = 'none';
+      
+      checkout.mount("#stripe-checkout-embedded");
+    }
+  } catch (err) {
+    showToast(err.message || "Could not start checkout — try again", "error");
     if (btn) {
       btn.disabled = false;
       btn.innerHTML = "Pay with card →";
+      btn.style.display = 'block';
     }
-    return;
   }
-  location.href = res.url;
 }
 
 // Boot-time handler for the browser coming back from Stripe Checkout.
 // Mirrors checkSquadClaim()'s URL-param pattern (read, strip, act).
-// success_url/cancel_url are set in create-checkout-session.
+// success_url/cancel_url/return_url are set in create-checkout-session.
 async function checkStripeCheckoutReturn() {
   const params = new URLSearchParams(location.search);
   const sessionId = params.get("session_id");
@@ -1416,7 +1439,7 @@ async function checkStripeCheckoutReturn() {
     showToast("Payment was cancelled — no charge was made.", "info");
     return;
   }
-  if (status !== "success" || !sessionId) return;
+  if ((status !== "success" && status !== "return") || !sessionId) return;
   if (!state.userId) return; // returning signed-out isn't wired up — keep simple for now
 
   showToast("Confirming your payment…", "info");

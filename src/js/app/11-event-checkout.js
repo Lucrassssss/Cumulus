@@ -79,7 +79,7 @@ function renderCheckout() {
       <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:var(--text);padding-top:10px;border-top:1px solid var(--line);"><span>Total</span><span>£${total}</span></div>
     </div>
     <button id="pay-btn" class="btn" style="width:100%;background:${c.color};padding:14px;font-size:15px;margin-top:14px;" onclick="startStripeCheckout()">Pay with card — £${total} →</button>
-    <div style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:10px;">You'll be redirected to Stripe's secure checkout.</div>`;
+    <div id="stripe-checkout-embedded" style="margin-top: 20px;"></div>`;
 }
 
 // ─── Render: Ticket confirmation ─────────────────────────────────────────

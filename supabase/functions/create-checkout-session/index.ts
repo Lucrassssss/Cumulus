@@ -148,13 +148,13 @@ Deno.serve(async (req: Request) => {
 
   const params = new URLSearchParams({
     mode: "payment",
+    ui_mode: "embedded",
     "line_items[0][price_data][currency]": "gbp",
     "line_items[0][price_data][product_data][name]": ev.title || "Cumulus ticket",
     "line_items[0][price_data][unit_amount]": String(unitAmountPence),
     "line_items[0][quantity]": String(qty),
     client_reference_id: userId,
-    success_url: `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/?checkout=cancelled&event=${encodeURIComponent(eventId)}`,
+    return_url: `${origin}/?checkout=return&session_id={CHECKOUT_SESSION_ID}`,
     "metadata[event_id]": eventId,
     "metadata[user_id]": userId,
     "metadata[qty]": String(qty),
@@ -174,7 +174,7 @@ Deno.serve(async (req: Request) => {
     });
     const session = await res.json();
     if (!res.ok) throw new Error(session.error?.message || "Stripe error");
-    return json({ url: session.url, id: session.id });
+    return json({ clientSecret: session.client_secret, id: session.id });
   } catch (err: any) {
     return json({ error: err.message }, 500);
   }

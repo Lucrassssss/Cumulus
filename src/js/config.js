@@ -22,6 +22,7 @@ window.CUMULUS_CONFIG = Object.assign(
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5enJ2Z2JkbmV2bGx3dnhxY2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NDM0NTAsImV4cCI6MjA5NzQxOTQ1MH0.jfSmMobPUV1tTg2cmyAvTGuRmAyd9C5r-pooMVpSV6E",
     MAPBOX_TOKEN:
       "pk.eyJ1IjoibHVjcmFzc3Nzc3MiLCJhIjoiY21xam1pcTJ4MGt0dTJzcXhobnQyZ3owMiJ9.RpRNYuS-zJnNdZ3wOGl61g",
+    STRIPE_PUBLISHABLE_KEY: "pk_test_placeholder",
   },
   window.CUMULUS_CONFIG || {},
 );
