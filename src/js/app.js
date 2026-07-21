@@ -1512,6 +1512,7 @@ let state = {
   profileEmail: "",
   profileId: null,
   specialBadges: [],
+  hostApplicationStatus: null, // null | "pending" | "approved" | "rejected" — see loadHostApplicationStatus()
   theme: "light",
   editingProfile: false,
   myCard: null,
@@ -2884,6 +2885,27 @@ async function _submitHostApplication({
   hostDesc,
   whyHost,
 }) {
+  await _saveHostApplicationRow({ name, email, bizName, hostDesc, whyHost });
+  state.hostApplicationStatus = "pending";
+
+  // Show success screen inside modal
+  const modal = document.querySelector(".lp-signup-modal");
+  if (modal) {
+    modal.innerHTML = `
+      <div class="gate-host-success">
+        <div class="gate-host-success-icon">🎉</div>
+        <div class="gate-host-success-title">Application submitted!</div>
+        <div class="gate-host-success-sub">Thanks ${escapeHtml(name)} — we'll review your application and get back to you within 48 hours. In the meantime, you can explore Cumulus as an attendee.</div>
+        <button class="btn" style="width:100%;margin-top:24px;" onclick="document.body.style.overflow='';document.getElementById('gate-root').innerHTML='';enterApp();">Explore Cumulus →</button>
+      </div>`;
+  }
+}
+
+// Shared by the landing-page "Become a host" signup flow and the in-app
+// "Apply to host" flow (submitHostApplyForm) — writes one host_applications
+// row (real auth.uid() session required by RLS in both cases), falling back
+// to localStorage only if the write itself fails (offline/misconfigured).
+async function _saveHostApplicationRow({ name, email, bizName, hostDesc, whyHost }) {
   const appPayload = {
     name,
     email,
@@ -2896,7 +2918,6 @@ async function _submitHostApplication({
     created_at: new Date().toISOString(),
   };
 
-  // Try Supabase first; fall back to localStorage
   let savedToDb = false;
   try {
     const { error } = await sb.from("host_applications").insert(appPayload);
@@ -2912,18 +2933,86 @@ async function _submitHostApplication({
       localStorage.setItem("host_applications_local", JSON.stringify(apps));
     } catch (e) {}
   }
+  return savedToDb;
+}
 
-  // Show success screen inside modal
-  const modal = document.querySelector(".lp-signup-modal");
-  if (modal) {
-    modal.innerHTML = `
-      <div class="gate-host-success">
-        <div class="gate-host-success-icon">🎉</div>
-        <div class="gate-host-success-title">Application submitted!</div>
-        <div class="gate-host-success-sub">Thanks ${escapeHtml(name)} — we'll review your application and get back to you within 48 hours. In the meantime, you can explore Cumulus as an attendee.</div>
-        <button class="btn" style="width:100%;margin-top:24px;" onclick="document.body.style.overflow='';document.getElementById('gate-root').innerHTML='';enterApp();">Explore Cumulus →</button>
-      </div>`;
+// ── In-app "Become a host" apply flow (already-signed-in eventees) ─────────
+function openHostApply() {
+  pushNav();
+  _hostCats = [];
+  state.view = "host-apply";
+  renderNav();
+  renderView();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function renderHostApplyView() {
+  if (isApprovedHost()) {
+    return `<button class="back-btn" onclick="goBack()">←</button>
+      <div class="connect-header"><h2>You're already a host</h2><p>Head to the Host tab to publish an event.</p></div>`;
   }
+  if (state.hostApplicationStatus === "pending") {
+    return `<button class="back-btn" onclick="goBack()">←</button>
+      <div class="connect-header"><h2>Application pending</h2><p>We're reviewing your host application — usually within 48 hours. You'll get the Host tab as soon as it's approved.</p></div>`;
+  }
+  return `
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="connect-header" style="padding-top:16px;"><h2>Become a host</h2><p>Tell us about your venue or events. Our team reviews every application to keep quality high on Cumulus.</p></div>
+    <div class="host-section">
+      <label class="intro-field-label">Venue or business name</label>
+      <input id="apply-biz-name" class="gate-input" placeholder="e.g. The Sketch House"/>
+      <div class="gate-field-group-label" style="margin-top:14px;">Event types you'd host</div>
+      <div class="host-cat-grid" id="apply-host-cat-grid">
+        ${["Creative", "Gaming", "Movie Nights", "Board Games", "Meetups", "Food &amp; Drink", "Live Music", "Wellness &amp; Outdoors", "Tech &amp; Talks"].map((c) => `<button class="host-cat-chip" data-hostcat="${escapeHtml(c.replace(/&amp;/g, "&"))}" onclick="toggleHostCat('${escapeHtml(c.replace(/&amp;/g, "&"))}')">${c}</button>`).join("")}
+      </div>
+      <label class="intro-field-label" style="margin-top:14px;">About your events</label>
+      <textarea id="apply-host-desc" class="gate-input" placeholder="What kind of events do you run? Describe the vibe, size, and frequency…" rows="3" maxlength="400"></textarea>
+      <label class="intro-field-label">Why host on Cumulus?</label>
+      <textarea id="apply-why-host" class="gate-input" placeholder="Tell us what you're hoping to achieve…" rows="2" maxlength="300"></textarea>
+    </div>
+    <p id="apply-host-error" class="gate-field-error"></p>
+    <button class="btn" style="width:100%;margin-bottom:16px;" onclick="submitHostApplyForm()">Submit application →</button>`;
+}
+
+async function submitHostApplyForm() {
+  const errEl = document.getElementById("apply-host-error");
+  if (errEl) errEl.classList.remove("show");
+  const bizName = (document.getElementById("apply-biz-name")?.value || "").trim();
+  const hostDesc = (document.getElementById("apply-host-desc")?.value || "").trim();
+  const whyHost = (document.getElementById("apply-why-host")?.value || "").trim();
+  const err = (msg) => {
+    if (errEl) {
+      errEl.textContent = msg;
+      errEl.classList.add("show");
+    }
+  };
+  if (!bizName) return err("Please enter your venue or business name.");
+  if (_hostCats.length === 0) return err("Please select at least one event type.");
+  if (!hostDesc) return err("Please add a brief description of your events.");
+
+  const btn = document.querySelector('[onclick="submitHostApplyForm()"]');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Submitting…";
+  }
+  const ok = await _saveHostApplicationRow({
+    name: state.profileName,
+    email: state.profileEmail,
+    bizName,
+    hostDesc,
+    whyHost,
+  });
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = "Submit application →";
+  }
+  if (!ok) {
+    showToast("Couldn't reach the server — application saved locally, will retry.", "error");
+  }
+  state.hostApplicationStatus = "pending";
+  showToast("Application submitted — we'll be in touch within 48 hours.", "success");
+  navStack = [];
+  openProfile();
 }
 // Cloud loading transition removed — enter the app directly.
 
@@ -3900,6 +3989,9 @@ async function initApp() {
   await checkSquadGroupClaim();
   await checkStripeCheckoutReturn();
   await checkConnectReturn();
+  if (!isApprovedHost() && state.userId) {
+    state.hostApplicationStatus = await getMyHostApplicationStatus(state.userId);
+  }
 
   if (!state.myCard) {
     const cardRaw = await localGet(`card:${state.profileName}`);
@@ -4085,9 +4177,16 @@ function renderNav() {
       ? "calendar"
       : state.view;
   const navContainer = document.getElementById("nav-container");
+  const hostApproved = isApprovedHost();
 
-  // First render: build the full DOM once
-  if (!navContainer.querySelector(".bottom-nav")) {
+  // Rebuild the tab bar if it doesn't exist yet, OR if host-tab visibility
+  // has changed since it was last built (e.g. an admin verifies mid-session,
+  // or a host application gets approved and the page hasn't reloaded yet).
+  if (
+    !navContainer.querySelector(".bottom-nav") ||
+    navContainer.dataset.hostShown !== String(hostApproved)
+  ) {
+    navContainer.dataset.hostShown = String(hostApproved);
     const icons = {
       browse: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5 5-2Z"/></svg>`,
       tickets: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/></svg>`,
@@ -4098,7 +4197,14 @@ function renderNav() {
     };
     const NAV_TABS = [
       { label: "Explore", v: "browse", action: "goBrowse()" },
-      { label: "Host", v: "host", action: "navStack=[];openHost()" },
+      // Only shown once an account is an approved host (verified-host badge,
+      // granted on host_applications approval) or an admin — otherwise any
+      // signed-up user could reach the event-creation form with zero
+      // hosting privileges. Non-hosts apply via Profile → "Become a host"
+      // instead (openHostApply()).
+      ...(hostApproved
+        ? [{ label: "Host", v: "host", action: "navStack=[];openHost()" }]
+        : []),
       {
         label: "Calendar",
         v: "calendar",
@@ -4329,7 +4435,19 @@ function openCalendar() {
   renderView();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+// True once an account has been accepted onto the host onboarding system
+// (the verified-host badge, granted server-side in reviewHost() on
+// approval) or is an admin. This — not just being signed in — is what gates
+// the Host tab and the event-creation form; the actual security boundary is
+// still RLS (events_insert_own), this just decides what the UI offers.
+function isApprovedHost() {
+  return state.isAdmin || (state.specialBadges || []).includes("verified-host");
+}
 function openHost() {
+  if (!isApprovedHost()) {
+    openHostApply();
+    return;
+  }
   state.view = "host";
   renderNav();
   renderView();
@@ -7733,7 +7851,7 @@ async function reviewHost(appId, email, decision) {
   try {
     await sb
       .from("host_applications")
-      .update({ status: decision })
+      .update({ status: decision, decided_at: new Date().toISOString() })
       .eq("id", appId);
   } catch (e) {}
   // Update localStorage fallback
@@ -8008,7 +8126,6 @@ async function loadAndRenderEventApprovals() {
         .from("pending_events")
         .select("*")
         .order("created_at", { ascending: false });
-      if (error)
       if (!error && data) evs = [...evs, ...data];
     } catch (e) {
     }
@@ -8278,6 +8395,8 @@ function renderView() {
   } else if (state.view === "event-approvals") {
     renderEventApprovals();
     return;
+  } else if (state.view === "host-apply") {
+    container.innerHTML = renderHostApplyView();
   }
 }
 
@@ -9327,6 +9446,18 @@ function renderProfile() {
         <span class="prof-action-right">›</span>
       </button>`
           : ""
+      }
+      ${
+        isApprovedHost()
+          ? ""
+          : state.hostApplicationStatus === "pending"
+            ? `<div class="prof-action-row" style="opacity:.6;">
+        <span class="prof-action-label">Host application<span class="prof-action-sub">Pending review — usually within 48 hours</span></span>
+      </div>`
+            : `<button class="prof-action-row" onclick="openHostApply()">
+        <span class="prof-action-label">Become a host<span class="prof-action-sub">Apply to host events on Cumulus</span></span>
+        <span class="prof-action-right">›</span>
+      </button>`
       }
       <button class="prof-action-row" onclick="editProfile()">
         <span class="prof-action-label">Edit name &amp; email</span>

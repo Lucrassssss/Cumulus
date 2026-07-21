@@ -192,6 +192,28 @@ async function claimGroupTicket(squadId) {
   }
 }
 
+/* The caller's most recent host_applications status ("pending"/"approved"/
+ * "rejected"), or null if they've never applied. Drives whether Profile
+ * shows "Become a host" vs "Application pending" — the Host tab itself is
+ * gated on the verified-host special_badges entry (set server-side on
+ * approval), not on this value directly. */
+async function getMyHostApplicationStatus(userId) {
+  if (!userId) return null;
+  try {
+    const { data, error } = await sb
+      .from("host_applications")
+      .select("status")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) return null;
+    return (data && data.status) || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 /* A host's own past-attendee emails (deduped across every event they've
  * hosted), for the "Invite Past Attendees" one-click blast. */
 async function getPastAttendeeEmails() {

@@ -100,6 +100,17 @@ are stuck disabled, open a **new chat** and paste:
 ## Still on the roadmap (code, not config)
 
 - Verify the map's day/night relight on the live site (Mapbox is blocked in CI).
+- **Host applications + event review — fixed and live.**
+  `supabase/migrations/20260721030000_host_applications_and_review_fixes.sql`
+  created the missing `public.host_applications` table (applications were
+  silently landing in localStorage only, never reaching admins), fixed a
+  dead-conditional bug that made the admin Event Approvals queue always show
+  empty, and tightened `pending_events` select/update RLS to admin-only
+  (previously `using (true)` let any signed-in user self-approve their own
+  submission). The Host nav tab is now gated behind approved-host status
+  (`verified-host` special badge or admin) instead of being shown to every
+  signed-up account — see ARCHITECTURE.md → "Host onboarding — applications
+  and the Host tab gate".
 - **Stripe Connect — schema live, functions deployed, still needs a real
   purchase run through it.** Schema
   (`supabase/migrations/20260721000000_stripe_connect_scaffolding.sql`,
