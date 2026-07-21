@@ -1434,6 +1434,18 @@ function stripeAppearanceForCurrentTheme() {
 // window.stripeInstance below.
 let stripeElementsGroup = null;
 
+// Mobile-only collapse/expand for the order-recap card rendered by
+// renderCheckout() — desktop forces it open via CSS (styles.css, the
+// checkout view's own >=860px breakpoint) and hides the chevron, so this
+// only ever fires from a real tap on narrower viewports.
+function toggleCheckoutSummary() {
+  const el = document.getElementById("checkout-summary");
+  if (!el) return;
+  const expanded = el.classList.toggle("expanded");
+  const btn = el.querySelector(".checkout-summary-toggle");
+  if (btn) btn.setAttribute("aria-expanded", expanded ? "true" : "false");
+}
+
 // Starts a real Stripe payment against a PaymentIntent — auto-triggered by
 // afterRenderCheckout() the instant the payment screen renders, so
 // "Continue to Payment" reads as one action, not two. Ticket rows are
@@ -1477,8 +1489,11 @@ async function startStripeCheckout() {
     paymentElement.mount("#payment-element");
     paymentElement.on("ready", () => {
       if (status) status.style.display = "none";
-      const payBtn = document.getElementById("pay-btn");
-      if (payBtn) payBtn.style.display = "block";
+      // The Pay button lives inside the floating total+CTA bar now (see
+      // renderCheckout()) — reveal the whole bar together, not just the
+      // button, so the total appears at the same moment as the form.
+      const ctaBar = document.getElementById("checkout-cta-bar");
+      if (ctaBar) ctaBar.style.display = "flex";
     });
   } catch (err) {
     setStatus(

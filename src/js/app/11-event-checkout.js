@@ -72,31 +72,68 @@ function renderBook() {
 // this screen renders (see afterRenderCheckout(), wired from renderView())
 // — "Continue to Payment" IS the action, the same one-step feel as
 // Eventbrite.
+//
+// Layout researched against DICE/Eventbrite/Stripe's own mobile-checkout
+// guidance rather than guessed: mobile collapses the order recap to one
+// line (thumbnail + total, tap to expand the fee breakdown) and puts the
+// Pay button in a floating bar pinned in the thumb zone above the bottom
+// nav pill — full breakdown was already shown once on the Book screen, so
+// collapsing it here is a recap, not a first disclosure. Desktop widens
+// into two columns past 860px (this view's own breakpoint — see
+// styles.css's "Checkout — sleeker mobile + desktop layout" block) with
+// the recap always expanded in a sticky left rail, matching the
+// "never collapse the summary on desktop" pattern those platforms use.
 function renderCheckout() {
   const ev = EVENTS.find((e) => e.id === bookingDraft.eventId);
   if (!ev) return "";
   const c = CATS[ev.category];
   const types = ticketTypes(ev);
   const sel = types.find((t) => t.id === bookingDraft.type) || types[0];
-  const total = (
-    (sel.price + (sel.platformFee || 0)) *
-    bookingDraft.qty
-  ).toFixed(2);
+  const qty = bookingDraft.qty;
+  const baseTotal = sel.price * qty;
+  const feeTotal = (sel.platformFee || 0) * qty;
+  const total = (baseTotal + feeTotal).toFixed(2);
+  const thumb = ev.photoUrl || ev.nightShotUrl || catImg(ev.category);
+
   return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>Payment</h2><p>${escapeHtml(ev.title)} · ${sel.label} × ${bookingDraft.qty}</p></div>
-    <div class="panel intro-form" style="--corner:${c.color};">
-      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-soft);margin-bottom:6px;"><span>${sel.label} × ${bookingDraft.qty}</span><span>£${(sel.price * bookingDraft.qty).toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-soft);margin-bottom:10px;"><span>Booking fee</span><span>£${((sel.platformFee || 0) * bookingDraft.qty).toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:var(--text);padding-top:10px;border-top:1px solid var(--line);"><span>Total</span><span>£${total}</span></div>
-    </div>
-    <div id="checkout-status" style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:10px;padding:22px 0;color:var(--text-muted);font-size:13px;">
-      <span style="width:18px;height:18px;border-radius:50%;border:2px solid var(--line);border-top-color:${c.color};animation:checkout-spin .8s linear infinite;flex-shrink:0;"></span>
-      Loading secure payment…
-    </div>
-    <style>@keyframes checkout-spin{to{transform:rotate(360deg)}}</style>
-    <div id="payment-element" style="margin-top:16px;"></div>
-    <button id="pay-btn" class="btn" data-label="Pay £${total} →" style="width:100%;background:${c.color};padding:14px;font-size:15px;margin-top:16px;display:none;" onclick="submitStripePayment()">Pay £${total} →</button>
-    <p style="text-align:center;font-size:10.5px;color:var(--text-muted);margin-top:10px;">Powered by Stripe · <a href="terms.html" target="_blank" style="color:var(--gold-text);">Terms</a> · <a href="privacy.html" target="_blank" style="color:var(--gold-text);">Privacy</a></p>`;
+    <div class="connect-header"><h2>Payment</h2><p>Secure checkout · ${escapeHtml(ev.title)}</p></div>
+    <div class="checkout-layout">
+      <div class="checkout-summary-col">
+        <div class="panel checkout-summary" id="checkout-summary" style="--corner:${c.color};">
+          <button type="button" class="checkout-summary-toggle" onclick="toggleCheckoutSummary()" aria-expanded="false" aria-controls="checkout-summary-details">
+            <div class="checkout-summary-thumb" style="background-image:url('${thumb}');"></div>
+            <div class="checkout-summary-toggle-text">
+              <div class="checkout-summary-title">${escapeHtml(ev.title)}</div>
+              <div class="checkout-summary-sub">${sel.label} × ${qty} · ${ev.date}</div>
+            </div>
+            <div class="checkout-summary-amount">£${total}</div>
+            <svg class="checkout-summary-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="checkout-summary-details" id="checkout-summary-details">
+            <div class="checkout-line"><span>${sel.label} × ${qty}</span><span>£${baseTotal.toFixed(2)}</span></div>
+            <div class="checkout-line"><span>Booking fee</span><span>£${feeTotal.toFixed(2)}</span></div>
+            <div class="checkout-line checkout-line-total"><span>Total</span><span style="color:${c.color};">£${total}</span></div>
+          </div>
+        </div>
+        <div class="checkout-trust">${lockIconSvg(14)}<span>Payments are encrypted and processed securely by Stripe — Cumulus never sees your card details.</span></div>
+      </div>
+      <div class="checkout-main-col">
+        <div id="checkout-status" class="checkout-status">
+          <div class="checkout-skeleton">
+            <div class="checkout-skeleton-row" style="width:55%;"></div>
+            <div class="checkout-skeleton-row" style="height:46px;"></div>
+            <div class="checkout-skeleton-row" style="height:46px;"></div>
+            <div class="checkout-skeleton-row" style="width:35%;"></div>
+          </div>
+        </div>
+        <div id="payment-element"></div>
+        <div class="checkout-cta-bar" id="checkout-cta-bar">
+          <div class="checkout-cta-total"><span>Total</span><strong style="color:${c.color};">£${total}</strong></div>
+          <button id="pay-btn" class="btn checkout-pay-btn" data-label="Pay £${total} →" style="background:${c.color};" onclick="submitStripePayment()">Pay £${total} →</button>
+        </div>
+        <p class="checkout-footer-note">Powered by Stripe · <a href="terms.html" target="_blank">Terms</a> · <a href="privacy.html" target="_blank">Privacy</a></p>
+      </div>
+    </div>`;
 }
 
 // Fired from renderView() right after the checkout screen mounts. Kicks off

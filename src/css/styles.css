@@ -11474,3 +11474,282 @@ body,
     opacity: 0.75;
   }
 }
+
+/* ── Checkout — sleeker mobile + desktop layout ────────────────────────────
+ * Researched against DICE/Eventbrite/Stripe's own mobile-checkout guidance:
+ * collapse the order recap to one line on mobile (tap to expand — the full
+ * breakdown was already shown once on the Book screen, so this is a recap,
+ * not a first disclosure), pin the Pay button in the thumb zone instead of
+ * inline at the bottom of a tall scrolling page, and never collapse the
+ * recap on desktop — it moves into an always-open sticky rail instead. This
+ * is the app's first real in-app-view breakpoint (every other screen is a
+ * fluid single column at any width) — scoped entirely under
+ * #app[data-view="checkout"] so it can't affect any other view. */
+.checkout-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#app[data-view="checkout"] #view-container {
+  padding-bottom: 92px;
+}
+
+.checkout-summary-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.checkout-summary-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background-color: var(--surface-2);
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.checkout-summary-toggle-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkout-summary-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkout-summary-sub {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkout-summary-amount {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.checkout-summary-chevron {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.checkout-summary.expanded .checkout-summary-chevron {
+  transform: rotate(180deg);
+}
+
+.checkout-summary-details {
+  display: none;
+  padding: 0 16px 16px;
+  margin-top: 2px;
+}
+
+.checkout-summary.expanded .checkout-summary-details {
+  display: block;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.checkout-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-soft);
+  margin-bottom: 6px;
+}
+
+.checkout-line-total {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: var(--text);
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.checkout-trust {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 0 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.checkout-trust svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.checkout-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0 4px;
+}
+
+.checkout-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.checkout-skeleton-row {
+  width: 100%;
+  height: 16px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--line-soft) 37%,
+    var(--surface-2) 63%
+  );
+  background-size: 400% 100%;
+  animation: checkout-shimmer 1.4s ease infinite;
+}
+
+@keyframes checkout-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* JS toggles this to "flex" once the Payment Element fires 'ready' — total
+ * and button appear together rather than the button popping in alone. */
+.checkout-cta-bar {
+  display: none;
+  align-items: center;
+  gap: 14px;
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(var(--bot-h) + env(safe-area-inset-bottom, 0px) + 14px);
+  z-index: 1100;
+  max-width: 688px;
+  margin: 0 auto;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 18px;
+  padding: 12px 14px;
+  box-shadow:
+    0 12px 32px -8px var(--shadow),
+    0 2px 8px var(--shadow);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+}
+
+.checkout-cta-total {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  flex-shrink: 0;
+}
+
+.checkout-cta-total span {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.checkout-cta-total strong {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.checkout-pay-btn {
+  flex: 1;
+  padding: 13px;
+  font-size: 14.5px;
+}
+
+.checkout-footer-note {
+  text-align: center;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  margin-top: 10px;
+}
+
+.checkout-footer-note a {
+  color: var(--gold-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkout-skeleton-row {
+    animation: none;
+  }
+}
+
+@media (min-width: 860px) {
+  #app[data-view="checkout"] #view-container {
+    max-width: 920px;
+    padding-bottom: 0;
+  }
+  #app[data-view="checkout"] .checkout-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    align-items: start;
+    gap: 28px;
+  }
+  #app[data-view="checkout"] .checkout-summary-col {
+    position: sticky;
+    top: calc(var(--top-h) + 24px);
+  }
+  #app[data-view="checkout"] .checkout-summary-toggle {
+    cursor: default;
+  }
+  #app[data-view="checkout"] .checkout-summary-chevron {
+    display: none;
+  }
+  #app[data-view="checkout"] .checkout-summary-details,
+  #app[data-view="checkout"] .checkout-summary.expanded .checkout-summary-details {
+    display: block;
+    border-top: 1px solid var(--line);
+    padding-top: 12px;
+  }
+  #app[data-view="checkout"] .checkout-cta-bar {
+    position: static;
+    max-width: none;
+    margin: 18px 0 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    padding: 0;
+  }
+  #app[data-view="checkout"] .checkout-cta-total {
+    display: none;
+  }
+}
