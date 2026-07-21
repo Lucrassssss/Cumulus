@@ -1374,6 +1374,61 @@ async function registerFree(evId) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+// Maps Cumulus's current light/dark palette onto Stripe's Embedded
+// Checkout Appearance API (theme + variables) so the payment iframe reads
+// as part of the same page instead of a jarring foreign-white box dropped
+// into a dark UI. Reads live computed CSS custom properties rather than
+// duplicating hex values here, so it can never drift out of sync with
+// styles.css. This is cosmetic only — an unrecognized/missing variable is
+// ignored by Stripe rather than rejected, unlike ui_mode/Stripe-Version,
+// so a mistake here can't reintroduce the checkout outage this session
+// already fixed twice.
+// Returns { appearance, fonts } — spread directly into
+// createEmbeddedCheckoutPage()'s options alongside clientSecret; "fonts"
+// is a sibling of "appearance" in Stripe's options shape, not nested
+// inside it.
+function stripeAppearanceForCurrentTheme() {
+  const isDark = document.documentElement.dataset.theme === "dark";
+  const cs = getComputedStyle(document.documentElement);
+  const v = (name, fallback) => cs.getPropertyValue(name).trim() || fallback;
+  return {
+    appearance: {
+      theme: isDark ? "night" : "stripe",
+      variables: {
+        colorPrimary: v("--accent", isDark ? "#ffcf33" : "#c08a00"),
+        // The app's own .btn convention pairs the gold/yellow accent with
+        // near-black text (styles.css), not white — Stripe's own default
+        // guess would likely pick white, which is barely readable against
+        // the dark theme's bright #ffcf33. Match the real convention
+        // instead of trusting a default here.
+        colorPrimaryText: "#0a0a0a",
+        colorBackground: v("--surface", isDark ? "#16181b" : "#f7f6f2"),
+        colorText: v("--text", isDark ? "#ece9e1" : "#191a1c"),
+        colorDanger: "#dc2626",
+        fontFamily: v(
+          "--font-sans",
+          "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+        ),
+        borderRadius: "12px",
+        spacingUnit: "4px",
+      },
+    },
+    // Best-effort: the Appearance API's fontFamily only names a font, it
+    // doesn't load one — Stripe's iframe is a separate origin and won't
+    // inherit index.html's Google Fonts <link>. Pointing it at the same
+    // Inter weights the rest of the app uses means the payment form
+    // actually renders in Inter rather than falling back to a generic
+    // system sans if this key isn't honored, worst case is silently
+    // ignored, not a functional break.
+    fonts: [
+      {
+        cssSrc:
+          "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
+      },
+    ],
+  };
+}
+
 // Starts a real Stripe Embedded Checkout session — auto-triggered by
 // afterRenderCheckout() the instant the payment screen renders, so
 // "Continue to Payment" reads as one action, not two. Ticket rows are
@@ -1412,6 +1467,7 @@ async function startStripeCheckout() {
       window.stripeInstance.initEmbeddedCheckout;
     const checkout = await initFn.call(window.stripeInstance, {
       clientSecret: res.clientSecret,
+      ...stripeAppearanceForCurrentTheme(),
     });
 
     const container = document.getElementById("stripe-checkout-embedded");

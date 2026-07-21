@@ -330,6 +330,60 @@ owns the whole payment form (card, wallets, Link) inside the mounted
 iframe, same PCI scope as before, just presented in-page instead of on a
 separate domain.
 
+**Payment methods (Apple Pay / Google Pay / PayPal).** `create-checkout-
+session` never sets `payment_method_types`, which is deliberate — Stripe
+Checkout's default behavior without that param is "dynamic payment
+methods": it shows whatever's enabled in the Stripe Dashboard (Settings →
+Payment methods), filtered to what's eligible for the buyer's browser/
+currency. Apple Pay and Google Pay are wallet buttons that piggyback on
+the card method and need no code change here — Stripe handles Apple Pay
+domain verification itself for Checkout (unlike a hand-rolled Payment
+Request Button integration). PayPal is a distinct method that needs
+explicit enabling in the Dashboard (country/currency-eligibility gated)
+and is redirect-based even inside the embedded iframe — clicking it
+briefly leaves to authenticate on PayPal's own domain before returning,
+which is inherent to PayPal, not a Cumulus limitation. None of this is
+toggleable from this repo's tooling; it's a Dashboard action for whoever
+holds the Stripe account.
+
+**Theming (`stripeAppearanceForCurrentTheme()`, `src/js/app/10-badges.js`).**
+Stripe's Embedded Checkout Appearance API (`theme: 'stripe'|'night'|'flat'`
+plus a `variables` object) is the customization surface — real limits:
+it's a cross-origin iframe (exposed tokens only, no arbitrary CSS/DOM),
+the logo/icon live in Dashboard → Branding account-wide rather than
+per-session, and the small "Powered by Stripe" mark can't be removed on a
+standard account. `stripeAppearanceForCurrentTheme()` reads the page's
+*live computed* `--accent`/`--surface`/`--text`/`--font-sans` custom
+properties (never hardcodes hex values that could drift from
+`styles.css`) and picks the `night` vs `stripe` base theme from
+`document.documentElement.dataset.theme`. Two deliberate choices worth
+calling out:
+- `colorPrimaryText` is hardcoded to `#0a0a0a` rather than left to
+  Stripe's own contrast guess — `.btn` in `styles.css` pairs the gold/
+  yellow accent with near-black text in both themes (not white), and
+  Stripe's default would likely pick white, which reads poorly against
+  the dark theme's bright `#ffcf33`.
+- A `fonts: [{ cssSrc }]` entry (sibling of `appearance`, not nested in
+  it — Stripe's own options shape) points the iframe at the same Inter
+  weights `index.html` already loads, because `fontFamily` only *names* a
+  font — the cross-origin iframe doesn't inherit the parent page's loaded
+  `<link>` fonts, so without this the form would silently fall back to a
+  generic system sans even with the right `fontFamily` string set.
+
+Returned as `{ appearance, fonts }` and spread into
+`createEmbeddedCheckoutPage({ clientSecret, ...stripeAppearanceForCurrentTheme() })`.
+Captured once when the checkout screen mounts — a theme toggle mid-payment
+isn't re-applied to an already-open iframe, a deliberate scope cut rather
+than an oversight.
+
+**Known follow-up, not yet done**: Stripe's `clientSecret` param to
+`createEmbeddedCheckoutPage()` is now documented as deprecated in favor of
+a `fetchClientSecret` callback (faster load, per Stripe's own docs) — it
+still works today, but given this integration has already broken twice
+this session from trusting a soon-to-be-stale Stripe API shape, migrating
+to `fetchClientSecret` proactively (rather than waiting for `clientSecret`
+to actually stop working) is worth scheduling.
+
 **stripe-webhook** (`verify_jwt = false`, HMAC-verified like the deleted
 identity-webhook was): the *only* place tickets get created for a paid
 purchase — `checkout.session.completed` creates the ticket rows (+ an
