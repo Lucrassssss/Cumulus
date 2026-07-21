@@ -160,18 +160,46 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator("#gate-field-error")).toBeVisible();
   });
 
-  test("enter app → 4-tab bottom nav", async ({ page }) => {
+  test("enter app → 3-tab bottom nav (Host hidden until approved)", async ({
+    page,
+  }) => {
     await page.goto("/");
     await enterApp(page);
     const labels = (
       await page.locator(".bottom-nav .nav-link").allInnerTexts()
     ).map((s) => s.trim().toUpperCase());
-    for (const tab of ["EXPLORE", "HOST", "CALENDAR", "PROFILE"]) {
+    for (const tab of ["EXPLORE", "CALENDAR", "PROFILE"]) {
       expect(
         labels.some((l) => l.includes(tab)),
         `${tab} tab present`,
       ).toBeTruthy();
     }
+    // Host tab is gated behind approved-host status (verified-host special
+    // badge or admin) — a freshly signed-up account has neither, so it must
+    // not be able to spam the event-creation form.
+    expect(
+      labels.some((l) => l.includes("HOST")),
+      "Host tab hidden for a non-approved account",
+    ).toBeFalsy();
+  });
+
+  test("Host tab appears once an account is an approved host", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      /* global state, renderNav */
+      state.specialBadges = ["verified-host"];
+      renderNav();
+    });
+    const labels = (
+      await page.locator(".bottom-nav .nav-link").allInnerTexts()
+    ).map((s) => s.trim().toUpperCase());
+    expect(
+      labels.some((l) => l.includes("HOST")),
+      "Host tab present for an approved host",
+    ).toBeTruthy();
   });
 
   test("core views render (host / calendar / profile)", async ({ page }) => {

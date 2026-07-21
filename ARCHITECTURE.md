@@ -360,6 +360,53 @@ for them here would be inventing a feature the document doesn't actually ask
 for. See `PRODUCT.md` → "Business Model" for how this is framed for the
 brand/product side.
 
+## Host onboarding — applications and the Host tab gate
+
+Two related bugs meant "apply to host" and "review a submitted event" looked
+like they worked but didn't: `public.host_applications` never existed on the
+live project — every application silently fell back to a browser-local
+`localStorage` array (the code's own error-fallback path), so an admin on a
+different device would never see it. And `loadAndRenderEventApprovals()` had
+a dead conditional (`if (error) if (!error && data) …` — the inner branch is
+never reachable, since `error` and `!error` can't both be true) that meant
+the admin Event Approvals queue always rendered "All clear" regardless of
+what was actually pending. Both fixed in
+`supabase/migrations/20260721030000_host_applications_and_review_fixes.sql`
+plus the corresponding one-line JS fix.
+
+That same migration also closes a real privilege-escalation gap: the
+original `pending_events_select`/`pending_events_update` policies (from the
+2026-07-03 migration) were `using (true)` for both — fully open reads *and
+writes* on every row to any authenticated (or even anonymous) caller.
+Combined with `events_insert_own`'s `host_id = auth.uid()` check, any
+signed-in user could call `decideEvent(<their own pending_events id>,
+'approved')` directly (e.g. from devtools) and self-publish, bypassing
+admin review entirely — the admin-only UI was cosmetic, not a real boundary.
+Now scoped to `host_id = auth.uid() or is_admin()` for select and
+`is_admin()`-only for update.
+
+**The Host tab is no longer shown to every signed-in user.** Previously any
+account could open it and submit an event straight into the `pending_events`
+review queue with zero hosting privileges — the request that prompted this
+section put it plainly: "every user can just spam the host button when they
+don't have privileges to host." `isApprovedHost()` (`app.js`) now gates it:
+true for admins, or for an account carrying the `verified-host`
+`special_badges` entry that `reviewHost()` grants on host_applications
+approval. `renderNav()` only includes the Host tab when that's true, and
+`openHost()` redirects a non-approved caller into the apply flow instead of
+the event-creation form (defense in depth against a stale nav DOM or a
+direct call). Non-approved signed-in users apply via a new in-app flow —
+Profile → "Become a host" → `openHostApply()`/`renderHostApplyView()` —
+which shares its DB-write logic (`_saveHostApplicationRow()`) with the
+original landing-page "Become a host" signup path rather than duplicating
+it. `getMyHostApplicationStatus()` (services.js) loads the caller's latest
+application status during `initApp()` so Profile can show "Become a host"
+(never applied / rejected), "Application pending" (disabled), or nothing
+(already approved — the Host tab covers it). The actual security boundary
+remains server-side RLS (`events_insert_own`, the two policies above) — this
+gating is about not offering a dead-end UI to accounts with no privileges,
+not the enforcement itself.
+
 ## Security model (important)
 
 There is no server to hide keys behind, so the keys in `config.js` are the
