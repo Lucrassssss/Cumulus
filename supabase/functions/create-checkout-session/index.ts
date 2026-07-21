@@ -1,8 +1,12 @@
-/* Creates a real Stripe Checkout Session for a paid event and hands back its
- * hosted `url` for the browser to redirect to — no Stripe.js/Elements needed
- * client-side at all, which fits this repo's "no build step, no SDK" house
- * style (same reasoning as create-checkout-session's now-removed sibling,
- * the old create-verification-session).
+/* Creates a real Stripe Checkout Session in EMBEDDED mode (ui_mode:
+ * "embedded") and hands back its `client_secret` for the browser to mount
+ * in-page via Stripe.js's stripe.initEmbeddedCheckout() — the buyer never
+ * leaves cumulus's own origin. return_url points back at this app's own
+ * page (see checkStripeCheckoutReturn() in src/js/app/10-badges.js), which
+ * is what makes it "embedded" rather than a redirect to a Stripe-hosted
+ * page. Stripe.js (https://js.stripe.com/v3/) is loaded client-side for
+ * this — the one exception to this repo's "no SDK" house style, required
+ * because Embedded Checkout's iframe is mounted and driven by that library.
  *
  * "Separate charges and transfers": Checkout collects the FULL amount
  * (ticket price + booking fee) onto the PLATFORM's own Stripe account. The
