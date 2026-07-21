@@ -392,12 +392,91 @@ rename claim turned out not to reflect what's actually live, treat that
 deprecation claim with the same skepticism until independently confirmed
 against the real, currently-loaded Stripe.js before acting on it.
 
+**Superseded** by the "Payment Element migration" section directly below —
+theming attempt #2 got the header/button themed but hit a hard wall on the
+input card itself, which is what finally justified the bigger rebuild.
+
+### Payment Element migration (2026-07-21) — full theming needs the raw Elements API, not Checkout Sessions
+
+Attempt #2 above (`branding_settings`) DID theme the Checkout Session's
+header/summary background and the "Pay" button — confirmed against a real
+screenshot of the live checkout. But the payment-method-selection card
+(email field, card/wallet list) stayed on a fixed white surface no matter
+what. Researched against Stripe's own docs/community reports and confirmed
+this is a genuine, deliberate Stripe product constraint: the pre-built
+Checkout Session form always renders its input card on a fixed light
+surface for legibility/trust, and there is no parameter — Appearance API or
+`branding_settings` — that reaches it. This isn't a bug to keep patching;
+no further server-side field-name guessing would ever fix it.
+
+The only way to theme the input card itself is to stop using Stripe's
+pre-built Checkout Session form and build the payment form directly with
+Stripe's **Elements** API instead — full Appearance API control over every
+surface, because the form's DOM is no longer Stripe's own hosted page/
+iframe, it's `Element`s mounted directly into this app's own page. Given
+this session's track record of three prior live breakages from newer/
+less-proven Stripe surfaces (the `ui_mode` rename, the malformed
+`Stripe-Version` header, the `appearance` param rejection above), the
+migration deliberately targets Stripe's **oldest, most stable** payments
+primitive — raw **PaymentIntent + Payment Element**
+(`automatic_payment_methods` has been GA since 2023-08-16) — rather than
+the newer "Elements with Checkout Sessions" feature (`ui_mode: "elements"`
++ `initCheckout`), which ships behind a distinct versioned Stripe.js
+preview build and looked like a strong candidate for a fifth outage.
+
+**What changed:**
+
+- `create-checkout-session` no longer creates a Checkout Session at all —
+  it creates a **PaymentIntent** (`POST /v1/payment_intents`) for the full
+  charge amount (ticket price + booking fee, × quantity — PaymentIntents
+  have no line-items/quantity concept, so the server multiplies once
+  up front) and returns its `client_secret`. `automatic_payment_methods`
+  is left enabled so Stripe still offers whatever's eligible (cards,
+  wallets, bank debits) without the function hard-coding a method list.
+  Also looks up the buyer's email from `public.users` and passes it as
+  `receipt_email`, so the new form never needs to ask for an email the
+  app already has (unlike the old Checkout form's own Email field).
+- `startStripeCheckout()` (`src/js/app/10-badges.js`) now calls
+  `stripe.elements({ clientSecret, appearance, fonts })` (the SAME
+  `stripeAppearanceForCurrentTheme()` color/font values computed for the
+  abandoned attempt #1 — they finally apply for real now) and mounts a
+  single `payment` Element into `#payment-element`
+  (`renderCheckout()`, `src/js/app/11-event-checkout.js`). A `#pay-btn`
+  button stays hidden until the Element fires `'ready'`, then triggers
+  `submitStripePayment()` on click.
+- `submitStripePayment()` calls
+  `stripe.confirmPayment({ elements, confirmParams: { return_url }, redirect: "if_required" })`.
+  Most cards confirm **synchronously with no redirect at all** — the
+  promise resolves with `{ paymentIntent }` directly, and
+  `finalizeStripePayment()` is called inline. Some methods (certain bank
+  debits/wallets) genuinely navigate away and back via `return_url`;
+  `checkStripeCheckoutReturn()` (boot-time) now reads Stripe's own
+  appended `?payment_intent=...&redirect_status=...` params (replacing the
+  old `session_id`/`checkout` params) and calls the same
+  `finalizeStripePayment()` for that path — one shared
+  polling/confirmation-screen implementation for both completion routes.
+- `stripe-webhook`'s trigger event changed from `checkout.session.completed`
+  to **`payment_intent.succeeded`**, and its idempotency/ticket-linking
+  column changed from `stripe_checkout_session_id` to
+  `stripe_payment_intent_id` (both columns already existed on `tickets`
+  from the original Connect-scaffolding migration — no new migration
+  needed). **This requires a manual Stripe Dashboard change** — the
+  webhook endpoint must be resubscribed from `checkout.session.completed`
+  to `payment_intent.succeeded`, or payments will succeed with no ticket
+  ever created. See GO-LIVE.md → "REQUIRED — Stripe Dashboard webhook
+  resubscription" for the exact steps; no tool available to this session
+  can change a webhook's subscribed events itself.
+- `fetchTicketsBySession()`/`stripe_checkout_session_id`-based lookups were
+  replaced outright by `fetchTicketsByPaymentIntent()` (`src/js/services.js`)
+  — no dead code left behind, since nothing else referenced the old
+  session-based path once the redirect-return handler was rewritten.
+
 **stripe-webhook** (`verify_jwt = false`, HMAC-verified like the deleted
 identity-webhook was): the *only* place tickets get created for a paid
-purchase — `checkout.session.completed` creates the ticket rows (+ an
+purchase — `payment_intent.succeeded` creates the ticket rows (+ an
 `event_squads` row if `qty > 1`, mirroring the old client-side
 `createSquadIfNeeded()`), which fires the existing `sync_event_payout_trg`
-automatically. Idempotent on `stripe_checkout_session_id` (Stripe redelivers
+automatically. Idempotent on `stripe_payment_intent_id` (Stripe redelivers
 webhooks). Also handles `account.updated` to flip a host's
 `stripe_connect_charges_enabled`/`payouts_enabled` once Stripe actually
 verifies their Connect account — `connect-onboarding` only ever *starts*

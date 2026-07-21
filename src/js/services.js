@@ -304,18 +304,17 @@ async function getRepeatAttendeeCount(eventId) {
  * checked by the gateway, Stripe calls) lives in the edge functions
  * themselves, same division of responsibility as the rest of this file. */
 
-/* Starts a real Stripe Checkout for a paid event and returns the hosted
- * session URL to redirect to. Free events never call this — registerFree()
- * (app.js) handles those with no Stripe involvement at all. */
+/* Creates a real Stripe PaymentIntent for a paid event and returns its
+ * client_secret for startStripeCheckout() (10-badges.js) to mount a Payment
+ * Element against. Free events never call this — registerFree() (app.js)
+ * handles those with no Stripe involvement at all. */
 async function createCheckoutSession(eventId, qty, marketingOptIn) {
   try {
     const { data, error } = await sb.functions.invoke("create-checkout-session", {
       body: {
         eventId,
         qty,
-        origin: location.origin,
         marketingOptIn: !!marketingOptIn,
-        theme: document.documentElement.dataset.theme === "dark" ? "dark" : "light",
       },
     });
     if (error) {
@@ -338,15 +337,17 @@ async function createCheckoutSession(eventId, qty, marketingOptIn) {
   }
 }
 
-/* Fetches the tickets a just-completed Checkout Session created, for the
- * post-redirect confirmation screen. Relies on tickets_buyer_read RLS
- * (user_id = auth.uid()) — this never needs a service-role key client-side. */
-async function fetchTicketsBySession(sessionId) {
+/* Fetches the tickets a just-completed PaymentIntent created, for the
+ * confirmation screen — polled by finalizeStripePayment() (10-badges.js)
+ * since stripe-webhook creates these rows asynchronously. Relies on
+ * tickets_buyer_read RLS (user_id = auth.uid()) — this never needs a
+ * service-role key client-side. */
+async function fetchTicketsByPaymentIntent(paymentIntentId) {
   try {
     const { data, error } = await sb
       .from("tickets")
       .select("*")
-      .eq("stripe_checkout_session_id", sessionId);
+      .eq("stripe_payment_intent_id", paymentIntentId);
     if (error) return null;
     return data || [];
   } catch (e) {
