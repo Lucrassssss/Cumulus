@@ -80,6 +80,16 @@ Keep `gondoxml@gmail.com`.
 Live site → sign in as `gondoxml@gmail.com` → 6-digit code arrives → enter it →
 you're in as admin (admin panel + event approvals visible).
 
+### 5. Enable leaked-password protection
+
+**Authentication → Policies** (or **Authentication → Providers → Email**,
+depending on dashboard version) → enable **"Leaked password protection"**.
+Checks new passwords against HaveIBeenPwned so no account can be created
+with a password already known to be compromised elsewhere. Flagged by
+Supabase's own security advisor (`auth_leaked_password_protection`) — not
+something any migration or API call available to this repo's tooling can
+turn on; it's an Auth-service setting, not a database object.
+
 ---
 
 ## Doing the connector-dependent bits in a fresh chat
@@ -99,6 +109,28 @@ are stuck disabled, open a **new chat** and paste:
 
 ## Still on the roadmap (code, not config)
 
+- **Stripe Embedded Checkout — buyer never leaves the app.** Checkout used
+  to redirect to a Stripe-hosted page; `create-checkout-session` now
+  creates the session in `ui_mode: "embedded"` and the buyer pays inside a
+  Stripe.js-mounted iframe right on Cumulus's own checkout screen (same
+  approach as Eventbrite's in-page checkout). See ARCHITECTURE.md →
+  "Embedded Checkout — the buyer never leaves cumulus". No functional
+  change to how tickets get created — `stripe-webhook` still does that,
+  the same way it always did.
+- **Supabase advisor remediation pass — two real vulnerabilities fixed, the
+  rest of the warning list resolved or documented.**
+  `supabase/migrations/20260721060000_advisor_remediation.sql`: closed an
+  actual account/financial-data-disclosure bug in `app_role()` and
+  `get_host_payouts()` (both let a caller read *any* user's role or *any*
+  host's payout history by passing someone else's UUID — neither the app
+  nor any existing caller ever did this, but the RPCs allowed it), pinned
+  `search_path` on 3 functions, revoked unnecessary public RPC access on
+  trigger-only functions, and rewrote every RLS policy's `auth.uid()` calls
+  plus merged several redundant/duplicate policies (the full
+  `auth_rls_initplan` + `multiple_permissive_policies` performance-advisor
+  list, ~30 findings, all resolved). See ARCHITECTURE.md → "Advisor
+  remediation pass" for the complete list, and → "Security model" for what's
+  left (all dashboard-only or intentional, not code gaps).
 - Verify the map's day/night relight on the live site (Mapbox is blocked in CI).
 - **Host applications + event review — fixed and live.**
   `supabase/migrations/20260721030000_host_applications_and_review_fixes.sql`

@@ -14,7 +14,20 @@ fact drives every architectural decision below.
 │   └── js/
 │       ├── config.js     # runtime config + Supabase client (`sb`)
 │       ├── services.js   # data-access + business logic (auth, ticket claims, host payouts)
-│       └── app.js        # UI rendering, state, Mapbox logic
+│       └── app/           # UI rendering, state, Mapbox logic — 12 classic
+│           ├── 01-core-constants.js    #   scripts loaded in this numeric
+│           ├── 02-core-storage.js      #   order (see below); all still
+│           ├── 03-core-theme.js        #   share ONE global scope, same
+│           ├── 04-auth-onboarding.js   #   inline-onclick contract as the
+│           ├── 05-data-loaders.js      #   single app.js this replaced —
+│           ├── 06-map-animations.js    #   this is a file-count split for
+│           ├── 07-discovery-map.js     #   readability, not the ES-module
+│           ├── 08-event-creator.js     #   Phase 2 rewrite described below.
+│           ├── 09-host-analytics.js    #   Note: the split's naming isn't
+│           ├── 10-badges.js            #   perfectly scoped — e.g. Stripe
+│           ├── 11-event-checkout.js    #   checkout logic (startStripe-
+│           └── 12-ticket-wallet.js     #   Checkout) landed in 10-badges.js,
+│                                       #   not 11-event-checkout.js.
 ├── assets/
 │   ├── clouds/           # cloud1–5.webp — drifting hero clouds
 │   ├── skyline/          # skyline-light.svg / skyline-dark.svg — hero skyline
@@ -33,12 +46,15 @@ Inline handlers resolve against the **global scope**, so every handler function
 must be a global. This is why the app JS is loaded as a **classic deferred
 script**, not an ES module:
 
-- `<script defer src="src/js/app.js">` — classic scripts share one global
-  lexical scope, so top-level `function foo(){}` stays reachable from
-  `onclick="foo()"`. `defer` makes it non-render-blocking and preserves order.
+- `<script defer src="src/js/app/01-core-constants.js">` (and the 11 files
+  after it) — classic scripts share one global lexical scope, so top-level
+  `function foo(){}` in ANY of the 12 files stays reachable from
+  `onclick="foo()"` anywhere else. `defer` makes each non-render-blocking
+  and preserves execution order across all of them.
 - Load order (all `defer`, executed in document order after parse):
-  `supabase-js` → `config.js` (creates `sb`) → `services.js` → `mapbox-gl`
-  → `qrcode` → `app.js`.
+  `supabase-js` → `stripe-js` → `config.js` (creates `sb`) → `services.js` →
+  `mapbox-gl` → `qrcode` → `src/js/app/01-core-constants.js` through
+  `12-ticket-wallet.js`, in that numeric order.
 - The tiny inline theme script in `<head>` is intentionally **not** deferred —
   it must set `data-theme` before first paint to avoid a flash.
 
@@ -199,9 +215,37 @@ onboarding.
 `price` server-side (the client sends only `eventId`/`qty` — price is never
 trusted from the request body), computes the booking fee with a fee-tier
 function that **must be kept in sync by hand** with `getCumulusFee()` in
-`app.js` (£0 free / ≤£15 → £1.50 / ≤£40 → £2.50 / ≤£71 → £3.50 / else
-£4.50), creates a Stripe Checkout Session, and returns its hosted `url` for
-`location.href` to redirect to. No Stripe.js/Elements anywhere client-side.
+`src/js/app/*.js` (£0 free / ≤£15 → £1.50 / ≤£40 → £2.50 / ≤£71 → £3.50 /
+else £4.50), creates a Stripe Checkout Session in **embedded** mode
+(`ui_mode: "embedded"`), and returns its `client_secret`. See "Embedded
+Checkout" below — this used to return a hosted `url` for `location.href` to
+redirect to; it doesn't anymore.
+
+### Embedded Checkout — the buyer never leaves cumulus
+
+Checkout used to redirect the whole tab to a Stripe-hosted payment page.
+It's now Stripe's **Embedded Checkout**: `create-checkout-session` passes
+`ui_mode: "embedded"` and a `return_url` (this app's own origin, with a
+`{CHECKOUT_SESSION_ID}` placeholder Stripe fills in) instead of
+`success_url`/`cancel_url`, and returns `client_secret` instead of `url`.
+`startStripeCheckout()` (`src/js/app/10-badges.js`) loads `Stripe.js`
+(`https://js.stripe.com/v3/`, the one exception to this repo's "no SDK for
+anything" rule — Embedded Checkout's iframe can only be mounted and driven
+by that library), calls `stripe.initEmbeddedCheckout({ clientSecret })`,
+and mounts it into `#stripe-checkout-embedded` right on the existing
+checkout screen (`renderCheckout()`, `src/js/app/11-event-checkout.js`) —
+same look as Eventbrite's in-page checkout, no new tab, no new domain in
+the address bar. On completion Stripe navigates back to `return_url`
+(`/?checkout=return&session_id=...`), which is still this app's own page;
+`checkStripeCheckoutReturn()` (boot-time, `10-badges.js`) reads that,
+polls `fetchTicketsBySession()` until `stripe-webhook` has finished
+creating the ticket rows (same webhook, same ticket-creation path as
+before — embedded vs. hosted only changes where the *card form* renders,
+not how a ticket gets created), and shows the confirmation screen. No
+Stripe Elements/PaymentIntent hand-rolling was needed to get this — Stripe
+owns the whole payment form (card, wallets, Link) inside the mounted
+iframe, same PCI scope as before, just presented in-page instead of on a
+separate domain.
 
 **stripe-webhook** (`verify_jwt = false`, HMAC-verified like the deleted
 identity-webhook was): the *only* place tickets get created for a paid
@@ -572,6 +616,79 @@ holds ~8500 rows of public EPSG/SRID coordinate-system definitions, byte-for-
 byte identical on every PostGIS install on earth — there is no app or user
 data in it, and "RLS disabled" here means at most someone can read reference
 data that's already public in the PostGIS source itself.
+
+**`extension_in_public` (`postgis`, `pg_net`) — same limitation, same
+verdict.** Both extensions are installed in the `public` schema, which
+Supabase's advisor flags on general security-hygiene grounds (a compromised
+function in an extension sharing a schema with app tables has a shorter
+path to them). Checked ownership the same way as `spatial_ref_sys`: both
+extensions are owned by `supabase_admin`, not `postgres` — `ALTER EXTENSION
+... SET SCHEMA` requires ownership this repo's tooling doesn't have. The
+real fix (moving both into a dedicated `extensions` schema) is a Dashboard
+Extensions-UI action, and for `postgis` specifically it's a bigger change
+than it looks (every geography column, GIST index, and `ST_*` call in
+`get_events_geojson`/`sync_event_coordinates` would need re-pointing) —
+tracked, not attempted here.
+
+### Advisor remediation pass (2026-07-21)
+
+A full `get_advisors` sweep (security + performance), prompted by the
+volume of warnings the user was seeing directly in the Supabase dashboard.
+`supabase/migrations/20260721060000_advisor_remediation.sql` fixed
+everything that was actually fixable from this repo's tooling:
+
+- **Two real vulnerabilities, not just lint noise.** `app_role(p_user uuid
+  default auth.uid())` and `get_host_payouts(p_host uuid default
+  auth.uid())` are both `SECURITY DEFINER` (so they bypass RLS entirely)
+  and both let the *caller* override the default with anyone else's UUID,
+  with no check that the override actually belonged to them. Neither the
+  app itself nor any migration ever called them with an override — the
+  app's own use (check my own role; read my own payouts) always looked
+  correct — but as exposed PostgREST RPCs, anyone with the public anon key
+  could call `app_role(p_user := '<any-uuid>')` and learn whether an
+  arbitrary account is an admin, or `get_host_payouts(p_host :=
+  '<any-uuid>')` and read another host's entire payout ledger (gross/fee/
+  net amounts, dispute status) — completely bypassing the
+  `event_payouts_host_read` RLS policy that looks like it protects that
+  table. Fixed by adding the same "self, or `is_admin()`" check every other
+  parameterized RPC in this codebase already uses.
+- **`function_search_path_mutable`** — `get_events_geojson`,
+  `get_event_details`, `sync_event_coordinates` were missing a pinned
+  `search_path`; added `set search_path = public, pg_temp` to all three,
+  bodies unchanged.
+- **Unnecessary RPC exposure on trigger-only functions** —
+  `protect_user_columns`, `set_payout_schedule`, `sync_event_payout`,
+  `sync_event_coordinates`, and `is_trusted_host` only ever run as
+  triggers or as internal calls from inside another trigger (confirmed via
+  `pg_trigger`); Postgres fires a trigger as the function's owner
+  regardless of the invoking role's own `EXECUTE` grant, so revoking
+  `anon`/`authenticated` access removes a public `/rest/v1/rpc/...` entry
+  point with zero effect on the triggers themselves.
+- **`auth_rls_initplan`** (23 policies across `admins`, `event_attendees`,
+  `event_payouts`, `event_squads`, `events`, `host_applications`,
+  `pending_events`, `rsvps`, `tickets`, `users`) — every direct
+  `auth.uid()` call written inline in a policy was re-evaluating per row;
+  wrapped each in `(select auth.uid())` so Postgres caches it once per
+  statement.
+- **`multiple_permissive_policies`** — several tables had a blanket
+  `*_admin_all` (or duplicate `*_admin`) policy layered on top of
+  already-`is_admin()`-aware per-action policies (Postgres evaluates every
+  permissive policy that applies, so two policies for the same
+  role+action is pure overhead). Folded each blanket policy's `is_admin()`
+  branch into the specific policy(ies) that needed it and dropped the
+  blanket one — same authorization outcome, fewer policies evaluated per
+  query. Also found and dropped two policies that were byte-for-byte
+  duplicates of another policy already on the same table/action
+  (`users_self_write` ≡ `users_self_update`, `pending_events_update_admin`
+  ≡ `pending_events_update`), and one that was a strict subset of another
+  (`pending_events_select_admin` ⊂ `pending_events_select`).
+- **`unused_index`** (INFO) — five indexes Postgres stats say have never
+  been used. Left alone: this project has no real production traffic yet,
+  so "unused" means "not yet exercised," not "useless" — each backs a real
+  query pattern (`tickets_stripe_pi_idx`/`tickets_stripe_session_idx` for
+  `fetchTicketsBySession()`, etc.). Revisit once there's real usage data.
+- **`auth_leaked_password_protection`** — Supabase Auth setting, not a
+  migration; see `GO-LIVE.md`.
 
 ## Production readiness — app & website
 

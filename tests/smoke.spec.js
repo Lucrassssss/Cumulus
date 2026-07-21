@@ -102,8 +102,9 @@ test.describe("Cumulus smoke", () => {
     // (The skyline is an inline SVG diorama now — only cloud photos load as assets.)
     for (const path of [
       "/src/css/styles.css",
-      "/src/js/app.js",
       "/src/js/config.js",
+      "/src/js/app/01-core-constants.js",
+      "/src/js/app/11-event-checkout.js",
       "/assets/clouds/cloud1.webp",
       "/assets/clouds/cloud3.webp",
       "/assets/img/discover.svg",
