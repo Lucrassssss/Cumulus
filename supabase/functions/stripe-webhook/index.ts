@@ -148,6 +148,7 @@ Deno.serve(async (req: Request) => {
     const qty = Math.max(1, Math.min(10, Number(session.metadata?.qty) || 1));
     const pricePerTicket = Number(session.metadata?.price_per_ticket) || 0;
     const platformFee = Number(session.metadata?.platform_fee) || 0;
+    const marketingOptIn = session.metadata?.marketing_opt_in === "true";
     const paymentIntentId: string | null = session.payment_intent || null;
 
     if (!eventId || !userId) {
@@ -223,6 +224,7 @@ Deno.serve(async (req: Request) => {
       status: "active",
       stripe_payment_intent_id: paymentIntentId,
       stripe_checkout_session_id: sessionId,
+      marketing_opt_in: marketingOptIn,
     }));
 
     const insertRes = await fetch(`${supabaseUrl}/rest/v1/tickets`, {

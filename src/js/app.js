@@ -4035,6 +4035,7 @@ async function loadRealEvents() {
       price: ev.price || 0,
       priceTiers: ev.price_tiers || null,
       nightShotUrl: ev.night_shot_url || null,
+      photoUrl: ev.photo_url || null,
       status: ev.status || "active",
     };
     computeEventDates(mapped);
@@ -4448,6 +4449,11 @@ function openHost() {
     openHostApply();
     return;
   }
+  // A flyer picked on a previous visit to this form (then abandoned without
+  // submitting, e.g. via the back button) must not silently attach itself
+  // to a completely different submission later — the fresh form has no
+  // preview showing anything is still selected.
+  _hostFlyerBlob = null;
   state.view = "host";
   renderNav();
   renderView();
@@ -4537,6 +4543,7 @@ function buildEventsGeoJSON() {
           color: CATS[ev.category].color,
           status: eventStatus(ev),
           category: ev.category,
+          free: eventPrice(ev) <= 0,
         },
       })),
   };
@@ -4792,6 +4799,7 @@ function bounceInPinLayer(features) {
 // Data-URL cache of each category's pin image, captured in loadWebGLIcons —
 // reused by the DOM hover-overlay so it's pixel-identical to the WebGL pin.
 const pinImageDataUrls = {};
+const pinFreeImageDataUrls = {};
 
 let _pinOverlayEl = null;
 function ensurePinOverlay() {
@@ -4830,7 +4838,9 @@ function showPinOverlay(ev) {
   if (!el) return;
   _pinOverlayEvId = ev.id;
   const img = el.querySelector("img");
-  img.src = pinImageDataUrls[ev.category] || "";
+  const isFree = eventPrice(ev) <= 0;
+  img.src =
+    (isFree ? pinFreeImageDataUrls[ev.category] : pinImageDataUrls[ev.category]) || "";
   positionPinOverlay([ev.lon, ev.lat]);
   el.style.display = "block";
   // Always retrigger the bounce-in from a clean state, even when the
@@ -5019,47 +5029,63 @@ function drawCategoryGlyph(ctx, name, cx, cy, r) {
 // small category glyph inside it. The tip sits near the bottom of the canvas
 // so icon-anchor:'bottom' on the symbol layer plants the tip — not the
 // visual centre — on the event's coordinate.
-function loadWebGLIcons() {
-  if (!lmap) return;
+// Codex pin taxonomy: "Standard Pins" (paid) vs "Ghost Pins" (free events,
+// visually distinct/muted so a scan of the map reads price at a glance).
+// "Sponsored Pins" from the same spec are deliberately not built — there's
+// no brand/sponsorship data model anywhere in this schema, and drawing a
+// glowing pin for a feature that doesn't exist would be UI for nothing (see
+// PRODUCT.md — sponsorship is a manual sales process, not a product
+// surface). A ghost pin is just the same silhouette in a muted grey instead
+// of the category colour, at reduced opacity — still shows the category
+// glyph, so "cheap/free" doesn't come at the cost of "what kind of event".
+const GHOST_PIN_COLOR = "#9CA3AF";
+function drawPinIcon(ctx, name, cat, muted) {
   const outerPin = new Path2D(
     "M20 3C11.72 3 5 9.72 5 18c0 11.6 15 31 15 31s15-19.4 15-31C35 9.72 28.28 3 20 3Z",
   );
   const innerPin = new Path2D(
     "M20 6C13.4 6 8 11.4 8 18c0 9.6 12 27 12 27s12-17.4 12-27C32 11.4 26.6 6 20 6Z",
   );
+  const fill = muted ? GHOST_PIN_COLOR : cat.color;
+  ctx.globalAlpha = muted ? 0.62 : 1;
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.35)";
+  ctx.shadowBlur = 3;
+  ctx.shadowOffsetY = 2;
+  ctx.fillStyle = "#ffffff";
+  ctx.fill(outerPin);
+  ctx.restore();
+  ctx.fillStyle = fill;
+  ctx.fill(innerPin);
+  ctx.beginPath();
+  ctx.arc(20, 18, 7.2, 0, Math.PI * 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+  ctx.fillStyle = fill;
+  drawCategoryGlyph(ctx, name, 20, 18, 5.6);
+  ctx.globalAlpha = 1;
+}
+function loadWebGLIcons() {
+  if (!lmap) return;
   Object.entries(CATS).forEach(([name, cat]) => {
     const w = 40,
       h = 50;
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    ctx.save();
-    ctx.shadowColor = "rgba(0,0,0,0.35)";
-    ctx.shadowBlur = 3;
-    ctx.shadowOffsetY = 2;
-    ctx.fillStyle = "#ffffff";
-    ctx.fill(outerPin);
-    ctx.restore();
-    ctx.fillStyle = cat.color;
-    ctx.fill(innerPin);
-    ctx.beginPath();
-    ctx.arc(20, 18, 7.2, 0, Math.PI * 2);
-    ctx.fillStyle = "#ffffff";
-    ctx.fill();
-    ctx.fillStyle = cat.color;
-    drawCategoryGlyph(ctx, name, 20, 18, 5.6);
-    // ctx.getImageData() reads the actual pixel buffer back from the canvas
-    // as a flat Uint8ClampedArray — the format Mapbox addImage() requires.
-    const imageData = ctx.getImageData(0, 0, w, h);
-    try {
-      lmap.addImage("pin-" + name, {
-        width: w,
-        height: h,
-        data: imageData.data,
-      });
-    } catch (e) {}
-    pinImageDataUrls[name] = canvas.toDataURL();
+    [false, true].forEach((muted) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      drawPinIcon(ctx, name, cat, muted);
+      // ctx.getImageData() reads the actual pixel buffer back from the
+      // canvas as a flat Uint8ClampedArray — the format Mapbox addImage()
+      // requires.
+      const imageData = ctx.getImageData(0, 0, w, h);
+      const imgId = (muted ? "pin-free-" : "pin-") + name;
+      try {
+        lmap.addImage(imgId, { width: w, height: h, data: imageData.data });
+      } catch (e) {}
+      (muted ? pinFreeImageDataUrls : pinImageDataUrls)[name] = canvas.toDataURL();
+    });
   });
 }
 
@@ -5238,7 +5264,11 @@ function attachMapLayers() {
     source: "events-source",
     filter: ["!", ["has", "point_count"]],
     layout: {
-      "icon-image": ["concat", "pin-", ["get", "category"]],
+      "icon-image": [
+        "concat",
+        ["case", ["==", ["get", "free"], true], "pin-free-", "pin-"],
+        ["get", "category"],
+      ],
       "icon-size": 1.0,
       "icon-anchor": "bottom",
       "icon-allow-overlap": true,
@@ -5496,7 +5526,9 @@ async function fetchVisibleEvents() {
         desc: ev.description,
         capacity: ev.capacity,
         price: ev.price || 0,
+        priceTiers: ev.price_tiers || null,
         nightShotUrl: ev.night_shot_url || null,
+        photoUrl: ev.photo_url || null,
       };
       computeEventDates(mapped);
       EVENTS.push(mapped);
@@ -6139,6 +6171,88 @@ function selectAutocompleteAddress(lat, lon, fullAddress, name) {
 // renderHostView() — to keep the default flow simple/fast, matching the
 // SAME doc's "60-second mobile publish" demand). Returns null (use the
 // flat price field) unless the host actually filled in at least one row.
+// ── Event flyer upload (Codex Page 2 / Page 5) ──────────────────────────────
+// Client-side canvas re-encode before upload — no library, matching this
+// app's "no build step" constraint. A real flyer replaces the category
+// stock photo (catImg()) wherever an event's image renders; no flyer just
+// falls back to that stock photo exactly as before, so this is additive.
+function compressImageFile(file, maxDim = 1600, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        const scale = maxDim / Math.max(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          URL.revokeObjectURL(url);
+          if (blob) resolve(blob);
+          else reject(new Error("Compression failed"));
+        },
+        "image/jpeg",
+        quality,
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not read image"));
+    };
+    img.src = url;
+  });
+}
+
+let _hostFlyerBlob = null;
+async function handleHostFlyerSelect(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const preview = document.getElementById("host-flyer-preview");
+  if (preview)
+    preview.innerHTML = `<span style="font-size:12px;color:var(--text-muted);">Compressing…</span>`;
+  try {
+    _hostFlyerBlob = await compressImageFile(file);
+    const url = URL.createObjectURL(_hostFlyerBlob);
+    if (preview) {
+      preview.style.border = "none";
+      preview.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;"/>`;
+    }
+  } catch (e) {
+    _hostFlyerBlob = null;
+    showToast("Couldn't process that image — try another", "error");
+    if (preview) {
+      preview.style.border = "2px dashed var(--line)";
+      preview.innerHTML = `<span style="font-size:22px;">📷</span><span>Tap to upload a flyer photo</span>`;
+    }
+  }
+}
+
+// Uploads to the caller's own folder in the event-flyers bucket (RLS scopes
+// writes to auth.uid() — see the migration) and returns its public URL, or
+// null if there's nothing to upload or the upload fails (never blocks event
+// submission; the category stock photo is always a safe fallback).
+async function uploadHostFlyer() {
+  if (!_hostFlyerBlob || !state.userId) return null;
+  try {
+    const path = `${state.userId}/${Date.now()}.jpg`;
+    const { error } = await sb.storage
+      .from("event-flyers")
+      .upload(path, _hostFlyerBlob, { contentType: "image/jpeg", upsert: false });
+    if (error) return null;
+    const { data } = sb.storage.from("event-flyers").getPublicUrl(path);
+    return data?.publicUrl || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 function collectHostPriceTiers() {
   const toggle = document.getElementById("host-tiered-toggle");
   if (!toggle || !toggle.checked) return null;
@@ -6196,6 +6310,22 @@ async function submitHostEvent() {
     return;
   }
 
+  // Disable before the (potentially slow) flyer upload starts, not just
+  // once we're inside one of the two insert branches below — otherwise the
+  // button stayed clickable for the whole upload and a second click could
+  // race a duplicate submission.
+  const submitBtn = document.getElementById("host-submit-btn");
+  const submitBtnOrigLabel = submitBtn?.textContent;
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Uploading flyer…";
+  }
+  // Upload before either insert path so both the admin-direct and
+  // pending_events rows get the same photo_url — a failed/skipped upload
+  // just leaves it null, and the category stock photo covers the rest.
+  const photoUrl = await uploadHostFlyer();
+  if (submitBtn) submitBtn.textContent = submitBtnOrigLabel;
+
   // Every event is public. Admin submissions publish immediately; everyone
   // else goes via pending_events for a quick review (see the notify-admin
   // edge function, which emails on every new pending row).
@@ -6225,6 +6355,7 @@ async function submitHostEvent() {
         capacity: parseInt(capStr, 10),
         price: priceVal,
         price_tiers: priceTiers,
+        photo_url: photoUrl,
       })
       .select()
       .single();
@@ -6254,6 +6385,7 @@ async function submitHostEvent() {
       capacity: aData.capacity,
       price: priceVal,
       priceTiers: aData.price_tiers || priceTiers,
+      photoUrl: aData.photo_url || photoUrl,
     };
     computeEventDates(aEv);
     EVENTS.push(aEv);
@@ -6266,6 +6398,7 @@ async function submitHostEvent() {
       })
       .catch(() => {});
     state.rsvps[aData.id] = [state.profileName];
+    _hostFlyerBlob = null;
     showToast("Event published live to the map!", "success");
     openEvent(aData.id);
     return;
@@ -6291,6 +6424,7 @@ async function submitHostEvent() {
     capacity: parseInt(capStr, 10),
     price: priceVal,
     price_tiers: priceTiers,
+    photo_url: photoUrl,
     status: "pending",
     created_at: new Date().toISOString(),
   };
@@ -6325,6 +6459,7 @@ async function submitHostEvent() {
     saved ? "success" : "error",
   );
   if (saved) {
+    _hostFlyerBlob = null;
     state.view = "browse";
     renderNav();
     renderView();
@@ -8302,6 +8437,7 @@ async function _publishApprovedEvent(rec) {
         capacity: rec.capacity,
         price: rec.price || 0,
         price_tiers: rec.price_tiers || null,
+        photo_url: rec.photo_url || null,
       })
       .select()
       .single();
@@ -8324,6 +8460,7 @@ async function _publishApprovedEvent(rec) {
             description: rec.description,
             capacity: rec.capacity,
             price: rec.price || 0,
+            photo_url: rec.photo_url || null,
           })
           .select()
           .single();
@@ -8363,6 +8500,7 @@ async function _publishApprovedEvent(rec) {
     capacity: src.capacity,
     price: src.price || 0,
     priceTiers: src.price_tiers || null,
+    photoUrl: src.photo_url || null,
   };
   computeEventDates(newEvent);
   if (!EVENTS.some((e) => String(e.id) === String(newEvent.id)))
@@ -8598,6 +8736,30 @@ function shareEvent(id) {
 // owns (start_ticket_transfer RPC) and shares it the same way a Squad claim
 // link works — claim_ticket() (pivot migration) already reassigns ownership
 // to whoever opens it, transfer or squad-share alike.
+// WhatsApp-first sharing for ticket links — the codex's "core viral
+// acquisition engine": hijack an existing group chat rather than asking a
+// friend to install anything first. wa.me works cross-platform (opens the
+// app on mobile via its own redirect, WhatsApp Web on desktop) unlike the
+// app-only whatsapp:// scheme, which only fires on mobile. Falls back to
+// the native share sheet, then clipboard, only if the WhatsApp tab itself
+// couldn't open (e.g. a popup blocker with no prior user gesture — shouldn't
+// happen here since every call site is a direct click handler).
+function shareTicketLink(title, text, url, copiedMsg) {
+  const waUrl = `https://wa.me/?text=${encodeURIComponent(text + " " + url)}`;
+  const opened = window.open(waUrl, "_blank", "noopener");
+  if (opened) return;
+  if (navigator.share) {
+    navigator.share({ title, text, url }).catch(() => {});
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(`${text} ${url}`).then(
+      () => showToast(copiedMsg, "success"),
+      () => showToast("Couldn't copy — try again"),
+    );
+  } else {
+    showToast("Share not supported on this browser");
+  }
+}
+
 async function transferMyTicket(ticketCode, eventTitle) {
   const res = await startTicketTransfer(ticketCode);
   if (!res || !res.ok) {
@@ -8606,31 +8768,18 @@ async function transferMyTicket(ticketCode, eventTitle) {
   }
   const url = `${location.origin}${location.pathname}?claim=${res.claim_code}`;
   const text = `Here's my ticket to ${eventTitle} on Cumulus — tap to claim it:`;
-  if (navigator.share) {
-    navigator.share({ title: "Transfer a Cumulus ticket", text, url }).catch(() => {});
-  } else if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(`${text} ${url}`).then(
-      () => showToast("Transfer link copied — send it to whoever's taking the ticket", "success"),
-      () => showToast("Couldn't copy — try again"),
-    );
-  } else {
-    showToast("Share not supported on this browser");
-  }
+  shareTicketLink(
+    "Transfer a Cumulus ticket",
+    text,
+    url,
+    "Transfer link copied — send it to whoever's taking the ticket",
+  );
 }
 
 function shareSquadTicket(code, eventTitle) {
   const url = `${location.origin}${location.pathname}?claim=${code}`;
   const text = `You're on my squad for ${eventTitle} on Cumulus — tap to claim your ticket:`;
-  if (navigator.share) {
-    navigator.share({ title: "Claim your Cumulus ticket", text, url }).catch(() => {});
-  } else if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(`${text} ${url}`).then(
-      () => showToast("Claim link copied", "success"),
-      () => showToast("Couldn't copy — try again"),
-    );
-  } else {
-    showToast("Share not supported on this browser");
-  }
+  shareTicketLink("Claim your Cumulus ticket", text, url, "Claim link copied");
 }
 
 // Runs once at boot: if the URL carries a Squad claim link (?claim=CODE),
@@ -8657,16 +8806,7 @@ async function checkSquadClaim() {
 function shareSquadGroupLink(squadId, eventTitle, seatsOpen) {
   const url = `${location.origin}${location.pathname}?squad=${squadId}`;
   const text = `You're on my squad for ${eventTitle} on Cumulus — tap to claim your ticket:`;
-  if (navigator.share) {
-    navigator.share({ title: "Claim your Cumulus ticket", text, url }).catch(() => {});
-  } else if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(`${text} ${url}`).then(
-      () => showToast("Squad link copied", "success"),
-      () => showToast("Couldn't copy — try again"),
-    );
-  } else {
-    showToast("Share not supported on this browser");
-  }
+  shareTicketLink("Claim your Cumulus ticket", text, url, "Squad link copied");
 }
 
 // Companion to checkSquadClaim() for the group-link flow. Deliberately does
@@ -8772,7 +8912,7 @@ function renderDetail(id) {
   const going = attendees.includes(state.profileName);
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="panel detail-card" style="--corner:${c.color};">
-      <div class="detail-hero" style="background-image:url('${catImg(ev.category)}');">
+      <div class="detail-hero" style="background-image:url('${ev.photoUrl || catImg(ev.category)}');">
         <button class="detail-share-btn" onclick="shareEvent('${ev.id}')" aria-label="Share event"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.7l7.6-4.4M8.2 13.3l7.6 4.4"/></svg></button>
       </div>
       <span class="event-badge" style="--cat:${c.color};--cat-text:${c.textColor};">${ev.category}</span>${statusChip}${capBadge}${priceBadge}
@@ -9841,7 +9981,7 @@ function eventListCardHtml(ev) {
   const c = CATS[ev.category] || { color: "var(--accent)", textColor: "#fff" };
   const status = eventStatus(ev);
   const price = eventPrice(ev);
-  const img = ev.nightShotUrl || catImg(ev.category);
+  const img = ev.photoUrl || ev.nightShotUrl || catImg(ev.category);
   return `<div class="panel event-list-card" style="--corner:${c.color};" onclick="openEvent('${ev.id}')" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
     <div class="elc-img" style="background-image:url('${img}');"></div>
     <div class="elc-body">
@@ -10151,6 +10291,7 @@ async function _insertTickets(tickets) {
     purchased_at: new Date(t.purchasedAt).toISOString(),
     squad_id: t.squadId || null,
     claim_code: t.claimCode || null,
+    marketing_opt_in: t.marketingOptIn || false,
   }));
   await sb.from("tickets").insert(rows);
 }
@@ -10203,6 +10344,9 @@ function setBookingQty(q) {
 }
 function proceedToCheckout() {
   pushNav();
+  // Read before the book screen's DOM goes away — startStripeCheckout()
+  // (fired from the checkout screen) needs this value later.
+  bookingDraft.marketingOptIn = !!document.getElementById("book-marketing-optin")?.checked;
   state.view = "checkout";
   renderNav();
   renderView();
@@ -10235,6 +10379,7 @@ async function registerFree(evId) {
   const baseId = generateTicketId();
   const nf = bookingDraft.qty || 1;
   const squadId = await createSquadIfNeeded(ev.id, nf);
+  const marketingOptIn = !!document.getElementById("book-marketing-optin")?.checked;
   const freeTickets = Array.from({ length: nf }, (_, i) => ({
     ticketId: nf > 1 ? `${baseId}-${String(i + 1).padStart(2, "0")}` : baseId,
     seatNum: nf > 1 ? i + 1 : null,
@@ -10249,6 +10394,7 @@ async function registerFree(evId) {
     purchasedAt: Date.now(),
     squadId,
     claimCode: i > 0 ? generateClaimCode() : null,
+    marketingOptIn,
   }));
   myTickets.push(...freeTickets);
   await _insertTickets(freeTickets);
@@ -10282,7 +10428,11 @@ async function startStripeCheckout() {
     btn.disabled = true;
     btn.innerHTML = '<span style="opacity:.7">Redirecting to Stripe…</span>';
   }
-  const res = await createCheckoutSession(ev.id, bookingDraft.qty);
+  const res = await createCheckoutSession(
+    ev.id,
+    bookingDraft.qty,
+    bookingDraft.marketingOptIn,
+  );
   if (!res || res.error || !res.url) {
     showToast(res?.error || "Could not start checkout — try again", "error");
     if (btn) {
@@ -10351,6 +10501,23 @@ async function checkStripeCheckoutReturn() {
 function afterRenderConfirmed() {
   const tickets = bookingDraft.confirmedTickets || [];
   if (!tickets.length) return;
+  const t0 = tickets[0];
+  const masterEl = document.getElementById("squad-master-qr");
+  if (masterEl && tickets.length > 1 && t0.squadId) {
+    masterEl.innerHTML = "";
+    try {
+      new QRCode(masterEl, {
+        text: `SQUAD:${t0.squadId}`,
+        width: 134,
+        height: 134,
+        colorDark: "#000",
+        colorLight: "#fff",
+        correctLevel: QRCode.CorrectLevel.M,
+      });
+    } catch (e) {
+      masterEl.innerHTML = `<div style="font-size:10px;word-break:break-all;color:#333;">SQUAD:${t0.squadId}</div>`;
+    }
+  }
   tickets.forEach((t, i) => {
     const el = document.getElementById(`ticket-qr-${i}`);
     if (!el) return;
@@ -10462,7 +10629,11 @@ function renderBook() {
       }
       <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:var(--text);padding-top:10px;border-top:1px solid var(--line);"><span>Total</span><span style="color:${c.color};">${finalTotal ? `£${finalTotal.toFixed(2)}` : "Free"}</span></div>
     </div>
-    <button class="btn" style="width:100%;background:${c.color};padding:14px;font-size:15px;" onclick="${isFree ? `registerFree(${ev.id})` : `proceedToCheckout()`}">${isFree ? "Register Free →" : `Continue to Payment · £${finalTotal.toFixed(2)} →`}</button>
+    <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;font-size:12px;color:var(--text-muted);line-height:1.5;cursor:pointer;">
+      <input type="checkbox" id="book-marketing-optin" style="margin-top:2px;width:15px;height:15px;flex-shrink:0;accent-color:${c.color};"/>
+      <span>Allow ${escapeHtml(ev.host || "the host")} to email me about future local events. Off by default — opting in is entirely your choice.</span>
+    </label>
+    <button class="btn" style="width:100%;background:${c.color};padding:14px;font-size:15px;" onclick="${isFree ? `registerFree('${ev.id}')` : `proceedToCheckout()`}">${isFree ? "Register Free →" : `Continue to Payment · £${finalTotal.toFixed(2)} →`}</button>
     <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:10px;">Free cancellation up to 24 hours before the event (Cumulus's standard policy, unless the host states otherwise) · <a href="terms.html" target="_blank" style="color:var(--gold-text);">See full policy</a></p>`;
 }
 
@@ -10531,6 +10702,22 @@ function renderConfirmed() {
     </div>`,
     )
     .join("");
+  // Codex "Group Logic": one master QR for the whole squad purchase,
+  // "Valid for N Entries" — instead of juggling N separate ticket images at
+  // the door. Encodes SQUAD:<squad_id>; check_in_squad_ticket() (scanned via
+  // checkInSquadScan()) checks in the next still-active seat per scan, so
+  // it's still one tap per person arriving, just from a single QR. The
+  // individual ticket cards below still work too — this is additive, not a
+  // replacement, for groups that split up before doors.
+  const masterQrSection =
+    tickets.length > 1 && t0.squadId
+      ? `<div class="panel" style="--corner:${c.color};overflow:visible;margin-bottom:20px;border-radius:20px;padding:20px;text-align:center;">
+        <div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${c.color};margin-bottom:10px;">✦ Valid for ${tickets.length} entries</div>
+        <div id="squad-master-qr" style="width:150px;height:150px;margin:0 auto 10px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;padding:8px;"></div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.5;">One code for your whole group — show this at the door, scanned once per person as you arrive.</div>
+      </div>`
+      : "";
+
   // Squad ticketing — the blueprint's "Magic Link" model: ONE shareable
   // group link, not a code per ticket. Whoever opens it claims whichever
   // seat is still free (claim_group_ticket(), FOR UPDATE SKIP LOCKED),
@@ -10542,7 +10729,7 @@ function renderConfirmed() {
       ? `<div class="hp-panel" style="margin-top:20px;">
         <div class="hp-title">👥 Share with your squad</div>
         <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">You bought ${tickets.length} tickets — drop this ONE link in your group chat. Whoever opens it first claims a seat, no phone-number swapping needed.</div>
-        <button class="btn btn-outline" style="width:100%;" onclick="shareSquadGroupLink('${t0.squadId}','${escapeHtml(ev.title).replace(/'/g, "&#39;")}',${unclaimedCount})">Share squad link (${unclaimedCount} seat${unclaimedCount > 1 ? "s" : ""} open)</button>
+        <button class="btn btn-outline" style="width:100%;" onclick="shareSquadGroupLink('${t0.squadId}','${escapeHtml(ev.title).replace(/'/g, "&#39;")}',${unclaimedCount})">📱 Send to your squad on WhatsApp (${unclaimedCount} seat${unclaimedCount > 1 ? "s" : ""} open)</button>
       </div>`
       : "";
 
@@ -10564,6 +10751,7 @@ function renderConfirmed() {
       <div style="font-size:21px;font-weight:800;color:var(--text);">${totalPaid ? "Payment confirmed!" : "You're registered!"}</div>
       <div style="font-size:12.5px;color:var(--text-muted);margin-top:3px;">${tickets.length} ticket${tickets.length !== 1 ? "s" : ""} · ${totalPaid ? `£${totalPaid.toFixed(2)} total` : "Free"}</div>
     </div>
+    ${masterQrSection}
     ${ticketCards}
     ${squadSection}
     ${walletSection}
@@ -10854,6 +11042,16 @@ function renderHostView() {
     }</div>
 
     <div class="host-section">
+      <div class="host-section-title">Flyer (optional)</div>
+      <input id="host-flyer-input" type="file" accept="image/*" style="display:none;" onchange="handleHostFlyerSelect(this)"/>
+      <div id="host-flyer-preview" onclick="document.getElementById('host-flyer-input').click()" role="button" tabindex="0" aria-label="Upload a flyer photo" style="cursor:pointer;border:2px dashed var(--line);border-radius:14px;height:140px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--text-muted);font-size:13px;background:var(--surface-2);overflow:hidden;">
+        <span style="font-size:22px;">📷</span>
+        <span>Tap to upload a flyer photo</span>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Compressed automatically. No flyer? We'll show a category photo instead.</div>
+    </div>
+
+    <div class="host-section">
       <div class="host-section-title">Event basics</div>
       <label class="intro-field-label">Title</label>
       <input id="host-title" class="gate-input" placeholder="e.g., Summer Park Picnic"/>
@@ -11002,6 +11200,7 @@ let scannerState = {
   videoStream: null,
   scanning: false,
   detector: null,
+  repeatStat: null, // {total, repeat} — lazy-loaded, see loadRepeatAttendeeStat()
 };
 
 // Am I even worth showing the "Scan tickets" entry to? Real access control
@@ -11049,6 +11248,7 @@ async function openScannerForEvent(eventId) {
     videoStream: null,
     scanning: false,
     detector: null,
+    repeatStat: null,
   };
   state.view = "scan";
   renderNav();
@@ -11104,13 +11304,42 @@ function renderScannerList() {
     : `<div class="empty-state">No matching guests.</div>`;
 }
 
+// Massive full-screen green/red flash — the door-scanner needs feedback a
+// bouncer can read at a glance in a dark venue, not a small toast easy to
+// miss mid-scan. One reused, pointer-events:none overlay; retriggers its
+// CSS animation the same remove-reflow-add way the map's pin-hover bounce
+// does, so back-to-back scans each get a clean flash instead of the first
+// one's animation silently continuing.
+function flashScannerResult(ok) {
+  let el = document.getElementById("scanner-flash");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "scanner-flash";
+    el.className = "scanner-flash";
+    document.body.appendChild(el);
+  }
+  el.classList.remove("flash-green", "flash-red");
+  void el.offsetWidth;
+  el.classList.add(ok ? "flash-green" : "flash-red");
+  // Cleared from JS rather than relying on the CSS animation's own end
+  // timing — prefers-reduced-motion drops the animation for a plain
+  // opacity flash instead, which has no animationend event to hook.
+  clearTimeout(_scannerFlashTimer);
+  _scannerFlashTimer = setTimeout(() => {
+    el.classList.remove("flash-green", "flash-red");
+  }, 550);
+}
+let _scannerFlashTimer = null;
+
 async function checkInGuestlistTicket(ticketId) {
   const entry = scannerState.guestlist.find((t) => t.ticket_id === ticketId);
   if (!entry) {
+    flashScannerResult(false);
     showToast("Not on this event's guestlist", "error");
     return;
   }
   if (entry.status === "checked_in") {
+    flashScannerResult(false);
     showToast("Already checked in", "info");
     return;
   }
@@ -11119,8 +11348,47 @@ async function checkInGuestlistTicket(ticketId) {
   await idbPut("guestlists", scannerState.eventId, scannerState.guestlist);
   await idbPut("pending", ticketId, { eventId: scannerState.eventId });
   renderScannerList();
+  flashScannerResult(true);
   showToast(`${entry.purchaser_name || "Guest"} checked in`, "success");
   syncScannerQueue();
+}
+
+// Master "Valid for N Entries" QR (Page 3) — scanning it checks in the next
+// still-active ticket in the squad (server picks which one, race-safe via
+// FOR UPDATE SKIP LOCKED), not a specific ticket_id the client already
+// knows. Unlike single-ticket check-in this needs a live round-trip every
+// scan — there's no safe client-side way to guess "which seat is still
+// free" for an optimistic offline queue the way a known ticket_id allows,
+// so this path simply asks for a connection rather than half-supporting it.
+async function checkInSquadScan(squadId) {
+  if (!navigator.onLine) {
+    flashScannerResult(false);
+    showToast("Group check-in needs a connection — reconnect and try again", "error");
+    return;
+  }
+  const res = await checkInSquadTicket(squadId);
+  if (!res || !res.ok) {
+    flashScannerResult(false);
+    const msg =
+      res?.error === "all_checked_in"
+        ? "Everyone in this group is already checked in"
+        : res?.error === "not_found"
+          ? "Squad not found for this event"
+          : res?.error === "forbidden"
+            ? "Not your event"
+            : "Couldn't check in — try again";
+    showToast(msg, res?.error === "all_checked_in" ? "info" : "error");
+    return;
+  }
+  const entry = scannerState.guestlist.find((t) => t.ticket_id === res.ticket_id);
+  if (entry) entry.status = "checked_in";
+  await idbPut("guestlists", scannerState.eventId, scannerState.guestlist);
+  renderScannerList();
+  flashScannerResult(true);
+  showToast(
+    `${res.purchaser_name || "Guest"} checked in — ${res.remaining} left in this group`,
+    "success",
+  );
 }
 
 async function syncScannerQueue() {
@@ -11189,8 +11457,12 @@ async function scanFrame(video) {
   try {
     const codes = await scannerState.detector.detect(video);
     if (codes.length) {
-      const ticketId = codes[0].rawValue.trim();
-      await checkInGuestlistTicket(ticketId);
+      const raw = codes[0].rawValue.trim();
+      if (raw.startsWith("SQUAD:")) {
+        await checkInSquadScan(raw.slice(6));
+      } else {
+        await checkInGuestlistTicket(raw);
+      }
     }
   } catch (e) {
     // detect() can throw transiently mid-frame — just try again next tick
@@ -11211,19 +11483,92 @@ function lastMinuteSalesStat(ev) {
   return Math.round((within48h / rows.length) * 100);
 }
 
+// Codex "Spontaneity Metric": splits sales into Spontaneous (bought within 4
+// hours of doors opening) vs Pre-Planned (everything earlier than that) —
+// a two-way split rather than the doc's own three-way wording ("24+ hrs" /
+// "<4 hrs", leaving a 4-24h gap undefined), since a clean binary is more
+// legible as a bar and the gap band is still "planned ahead" relative to
+// walking in on a whim. Same guestlist data as lastMinuteSalesStat(), just
+// a tighter window and framed as a ratio rather than a single percentage.
+function spontaneityStat(ev) {
+  if (!ev || typeof ev.startsAt !== "number") return null;
+  const rows = scannerState.guestlist.filter((t) => t.purchased_at);
+  if (rows.length < 3) return null;
+  const spontaneous = rows.filter(
+    (t) => ev.startsAt - new Date(t.purchased_at).getTime() <= 4 * 3600000,
+  ).length;
+  const pct = Math.round((spontaneous / rows.length) * 100);
+  return { spontaneousPct: pct, preplannedPct: 100 - pct, total: rows.length };
+}
+
+// Codex "Drop-off Rate": tickets sold vs QR codes actually scanned at the
+// door — only meaningful once the event has actually happened.
+function dropOffStat(ev) {
+  if (!ev || eventStatus(ev) !== "past") return null;
+  const sold = scannerState.guestlist.length;
+  if (!sold) return null;
+  const scanned = scannerState.guestlist.filter(
+    (t) => t.status === "checked_in",
+  ).length;
+  return { sold, scanned, pct: Math.round((scanned / sold) * 100) };
+}
+
+// Repeat-attendee stat needs a round trip (cross-event history), unlike the
+// other two — lazy-loaded the same way renderScannerList() is, into its own
+// placeholder so the rest of the panel doesn't wait on it.
+async function loadRepeatAttendeeStat(eventId) {
+  const stat = await getRepeatAttendeeCount(eventId);
+  scannerState.repeatStat = stat;
+  const el = document.getElementById("repeat-attendee-stat");
+  if (!el) return;
+  if (!stat || !stat.total) {
+    el.parentElement.style.display = "none";
+    return;
+  }
+  el.parentElement.style.display = "block";
+  el.innerHTML = `<strong style="color:var(--text);">${stat.repeat}</strong> of tonight's ${stat.total} attendee${stat.total !== 1 ? "s" : ""} ${stat.repeat === 1 ? "has" : "have"} been to one of your past events before.`;
+}
+
 function renderScanner() {
   const ev = EVENTS.find((e) => e.id === scannerState.eventId);
   const checkedInCount = scannerState.guestlist.filter(
     (t) => t.status === "checked_in",
   ).length;
   const lastMinutePct = lastMinuteSalesStat(ev);
+  const spontaneity = spontaneityStat(ev);
+  const dropOff = dropOffStat(ev);
   setTimeout(() => renderScannerList(), 0);
+  setTimeout(() => loadRepeatAttendeeStat(scannerState.eventId), 0);
   return `<button class="back-btn" onclick="stopScannerCamera();goBack()">←</button>
     <div class="connect-header"><h2>${ev ? escapeHtml(ev.title) : "Scan tickets"}</h2><p>${checkedInCount} / ${scannerState.guestlist.length} checked in</p></div>
     <span id="scanner-pending-badge" style="display:none;font-size:11px;font-weight:700;color:var(--accent);"></span>
     ${
       lastMinutePct !== null
         ? `<div class="hp-panel" style="margin-bottom:14px;"><div class="hp-title">📊 Your sales timing</div><div style="font-size:12px;color:var(--text-muted);line-height:1.6;"><strong style="color:var(--text);">${lastMinutePct}%</strong> of tickets for this event sold in the final 48 hours before start. ${lastMinutePct >= 60 ? "Your audience buys late — lean into last-minute pushes." : "Your audience plans ahead — early promotion is working for you."}</div></div>`
+        : ""
+    }
+    ${
+      spontaneity !== null
+        ? `<div class="hp-panel" style="margin-bottom:14px;">
+            <div class="hp-title">⚡ Spontaneous vs planned</div>
+            <div style="display:flex;height:8px;border-radius:99px;overflow:hidden;margin:8px 0;">
+              <div style="width:${spontaneity.spontaneousPct}%;background:#8B5CF6;"></div>
+              <div style="width:${spontaneity.preplannedPct}%;background:var(--surface-2);"></div>
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.6;"><strong style="color:var(--text);">${spontaneity.spontaneousPct}%</strong> booked within 4 hours of doors opening (spontaneous) · <strong style="color:var(--text);">${spontaneity.preplannedPct}%</strong> booked earlier (pre-planned)</div>
+          </div>`
+        : ""
+    }
+    <div class="hp-panel" style="margin-bottom:14px;display:${scannerState.repeatStat && scannerState.repeatStat.total ? "block" : "none"};">
+      <div class="hp-title">🔁 Repeat attendees</div>
+      <div id="repeat-attendee-stat" style="font-size:12px;color:var(--text-muted);line-height:1.6;"></div>
+    </div>
+    ${
+      dropOff !== null
+        ? `<div class="hp-panel" style="margin-bottom:14px;">
+            <div class="hp-title">🚪 Drop-off rate</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.6;"><strong style="color:var(--text);">${dropOff.scanned} of ${dropOff.sold}</strong> tickets sold were actually scanned at the door (${dropOff.pct}%).${dropOff.pct < 70 ? " Worth checking whether capacity planning should account for no-shows." : ""}</div>
+          </div>`
         : ""
     }
     <div class="panel" style="padding:16px;margin-bottom:14px;text-align:center;">

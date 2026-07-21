@@ -247,7 +247,7 @@ async function fetchGuestlist(eventId) {
     const { data, error } = await sb
       .from("tickets")
       .select(
-        "ticket_id,purchaser_name,seat_num,total_seats,ticket_type,type_label,status,purchased_at",
+        "ticket_id,purchaser_name,seat_num,total_seats,ticket_type,type_label,status,purchased_at,squad_id",
       )
       .eq("event_id", eventId);
     if (error) return null;
@@ -269,6 +269,35 @@ async function checkInTicket(ticketId) {
   }
 }
 
+/* Checks in the next still-active ticket in a squad via the master "Valid
+ * for N Entries" QR — check_in_squad_ticket() picks whichever unchecked
+ * seat is free (FOR UPDATE SKIP LOCKED) and reports how many remain. */
+async function checkInSquadTicket(squadId) {
+  try {
+    const { data, error } = await sb.rpc("check_in_squad_ticket", {
+      p_squad_id: squadId,
+    });
+    if (error) return { ok: false, error: error.message };
+    return data;
+  } catch (e) {
+    return { ok: false, error: "unavailable" };
+  }
+}
+
+/* How many of this event's attendees have also been to a past event by the
+ * same host — the "Repeat Attendees" loyalty stat. Null on error/offline. */
+async function getRepeatAttendeeCount(eventId) {
+  try {
+    const { data, error } = await sb.rpc("get_repeat_attendee_count", {
+      p_event_id: eventId,
+    });
+    if (error) return null;
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
 /* ── Stripe Connect scaffolding ─────────────────────────────────────────
  * NOT LIVE-TESTED — see create-checkout-session's own header comment. These
  * are thin wrappers; all the real logic (price computed server-side, JWT
@@ -278,10 +307,15 @@ async function checkInTicket(ticketId) {
 /* Starts a real Stripe Checkout for a paid event and returns the hosted
  * session URL to redirect to. Free events never call this — registerFree()
  * (app.js) handles those with no Stripe involvement at all. */
-async function createCheckoutSession(eventId, qty) {
+async function createCheckoutSession(eventId, qty, marketingOptIn) {
   try {
     const { data, error } = await sb.functions.invoke("create-checkout-session", {
-      body: { eventId, qty, origin: location.origin },
+      body: {
+        eventId,
+        qty,
+        origin: location.origin,
+        marketingOptIn: !!marketingOptIn,
+      },
     });
     if (error) return { error: error.message || "Could not start checkout" };
     return data;
