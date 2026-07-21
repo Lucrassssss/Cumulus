@@ -407,6 +407,134 @@ remains server-side RLS (`events_insert_own`, the two policies above) — this
 gating is about not offering a dead-end UI to accounts with no privileges,
 not the enforcement itself.
 
+## The "Master Development Codex" reconciliation
+
+A second founder-supplied document (a 7-page "Master Development Codex")
+was checked line-by-line against what's actually in this repo. Most of it
+already matched the Master Blueprint pass above almost exactly (the map,
+tiered ticketing, the Magic Link claim, host analytics basics, offline
+scanning, admin approvals) — this section covers only what changed:
+genuinely new pieces the Codex specified that weren't built yet, real gaps
+it caught, and what was deliberately declined.
+
+**GDPR marketing opt-in (Codex Page 2/4).** A per-ticket
+`marketing_opt_in` boolean, off by default, with a checkbox at checkout
+("Allow [Host] to email me about future local events"). Threaded through
+both purchase paths: `registerFree()` reads the checkbox directly;
+`startStripeCheckout()` stashes it on `bookingDraft` before navigating away
+from the booking screen (the checkbox's DOM is gone by the time
+`create-checkout-session` actually runs) and passes it through as Stripe
+Checkout metadata for `stripe-webhook` to write onto the created ticket
+rows. The enforcement point is `get_past_attendee_emails()` — the guestlist
+CSV export never carried email addresses in the first place, so consent
+only matters where an email address actually leaves the building.
+
+**WhatsApp-first ticket sharing.** The Codex frames WhatsApp specifically
+as "the core viral acquisition engine," not sharing in general. The three
+ticket-link share functions (squad group link, squad ticket claim, ticket
+transfer) were consolidated into one `shareTicketLink()` helper that opens
+`wa.me` first (works cross-platform, unlike the app-only `whatsapp://`
+scheme) and falls back to the native share sheet, then clipboard. The
+generic "share this event" button on the detail page is untouched — that's
+organic discovery, not the ticket-sharing growth loop the Codex means.
+
+**Master "Valid for N Entries" QR + group scan.** Squad/group purchases now
+also get one combined QR (`SQUAD:<squad_id>`) alongside the existing
+per-ticket ones, shown first on the confirmation screen. Scanning it calls
+`check_in_squad_ticket()`, which checks in the next still-active seat in
+that squad (`FOR UPDATE SKIP LOCKED`, same pattern as `claim_group_ticket`)
+and reports how many remain — **one scan per person arriving**, not one
+scan admitting the whole group at once. The Codex's own wording ("instantly
+logs N entries") reads as the latter; that was deliberately not built,
+since letting one phone screen wave an entire group through with no
+headcount check undercuts the same anti-fraud intent the rest of the
+document cares about (rotating QR, 1:1 licensing compliance). This needs a
+live connection every scan (no offline queueing) — unlike a known
+`ticket_id`, there's no safe client-side way to guess which seat in a group
+is still free.
+
+**Full-screen door-scanner feedback.** The scanner's check-in result was a
+small toast; the Codex asks for "Binary Feedback: Full Green screen (Valid),
+Full Red screen (Invalid)" — a bouncer needs to read it at a glance in a
+dark venue. `flashScannerResult()` adds a reused, `pointer-events:none`
+full-viewport flash (green/red), retriggered cleanly on every scan the same
+remove-reflow-add way the map's pin-hover bounce works, with a
+`prefers-reduced-motion` fallback that skips the animation for a plain flash.
+
+**Ghost pins for free events.** The Codex's pin taxonomy (Standard/Ghost/
+Sponsored) was only partly buildable: free events now render as a visually
+distinct, desaturated grey pin (still showing the category glyph) instead
+of the category colour — real, cheap, and already wired through
+`buildEventsGeoJSON()`'s `free` property into the WebGL symbol layer's
+`icon-image` expression. **Sponsored pins were not built** — there is no
+brand/sponsorship data model anywhere in this schema (no `sponsor_id`
+column, nothing to attach a brand to), and drawing a glowing pin for a
+feature that doesn't exist would be UI for nothing. This matches
+`PRODUCT.md`'s existing stance that the Experiential Sponsorship Moat is a
+manual sales process, not a product surface.
+
+**Host analytics: three new reads, no new charting library.** Spontaneity
+ratio (% booked within 4h of doors vs earlier — a two-way split rather than
+the Codex's own three-way wording, which leaves a 4-24h band undefined) and
+drop-off rate (tickets sold vs actually scanned, past events only) are both
+derived client-side from data the scanner guestlist already carries — no
+new backend. Repeat-attendee tracking needs cross-event history the
+guestlist doesn't carry, so it's a new RPC, `get_repeat_attendee_count()`,
+lazy-loaded the same way the guestlist itself is. **Not built**: the
+Codex's purchasing-time heatmap (would need Recharts or an equivalent
+charting library — see the stack note below).
+
+**Real event flyer upload.** Events previously always fell back to a
+category stock photo (`catImg()`); hosts can now upload a real flyer,
+compressed client-side (canvas re-encode to JPEG, no library) before
+landing in a new `event-flyers` Supabase Storage bucket. Storage RLS scopes
+writes to the uploader's own folder (`<user_id>/...`) so one host can never
+overwrite another's flyer; reads are the bucket's own public-URL serving,
+not a `storage.objects` SELECT policy — a first pass *did* add one, which
+Supabase's advisor immediately flagged (`public_bucket_allows_listing`): a
+public bucket already serves object URLs without consulting
+`storage.objects` RLS at all, so a SELECT policy there only adds the
+ability to enumerate every uploaded file path, for no benefit. Fixed by
+dropping it. `events.photo_url`/`pending_events.photo_url` carry the
+uploaded URL through the same admin-direct/pending-review paths as
+`price_tiers`; the card/detail hero prefer it over the stock photo.
+
+**Declined outright — stack mismatch, not a gap.** The Codex specs a
+Next.js/React/Recharts/React-Map-GL stack throughout ("Stack: Mapbox GL JS
++ React Map GL", "Integrate charting libraries (e.g., Recharts)", `/events/
+[slug]` file-based routing). This app is deliberately static with no build
+step (see "Current structure" above) — adopting a component framework or a
+charting library would be an architecture change, not a feature, so every
+Codex ask was re-read for its *intent* and rebuilt in vanilla JS against
+this app's existing map/services layer rather than attempted literally.
+
+**Declined outright — no credentials or infrastructure exist for these,
+same posture as the wallet-passes gap already documented above.** Twilio
+SMS OTP as a host anti-spam gate (Page 5) — this app already has an
+arguably stronger anti-spam gate for the same problem: the host-application
+approval system (see "Host onboarding" above) requires a human admin
+decision before an account gets the Host tab at all, which a bot can't
+automate its way past the way an SMS OTP challenge alone could.
+
+**Declined outright — business process, not a product surface, same
+reasoning as the Master Blueprint's sponsorship section.** The Sponsorship
+Matchmaker UI and the Ghost Pin Injector (Page 7 — a tool to bulk-import
+"scraped" events from other platforms to pad out map density in new
+cities). The former has no data model to attach to (see above); the latter
+was not built on principle, not just scope — building a scraper/importer
+for other platforms' event listings is a business decision with real legal
+and ethical weight (most listing sites' own terms prohibit it) that
+shouldn't be made unilaterally by writing the code for it.
+
+**Left as-is, not revisited.** The Codex's cancellation-engine nuance
+("converts the £2 platform fee to platform credit to cover Stripe gateway
+reversal penalties") is a specific accounting policy on top of the
+already-built `cancel-event-refund` function. It was not implemented
+because it can't be verified without a live Stripe test-mode run (this
+sandbox has no outbound network to Stripe), and guessing at exact money-
+handling behavior that can't be tested is worse than leaving the existing,
+already-documented full-refund behavior in place.
+
 ## Security model (important)
 
 There is no server to hide keys behind, so the keys in `config.js` are the

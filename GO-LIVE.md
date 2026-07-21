@@ -111,6 +111,38 @@ are stuck disabled, open a **new chat** and paste:
   (`verified-host` special badge or admin) instead of being shown to every
   signed-up account — see ARCHITECTURE.md → "Host onboarding — applications
   and the Host tab gate".
+- **Fixed a widespread silent-click bug** — 13 places embedded a raw UUID
+  event id unquoted into an `onclick` attribute (e.g.
+  `onclick="openEvent(${ev.id})"`), which threw a `ReferenceError` on click
+  since a hyphenated UUID parses as subtraction between undefined
+  identifiers. This broke the event detail page's own Book Now/View
+  Ticket/Share buttons, calendar cards, and several other tap-to-open
+  entry points — quoted every one, verified live with a real UUID fixture.
+- **"Master Development Codex" growth features — schema and storage live.**
+  `supabase/migrations/20260721050000_codex_growth_features.sql`: GDPR
+  marketing opt-in (`tickets.marketing_opt_in`), the master squad
+  check-in RPC (`check_in_squad_ticket`), the repeat-attendee RPC
+  (`get_repeat_attendee_count`), and `events.photo_url`/
+  `pending_events.photo_url` plus a new public `event-flyers` Storage
+  bucket (RLS scoped to each uploader's own folder; no SELECT policy on
+  `storage.objects` — a public bucket serves URLs without one, and adding
+  one only let files be listed, which Supabase's advisor flagged and this
+  migration corrects). `create-checkout-session` and `stripe-webhook`
+  redeployed to carry the opt-in flag through Stripe metadata. See
+  ARCHITECTURE.md → "The 'Master Development Codex' reconciliation" for
+  what was built, reformed, and deliberately declined (Twilio SMS gate,
+  Recharts/heatmap, sponsorship matchmaker, scraped-event importer,
+  rotating anti-scalping QR, cancellation fee-credit accounting nuance).
+- **`public.spatial_ref_sys` RLS cannot be enabled from this repo** —
+  confirmed a second way this session (the table *and* the `postgis`
+  extension are owned by `supabase_admin`; `postgres` isn't even a member
+  of that role, so there's no `SET ROLE` workaround either). Per Supabase's
+  own community guidance, the only real fix is moving the `postgis`
+  extension out of `public` via the Dashboard's Extensions UI — out of
+  reach of the SQL/migration tools available here, and a bigger change
+  than it looks (touches `events.coordinates`, its GIST index, and the
+  `get_events_geojson`/`ST_DWithin` viewport query) — see ARCHITECTURE.md
+  → "Security model" for the full writeup and sources.
 - **Stripe Connect — schema live, functions deployed, still needs a real
   purchase run through it.** Schema
   (`supabase/migrations/20260721000000_stripe_connect_scaffolding.sql`,

@@ -98,6 +98,7 @@ Deno.serve(async (req: Request) => {
 
   const eventId = body?.eventId;
   const qty = Math.max(1, Math.min(10, Number(body?.qty) || 1));
+  const marketingOptIn = body?.marketingOptIn === true;
   // Only origin is taken from the client (for the redirect URLs); every
   // price-bearing field below comes from the DB, never the request body.
   const origin =
@@ -159,6 +160,7 @@ Deno.serve(async (req: Request) => {
     "metadata[qty]": String(qty),
     "metadata[price_per_ticket]": String(price),
     "metadata[platform_fee]": String(fee),
+    "metadata[marketing_opt_in]": marketingOptIn ? "true" : "false",
   });
 
   try {
