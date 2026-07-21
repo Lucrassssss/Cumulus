@@ -58,12 +58,20 @@ function renderBook() {
 }
 
 // ─── Render: Payment ─────────────────────────────────────────────────────
-// Real Stripe Embedded Checkout (create-checkout-session computes the
-// authoritative price server-side from the events table — the numbers
-// rendered here are for display only, never sent as the charge amount).
-// No manual "Pay with card" tap: the iframe starts loading the instant this
-// screen renders (see afterRenderCheckout(), wired from renderView()) —
-// "Continue to Payment" IS the action, the same one-step feel as Eventbrite.
+// Real Stripe payment via a PaymentIntent + Payment Element (create-
+// checkout-session computes the authoritative price server-side from the
+// events table — the numbers rendered here are for display only, never
+// sent as the charge amount). PaymentIntent + Payment Element rather than
+// a Checkout Session: Stripe's pre-built Checkout form always renders its
+// input card on a fixed light surface regardless of branding — a genuine
+// product constraint, not something any parameter can override — so full
+// dark/light theming needs the raw Elements API instead (see
+// stripeAppearanceForCurrentTheme() in 10-badges.js), which only works
+// against a PaymentIntent's client_secret, not a Checkout Session's.
+// No manual "Pay with card" tap: the element starts loading the instant
+// this screen renders (see afterRenderCheckout(), wired from renderView())
+// — "Continue to Payment" IS the action, the same one-step feel as
+// Eventbrite.
 function renderCheckout() {
   const ev = EVENTS.find((e) => e.id === bookingDraft.eventId);
   if (!ev) return "";
@@ -86,7 +94,9 @@ function renderCheckout() {
       Loading secure payment…
     </div>
     <style>@keyframes checkout-spin{to{transform:rotate(360deg)}}</style>
-    <div id="stripe-checkout-embedded" style="margin-top: 20px;"></div>`;
+    <div id="payment-element" style="margin-top:16px;"></div>
+    <button id="pay-btn" class="btn" data-label="Pay £${total} →" style="width:100%;background:${c.color};padding:14px;font-size:15px;margin-top:16px;display:none;" onclick="submitStripePayment()">Pay £${total} →</button>
+    <p style="text-align:center;font-size:10.5px;color:var(--text-muted);margin-top:10px;">Powered by Stripe · <a href="terms.html" target="_blank" style="color:var(--gold-text);">Terms</a> · <a href="privacy.html" target="_blank" style="color:var(--gold-text);">Privacy</a></p>`;
 }
 
 // Fired from renderView() right after the checkout screen mounts. Kicks off

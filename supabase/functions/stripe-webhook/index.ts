@@ -1,5 +1,5 @@
-/* Stripe calls this server-to-server once a Checkout Session (created by
- * create-checkout-session) completes — there is no user JWT on this request,
+/* Stripe calls this server-to-server once a PaymentIntent (created by
+ * create-checkout-session) succeeds — there is no user JWT on this request,
  * so trust is established the same way identity-webhook already does it: a
  * from-scratch HMAC verification of the `stripe-signature` header against
  * the RAW request body (verify_jwt = false in config.toml).
@@ -8,8 +8,13 @@
  * old identity-webhook's STRIPE_WEBHOOK_SECRET — Stripe issues one signing
  * secret per webhook endpoint URL, not one per Stripe account. Configure a
  * new endpoint in the Stripe dashboard pointing at this function's URL,
- * subscribed to `checkout.session.completed`, and put the "whsec_..." it
- * gives you into STRIPE_CHECKOUT_WEBHOOK_SECRET.
+ * subscribed to `payment_intent.succeeded` (this REPLACES the earlier
+ * `checkout.session.completed` subscription — create-checkout-session no
+ * longer creates a Checkout Session at all, see its own header comment for
+ * why), and put the "whsec_..." it gives you into
+ * STRIPE_CHECKOUT_WEBHOOK_SECRET. If this endpoint is still only subscribed
+ * to the old event, payments will succeed with NO ticket ever created,
+ * since this webhook is the only place ticket rows get written.
  *
  * Ticket creation happens HERE, not in the frontend, on purpose: the old
  * fake checkout flow (processPayment() in app.js) inserted ticket rows
@@ -101,7 +106,7 @@ Deno.serve(async (req: Request) => {
     // that process, this is where it's confirmed. Requires this same
     // endpoint to also be subscribed to `account.updated` in the Stripe
     // dashboard (Connect webhooks are account-scoped, separate from the
-    // checkout.session.completed subscription above).
+    // payment_intent.succeeded subscription below).
     if (event.type === "account.updated") {
       const account = event.data?.object;
       if (account?.id) {
@@ -123,8 +128,8 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    if (event.type !== "checkout.session.completed") {
-      // charge.refunded / payment_intent.payment_failed / anything else
+    if (event.type !== "payment_intent.succeeded") {
+      // payment_intent.payment_failed / charge.refunded / anything else
       // we're subscribed to — acknowledged so Stripe stops retrying, but out
       // of scope for this scaffolding pass (refunds in this app are always
       // host/admin-initiated via cancel-event-refund, not out-of-band).
@@ -134,22 +139,21 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const session = event.data?.object;
-    if (session?.payment_status !== "paid") {
+    const intent = event.data?.object;
+    if (intent?.status !== "succeeded") {
       return new Response(
-        JSON.stringify({ ok: true, ignored: "not paid yet" }),
+        JSON.stringify({ ok: true, ignored: "not succeeded yet" }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       );
     }
 
-    const sessionId: string = session.id;
-    const eventId: string = session.metadata?.event_id;
-    const userId: string = session.metadata?.user_id || session.client_reference_id;
-    const qty = Math.max(1, Math.min(10, Number(session.metadata?.qty) || 1));
-    const pricePerTicket = Number(session.metadata?.price_per_ticket) || 0;
-    const platformFee = Number(session.metadata?.platform_fee) || 0;
-    const marketingOptIn = session.metadata?.marketing_opt_in === "true";
-    const paymentIntentId: string | null = session.payment_intent || null;
+    const paymentIntentId: string = intent.id;
+    const eventId: string = intent.metadata?.event_id;
+    const userId: string = intent.metadata?.user_id;
+    const qty = Math.max(1, Math.min(10, Number(intent.metadata?.qty) || 1));
+    const pricePerTicket = Number(intent.metadata?.price_per_ticket) || 0;
+    const platformFee = Number(intent.metadata?.platform_fee) || 0;
+    const marketingOptIn = intent.metadata?.marketing_opt_in === "true";
 
     if (!eventId || !userId) {
       return new Response(
@@ -159,10 +163,10 @@ Deno.serve(async (req: Request) => {
     }
 
     // Idempotency: Stripe can and does redeliver the same event. If tickets
-    // for this checkout session already exist, this is a retry — ack without
+    // for this PaymentIntent already exist, this is a retry — ack without
     // creating duplicates.
     const existingRes = await fetch(
-      `${supabaseUrl}/rest/v1/tickets?stripe_checkout_session_id=eq.${sessionId}&select=id&limit=1`,
+      `${supabaseUrl}/rest/v1/tickets?stripe_payment_intent_id=eq.${paymentIntentId}&select=id&limit=1`,
       { headers: svcHeaders },
     );
     const existing = await existingRes.json();
@@ -223,7 +227,6 @@ Deno.serve(async (req: Request) => {
       claim_code: i > 0 ? genClaimCode() : null,
       status: "active",
       stripe_payment_intent_id: paymentIntentId,
-      stripe_checkout_session_id: sessionId,
       marketing_opt_in: marketingOptIn,
     }));
 

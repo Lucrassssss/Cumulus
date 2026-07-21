@@ -1374,19 +1374,18 @@ async function registerFree(evId) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// Maps Cumulus's current light/dark palette onto Stripe's Embedded
-// Checkout Appearance API (theme + variables) so the payment iframe reads
-// as part of the same page instead of a jarring foreign-white box dropped
-// into a dark UI. Reads live computed CSS custom properties rather than
-// duplicating hex values here, so it can never drift out of sync with
-// styles.css. This is cosmetic only — an unrecognized/missing variable is
-// ignored by Stripe rather than rejected, unlike ui_mode/Stripe-Version,
-// so a mistake here can't reintroduce the checkout outage this session
-// already fixed twice.
-// Returns { appearance, fonts } — spread directly into
-// createEmbeddedCheckoutPage()'s options alongside clientSecret; "fonts"
-// is a sibling of "appearance" in Stripe's options shape, not nested
-// inside it.
+// Maps Cumulus's current light/dark palette onto Stripe's Elements
+// Appearance API (theme + variables + fonts) so the payment form reads as
+// part of the same page instead of a foreign white card dropped into a
+// themed UI. Genuinely applies here — this is the raw Elements API
+// (stripe.elements({appearance, fonts}), not the pre-built Checkout
+// Session form's initEmbeddedCheckout()/createEmbeddedCheckoutPage(),
+// which rejects an appearance option outright and, even where a
+// server-side branding_settings equivalent exists, still can't theme its
+// own input card (a fixed-light-surface product constraint, not a missing
+// parameter — see ARCHITECTURE.md). Reads live computed CSS custom
+// properties rather than duplicating hex values here, so it can never
+// drift out of sync with styles.css.
 function stripeAppearanceForCurrentTheme() {
   const isDark = document.documentElement.dataset.theme === "dark";
   const cs = getComputedStyle(document.documentElement);
@@ -1414,12 +1413,12 @@ function stripeAppearanceForCurrentTheme() {
       },
     },
     // Best-effort: the Appearance API's fontFamily only names a font, it
-    // doesn't load one — Stripe's iframe is a separate origin and won't
-    // inherit index.html's Google Fonts <link>. Pointing it at the same
-    // Inter weights the rest of the app uses means the payment form
-    // actually renders in Inter rather than falling back to a generic
-    // system sans if this key isn't honored, worst case is silently
-    // ignored, not a functional break.
+    // doesn't load one — Stripe's Elements render in their own isolated
+    // context and won't inherit index.html's Google Fonts <link>. Pointing
+    // it at the same Inter weights the rest of the app uses means the
+    // payment form actually renders in Inter rather than falling back to a
+    // generic system sans if this key isn't honored, worst case is
+    // silently ignored, not a functional break.
     fonts: [
       {
         cssSrc:
@@ -1429,19 +1428,30 @@ function stripeAppearanceForCurrentTheme() {
   };
 }
 
-// Starts a real Stripe Embedded Checkout session — auto-triggered by
+// Holds the mounted Elements group + Payment Element between
+// startStripeCheckout() (creates + mounts them) and submitStripePayment()
+// (reads them back on click) — module-scope state, same pattern as
+// window.stripeInstance below.
+let stripeElementsGroup = null;
+
+// Starts a real Stripe payment against a PaymentIntent — auto-triggered by
 // afterRenderCheckout() the instant the payment screen renders, so
 // "Continue to Payment" reads as one action, not two. Ticket rows are
 // created ONLY by stripe-webhook once Stripe confirms payment — this
-// function never writes to the tickets table itself.
-// checkStripeCheckoutReturn() (boot) picks the tickets up again once the
-// browser comes back from Stripe.
+// function never writes to the tickets table itself. finalizeStripePayment()
+// (below) picks the tickets up once payment actually succeeds, whether
+// that happens inline (most cards — no redirect at all) or after the
+// browser comes back from a redirect-based method (some banks/wallets),
+// via checkStripeCheckoutReturn() at boot.
 async function startStripeCheckout() {
   const ev = EVENTS.find((e) => e.id === bookingDraft.eventId);
   if (!ev) return;
   const status = document.getElementById("checkout-status");
   const setStatus = (html) => {
-    if (status) status.innerHTML = html;
+    if (status) {
+      status.style.display = "flex";
+      status.innerHTML = html;
+    }
   };
 
   try {
@@ -1457,32 +1467,19 @@ async function startStripeCheckout() {
     if (!window.stripeInstance) {
       window.stripeInstance = Stripe(window.CUMULUS_CONFIG.STRIPE_PUBLISHABLE_KEY);
     }
-    // Stripe.js's docs describe initEmbeddedCheckout() as renamed to
-    // createEmbeddedCheckoutPage(), but the live js.stripe.com/v3/ script
-    // still only exposes the old name in practice (confirmed live:
-    // createEmbeddedCheckoutPage was undefined, so the fallback below fired)
-    // — and that old initEmbeddedCheckout() strictly validates its options,
-    // throwing "appearance is not an accepted parameter" rather than
-    // ignoring it. So: no appearance/fonts customization here, only the
-    // options this method actually accepts. See stripeAppearanceForCurrentTheme()
-    // for why the appearance attempt (below it, unused for now) isn't wired
-    // up — kept as a starting point for whichever mechanism turns out to
-    // actually theme Checkout Sessions (likely branding_settings on the
-    // session itself, server-side, not a client init option).
-    const initFn =
-      window.stripeInstance.createEmbeddedCheckoutPage ||
-      window.stripeInstance.initEmbeddedCheckout;
-    const checkout = await initFn.call(window.stripeInstance, {
+    const { appearance, fonts } = stripeAppearanceForCurrentTheme();
+    stripeElementsGroup = window.stripeInstance.elements({
       clientSecret: res.clientSecret,
+      appearance,
+      fonts,
     });
-
-    const container = document.getElementById("stripe-checkout-embedded");
-    if (container) {
+    const paymentElement = stripeElementsGroup.create("payment");
+    paymentElement.mount("#payment-element");
+    paymentElement.on("ready", () => {
       if (status) status.style.display = "none";
-      const introForm = document.querySelector(".intro-form");
-      if (introForm) introForm.style.display = "none";
-      checkout.mount("#stripe-checkout-embedded");
-    }
+      const payBtn = document.getElementById("pay-btn");
+      if (payBtn) payBtn.style.display = "block";
+    });
   } catch (err) {
     setStatus(
       `<div style="text-align:center;width:100%;">
@@ -1493,28 +1490,69 @@ async function startStripeCheckout() {
   }
 }
 
-// Boot-time handler for the browser coming back from Stripe Checkout.
-// Mirrors checkSquadClaim()'s URL-param pattern (read, strip, act).
-// success_url/cancel_url/return_url are set in create-checkout-session.
-async function checkStripeCheckoutReturn() {
-  const params = new URLSearchParams(location.search);
-  const sessionId = params.get("session_id");
-  const status = params.get("checkout");
-  if (!status) return;
-  history.replaceState(null, "", location.pathname);
+// Fired by the "Pay £X" button rendered in renderCheckout(). Most card
+// payments never leave the page at all — redirect:"if_required" only
+// navigates away for payment methods that genuinely need it (some bank
+// redirects/wallets), in which case checkStripeCheckoutReturn() (boot)
+// picks it back up from the return_url's query params.
+async function submitStripePayment() {
+  if (!stripeElementsGroup || !window.stripeInstance) return;
+  const btn = document.getElementById("pay-btn");
+  const status = document.getElementById("checkout-status");
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span style="opacity:.7">Processing…</span>';
+  }
+  if (status) {
+    status.style.display = "none";
+    status.innerHTML = "";
+  }
 
-  if (status === "cancelled") {
-    showToast("Payment was cancelled — no charge was made.", "info");
+  const { error, paymentIntent } = await window.stripeInstance.confirmPayment({
+    elements: stripeElementsGroup,
+    confirmParams: {
+      return_url: `${location.origin}/?checkout=return`,
+    },
+    redirect: "if_required",
+  });
+
+  if (error) {
+    if (status) {
+      status.style.display = "flex";
+      status.innerHTML = `<div style="text-align:center;width:100%;"><div style="color:var(--danger, #dc2626);font-size:13px;">${escapeHtml(error.message || "Payment failed — try again")}</div></div>`;
+    }
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = btn.dataset.label || "Pay →";
+    }
     return;
   }
-  if ((status !== "success" && status !== "return") || !sessionId) return;
-  if (!state.userId) return; // returning signed-out isn't wired up — keep simple for now
 
+  // No redirect happened (the common case for cards) — Stripe already
+  // confirmed the PaymentIntent synchronously, so finalize right here
+  // instead of waiting on a return_url that's never coming.
+  if (paymentIntent?.status === "succeeded") {
+    await finalizeStripePayment(paymentIntent.id);
+  } else {
+    // "processing" (rare — some bank debits settle asynchronously) or an
+    // unexpected status. stripe-webhook will create the ticket once Stripe
+    // actually confirms it; tell the buyer rather than leave them staring
+    // at a disabled button.
+    showToast(
+      "Payment is processing — your ticket will appear in My Tickets shortly.",
+      "info",
+    );
+  }
+}
+
+// Shared by submitStripePayment() (inline, no-redirect completion) and
+// checkStripeCheckoutReturn() (redirect-based completion) — polls for the
+// ticket rows stripe-webhook creates asynchronously once it receives
+// payment_intent.succeeded, then shows the confirmation screen.
+async function finalizeStripePayment(paymentIntentId) {
   showToast("Confirming your payment…", "info");
-  // stripe-webhook creates the ticket rows asynchronously, so this may need
-  // a couple of tries before they exist yet.
   for (let attempt = 0; attempt < 6; attempt++) {
-    const rows = await fetchTicketsBySession(sessionId);
+    const rows = await fetchTicketsByPaymentIntent(paymentIntentId);
     if (rows && rows.length > 0) {
       await loadMyTickets();
       bookingDraft.confirmedTickets = rows.map((t) => ({
@@ -1545,6 +1583,33 @@ async function checkStripeCheckoutReturn() {
     "Payment confirmed — your ticket is finishing up. Check My Tickets in a moment.",
     "info",
   );
+}
+
+// Boot-time handler for the browser coming back from a redirect-based
+// payment method (some bank debits/wallets — most cards never leave the
+// page, see submitStripePayment()). Stripe appends its own query params to
+// the return_url passed to confirmPayment(): payment_intent,
+// payment_intent_client_secret, redirect_status. Mirrors
+// checkSquadClaim()'s URL-param pattern (read, strip, act).
+async function checkStripeCheckoutReturn() {
+  const params = new URLSearchParams(location.search);
+  const paymentIntentId = params.get("payment_intent");
+  const redirectStatus = params.get("redirect_status");
+  if (!paymentIntentId || !redirectStatus) return;
+  history.replaceState(null, "", location.pathname);
+
+  if (redirectStatus !== "succeeded") {
+    showToast(
+      redirectStatus === "processing"
+        ? "Payment is processing — your ticket will appear in My Tickets shortly."
+        : "Payment was not completed — no charge was made.",
+      "info",
+    );
+    return;
+  }
+  if (!state.userId) return; // returning signed-out isn't wired up — keep simple for now
+
+  await finalizeStripePayment(paymentIntentId);
 }
 
 function afterRenderConfirmed() {

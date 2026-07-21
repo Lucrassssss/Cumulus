@@ -6,6 +6,33 @@ connector, or tool can perform for you.
 
 ---
 
+## 🚨 REQUIRED — Stripe Dashboard webhook resubscription (checkout is migrating to Payment Element)
+
+**Without this one dashboard change, every payment will succeed and every
+ticket will silently fail to be created.** Checkout just moved off Stripe's
+pre-built Checkout Session (which couldn't be fully themed to match
+Cumulus's dark/light design — the input card always rendered on a fixed
+light surface, a genuine Stripe product constraint, not a bug) onto a
+custom Payment Element form built on raw PaymentIntents. That means
+`stripe-webhook`'s trigger event changed:
+
+- **Old:** `checkout.session.completed`
+- **New:** `payment_intent.succeeded`
+
+**Stripe Dashboard → Developers → Webhooks → (the endpoint pointing at this
+project's `stripe-webhook` function) → edit the subscribed events:**
+remove `checkout.session.completed`, add `payment_intent.succeeded`. Leave
+`account.updated` subscribed (Connect payouts-enabled tracking is
+unrelated and unaffected).
+
+If this isn't done before the new `create-checkout-session`/`stripe-webhook`
+versions are deployed, tickets stop being created entirely — the webhook is
+the *only* place ticket rows get written, and it will keep listening for an
+event Stripe will never send again. See ARCHITECTURE.md → "Payment Element
+migration" for the full rationale and what changed.
+
+---
+
 ## ✅ Already done (verified in production)
 
 - **Auth model migrated to Supabase Auth** (Phase 1 + 2). Sign-up/login use email
@@ -226,8 +253,9 @@ are stuck disabled, open a **new chat** and paste:
      create-verification-session — could not be confirmed from this
      session, no tool exposes secret existence), `STRIPE_CHECKOUT_WEBHOOK_SECRET`
      (new — create a webhook endpoint pointed at `stripe-webhook`,
-     subscribed to `checkout.session.completed` and `account.updated`, and
-     use the `whsec_...` it gives you).
+     subscribed to `payment_intent.succeeded` and `account.updated` — see
+     "REQUIRED — Stripe Dashboard webhook resubscription" at the top of
+     this doc — and use the `whsec_...` it gives you).
   3. Run one real test-mode purchase end to end and confirm a ticket row
      actually appears. This session's sandbox could not do this itself —
      its outbound network can't reach either the Supabase Functions HTTPS

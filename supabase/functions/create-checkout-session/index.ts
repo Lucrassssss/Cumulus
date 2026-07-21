@@ -1,33 +1,44 @@
-/* Creates a real Stripe Checkout Session in EMBEDDED mode (ui_mode:
- * "embedded_page" as of the 2026-03-25 API version — see the note at its
- * call site below) and hands back its `client_secret` for the browser to
- * mount in-page via Stripe.js's stripe.createEmbeddedCheckoutPage() — the
- * buyer never leaves cumulus's own origin. return_url points back at this
- * app's own page (see checkStripeCheckoutReturn() in
- * src/js/app/10-badges.js), which is what makes it "embedded" rather than a
- * redirect to a Stripe-hosted page. Stripe.js (https://js.stripe.com/v3/) is
- * loaded client-side for this — the one exception to this repo's "no SDK"
- * house style, required because Embedded Checkout's iframe is mounted and
- * driven by that library.
+/* Creates a real Stripe PaymentIntent for a paid event and hands back its
+ * `client_secret` for the browser to mount a Stripe Payment Element against
+ * (see startStripeCheckout() in src/js/app/10-badges.js) — the buyer never
+ * leaves cumulus's own origin, and the payment form itself (card fields,
+ * wallet buttons) is fully themeable via Stripe.js's Appearance API, unlike
+ * the pre-built Checkout Session form this replaces.
  *
- * "Separate charges and transfers": Checkout collects the FULL amount
- * (ticket price + booking fee) onto the PLATFORM's own Stripe account. The
- * host's share is moved to their connected account later, by
- * release-payout, once event_payouts.scheduled_release_at has passed (the
- * existing 24h/48h trust-tier logic from the pivot migration). This is
- * deliberate: it matches the escrow language already in terms.html/
- * privacy.html and the event_payouts bookkeeping the pivot migration built,
- * rather than requiring every host to have a fully onboarded,
- * charges-enabled Connect account before their first ticket can even sell.
+ * WHY PaymentIntents INSTEAD OF Checkout Sessions: this function used to
+ * create a Checkout Session (ui_mode: "embedded_page"). That pre-built form
+ * hard-codes its own input-card surface to always render light, regardless
+ * of branding_settings — a genuine Stripe design constraint for that
+ * product, not a bug in this repo's integration of it (confirmed against
+ * Stripe's own docs and community reports after branding_settings correctly
+ * themed the header/button but left the card white). Full theming control
+ * needs the raw PaymentIntent + Payment Element API instead — the oldest,
+ * most stable part of Stripe's payments surface (automatic_payment_methods
+ * has been GA since 2023-08-16), deliberately chosen over the newer
+ * "Elements with Checkout Sessions" (ui_mode: "elements"/"custom") feature,
+ * which ships behind a distinct versioned Stripe.js preview build and is
+ * less proven — not a trade worth making again after three live breakages
+ * from newer/less-mature Stripe surfaces earlier this session.
+ *
+ * "Separate charges and transfers": collects the FULL amount (ticket price
+ * + booking fee) onto the PLATFORM's own Stripe account. The host's share
+ * is moved to their connected account later, by release-payout, once
+ * event_payouts.scheduled_release_at has passed (the existing 24h/48h
+ * trust-tier logic from the pivot migration). This is deliberate: it
+ * matches the escrow language already in terms.html/privacy.html and the
+ * event_payouts bookkeeping the pivot migration built, rather than
+ * requiring every host to have a fully onboarded, charges-enabled Connect
+ * account before their first ticket can even sell.
  *
  * verify_jwt = true in config.toml — the gateway has already rejected a
  * missing/expired/invalid session before this code runs.
  *
- * DEPLOYED (schema + this function are both live on the project), but NOT
- * MONEY-TESTED: no real (even test-mode) Stripe purchase has been run
- * through this yet. See ARCHITECTURE.md → "Payments — Stripe Connect
- * scaffolding" for exactly what that still needs (a real checkout flow
- * exercised end to end against a Stripe test-mode account). */
+ * IMPORTANT DEPLOY STEP: stripe-webhook must be subscribed to
+ * `payment_intent.succeeded` in the Stripe Dashboard (Developers → Webhooks
+ * → this endpoint) — it was previously only subscribed to
+ * `checkout.session.completed`/`account.updated`. Without that
+ * subscription, payments will succeed but no ticket will ever be created,
+ * since the webhook is the only place ticket rows get written. */
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -71,7 +82,7 @@ function cumulusFee(ticketPrice: number): number {
 // Mirrors activeTicketTier()/eventPrice() in src/js/app.js EXACTLY — same
 // "first tier whose cutoff hasn't passed, else the last tier" rule. The
 // client's displayed price is cosmetic only; this is what actually prices
-// the Stripe line item.
+// the PaymentIntent.
 function activeTierPrice(ev: { price?: number; price_tiers?: any }): number {
   const tiers = Array.isArray(ev.price_tiers) ? ev.price_tiers : null;
   if (!tiers || !tiers.length) return Number(ev.price) || 0;
@@ -105,14 +116,8 @@ Deno.serve(async (req: Request) => {
   const eventId = body?.eventId;
   const qty = Math.max(1, Math.min(10, Number(body?.qty) || 1));
   const marketingOptIn = body?.marketingOptIn === true;
-  const theme = body?.theme === "dark" ? "dark" : "light";
-  // Only origin is taken from the client (for the redirect URLs); every
-  // price-bearing field below comes from the DB, never the request body.
-  const origin =
-    req.headers.get("origin") ||
-    (typeof body?.origin === "string" ? body.origin : null);
-  if (!eventId || !origin) {
-    return json({ error: "Missing eventId or origin" }, 400);
+  if (!eventId) {
+    return json({ error: "Missing eventId" }, 400);
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -148,93 +153,56 @@ Deno.serve(async (req: Request) => {
   }
 
   const fee = cumulusFee(price);
-  const unitAmountPence = Math.round((price + fee) * 100);
+  const unitAmountPence = Math.round((price + fee) * qty * 100);
+
+  // Best-effort receipt email — the app already knows this from the signed-in
+  // session, so Payment Element never needs to ask the buyer for it again
+  // (unlike the pre-built Checkout Session form this replaces).
+  let receiptEmail: string | null = null;
+  try {
+    const uRes = await fetch(
+      `${supabaseUrl}/rest/v1/users?id=eq.${userId}&select=email`,
+      { headers: restHeaders },
+    );
+    const uRows = await uRes.json();
+    receiptEmail = uRows?.[0]?.email || null;
+  } catch {
+    /* cosmetic — a lookup failure shouldn't block payment */
+  }
 
   const secretKey = Deno.env.get("STRIPE_SECRET_KEY");
   if (!secretKey) return json({ error: "Stripe is not configured" }, 500);
 
-  const baseParams: Record<string, string> = {
-    mode: "payment",
-    // Stripe's 2026-03-25 ("dahlia") API version renamed the ui_mode enum —
-    // "embedded" (and "hosted"/"custom") now fail outright with an invalid-
-    // parameter error; the in-page mode is "embedded_page" going forward.
-    // Pinning Stripe-Version below (rather than trusting the account's
-    // dashboard-configured default) keeps this deterministic even if that
-    // default drifts again later. NOTE: Stripe version strings need the
-    // codename suffix (e.g. "2025-04-30.basil") — "2026-03-25" alone
-    // (without ".dahlia") is itself an invalid/unrecognized version string,
-    // which is exactly why the first attempt at this fix still 500'd.
-    ui_mode: "embedded_page",
-    "line_items[0][price_data][currency]": "gbp",
-    "line_items[0][price_data][product_data][name]": ev.title || "Cumulus ticket",
-    "line_items[0][price_data][unit_amount]": String(unitAmountPence),
-    "line_items[0][quantity]": String(qty),
-    client_reference_id: userId,
-    return_url: `${origin}/?checkout=return&session_id={CHECKOUT_SESSION_ID}`,
+  const params: Record<string, string> = {
+    amount: String(unitAmountPence),
+    currency: "gbp",
+    "automatic_payment_methods[enabled]": "true",
     "metadata[event_id]": eventId,
     "metadata[user_id]": userId,
     "metadata[qty]": String(qty),
     "metadata[price_per_ticket]": String(price),
     "metadata[platform_fee]": String(fee),
     "metadata[marketing_opt_in]": marketingOptIn ? "true" : "false",
+    description: ev.title || "Cumulus ticket",
   };
+  if (receiptEmail) params.receipt_email = receiptEmail;
 
-  // Mirrors the app's own light/dark accent + surface colours
-  // (styles.css --accent/--surface). branding_settings is a documented
-  // Checkout Session parameter (Stripe changelog: checkout-sessions-
-  // branding-settings) that theming was PREVIOUSLY attempted client-side
-  // for (via Stripe.js's appearance option) — that broke live checkout
-  // outright, because the client method validates unknown options
-  // strictly. This is a different, server-side mechanism, so it's tried
-  // separately below with its own fallback — if Stripe rejects these
-  // exact field names too, the session still gets created (unthemed)
-  // rather than checkout breaking a fourth time.
-  const brandingParams: Record<string, string> =
-    theme === "dark"
-      ? {
-          "branding_settings[background_color]": "#16181b",
-          "branding_settings[button_color]": "#ffcf33",
-        }
-      : {
-          "branding_settings[background_color]": "#f7f6f2",
-          "branding_settings[button_color]": "#c08a00",
-        };
-
-  async function postStripeSession(fields: Record<string, string>) {
-    const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+  try {
+    const res = await fetch("https://api.stripe.com/v1/payment_intents", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${secretKey}`,
         "Content-Type": "application/x-www-form-urlencoded",
         "Stripe-Version": "2026-03-25.dahlia",
       },
-      body: new URLSearchParams(fields).toString(),
+      body: new URLSearchParams(params).toString(),
     });
-    return { res, session: await res.json() };
-  }
-
-  try {
-    let { res, session } = await postStripeSession({
-      ...baseParams,
-      ...brandingParams,
-    });
+    const intent = await res.json();
     if (!res.ok) {
-      // branding_settings' exact field names aren't independently verified
-      // against a live Stripe account from this sandbox — degrade to an
-      // unthemed but WORKING session rather than fail the whole purchase
-      // over a cosmetic parameter. Logged so the real rejection reason is
-      // visible without guessing from a bare status code.
-      console.error(
-        "branding_settings rejected, retrying without theming:",
-        session.error,
-      );
-      ({ res, session } = await postStripeSession(baseParams));
+      console.error("Stripe PaymentIntent creation failed:", intent.error);
+      throw new Error(intent.error?.message || "Stripe error");
     }
-    if (!res.ok) {
-      console.error("Stripe checkout session creation failed:", session.error);
-      throw new Error(session.error?.message || "Stripe error");
-    }
-    return json({ clientSecret: session.client_secret, id: session.id });
+    return json({ clientSecret: intent.client_secret, id: intent.id });
   } catch (err: any) {
     return json({ error: err.message }, 500);
   }
