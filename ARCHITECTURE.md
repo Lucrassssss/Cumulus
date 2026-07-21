@@ -420,13 +420,30 @@ There is no server to hide keys behind, so the keys in `config.js` are the
 `.env.example` documents these and how to inject per-environment values via
 `window.CUMULUS_CONFIG` (or a future build step) without editing source.
 
-**RLS audit — resolved.** This was previously an open gap (pre-existing tables
-without a tracked migration). It has since been closed: RLS is hardened on
-every live table (`users`, `events`, `rsvps`, `tickets`, `host_applications`,
-`pending_events`, `admins`) and 13 leftover permissive `{public}` policies
-were found and dropped — see `GO-LIVE.md`. (`curator_codes`, `chat_messages`,
-and `friends` no longer exist; they were dropped by the frictionless-ticketing
-pivot.)
+**RLS audit — resolved for every application table.** This was previously an
+open gap (pre-existing tables without a tracked migration). It has since been
+closed: RLS is hardened on every live table this app owns (`users`, `events`,
+`rsvps`, `tickets`, `host_applications`, `pending_events`, `admins`) and 13
+leftover permissive `{public}` policies were found and dropped — see
+`GO-LIVE.md`. (`curator_codes`, `chat_messages`, and `friends` no longer
+exist; they were dropped by the frictionless-ticketing pivot.)
+
+**`public.spatial_ref_sys` — RLS cannot be enabled from here; accepted as a
+known PostGIS/Supabase limitation, not an open app-security gap.** This
+table (and the `postgis` extension itself) is owned by `supabase_admin`, a
+Supabase-internal role — confirmed by querying `pg_tables`/`pg_extension`
+directly. The project's own `postgres` role (what every migration in this
+repo, including this session's, runs as) gets `must be owner of table
+spatial_ref_sys` on `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`, so no
+migration in this repo can close it — this needs either Supabase's own
+tooling/support to act as `supabase_admin`, or moving the whole `postgis`
+extension out of `public` into a dedicated schema (a materially bigger,
+separate change touching `events.coordinates` and every geography
+RPC/index, not attempted here). Practically low-risk regardless: the table
+holds ~8500 rows of public EPSG/SRID coordinate-system definitions, byte-for-
+byte identical on every PostGIS install on earth — there is no app or user
+data in it, and "RLS disabled" here means at most someone can read reference
+data that's already public in the PostGIS source itself.
 
 ## Production readiness — app & website
 

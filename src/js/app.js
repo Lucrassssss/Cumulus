@@ -8763,17 +8763,17 @@ function renderDetail(id) {
   if (ev.status === "cancelled") {
     bookBtn = `<div style="background:#b3261e18;border:1px solid #b3261e55;color:#b3261e;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;text-align:center;">This event was cancelled${ticket ? " — your ticket has been refunded." : "."}</div>`;
   } else if (ticket) {
-    bookBtn = `<button class="btn" style="background:transparent;border:2px solid #147136;color:#147136;box-shadow:none;width:100%;" onclick="openViewTicket(${id})">${checkIconSvg(15)} You have a ticket — View it</button>`;
+    bookBtn = `<button class="btn" style="background:transparent;border:2px solid #147136;color:#147136;box-shadow:none;width:100%;" onclick="openViewTicket('${id}')">${checkIconSvg(15)} You have a ticket — View it</button>`;
   } else if (isFull) {
     bookBtn = `<button class="btn" style="background:var(--surface-2);color:var(--text-muted);cursor:not-allowed;width:100%;">Sold Out</button>`;
   } else {
-    bookBtn = `<button class="btn" style="background:${c.color};color:#fff;width:100%;font-size:15px;" onclick="openBook(${id})">${price ? `Book Now · From £${price}` : "Register Free"} →</button>`;
+    bookBtn = `<button class="btn" style="background:${c.color};color:#fff;width:100%;font-size:15px;" onclick="openBook('${id}')">${price ? `Book Now · From £${price}` : "Register Free"} →</button>`;
   }
   const going = attendees.includes(state.profileName);
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="panel detail-card" style="--corner:${c.color};">
       <div class="detail-hero" style="background-image:url('${catImg(ev.category)}');">
-        <button class="detail-share-btn" onclick="shareEvent(${ev.id})" aria-label="Share event"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.7l7.6-4.4M8.2 13.3l7.6 4.4"/></svg></button>
+        <button class="detail-share-btn" onclick="shareEvent('${ev.id}')" aria-label="Share event"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.7l7.6-4.4M8.2 13.3l7.6 4.4"/></svg></button>
       </div>
       <span class="event-badge" style="--cat:${c.color};--cat-text:${c.textColor};">${ev.category}</span>${statusChip}${capBadge}${priceBadge}
       <h2 class="detail-title">${ev.title}</h2>
@@ -9378,7 +9378,7 @@ function renderProfile() {
         ev.nightShotUrl || localStorage.getItem("night_shot:" + ev.id);
       const shortTitle =
         ev.title.length > 22 ? ev.title.substring(0, 20) + "…" : ev.title;
-      return `<div class="ns-tile" onclick="openEvent(${ev.id})" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
+      return `<div class="ns-tile" onclick="openEvent('${ev.id}')" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
       <img src="${shotUrl}" alt="${escapeHtml(ev.title)}"/>
       <div class="ns-tile-label">${escapeHtml(shortTitle)}</div>
     </div>`;
@@ -9417,7 +9417,7 @@ function renderProfile() {
           : status === "upcoming"
             ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c2.color};margin-right:4px;opacity:0.7;"></span>`
             : "";
-      return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:${mutedBg};border:1px solid ${c2.color}28;" title="${escapeHtml(ev.title)}" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
+      return `<div class="ev-plate" onclick="openEvent('${ev.id}')" style="background:${mutedBg};border:1px solid ${c2.color}28;" title="${escapeHtml(ev.title)}" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
       <div style="font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;">${escapeHtml(shortTitle)}</div>
       <div style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;">${statusDot}${escapeHtml(ev.category)}</div>
       ${evDate ? `<div style="font-size:10px;color:${c2.color};font-weight:600;margin-top:4px;">${evDate}</div>` : ""}
@@ -9705,7 +9705,7 @@ function renderAchievements() {
               : status === "upcoming"
                 ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c2.color};margin-right:4px;opacity:0.7;"></span>`
                 : "";
-          return `<div class="ev-plate" onclick="openEvent(${ev.id})" style="background:${hexToRgba(c2.color, 0.08)};border:1px solid ${c2.color}28;" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
+          return `<div class="ev-plate" onclick="openEvent('${ev.id}')" style="background:${hexToRgba(c2.color, 0.08)};border:1px solid ${c2.color}28;" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
           <div style="font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;">${escapeHtml(shortTitle)}</div>
           <div style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;">${statusDot}${escapeHtml(ev.category)}</div>
           ${evDate ? `<div style="font-size:10px;color:${c2.color};font-weight:600;margin-top:4px;">${evDate}</div>` : ""}
@@ -9842,7 +9842,7 @@ function eventListCardHtml(ev) {
   const status = eventStatus(ev);
   const price = eventPrice(ev);
   const img = ev.nightShotUrl || catImg(ev.category);
-  return `<div class="panel event-list-card" style="--corner:${c.color};" onclick="openEvent(${ev.id})" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
+  return `<div class="panel event-list-card" style="--corner:${c.color};" onclick="openEvent('${ev.id}')" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
     <div class="elc-img" style="background-image:url('${img}');"></div>
     <div class="elc-body">
       <div class="elc-top-row">
@@ -10568,7 +10568,7 @@ function renderConfirmed() {
     ${squadSection}
     ${walletSection}
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;">
-      <button class="btn" style="background:${c.color};" onclick="downloadICS(${ev.id})">+ Add to Calendar</button>
+      <button class="btn" style="background:${c.color};" onclick="downloadICS('${ev.id}')">+ Add to Calendar</button>
       <button class="btn btn-text" onclick="openTicketsTab()">View all my tickets →</button>
     </div>
     <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:14px;">Free cancellation up to 24 hours before the event · <a href="terms.html" target="_blank" style="color:var(--gold-text);">See full policy</a></p>`;
@@ -10672,8 +10672,8 @@ function renderMyTickets() {
       <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--line);">
         <div style="font-family:ui-monospace,monospace;font-size:11px;font-weight:700;color:var(--text-muted);">${t.ticketId}</div>
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-outline btn-small" onclick="downloadICS(${ev.id})">+ Cal</button>
-          <button class="btn btn-small" style="background:${c.color};" onclick="openViewTicket(${ev.id})">Ticket</button>
+          <button class="btn btn-outline btn-small" onclick="downloadICS('${ev.id}')">+ Cal</button>
+          <button class="btn btn-small" style="background:${c.color};" onclick="openViewTicket('${ev.id}')">Ticket</button>
         </div>
       </div>
       ${
@@ -10820,8 +10820,8 @@ function renderTicketsTab() {
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-small" style="background:${c.color};" onclick="openViewTicket(${evId})">View Ticket${tickets.length > 1 ? "s" : ""}</button>
-          <button class="btn btn-text btn-small" onclick="downloadICS(${evId})">+ Cal</button>
+          <button class="btn btn-small" style="background:${c.color};" onclick="openViewTicket('${evId}')">View Ticket${tickets.length > 1 ? "s" : ""}</button>
+          <button class="btn btn-text btn-small" onclick="downloadICS('${evId}')">+ Cal</button>
         </div>
       </div>`;
       })
