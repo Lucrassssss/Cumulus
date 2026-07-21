@@ -1520,6 +1520,7 @@ let state = {
   goingOpen: {},
   liveOnly: false,
   hotOnly: false,
+  startingSoonOnly: false,
   isAdmin: false, // set to true after admin OTP verification — bypasses all gates
   bgLoading: false,
 };
@@ -2424,6 +2425,7 @@ function renderGate(prefillName, prefillEmail) {
 
   // Auto-open modal if prefill data was provided (returning user flow)
   if (prefillName || prefillEmail) showLpSignup();
+  nudgeGateForSquadClaim(); // ?squad= link landing on a signed-out visitor
 
   document.getElementById("gate-name").addEventListener("keydown", (e) => {
     if (e.key === "Enter") document.getElementById("gate-email").focus();
@@ -3890,10 +3892,12 @@ async function initApp() {
     }
   });
   if (mapboxConfigured()) resolveEventLocations();
+  checkEventDeepLink();
 
   await loadMyTickets();
   await loadAllRsvps();
   await checkSquadClaim();
+  await checkSquadGroupClaim();
   await checkStripeCheckoutReturn();
   await checkConnectReturn();
 
@@ -3937,6 +3941,7 @@ async function loadRealEvents() {
       desc: ev.description,
       capacity: ev.capacity,
       price: ev.price || 0,
+      priceTiers: ev.price_tiers || null,
       nightShotUrl: ev.night_shot_url || null,
       status: ev.status || "active",
     };
@@ -4229,6 +4234,12 @@ function goBack() {
     renderView();
     if (state.view !== "browse")
       window.scrollTo({ top: 0, behavior: "smooth" });
+    if (state.view === "detail") {
+      const ev = EVENTS.find((e) => e.id === state.selectedEventId);
+      if (ev) updateEventUrlAndMeta(ev);
+    } else {
+      resetEventUrlAndMeta();
+    }
   } else {
     goBrowse();
   }
@@ -4240,10 +4251,48 @@ function goBrowse() {
   state.selectedEventId = null;
   renderNav();
   renderView();
+  resetEventUrlAndMeta();
 }
 function setCategory(cat) {
   state.selectedCategory = cat;
   renderView();
+}
+// Blueprint whitespace: "Web-View SEO Routing... events cannot be trapped
+// inside a map." Full Google-crawlable server-rendered pages would need a
+// server (this app is deliberately static/no-build/no-server — see
+// ARCHITECTURE.md) — that's a separate infra project, not something to
+// fake here. What IS shipped: a real shareable/bookmarkable URL per event
+// (?event=<id>) that deep-links straight to it on load, plus a dynamically
+// updated <title>/meta description so a shared link's social-card preview
+// reflects the actual event, not the generic homepage.
+function updateEventUrlAndMeta(ev) {
+  try {
+    const url = `${location.pathname}?event=${encodeURIComponent(ev.id)}`;
+    history.replaceState(null, "", url);
+    document.title = `${ev.title} — Cumulus`;
+    let desc = document.querySelector('meta[name="description"]');
+    if (!desc) {
+      desc = document.createElement("meta");
+      desc.name = "description";
+      document.head.appendChild(desc);
+    }
+    desc.setAttribute(
+      "content",
+      `${ev.title} · ${ev.date} · ${ev.venue}${ev.area ? ", " + ev.area : ""} — find it on Cumulus's live map of London community events.`,
+    );
+  } catch (e) {}
+}
+function resetEventUrlAndMeta() {
+  try {
+    history.replaceState(null, "", location.pathname);
+    document.title = "Cumulus — London's live community event map";
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc)
+      desc.setAttribute(
+        "content",
+        "A live map of grassroots events across London. Every event is public — no invite, no curator code.",
+      );
+  } catch (e) {}
 }
 function openEvent(id) {
   pushNav();
@@ -4252,6 +4301,17 @@ function openEvent(id) {
   renderNav();
   renderView();
   window.scrollTo({ top: 0, behavior: "smooth" });
+  const ev = EVENTS.find((e) => e.id === id);
+  if (ev) updateEventUrlAndMeta(ev);
+}
+// Boot-time deep link: ?event=<id> opens straight to that event once EVENTS
+// has loaded (called from initApp(), after loadRealEvents()).
+function checkEventDeepLink() {
+  const params = new URLSearchParams(location.search);
+  const id = params.get("event");
+  if (!id) return;
+  const ev = EVENTS.find((e) => String(e.id) === String(id));
+  if (ev) openEvent(ev.id);
 }
 function openProfile() {
   pushNav();
@@ -5332,6 +5392,7 @@ function updateMapEmptyState(count) {
     state.selectedCategory !== "all" ||
     state.liveOnly ||
     state.hotOnly ||
+    state.startingSoonOnly ||
     !!(document.getElementById("search-input")?.value || "").trim();
   el.innerHTML = filtered
     ? `<div class="map-empty-card" role="status">
@@ -5352,6 +5413,7 @@ function clearMapFilters() {
   state.selectedCategory = "all";
   state.liveOnly = false;
   state.hotOnly = false;
+  state.startingSoonOnly = false;
   const si = document.getElementById("search-input");
   if (si) si.value = "";
   refreshFilters();
@@ -5919,6 +5981,32 @@ function selectAutocompleteAddress(lat, lon, fullAddress, name) {
     venueInput.value = name.trim();
 }
 
+// Blueprint table-stakes: "automatic schema triggers for pricing tiers
+// (e.g., Early Bird £8, General £10, Final £15)." Reads the optional
+// tiered-pricing rows from the host form (hidden by default — see
+// renderHostView() — to keep the default flow simple/fast, matching the
+// SAME doc's "60-second mobile publish" demand). Returns null (use the
+// flat price field) unless the host actually filled in at least one row.
+function collectHostPriceTiers() {
+  const toggle = document.getElementById("host-tiered-toggle");
+  if (!toggle || !toggle.checked) return null;
+  const rows = [
+    { id: "early", label: "Early Bird" },
+    { id: "general", label: "General" },
+    { id: "final", label: "Final" },
+  ];
+  const tiers = [];
+  for (const r of rows) {
+    const priceEl = document.getElementById(`tier-${r.id}-price`);
+    const cutoffEl = document.getElementById(`tier-${r.id}-cutoff`);
+    const price = priceEl && priceEl.value ? parseFloat(priceEl.value) : null;
+    if (price == null || Number.isNaN(price)) continue;
+    const cutoff = cutoffEl && cutoffEl.value ? new Date(cutoffEl.value).toISOString() : null;
+    tiers.push({ label: r.label, price, cutoff });
+  }
+  return tiers.length ? tiers : null;
+}
+
 async function submitHostEvent() {
   const title = (document.getElementById("host-title")?.value || "").trim();
   const cat = document.getElementById("host-cat")?.value;
@@ -5932,7 +6020,15 @@ async function submitHostEvent() {
   const venue = (document.getElementById("host-venue")?.value || "").trim();
   const capStr = document.getElementById("host-capacity")?.value;
   const priceStr = document.getElementById("host-price")?.value;
-  const priceVal = priceStr ? parseFloat(priceStr) : 0;
+  let priceVal = priceStr ? parseFloat(priceStr) : 0;
+  const priceTiers = collectHostPriceTiers();
+  if (priceTiers) {
+    // price column stays populated with today's active tier — a fallback
+    // for any code path that hasn't been updated to read price_tiers, and
+    // what shows in admin/ops tooling that only ever looked at `price`.
+    const active = activeTicketTier({ priceTiers });
+    priceVal = active ? Number(active.price) || 0 : priceVal;
+  }
   const desc = (document.getElementById("host-desc")?.value || "").trim();
   if (!title || !startVal || !endVal || !venue || !capStr) {
     showToast(
@@ -5976,6 +6072,7 @@ async function submitHostEvent() {
         description: desc,
         capacity: parseInt(capStr, 10),
         price: priceVal,
+        price_tiers: priceTiers,
       })
       .select()
       .single();
@@ -6004,6 +6101,7 @@ async function submitHostEvent() {
       desc: aData.description,
       capacity: aData.capacity,
       price: priceVal,
+      priceTiers: aData.price_tiers || priceTiers,
     };
     computeEventDates(aEv);
     EVENTS.push(aEv);
@@ -6040,6 +6138,7 @@ async function submitHostEvent() {
     description: desc,
     capacity: parseInt(capStr, 10),
     price: priceVal,
+    price_tiers: priceTiers,
     status: "pending",
     created_at: new Date().toISOString(),
   };
@@ -7959,8 +8058,10 @@ function _buildEventApprovalCard(ev) {
     }
   }
   const isPending = ev.status === "pending";
-  const priceLbl =
-    Number(ev.price) > 0 ? `£${Number(ev.price).toFixed(2)}` : "Free";
+  // Raw pending_events row (snake_case), not a mapped EVENTS item — reuse
+  // the same active-tier rule via a quick adapter rather than duplicate it.
+  const reviewPrice = eventPrice({ price: ev.price, priceTiers: ev.price_tiers });
+  const priceLbl = reviewPrice > 0 ? `£${reviewPrice.toFixed(2)}` : "Free";
   return `<div class="review-card list-item-stagger">
     <div class="review-card-top">
       <div>
@@ -8049,6 +8150,7 @@ async function _publishApprovedEvent(rec) {
         description: rec.description,
         capacity: rec.capacity,
         price: rec.price || 0,
+        price_tiers: rec.price_tiers || null,
       })
       .select()
       .single();
@@ -8109,6 +8211,7 @@ async function _publishApprovedEvent(rec) {
     desc: src.description,
     capacity: src.capacity,
     price: src.price || 0,
+    priceTiers: src.price_tiers || null,
   };
   computeEventDates(newEvent);
   if (!EVENTS.some((e) => String(e.id) === String(newEvent.id)))
@@ -8200,6 +8303,7 @@ function getFilteredEvents() {
   });
   if (state.liveOnly) list = list.filter((ev) => eventStatus(ev) === "live");
   if (state.hotOnly) list = list.filter((ev) => isHotEvent(ev));
+  if (state.startingSoonOnly) list = list.filter((ev) => isStartingSoon(ev));
   if (state.dateFilter && state.dateFilter !== "all")
     list = list.filter((ev) => eventInDateRange(ev, state.dateFilter));
   return list;
@@ -8233,12 +8337,34 @@ function setDateFilter(mode) {
 }
 function toggleLiveOnly() {
   state.liveOnly = !state.liveOnly;
-  if (state.liveOnly) state.hotOnly = false;
+  if (state.liveOnly) {
+    state.hotOnly = false;
+    state.startingSoonOnly = false;
+  }
   renderView();
 }
 function toggleHotOnly() {
   state.hotOnly = !state.hotOnly;
-  if (state.hotOnly) state.liveOnly = false;
+  if (state.hotOnly) {
+    state.liveOnly = false;
+    state.startingSoonOnly = false;
+  }
+  renderView();
+}
+// Blueprint whitespace: "Real-Time Spontaneity Filter... own the 8pm
+// walk-up market." Events already live or already past don't count as
+// "about to start" — this is specifically the pre-doors window.
+function isStartingSoon(ev) {
+  if (typeof ev.startsAt !== "number") return false;
+  const mins = (ev.startsAt - Date.now()) / 60000;
+  return mins > 0 && mins <= 120;
+}
+function toggleStartingSoonOnly() {
+  state.startingSoonOnly = !state.startingSoonOnly;
+  if (state.startingSoonOnly) {
+    state.liveOnly = false;
+    state.hotOnly = false;
+  }
   renderView();
 }
 function refreshFilters() {
@@ -8254,6 +8380,7 @@ function refreshFilters() {
     .join("");
   html += `<button class="mchip ${state.liveOnly ? "active" : ""}" style="${state.liveOnly ? "background:#E23B3B;color:#fff;border-color:transparent;" : ""}" onclick="toggleLiveOnly()"><span style="width:6px;height:6px;border-radius:50%;background:${state.liveOnly ? "#fff" : "#E23B3B"};display:inline-block;margin-right:2px;animation:${state.liveOnly ? "blink 1.3s ease-in-out infinite" : "none"}"></span>Live</button>`;
   html += `<button class="mchip ${state.hotOnly ? "active" : ""}" style="${state.hotOnly ? "background:#F97316;color:#fff;border-color:transparent;" : ""}" onclick="toggleHotOnly()"><span style="display:inline-flex;color:#F97316;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c2 3 5 6 5 10a5 5 0 0 1-10 0c0-1.8.7-3 1.6-4.1.2 1.3.9 2 1.8 2.3-.4-2.7.4-5.3 1.6-8.2Z"/></svg></span> Hot</button>`;
+  html += `<button class="mchip ${state.startingSoonOnly ? "active" : ""}" style="${state.startingSoonOnly ? "background:#8B5CF6;color:#fff;border-color:transparent;" : ""}" onclick="toggleStartingSoonOnly()"><span style="display:inline-flex;color:${state.startingSoonOnly ? "#fff" : "#8B5CF6"};"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span> Starting soon</button>`;
   html += `<button class="mchip ${state.dateFilter === "today" ? "active" : ""}" style="${state.dateFilter === "today" ? "background:var(--accent);color:#fff;border-color:transparent;" : ""}" onclick="setDateFilter('today')">Today</button>`;
   html += `<button class="mchip ${state.dateFilter === "weekend" ? "active" : ""}" style="${state.dateFilter === "weekend" ? "background:var(--accent);color:#fff;border-color:transparent;" : ""}" onclick="setDateFilter('weekend')">This weekend</button>`;
   el.innerHTML = html;
@@ -8371,6 +8498,73 @@ async function checkSquadClaim() {
   }
 }
 
+// Blueprint "Magic Link" flow: shares ONE group link (event_squads.id)
+// rather than a code per ticket — whoever opens it grabs whichever seat is
+// still free (claim_group_ticket(), race-safe server-side).
+function shareSquadGroupLink(squadId, eventTitle, seatsOpen) {
+  const url = `${location.origin}${location.pathname}?squad=${squadId}`;
+  const text = `You're on my squad for ${eventTitle} on Cumulus — tap to claim your ticket:`;
+  if (navigator.share) {
+    navigator.share({ title: "Claim your Cumulus ticket", text, url }).catch(() => {});
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(`${text} ${url}`).then(
+      () => showToast("Squad link copied", "success"),
+      () => showToast("Couldn't copy — try again"),
+    );
+  } else {
+    showToast("Share not supported on this browser");
+  }
+}
+
+// Companion to checkSquadClaim() for the group-link flow. Deliberately does
+// NOT bail when signed out (unlike checkSquadClaim's ?claim= case) — the
+// whole point of the blueprint's Magic Link is that a friend with no
+// Cumulus account yet can still claim. If there's no session, the URL
+// param is simply left in place (this is a static SPA with no real
+// navigation, so it survives untouched) and the landing gate is nudged
+// into signup mode; once verifyGateCode()/enterApp() completes and
+// initApp() calls this again, state.userId now exists and the claim goes
+// through on that second pass.
+async function checkSquadGroupClaim() {
+  const params = new URLSearchParams(location.search);
+  const squadId = params.get("squad");
+  if (!squadId) return;
+  if (!state.userId) return; // resumed after sign-up — see nudgeGateForSquadClaim()
+  history.replaceState(null, "", location.pathname);
+  const res = await claimGroupTicket(squadId);
+  if (res && res.ok) {
+    showToast("Ticket claimed — welcome to the squad! 🎉", "success");
+    await loadMyTickets();
+    renderView();
+  } else {
+    const reason =
+      res?.error === "no_tickets_remaining"
+        ? "All the seats in that squad have already been claimed."
+        : res?.error === "already_claimed"
+          ? "You've already got a ticket from this squad."
+          : "That squad link isn't valid.";
+    showToast(reason, "error");
+  }
+}
+
+// Called once from renderGate() when a ?squad= link lands on a signed-out
+// visitor — auto-opens the sign-up modal with claim-specific copy so the
+// person doesn't have to figure out on their own that signing up is how
+// they get their ticket.
+function nudgeGateForSquadClaim() {
+  const params = new URLSearchParams(location.search);
+  if (!params.get("squad")) return;
+  showLpSignup();
+  const title = document.getElementById("gate-form-title");
+  const sub = document.getElementById("gate-form-sub");
+  const label = document.getElementById("gate-claim-label");
+  if (title) title.textContent = "Claim your ticket";
+  if (sub)
+    sub.textContent =
+      "Enter your email — we'll send a 6-digit code, then your ticket is yours.";
+  if (label) label.textContent = "Claim my ticket →";
+}
+
 // Host credibility + follow, shown inline in the event byline. The events-
 // hosted count is computed from EVENTS actually loaded this session (real
 // data, not a fabricated backend stat) and only shown once it's meaningful.
@@ -8450,8 +8644,33 @@ function renderDetail(id) {
             : `<span style="color:var(--text-muted);font-size:13px;">No bookings yet.</span>`
         }</div>
       </div>
+      ${ev.hostId === state.userId ? `<div style="margin-top:10px;"><button class="btn btn-outline" style="width:100%;" onclick="inviteMyPastAttendees('${id}','${escapeHtml(ev.title).replace(/'/g, "&#39;")}')">📣 Invite past attendees</button></div>` : ""}
       ${state.isAdmin || ev.hostId === state.userId ? `<div style="margin-top:10px;"><button class="btn btn-outline" style="color:#E23B3B;border-color:#E23B3B;width:100%;" onclick="if(confirm('Delete this event permanently?')) deleteEvent('${id}')">Delete Event</button></div>` : ""}
     </div>`;
+}
+
+// Blueprint B2B2C flywheel: "One-Click Blast" — invite-past-attendees
+// re-derives the recipient list server-side; this just tells it which
+// event to promote and reports the result.
+async function inviteMyPastAttendees(eventId, eventTitle) {
+  if (
+    !confirm(
+      `Email everyone who's attended one of your past events about "${eventTitle}"?`,
+    )
+  )
+    return;
+  showToast("Sending invites…", "info");
+  const res = await invitePastAttendees(eventId);
+  if (!res || res.error) {
+    showToast(res?.error || "Could not send invites — try again", "error");
+    return;
+  }
+  showToast(
+    res.sent > 0
+      ? `Invited ${res.sent} past attendee${res.sent !== 1 ? "s" : ""}!`
+      : res.note || "No past attendees to invite yet",
+    res.sent > 0 ? "success" : "info",
+  );
 }
 
 async function deleteEvent(id) {
@@ -9632,7 +9851,28 @@ function filterCalendarList() {
 // ════════════════════════════════════════════════
 // TICKET SYSTEM
 // ════════════════════════════════════════════════
+// Blueprint table-stakes: tiered ticketing that "flips automatically" —
+// implemented here as a time-cutoff schedule (events.price_tiers, e.g.
+// Early Bird -> General -> Final). Capacity-based flipping is deliberately
+// NOT implemented (would need a live attendee-count trigger; documented as
+// deferred in ARCHITECTURE.md rather than half-built). Tiers are ordered by
+// cutoff ascending; the active tier is the first whose cutoff hasn't
+// passed, falling back to the last (final) tier once every cutoff has
+// passed. This same selection logic is duplicated server-side in
+// create-checkout-session (never trust the client for the actual charge).
+function activeTicketTier(ev) {
+  const tiers = Array.isArray(ev.priceTiers) ? ev.priceTiers : null;
+  if (!tiers || !tiers.length) return null;
+  const now = Date.now();
+  const sorted = [...tiers].sort(
+    (a, b) => new Date(a.cutoff || 0) - new Date(b.cutoff || 0),
+  );
+  const active = sorted.find((t) => !t.cutoff || new Date(t.cutoff) > now);
+  return active || sorted[sorted.length - 1];
+}
 function eventPrice(ev) {
+  const tier = activeTicketTier(ev);
+  if (tier) return Number(tier.price) || 0;
   return ev.price || 0;
 }
 function getCumulusFee(ticketPrice) {
@@ -9643,6 +9883,7 @@ function getCumulusFee(ticketPrice) {
   return 4.5;
 }
 function ticketTypes(ev) {
+  const tier = activeTicketTier(ev);
   const basePrice = eventPrice(ev);
   if (!basePrice)
     return [
@@ -9655,6 +9896,19 @@ function ticketTypes(ev) {
       },
     ];
   const platformFee = getCumulusFee(basePrice);
+  if (tier) {
+    return [
+      {
+        id: "tier",
+        label: tier.label || "General",
+        price: basePrice,
+        platformFee,
+        desc: tier.cutoff
+          ? `${tier.label} pricing — rises after ${new Date(tier.cutoff).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`
+          : "Final price — this is it",
+      },
+    ];
+  }
   return [
     {
       id: "general",
@@ -10101,24 +10355,20 @@ function renderConfirmed() {
     </div>`,
     )
     .join("");
-  // Squad ticketing: any ticket from this purchase still carrying a
-  // claim_code (i.e. index > 0, not yet claimed by someone else) gets a
-  // share link here — the buyer's own ticket (index 0) never has one.
-  const unclaimed = tickets.filter((t) => t.claimCode);
-  const squadSection = unclaimed.length
-    ? `<div class="hp-panel" style="margin-top:20px;">
+  // Squad ticketing — the blueprint's "Magic Link" model: ONE shareable
+  // group link, not a code per ticket. Whoever opens it claims whichever
+  // seat is still free (claim_group_ticket(), FOR UPDATE SKIP LOCKED),
+  // including auto-provisioning their account via email OTP if they aren't
+  // signed in yet — see checkSquadGroupClaim() at boot.
+  const unclaimedCount = tickets.filter((t) => t.claimCode).length;
+  const squadSection =
+    unclaimedCount > 0 && t0.squadId
+      ? `<div class="hp-panel" style="margin-top:20px;">
         <div class="hp-title">👥 Share with your squad</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">You bought ${tickets.length} tickets — send each link below to whoever's coming with you. Whoever opens it claims that ticket as their own.</div>
-        ${unclaimed
-          .map(
-            (t) => `<div class="hp-tier-row">
-              <span class="hp-tier-label">Ticket ${t.seatNum} of ${t.totalSeats}</span>
-              <button class="btn btn-outline btn-small" style="min-height:32px;padding:0 12px;" onclick="shareSquadTicket('${t.claimCode}','${escapeHtml(ev.title).replace(/'/g, "&#39;")}')">Share link</button>
-            </div>`,
-          )
-          .join("")}
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">You bought ${tickets.length} tickets — drop this ONE link in your group chat. Whoever opens it first claims a seat, no phone-number swapping needed.</div>
+        <button class="btn btn-outline" style="width:100%;" onclick="shareSquadGroupLink('${t0.squadId}','${escapeHtml(ev.title).replace(/'/g, "&#39;")}',${unclaimedCount})">Share squad link (${unclaimedCount} seat${unclaimedCount > 1 ? "s" : ""} open)</button>
       </div>`
-    : "";
+      : "";
 
   // Wallet passes aren't real yet — no Apple/Google signing credentials
   // exist for this project — so they show as an honest "Coming soon"
@@ -10509,6 +10759,21 @@ function renderHostView() {
       <label class="intro-field-label">Ticket Price (£) — You keep 100%</label>
       <input id="host-price" type="number" min="0" step="0.01" class="gate-input" placeholder="e.g. 10 (Leave blank for free)"/>
       <div class="host-notice">We add a flat, transparent platform fee to the buyer at checkout to cover processing. You keep every penny of your ticket price.</div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;">
+        <input type="checkbox" id="host-tiered-toggle" onchange="document.getElementById('host-tiered-rows').style.display=this.checked?'block':'none'" style="width:16px;height:16px;"/>
+        Use tiered pricing instead (Early Bird → General → Final)
+      </label>
+      <div id="host-tiered-rows" style="display:none;margin-top:10px;">
+        <div class="host-notice" style="margin-bottom:10px;">Fill in whichever tiers you want (at least one). Each tier's price applies until its cutoff time passes, then the next one takes over automatically — leave a cutoff blank on your last tier.</div>
+        ${["early", "general", "final"]
+          .map(
+            (id, i) => `<div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-end;">
+              <div style="flex:1;"><label class="intro-field-label">${["Early Bird", "General", "Final"][i]} (£)</label><input id="tier-${id}-price" type="number" min="0" step="0.01" class="gate-input" placeholder="£"/></div>
+              <div style="flex:1.4;"><label class="intro-field-label">Rises after</label><input id="tier-${id}-cutoff" type="datetime-local" class="gate-input"/></div>
+            </div>`,
+          )
+          .join("")}
+      </div>
     </div>
 
     <button id="host-submit-btn" class="btn" style="width:100%;margin-bottom:16px;font-size:15px;" onclick="submitHostEvent()">${state.isAdmin ? "Publish event →" : "Submit for review →"}</button>
@@ -10789,15 +11054,34 @@ async function scanFrame(video) {
   if (scannerState.scanning) setTimeout(() => scanFrame(video), 600);
 }
 
+// Blueprint B2B2C flywheel: "Behavioral Analytics... teaching hosts how to
+// optimize their own marketing timing." Real stat computed from tickets
+// this host can already see (RLS: tickets_host_read) — no fabricated numbers.
+function lastMinuteSalesStat(ev) {
+  if (!ev || typeof ev.startsAt !== "number") return null;
+  const rows = scannerState.guestlist.filter((t) => t.purchased_at);
+  if (rows.length < 3) return null; // too few sales for the stat to mean anything
+  const within48h = rows.filter(
+    (t) => ev.startsAt - new Date(t.purchased_at).getTime() <= 48 * 3600000,
+  ).length;
+  return Math.round((within48h / rows.length) * 100);
+}
+
 function renderScanner() {
   const ev = EVENTS.find((e) => e.id === scannerState.eventId);
   const checkedInCount = scannerState.guestlist.filter(
     (t) => t.status === "checked_in",
   ).length;
+  const lastMinutePct = lastMinuteSalesStat(ev);
   setTimeout(() => renderScannerList(), 0);
   return `<button class="back-btn" onclick="stopScannerCamera();goBack()">←</button>
     <div class="connect-header"><h2>${ev ? escapeHtml(ev.title) : "Scan tickets"}</h2><p>${checkedInCount} / ${scannerState.guestlist.length} checked in</p></div>
     <span id="scanner-pending-badge" style="display:none;font-size:11px;font-weight:700;color:var(--accent);"></span>
+    ${
+      lastMinutePct !== null
+        ? `<div class="hp-panel" style="margin-bottom:14px;"><div class="hp-title">📊 Your sales timing</div><div style="font-size:12px;color:var(--text-muted);line-height:1.6;"><strong style="color:var(--text);">${lastMinutePct}%</strong> of tickets for this event sold in the final 48 hours before start. ${lastMinutePct >= 60 ? "Your audience buys late — lean into last-minute pushes." : "Your audience plans ahead — early promotion is working for you."}</div></div>`
+        : ""
+    }
     <div class="panel" style="padding:16px;margin-bottom:14px;text-align:center;">
       <video id="scanner-video" muted playsinline style="width:100%;max-width:320px;border-radius:12px;background:#000;display:${scannerState.scanning ? "block" : "none"};margin:0 auto 10px;"></video>
       ${
@@ -10806,8 +11090,52 @@ function renderScanner() {
           : `<button class="btn" onclick="startScannerCamera()">Start camera scan</button>`
       }
     </div>
-    <input class="gate-input" placeholder="Search by name or ticket ID…" oninput="scannerSetSearch(this.value)" style="margin-bottom:12px;"/>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <input class="gate-input" placeholder="Search by name or ticket ID…" oninput="scannerSetSearch(this.value)" style="flex:1;margin-bottom:0;"/>
+      <button class="btn btn-outline btn-small" style="flex-shrink:0;" onclick="exportGuestlistCsv()" title="Download attendee list as CSV">⭳ CSV</button>
+    </div>
     <div id="scanner-list"></div>`;
+}
+
+// Blueprint table-stakes: "Audience Data Ownership (CSV Export)... hosts
+// 100% ownership of their attendee lists" — unlike DICE's walled garden.
+// Client-side generation from the already-fetched guestlist; no new
+// backend call needed since fetchGuestlist() already returns everything
+// a host is allowed to see (RLS: tickets_host_read).
+function exportGuestlistCsv() {
+  const rows = scannerState.guestlist;
+  if (!rows.length) {
+    showToast("No guests to export yet", "error");
+    return;
+  }
+  const ev = EVENTS.find((e) => e.id === scannerState.eventId);
+  const csvEscape = (v) => {
+    const s = String(v ?? "");
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const header = ["Name", "Ticket ID", "Type", "Seat", "Status"];
+  const lines = [header.join(",")];
+  rows.forEach((t) => {
+    lines.push(
+      [
+        csvEscape(t.purchaser_name || "Guest"),
+        csvEscape(t.ticket_id),
+        csvEscape(t.type_label || t.ticket_type || ""),
+        csvEscape(t.total_seats > 1 ? `${t.seat_num}/${t.total_seats}` : ""),
+        csvEscape(t.status || ""),
+      ].join(","),
+    );
+  });
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${(ev?.title || "cumulus-event").replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-guestlist.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast(`Exported ${rows.length} guest${rows.length !== 1 ? "s" : ""}`, "success");
 }
 
 // Boot. Never let an unexpected rejection leave the user on a blank screen.

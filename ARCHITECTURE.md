@@ -255,6 +255,111 @@ the confirmation-screen comment in `app.js`), and any automated *scheduled*
 trigger for `release-payout` (it works today, but only when a host's own
 JWT calls it or something external hits it with the cron secret).
 
+## Growth features — the founding Master Blueprint
+
+A business/product document ("Cumulus Master Blueprint") specified a set of
+concrete, buildable features on top of the pivot above. This section covers
+what was built from it — schema
+(`supabase/migrations/20260721020000_blueprint_growth_features.sql`) plus one
+new Edge Function — and, separately, what the blueprint describes that is
+**deliberately not code** because it's a business process, not a product
+surface (see the end of this section).
+
+**Viral Acquisition Engine — WhatsApp Magic Link group claim.** The
+blueprint's spec is: buy N tickets → get ONE shareable link → a friend opens
+it, enters their email, gets an OTP, and their ticket is silently claimed
+under a freshly created account. This reuses the pre-existing `event_squads`
+table (`tickets.squad_id` + `tickets.claim_code` marking an unclaimed extra
+seat + `tickets.claimed_by`) rather than adding the blueprint's literal
+`purchase_group_id`/`owner_id` columns — the existing Squad structure already
+*is* a purchase group, so no new columns were needed, only a new RPC:
+`claim_group_ticket(p_squad_id uuid)` (SECURITY DEFINER, race-safe via
+`FOR UPDATE SKIP LOCKED`, uses `auth.uid()` internally rather than a
+client-supplied owner id — the blueprint's own pseudocode takes an explicit
+`p_new_owner_id` param, which would let any caller claim a seat on someone
+else's behalf; deliberately not copied). `shareSquadGroupLink()` builds a
+`?squad=<event_squads.id>` URL; `checkSquadGroupClaim()` (in `initApp()`)
+claims it once `state.userId` exists. The unauthenticated-friend case needs
+no separate stashing of intent across the signup flow: this is a
+client-only SPA, so `location.search` simply survives untouched through the
+whole OTP sign-up round-trip, and `checkSquadGroupClaim()` re-runs
+naturally once `initApp()` re-fires after auth. `nudgeGateForSquadClaim()`
+auto-opens the signup modal with claim-specific copy when `?squad=` is
+present and no session exists yet.
+
+**Tiered ticketing with time-based auto-flip.** New `price_tiers` jsonb
+column on `events`/`pending_events`: an array of `{label, price, cutoff}`.
+`activeTicketTier()` (client, `app.js`) picks the first tier (sorted by
+cutoff ascending) whose cutoff hasn't passed yet, or the last tier if all
+have — both `eventPrice()` and `ticketTypes()` read through it, and the host
+form gets an opt-in "tiered pricing" toggle (collapsed by default, to keep
+the blueprint's own 60-second-publish goal intact for hosts who don't need
+it) revealing three optional price+cutoff rows (Early Bird/General/Final).
+Price authority is still 100% server-side: `create-checkout-session` got its
+own `activeTierPrice()` that mirrors the client logic exactly and must be
+kept in sync by hand with it, same pattern as the existing booking-fee
+function. **Deliberately not built**: capacity-based tier flipping (the
+blueprint mentions both time and capacity triggers; only time-cutoff exists
+here — doing capacity right needs a per-tier sold-count that the current
+schema doesn't track and would need real design, not a quick add).
+
+**CSV / audience data export.** A "table stakes" item from the blueprint's
+competitive matrix. `exportGuestlistCsv()` is pure client-side (Blob + object
+URL + a synthetic `<a download>` click) — no new backend, since
+`fetchGuestlist()` already returns everything a host is allowed to see under
+the existing `tickets_host_read` RLS policy. Lives next to the scanner's
+search box.
+
+**Starting-Next-2-Hours spontaneity filter.** The blueprint's flagship
+"whitespace" differentiator. `isStartingSoon(ev)` / `toggleStartingSoonOnly()`
+add a map filter chip, mutually exclusive with the existing Live/Hot chips,
+using only data already on the event object — no schema change.
+
+**One-Click Blast — invite past attendees.** New Edge Function
+`invite-past-attendees` (`verify_jwt = true`) plus RPC
+`get_past_attendee_emails(p_host_id uuid default auth.uid())` (SECURITY
+DEFINER; checks the caller **is** the host or an admin — the client only
+ever says "promote this event", it can't supply or influence the recipient
+list). The function re-derives the recipient list server-side from the RPC,
+then sends a batch of Cumulus-branded emails via Resend's
+`/emails/batch` endpoint (same `RESEND_API_KEY` already configured for
+`email-ticket`/`notify-admin-new-event`). Wired to a host-only "📣 Invite
+past attendees" button on the event detail view. **Status: schema and
+function are both live on the Supabase project** (see the end of this
+section for verification); **not delivery-tested** — sending to anyone other
+than the Resend account owner needs a verified sending domain, which this
+sandbox can't configure or confirm.
+
+**Behavioral sales-timing analytics.** A lightweight read of the blueprint's
+"sales lift in the 48 hours before doors open" idea: `lastMinuteSalesStat()`
+computes, client-side from data the scanner view already loads, what
+percentage of an event's tickets sold within 48 hours of start time (shown
+only once ≥3 sales exist, to avoid a noisy stat on a near-empty guestlist).
+No new backend — this is existing `purchased_at`/`start_time` data the host
+already has access to, read differently.
+
+**SEO-crawlable event URLs — partial.** The blueprint calls for full
+server-rendered, crawlable individual event pages. This app has no server or
+build step (see "Current structure" above) — real SSR is out of scope
+without a genuine architecture change, not something to fake. What *was*
+built: `?event=<id>` deep links (`updateEventUrlAndMeta()`/
+`checkEventDeepLink()`/`resetEventUrlAndMeta()`) that update `document.title`
+and the existing `<meta name="description">` tag via `history.replaceState`
+as a user navigates, and restore an event from a shared link on load. This
+makes links shareable and gives *client-side* renderers a real title/
+description; it does not make event pages independently crawlable by a
+search engine that doesn't execute JavaScript. Labeled here as partial
+rather than claimed as done.
+
+**Deliberately not code — business process, not a product surface.** The
+blueprint's Experiential Sponsorship Moat (matching brands like a brewery to
+sponsor a night's drinks) and go-to-market plan (a "City Director" per
+region, a specific London launch corridor, a 100-event launch target) are
+sales/ops processes with no technical spec attached — building UI or schema
+for them here would be inventing a feature the document doesn't actually ask
+for. See `PRODUCT.md` → "Business Model" for how this is framed for the
+brand/product side.
+
 ## Security model (important)
 
 There is no server to hide keys behind, so the keys in `config.js` are the

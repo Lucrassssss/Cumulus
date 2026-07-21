@@ -176,6 +176,34 @@ async function claimTicket(code) {
   }
 }
 
+/* Blueprint "Magic Link" flow: ONE shareable group link per purchase
+ * (event_squads.id) rather than a code per ticket. Race-safe via
+ * FOR UPDATE SKIP LOCKED (claim_group_ticket() in the migration) — grabs
+ * whichever unclaimed seat in the group is still free. */
+async function claimGroupTicket(squadId) {
+  try {
+    const { data, error } = await sb.rpc("claim_group_ticket", {
+      p_squad_id: squadId,
+    });
+    if (error) return { ok: false, error: error.message };
+    return data;
+  } catch (e) {
+    return { ok: false, error: "unavailable" };
+  }
+}
+
+/* A host's own past-attendee emails (deduped across every event they've
+ * hosted), for the "Invite Past Attendees" one-click blast. */
+async function getPastAttendeeEmails() {
+  try {
+    const { data, error } = await sb.rpc("get_past_attendee_emails");
+    if (error) return null;
+    return data || [];
+  } catch (e) {
+    return null;
+  }
+}
+
 /* A host's payout rows — get_host_payouts() also lazily flips any row whose
  * scheduled_release_at has passed to 'released' before returning. */
 async function fetchHostPayouts() {
@@ -196,7 +224,9 @@ async function fetchGuestlist(eventId) {
   try {
     const { data, error } = await sb
       .from("tickets")
-      .select("ticket_id,purchaser_name,seat_num,total_seats,ticket_type,type_label,status")
+      .select(
+        "ticket_id,purchaser_name,seat_num,total_seats,ticket_type,type_label,status,purchased_at",
+      )
       .eq("event_id", eventId);
     if (error) return null;
     return data || [];
@@ -326,6 +356,21 @@ async function cancelEventRefund(eventId) {
       body: { eventId },
     });
     if (error) return { ok: false, error: error.message || "Could not cancel event" };
+    return data;
+  } catch (e) {
+    return { ok: false, error: "unavailable" };
+  }
+}
+
+/* Blueprint B2B2C flywheel: "Invite Past Attendees" one-click blast. Server
+ * re-derives the recipient list itself from get_past_attendee_emails() —
+ * the client only tells it which new event to promote. */
+async function invitePastAttendees(eventId) {
+  try {
+    const { data, error } = await sb.functions.invoke("invite-past-attendees", {
+      body: { eventId },
+    });
+    if (error) return { ok: false, error: error.message || "Could not send invites" };
     return data;
   } catch (e) {
     return { ok: false, error: "unavailable" };

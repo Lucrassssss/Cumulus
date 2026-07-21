@@ -39,3 +39,7 @@ Avoid generic corporate SaaS aesthetics — dashboard-blue palettes, stock icons
 ## Accessibility & Inclusion
 
 Standard WCAG AA — contrast, keyboard navigation, and reduced-motion support (respect `prefers-reduced-motion` for cloud drift and other ambient animation).
+
+## Business Model (from the founding Master Blueprint)
+
+Cumulus is bootstrapped and cash-flowing, not VC-funded — no "100M valuation mandate" shaping product decisions. Revenue is a flat £1.50–£4.50 booking fee paid by the buyer (see `getCumulusFee()` in `app.js`); hosts keep 100% of their base ticket price, always. Free community events cost the platform nothing to the host and nothing to attend — treated as a loss-leader for map density and user acquisition, not a lesser-tier product. The interface stays ad-free: no banners, no pop-ups, no funnels; monetization beyond the booking fee is meant to happen off-screen (experiential brand sponsorships, e.g. a brewery subsidizing a night's drinks) rather than in the UI itself — **not built as a feature in this codebase**, since the blueprint describes it as a manual sales/ops process, not a product surface. Expansion (a "City Director" per region, a specific London launch corridor, a 100-event launch target) is go-to-market strategy, not something the app enforces in code.

@@ -53,3 +53,10 @@ enabled = true
 # true: called by a signed-in host or admin cancelling their own event.
 verify_jwt = true
 entrypoint = "./functions/cancel-event-refund/index.ts"
+
+[functions.invite-past-attendees]
+enabled = true
+# true: called by a signed-in host promoting a new event to their own
+# past-attendee list (get_past_attendee_emails() RPC enforces that server-side).
+verify_jwt = true
+entrypoint = "./functions/invite-past-attendees/index.ts"
