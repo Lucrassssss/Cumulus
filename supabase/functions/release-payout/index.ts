@@ -27,8 +27,8 @@
  *
  * verify_jwt = false in config.toml — this function checks the header
  * itself so it can accept EITHER auth mode above; the gateway can't do that.
- * NOT LIVE-TESTED — see create-checkout-session's header for the same
- * caveat. */
+ * DEPLOYED but NOT MONEY-TESTED — see create-checkout-session's header for
+ * the same caveat. */
 
 function safeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -96,8 +96,12 @@ Deno.serve(async (req: Request) => {
   try {
     const nowIso = new Date().toISOString();
     const hostFilter = isCron ? "" : `&host_id=eq.${callerUserId}`;
+    // Embeds the host's Connect status via PostgREST's FK-based embed
+    // (event_payouts.host_id -> users.id) so this is one round trip instead
+    // of one due-payouts query plus a per-row host lookup (N+1) — matters
+    // once a cron run is processing every due payout across every host.
     const dueRes = await fetch(
-      `${supabaseUrl}/rest/v1/event_payouts?status=eq.pending&scheduled_release_at=lte.${encodeURIComponent(nowIso)}${hostFilter}&select=id,event_id,host_id,net_amount`,
+      `${supabaseUrl}/rest/v1/event_payouts?status=eq.pending&scheduled_release_at=lte.${encodeURIComponent(nowIso)}${hostFilter}&select=id,event_id,host_id,net_amount,users(stripe_connect_account_id,stripe_connect_payouts_enabled)`,
       { headers: svcHeaders },
     );
     const due = await dueRes.json();
@@ -110,12 +114,7 @@ Deno.serve(async (req: Request) => {
     const results: any[] = [];
 
     for (const payout of due) {
-      const hostRes = await fetch(
-        `${supabaseUrl}/rest/v1/users?id=eq.${payout.host_id}&select=stripe_connect_account_id,stripe_connect_payouts_enabled`,
-        { headers: svcHeaders },
-      );
-      const hostRows = await hostRes.json();
-      const host = hostRows?.[0];
+      const host = payout.users;
 
       if (!host?.stripe_connect_account_id || !host?.stripe_connect_payouts_enabled) {
         // Host hasn't finished Connect onboarding yet — leave 'pending' and

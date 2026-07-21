@@ -16,8 +16,8 @@
  * client-side before any payment existed. A ticket must only ever exist
  * once Stripe confirms money actually moved.
  *
- * NOT LIVE-TESTED — see create-checkout-session's header for the same
- * caveat; the same missing-credentials situation applies here. */
+ * DEPLOYED but NOT MONEY-TESTED — see create-checkout-session's header for
+ * the same caveat. */
 
 async function verifyStripeSignature(
   rawBody: string,

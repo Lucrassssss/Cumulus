@@ -161,18 +161,29 @@ local flow when Auth isn't configured, so the app runs before go-live. Migration
 in Supabase, apply the migration, sign in once as the owner, then add that
 `auth.users` row to `public.admins`.
 
-## Payments — Stripe Connect scaffolding (NOT LIVE-TESTED)
+## Payments — Stripe Connect scaffolding (DEPLOYED, NOT MONEY-TESTED)
 
 Every "£" figure the app showed before this section existed was bookkeeping
 only — the pivot migration's own comment said so plainly, and the checkout
 screen literally rendered a fake card-number form that never touched Stripe.
 This section adds real Stripe Connect wiring: schema
-(`supabase/migrations/20260721000000_stripe_connect_scaffolding.sql`) plus
-five Edge Functions. None of it has been exercised against a live Stripe
-account from this sandbox — there is no Stripe/Supabase MCP access here.
-Treat every function below as "written to the same conventions as the rest
-of this codebase, but unverified" until someone runs a real test-mode
-purchase through it.
+(`supabase/migrations/20260721000000_stripe_connect_scaffolding.sql`,
+`20260721010000_index_unindexed_foreign_keys.sql`) plus five Edge Functions.
+
+**Status: schema is live and all five functions are deployed and ACTIVE** on
+the Supabase project (verified via `list_tables`/`list_edge_functions` once
+MCP access to the live project became available mid-session — it was not
+available when this section was first written, which is why the code itself
+still says "not live-tested" in its own comments). What is **not** verified:
+no real (even test-mode) Stripe purchase has been run through it, because
+this sandbox's outbound network cannot reach the Supabase Functions HTTPS
+endpoint or Stripe directly (`curl`/`fetch` to either times out here — MCP
+tool calls reach Supabase through separate infrastructure that isn't
+available for arbitrary HTTP). Whether `STRIPE_SECRET_KEY` is actually set
+as a function secret also could not be confirmed from here (no tool exposes
+secret existence, only management via the Supabase CLI). Before trusting
+this with real money: run one real test-mode Checkout end to end and watch
+`stripe-webhook` actually create a ticket row.
 
 **Model: separate charges and transfers, not destination charges.** Checkout
 collects the full amount (ticket price + booking fee) onto the *platform's*

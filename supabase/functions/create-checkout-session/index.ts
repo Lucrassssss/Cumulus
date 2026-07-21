@@ -17,11 +17,11 @@
  * verify_jwt = true in config.toml — the gateway has already rejected a
  * missing/expired/invalid session before this code runs.
  *
- * NOT LIVE-TESTED: no Stripe/Supabase credentials are available in the
- * sandbox this was written in. Needs STRIPE_SECRET_KEY (already configured
- * per the old create-verification-session having required it) and a real
- * checkout flow exercised against a Stripe test-mode account before this
- * can be trusted in production. */
+ * DEPLOYED (schema + this function are both live on the project), but NOT
+ * MONEY-TESTED: no real (even test-mode) Stripe purchase has been run
+ * through this yet. See ARCHITECTURE.md → "Payments — Stripe Connect
+ * scaffolding" for exactly what that still needs (a real checkout flow
+ * exercised end to end against a Stripe test-mode account). */
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

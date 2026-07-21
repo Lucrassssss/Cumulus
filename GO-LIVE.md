@@ -100,19 +100,33 @@ are stuck disabled, open a **new chat** and paste:
 ## Still on the roadmap (code, not config)
 
 - Verify the map's day/night relight on the live site (Mapbox is blocked in CI).
-- **Stripe Connect — needs a real account, not code.** Schema + 5 Edge
-  Functions are written (`supabase/migrations/20260721000000_stripe_connect_scaffolding.sql`;
-  see ARCHITECTURE.md → "Payments — Stripe Connect scaffolding") but
-  NOT LIVE-TESTED anywhere. Before any of it can process a real purchase:
+- **Stripe Connect — schema live, functions deployed, still needs a real
+  purchase run through it.** Schema
+  (`supabase/migrations/20260721000000_stripe_connect_scaffolding.sql`,
+  `20260721010000_index_unindexed_foreign_keys.sql`) has been applied to the
+  live project and all 5 Edge Functions
+  (`create-checkout-session`/`stripe-webhook`/`connect-onboarding`/
+  `release-payout`/`cancel-event-refund`) are deployed and ACTIVE — see
+  ARCHITECTURE.md → "Payments — Stripe Connect scaffolding". The two
+  orphaned age-verification functions (`identity-webhook`,
+  `create-verification-session`) have been redeployed as harmless 410 stubs
+  rather than left as real, billable Stripe Identity endpoints with no
+  caller; delete them properly via the dashboard whenever convenient — no
+  tool available to this session could delete them outright. What's still
+  open before any of this can process a real purchase:
   1. Enable **Connect** on the platform's Stripe account (Dashboard →
-     Connect → Get started).
-  2. Set Edge Function secrets: `STRIPE_SECRET_KEY` (likely already set,
-     reused from the now-deleted create-verification-session),
-     `STRIPE_CHECKOUT_WEBHOOK_SECRET` (new — create a webhook endpoint
-     pointed at `stripe-webhook`, subscribed to `checkout.session.completed`
-     and `account.updated`, and use the `whsec_...` it gives you).
+     Connect → Get started), if not already.
+  2. Confirm Edge Function secrets are set: `STRIPE_SECRET_KEY` (likely
+     already set, reused from the now-decommissioned
+     create-verification-session — could not be confirmed from this
+     session, no tool exposes secret existence), `STRIPE_CHECKOUT_WEBHOOK_SECRET`
+     (new — create a webhook endpoint pointed at `stripe-webhook`,
+     subscribed to `checkout.session.completed` and `account.updated`, and
+     use the `whsec_...` it gives you).
   3. Run one real test-mode purchase end to end and confirm a ticket row
-     actually appears.
+     actually appears. This session's sandbox could not do this itself —
+     its outbound network can't reach either the Supabase Functions HTTPS
+     endpoint or Stripe directly.
   4. Decide how `release-payout` gets called on a schedule — nothing in
      this repo currently triggers it automatically (Supabase Cron / pg_cron
      / an external scheduler hitting it with `RELEASE_PAYOUT_CRON_SECRET`

@@ -10,8 +10,8 @@
  * synchronous "done" signal from this endpoint.
  *
  * verify_jwt = true in config.toml.
- * NOT LIVE-TESTED — see create-checkout-session's header for the same
- * caveat. Additionally requires Connect to be enabled on the platform's
+ * DEPLOYED but NOT MONEY-TESTED — see create-checkout-session's header for
+ * the same caveat. Additionally requires Connect to be enabled on the platform's
  * Stripe account (Dashboard → Connect → Get started) before account
  * creation will succeed at all. */
 

@@ -18,8 +18,8 @@
  * Stripe dashboard. A production build would want a retry queue instead.
  *
  * verify_jwt = true in config.toml.
- * NOT LIVE-TESTED — see create-checkout-session's header for the same
- * caveat. */
+ * DEPLOYED but NOT MONEY-TESTED — see create-checkout-session's header for
+ * the same caveat. */
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
