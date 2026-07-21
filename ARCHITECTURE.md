@@ -346,43 +346,47 @@ which is inherent to PayPal, not a Cumulus limitation. None of this is
 toggleable from this repo's tooling; it's a Dashboard action for whoever
 holds the Stripe account.
 
-**Theming (`stripeAppearanceForCurrentTheme()`, `src/js/app/10-badges.js`).**
-Stripe's Embedded Checkout Appearance API (`theme: 'stripe'|'night'|'flat'`
-plus a `variables` object) is the customization surface — real limits:
-it's a cross-origin iframe (exposed tokens only, no arbitrary CSS/DOM),
-the logo/icon live in Dashboard → Branding account-wide rather than
-per-session, and the small "Powered by Stripe" mark can't be removed on a
-standard account. `stripeAppearanceForCurrentTheme()` reads the page's
-*live computed* `--accent`/`--surface`/`--text`/`--font-sans` custom
-properties (never hardcodes hex values that could drift from
-`styles.css`) and picks the `night` vs `stripe` base theme from
-`document.documentElement.dataset.theme`. Two deliberate choices worth
-calling out:
-- `colorPrimaryText` is hardcoded to `#0a0a0a` rather than left to
-  Stripe's own contrast guess — `.btn` in `styles.css` pairs the gold/
-  yellow accent with near-black text in both themes (not white), and
-  Stripe's default would likely pick white, which reads poorly against
-  the dark theme's bright `#ffcf33`.
-- A `fonts: [{ cssSrc }]` entry (sibling of `appearance`, not nested in
-  it — Stripe's own options shape) points the iframe at the same Inter
-  weights `index.html` already loads, because `fontFamily` only *names* a
-  font — the cross-origin iframe doesn't inherit the parent page's loaded
-  `<link>` fonts, so without this the form would silently fall back to a
-  generic system sans even with the right `fontFamily` string set.
+**Theming — attempted, reverted, not yet working.** Tried passing an
+`appearance`/`fonts` object (Stripe's general Elements Appearance API
+shape: `theme: 'stripe'|'night'|'flat'` + a `variables` object) into the
+client-side init call so the payment iframe would pick up Cumulus's
+light/dark palette. **This broke checkout again, live**, with `Invalid
+initEmbeddedCheckout(options) parameter: appearance is not an accepted
+parameter` — reverted immediately.
 
-Returned as `{ appearance, fonts }` and spread into
-`createEmbeddedCheckoutPage({ clientSecret, ...stripeAppearanceForCurrentTheme() })`.
-Captured once when the checkout screen mounts — a theme toggle mid-payment
-isn't re-applied to an already-open iframe, a deliberate scope cut rather
-than an oversight.
+What this revealed: `createEmbeddedCheckoutPage` (the name Stripe's own
+changelog says `initEmbeddedCheckout` was renamed to) is **not actually
+present** on the currently-loaded `js.stripe.com/v3/` script — the
+fallback to the old `initEmbeddedCheckout` name is what's really firing —
+and that old method validates its options strictly, throwing on any key
+it doesn't recognize rather than ignoring it. So the Elements-style
+Appearance API either isn't the right customization surface for a
+Checkout Session at all, or needs a different entry point than assumed.
+The more likely correct mechanism, not yet attempted: Checkout Sessions
+support a `branding_settings` parameter on the session itself — meaning
+theming would need to happen **server-side**, in `create-checkout-
+session`'s Stripe API call, not client-side at mount time. That wasn't
+implemented because getting a Stripe Checkout Session parameter wrong has
+now broken real checkout on three separate occasions this session
+(`ui_mode`, the `Stripe-Version` header format, and this `appearance`
+option) — a fourth guess without a way to verify it against a live Stripe
+account from this sandbox isn't a good trade against "checkout stops
+working again."
+
+`stripeAppearanceForCurrentTheme()` (`src/js/app/10-badges.js`) still
+exists in the codebase but is **currently unused/uncalled** — left in
+place as a correctly-computed starting point (it does properly read live
+`--accent`/`--surface`/`--text`/`--font-sans` values and picks the right
+theme per `data-theme`), for whichever mechanism turns out to actually
+work. Do not wire it back into the client-side init call without
+confirming `appearance` is genuinely accepted there first.
 
 **Known follow-up, not yet done**: Stripe's `clientSecret` param to
-`createEmbeddedCheckoutPage()` is now documented as deprecated in favor of
-a `fetchClientSecret` callback (faster load, per Stripe's own docs) — it
-still works today, but given this integration has already broken twice
-this session from trusting a soon-to-be-stale Stripe API shape, migrating
-to `fetchClientSecret` proactively (rather than waiting for `clientSecret`
-to actually stop working) is worth scheduling.
+`initEmbeddedCheckout()` is documented elsewhere as deprecated in favor of
+a `fetchClientSecret` callback — given the `createEmbeddedCheckoutPage`
+rename claim turned out not to reflect what's actually live, treat that
+deprecation claim with the same skepticism until independently confirmed
+against the real, currently-loaded Stripe.js before acting on it.
 
 **stripe-webhook** (`verify_jwt = false`, HMAC-verified like the deleted
 identity-webhook was): the *only* place tickets get created for a paid

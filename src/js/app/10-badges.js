@@ -1457,17 +1457,23 @@ async function startStripeCheckout() {
     if (!window.stripeInstance) {
       window.stripeInstance = Stripe(window.CUMULUS_CONFIG.STRIPE_PUBLISHABLE_KEY);
     }
-    // Stripe.js renamed initEmbeddedCheckout() to createEmbeddedCheckoutPage()
-    // alongside the server-side ui_mode rename (see create-checkout-session).
-    // Fall back to the old name in case the loaded Stripe.js predates the
-    // rename — js.stripe.com/v3/ is unversioned, but this costs nothing to
-    // guard against.
+    // Stripe.js's docs describe initEmbeddedCheckout() as renamed to
+    // createEmbeddedCheckoutPage(), but the live js.stripe.com/v3/ script
+    // still only exposes the old name in practice (confirmed live:
+    // createEmbeddedCheckoutPage was undefined, so the fallback below fired)
+    // — and that old initEmbeddedCheckout() strictly validates its options,
+    // throwing "appearance is not an accepted parameter" rather than
+    // ignoring it. So: no appearance/fonts customization here, only the
+    // options this method actually accepts. See stripeAppearanceForCurrentTheme()
+    // for why the appearance attempt (below it, unused for now) isn't wired
+    // up — kept as a starting point for whichever mechanism turns out to
+    // actually theme Checkout Sessions (likely branding_settings on the
+    // session itself, server-side, not a client init option).
     const initFn =
       window.stripeInstance.createEmbeddedCheckoutPage ||
       window.stripeInstance.initEmbeddedCheckout;
     const checkout = await initFn.call(window.stripeInstance, {
       clientSecret: res.clientSecret,
-      ...stripeAppearanceForCurrentTheme(),
     });
 
     const container = document.getElementById("stripe-checkout-embedded");
