@@ -346,40 +346,44 @@ which is inherent to PayPal, not a Cumulus limitation. None of this is
 toggleable from this repo's tooling; it's a Dashboard action for whoever
 holds the Stripe account.
 
-**Theming — attempted, reverted, not yet working.** Tried passing an
-`appearance`/`fonts` object (Stripe's general Elements Appearance API
-shape: `theme: 'stripe'|'night'|'flat'` + a `variables` object) into the
-client-side init call so the payment iframe would pick up Cumulus's
-light/dark palette. **This broke checkout again, live**, with `Invalid
-initEmbeddedCheckout(options) parameter: appearance is not an accepted
-parameter` — reverted immediately.
+**Theming — attempt #1 (client-side `appearance`) broke checkout live and
+was reverted**: passing an `appearance`/`fonts` object into the client
+`initEmbeddedCheckout()` call threw `Invalid initEmbeddedCheckout(options)
+parameter: appearance is not an accepted parameter` on first real use.
+`createEmbeddedCheckoutPage` (the name Stripe's changelog says
+`initEmbeddedCheckout` was renamed to) turned out not to actually be
+present on the currently-loaded `js.stripe.com/v3/` script — the fallback
+to the old `initEmbeddedCheckout` is what really fires, and that method
+validates its options strictly rather than ignoring unknown keys.
 
-What this revealed: `createEmbeddedCheckoutPage` (the name Stripe's own
-changelog says `initEmbeddedCheckout` was renamed to) is **not actually
-present** on the currently-loaded `js.stripe.com/v3/` script — the
-fallback to the old `initEmbeddedCheckout` name is what's really firing —
-and that old method validates its options strictly, throwing on any key
-it doesn't recognize rather than ignoring it. So the Elements-style
-Appearance API either isn't the right customization surface for a
-Checkout Session at all, or needs a different entry point than assumed.
-The more likely correct mechanism, not yet attempted: Checkout Sessions
-support a `branding_settings` parameter on the session itself — meaning
-theming would need to happen **server-side**, in `create-checkout-
-session`'s Stripe API call, not client-side at mount time. That wasn't
-implemented because getting a Stripe Checkout Session parameter wrong has
-now broken real checkout on three separate occasions this session
-(`ui_mode`, the `Stripe-Version` header format, and this `appearance`
-option) — a fourth guess without a way to verify it against a live Stripe
-account from this sandbox isn't a good trade against "checkout stops
-working again."
+**Theming — attempt #2 (server-side `branding_settings`), current
+state.** Checkout Sessions support a documented `branding_settings`
+parameter (Stripe changelog: "checkout-sessions-branding-settings") set
+at session-*creation* time — a different mechanism from the client-side
+Appearance API attempt #1 used, and one that's actually allowed for
+`ui_mode: "embedded_page"` (the docs explicitly disallow it only for
+`ui_mode: "elements"`). `create-checkout-session` now sends
+`branding_settings[background_color]`/`branding_settings[button_color]`
+matching the app's light/dark `--surface`/`--accent`, selected by a
+`theme` field the client now sends (`createCheckoutSession()`,
+`src/js/services.js`, reading `document.documentElement.dataset.theme`).
 
-`stripeAppearanceForCurrentTheme()` (`src/js/app/10-badges.js`) still
-exists in the codebase but is **currently unused/uncalled** — left in
-place as a correctly-computed starting point (it does properly read live
-`--accent`/`--surface`/`--text`/`--font-sans` values and picks the right
-theme per `data-theme`), for whichever mechanism turns out to actually
-work. Do not wire it back into the client-side init call without
-confirming `appearance` is genuinely accepted there first.
+Given `ui_mode` and the `Stripe-Version` header format were BOTH
+confidently-wrong guesses that broke live checkout earlier this session,
+this attempt is built to **fail safe rather than fail closed**: the
+session is first requested WITH `branding_settings`; if Stripe rejects
+that request, `postStripeSession()` immediately retries the identical
+session WITHOUT those fields and logs the rejection via `console.error`
+(visible in `get_logs`/`supabase functions logs`). So if the exact field
+names turn out to be wrong too, the outcome is "checkout works, just
+unthemed" — never a fourth outage. Verify by watching for a "branding_settings
+rejected, retrying without theming" log line after a real checkout
+attempt; its absence (or a themed-looking payment form) means it worked.
+
+`stripeAppearanceForCurrentTheme()` (`src/js/app/10-badges.js`) is still
+unused/uncalled from attempt #1 — left in place as a correctly-computed
+reference for the color values, not wired back into the client init call
+(that specific surface is confirmed to reject unknown options).
 
 **Known follow-up, not yet done**: Stripe's `clientSecret` param to
 `initEmbeddedCheckout()` is documented elsewhere as deprecated in favor of

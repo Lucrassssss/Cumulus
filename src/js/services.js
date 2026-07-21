@@ -315,6 +315,7 @@ async function createCheckoutSession(eventId, qty, marketingOptIn) {
         qty,
         origin: location.origin,
         marketingOptIn: !!marketingOptIn,
+        theme: document.documentElement.dataset.theme === "dark" ? "dark" : "light",
       },
     });
     if (error) {

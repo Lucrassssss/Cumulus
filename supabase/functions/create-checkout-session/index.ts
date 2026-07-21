@@ -105,6 +105,7 @@ Deno.serve(async (req: Request) => {
   const eventId = body?.eventId;
   const qty = Math.max(1, Math.min(10, Number(body?.qty) || 1));
   const marketingOptIn = body?.marketingOptIn === true;
+  const theme = body?.theme === "dark" ? "dark" : "light";
   // Only origin is taken from the client (for the redirect URLs); every
   // price-bearing field below comes from the DB, never the request body.
   const origin =
@@ -152,7 +153,7 @@ Deno.serve(async (req: Request) => {
   const secretKey = Deno.env.get("STRIPE_SECRET_KEY");
   if (!secretKey) return json({ error: "Stripe is not configured" }, 500);
 
-  const params = new URLSearchParams({
+  const baseParams: Record<string, string> = {
     mode: "payment",
     // Stripe's 2026-03-25 ("dahlia") API version renamed the ui_mode enum —
     // "embedded" (and "hosted"/"custom") now fail outright with an invalid-
@@ -176,9 +177,30 @@ Deno.serve(async (req: Request) => {
     "metadata[price_per_ticket]": String(price),
     "metadata[platform_fee]": String(fee),
     "metadata[marketing_opt_in]": marketingOptIn ? "true" : "false",
-  });
+  };
 
-  try {
+  // Mirrors the app's own light/dark accent + surface colours
+  // (styles.css --accent/--surface). branding_settings is a documented
+  // Checkout Session parameter (Stripe changelog: checkout-sessions-
+  // branding-settings) that theming was PREVIOUSLY attempted client-side
+  // for (via Stripe.js's appearance option) — that broke live checkout
+  // outright, because the client method validates unknown options
+  // strictly. This is a different, server-side mechanism, so it's tried
+  // separately below with its own fallback — if Stripe rejects these
+  // exact field names too, the session still gets created (unthemed)
+  // rather than checkout breaking a fourth time.
+  const brandingParams: Record<string, string> =
+    theme === "dark"
+      ? {
+          "branding_settings[background_color]": "#16181b",
+          "branding_settings[button_color]": "#ffcf33",
+        }
+      : {
+          "branding_settings[background_color]": "#f7f6f2",
+          "branding_settings[button_color]": "#c08a00",
+        };
+
+  async function postStripeSession(fields: Record<string, string>) {
     const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
       headers: {
@@ -186,14 +208,29 @@ Deno.serve(async (req: Request) => {
         "Content-Type": "application/x-www-form-urlencoded",
         "Stripe-Version": "2026-03-25.dahlia",
       },
-      body: params.toString(),
+      body: new URLSearchParams(fields).toString(),
     });
-    const session = await res.json();
+    return { res, session: await res.json() };
+  }
+
+  try {
+    let { res, session } = await postStripeSession({
+      ...baseParams,
+      ...brandingParams,
+    });
     if (!res.ok) {
-      // Logged server-side so a future Stripe-side rejection is diagnosable
-      // from `supabase functions logs` without guessing from a bare status
-      // code — this exact gap is why the 2026-03-25 ui_mode break took this
-      // long to root-cause.
+      // branding_settings' exact field names aren't independently verified
+      // against a live Stripe account from this sandbox — degrade to an
+      // unthemed but WORKING session rather than fail the whole purchase
+      // over a cosmetic parameter. Logged so the real rejection reason is
+      // visible without guessing from a bare status code.
+      console.error(
+        "branding_settings rejected, retrying without theming:",
+        session.error,
+      );
+      ({ res, session } = await postStripeSession(baseParams));
+    }
+    if (!res.ok) {
       console.error("Stripe checkout session creation failed:", session.error);
       throw new Error(session.error?.message || "Stripe error");
     }
