@@ -270,6 +270,40 @@ Fixed two things together:
    is now one action, not two. On failure, the spinner is replaced by the
    real error message plus a "Try again" button — visible, not silent.
 
+### Embedded Checkout outage, round 2 — the version pin itself was malformed
+
+The `ui_mode: "embedded_page"` fix above was necessary but not sufficient:
+the very next real invocation (visible directly in Supabase's edge-function
+logs) still returned 500. Two compounding bugs, found together:
+
+1. **`Stripe-Version: "2026-03-25"` is itself an invalid version string.**
+   Stripe's newer "named" API versions use the format
+   `YYYY-MM-DD.codename` (e.g. `2025-04-30.basil`) — the codename isn't
+   cosmetic, it's part of the literal header value Stripe expects. The
+   correct pin is `"2026-03-25.dahlia"`. Sending the bare date alone is
+   itself a malformed/unrecognized version, which Stripe rejects — so the
+   very header meant to fix the `ui_mode` problem was causing its own
+   separate failure.
+2. **The failure was invisible from the app itself.** `createCheckoutSession()`
+   (`src/js/services.js`) used `sb.functions.invoke()`, whose thrown error
+   on any non-2xx response has a fixed, generic `.message`: *"Edge Function
+   returned a non-2xx status code"* — completely discarding whatever our
+   own function actually returned in the response body (which, since the
+   first round of this fix, included the real Stripe error text via
+   `console.error` server-side, but that only reaches Supabase's logs, not
+   the user). The real per-request detail lives on `error.context`, the
+   raw unconsumed `Response` object — `createCheckoutSession()` now awaits
+   `error.context.json()` and surfaces that message instead, so the next
+   time anything about this integration breaks, the actual reason shows up
+   in the toast/status UI directly instead of requiring a repeat of this
+   investigation.
+
+Deployed as edge function version 6. Same caveat as before: this session's
+sandbox cannot exercise a real Stripe call to confirm success end-to-end —
+confidence here comes from Stripe's own documented version-string format
+plus the (now-fixed) error surfacing, which will make any further failure
+self-diagnosing from the app itself.
+
 ### Embedded Checkout — the buyer never leaves cumulus
 
 Checkout used to redirect the whole tab to a Stripe-hosted payment page.

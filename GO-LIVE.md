@@ -129,6 +129,16 @@ are stuck disabled, open a **new chat** and paste:
   same limitation noted throughout this doc) — the fix is based on
   Stripe's own changelog plus the live error logs, but the very first real
   purchase attempt after this deploy is worth double-checking.
+  **Update: that first fix wasn't sufficient.** The pinned `Stripe-Version`
+  header was itself malformed — Stripe's versioned-API format is
+  `YYYY-MM-DD.codename`, and `"2026-03-25"` alone (missing `.dahlia`) is an
+  invalid version string, so the header meant to fix things caused its own
+  500. Fixed to `"2026-03-25.dahlia"`. Also fixed `createCheckoutSession()`
+  silently discarding the real error behind supabase-js's generic "Edge
+  Function returned a non-2xx status code" message — it now reads
+  `error.context` to surface what actually went wrong, so any future
+  failure is diagnosable from the app itself. Deployed as edge function
+  version 6. See ARCHITECTURE.md → "Embedded Checkout outage, round 2".
 - **Stripe Embedded Checkout — buyer never leaves the app.** Checkout used
   to redirect to a Stripe-hosted page; `create-checkout-session` now
   creates the session in `ui_mode: "embedded"` and the buyer pays inside a

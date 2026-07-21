@@ -159,7 +159,10 @@ Deno.serve(async (req: Request) => {
     // parameter error; the in-page mode is "embedded_page" going forward.
     // Pinning Stripe-Version below (rather than trusting the account's
     // dashboard-configured default) keeps this deterministic even if that
-    // default drifts again later.
+    // default drifts again later. NOTE: Stripe version strings need the
+    // codename suffix (e.g. "2025-04-30.basil") — "2026-03-25" alone
+    // (without ".dahlia") is itself an invalid/unrecognized version string,
+    // which is exactly why the first attempt at this fix still 500'd.
     ui_mode: "embedded_page",
     "line_items[0][price_data][currency]": "gbp",
     "line_items[0][price_data][product_data][name]": ev.title || "Cumulus ticket",
@@ -181,7 +184,7 @@ Deno.serve(async (req: Request) => {
       headers: {
         Authorization: `Bearer ${secretKey}`,
         "Content-Type": "application/x-www-form-urlencoded",
-        "Stripe-Version": "2026-03-25",
+        "Stripe-Version": "2026-03-25.dahlia",
       },
       body: params.toString(),
     });
