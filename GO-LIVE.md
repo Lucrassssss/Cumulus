@@ -10,17 +10,18 @@ connector, or tool can perform for you.
 
 - **Auth model migrated to Supabase Auth** (Phase 1 + 2). Sign-up/login use email
   OTP; every request carries a JWT.
-- **RLS hardened** on every table (`users`, `events`, `rsvps`, `tickets`,
-  `chat_messages`, `friends`, `host_applications`, `pending_events`,
-  `curator_codes`, `admins`). Writes are constrained to `auth.uid()`.
+- **RLS hardened** on every table that existed at the time (`users`, `events`,
+  `rsvps`, `tickets`, `host_applications`, `pending_events`, `admins`).
+  Writes are constrained to `auth.uid()`. (`chat_messages`, `friends`, and
+  `curator_codes` were dropped outright by the frictionless-ticketing pivot —
+  see `supabase/migrations/20260720010000_pivot_frictionless_ticketing.sql`.)
 - **Security hole closed:** 13 leftover wide-open `{public}` policies (incl.
   `public read users` / `public update users`) were dropped. Advisor: 0
   permissive public policies remain.
 - **Clean slate:** all demo/seed events and old pre-auth accounts deleted.
 - **Owner set up:** `gondoxml@gmail.com` is an admin + `partner_host`, with a
   real auth-linked profile.
-- **Curator codes:** 5 active (e.g. `CUR-CMLS-0001`).
-- Migrations of record: `supabase/migrations/2026070*.sql`.
+- Migrations of record: `supabase/migrations/2026070*.sql`, `2026072*.sql`.
 
 ---
 
@@ -98,6 +99,40 @@ are stuck disabled, open a **new chat** and paste:
 
 ## Still on the roadmap (code, not config)
 
-- Age-verification webhook (Stripe Identity / Yoti → `mark_age_verified`).
-- "Host a private event" checklist UI (`docs/velvet-rope/HostChecklist.tsx`).
 - Verify the map's day/night relight on the live site (Mapbox is blocked in CI).
+- **Stripe Connect — schema live, functions deployed, still needs a real
+  purchase run through it.** Schema
+  (`supabase/migrations/20260721000000_stripe_connect_scaffolding.sql`,
+  `20260721010000_index_unindexed_foreign_keys.sql`) has been applied to the
+  live project and all 5 Edge Functions
+  (`create-checkout-session`/`stripe-webhook`/`connect-onboarding`/
+  `release-payout`/`cancel-event-refund`) are deployed and ACTIVE — see
+  ARCHITECTURE.md → "Payments — Stripe Connect scaffolding". The two
+  orphaned age-verification functions (`identity-webhook`,
+  `create-verification-session`) have been redeployed as harmless 410 stubs
+  rather than left as real, billable Stripe Identity endpoints with no
+  caller; delete them properly via the dashboard whenever convenient — no
+  tool available to this session could delete them outright. What's still
+  open before any of this can process a real purchase:
+  1. Enable **Connect** on the platform's Stripe account (Dashboard →
+     Connect → Get started), if not already.
+  2. Confirm Edge Function secrets are set: `STRIPE_SECRET_KEY` (likely
+     already set, reused from the now-decommissioned
+     create-verification-session — could not be confirmed from this
+     session, no tool exposes secret existence), `STRIPE_CHECKOUT_WEBHOOK_SECRET`
+     (new — create a webhook endpoint pointed at `stripe-webhook`,
+     subscribed to `checkout.session.completed` and `account.updated`, and
+     use the `whsec_...` it gives you).
+  3. Run one real test-mode purchase end to end and confirm a ticket row
+     actually appears. This session's sandbox could not do this itself —
+     its outbound network can't reach either the Supabase Functions HTTPS
+     endpoint or Stripe directly.
+  4. Decide how `release-payout` gets called on a schedule — nothing in
+     this repo currently triggers it automatically (Supabase Cron / pg_cron
+     / an external scheduler hitting it with `RELEASE_PAYOUT_CRON_SECRET`
+     are all options, none chosen yet).
+
+(The velvet-rope hosting-eligibility checklist and curator-code perk gating
+that used to be tracked here were removed outright by the
+frictionless-ticketing pivot — see `docs/velvet-rope/README.md` for the
+historical design they replaced.)

@@ -216,3 +216,118 @@ async function checkInTicket(ticketId) {
     return { ok: false, error: "unavailable" };
   }
 }
+
+/* ── Stripe Connect scaffolding ─────────────────────────────────────────
+ * NOT LIVE-TESTED — see create-checkout-session's own header comment. These
+ * are thin wrappers; all the real logic (price computed server-side, JWT
+ * checked by the gateway, Stripe calls) lives in the edge functions
+ * themselves, same division of responsibility as the rest of this file. */
+
+/* Starts a real Stripe Checkout for a paid event and returns the hosted
+ * session URL to redirect to. Free events never call this — registerFree()
+ * (app.js) handles those with no Stripe involvement at all. */
+async function createCheckoutSession(eventId, qty) {
+  try {
+    const { data, error } = await sb.functions.invoke("create-checkout-session", {
+      body: { eventId, qty, origin: location.origin },
+    });
+    if (error) return { error: error.message || "Could not start checkout" };
+    return data;
+  } catch (e) {
+    return { error: "unavailable" };
+  }
+}
+
+/* Fetches the tickets a just-completed Checkout Session created, for the
+ * post-redirect confirmation screen. Relies on tickets_buyer_read RLS
+ * (user_id = auth.uid()) — this never needs a service-role key client-side. */
+async function fetchTicketsBySession(sessionId) {
+  try {
+    const { data, error } = await sb
+      .from("tickets")
+      .select("*")
+      .eq("stripe_checkout_session_id", sessionId);
+    if (error) return null;
+    return data || [];
+  } catch (e) {
+    return null;
+  }
+}
+
+/* The caller's own Connect account status, for the payouts panel's
+ * connect/pending/connected display. Null on error/offline — same
+ * degrade-gracefully contract as every other function in this file, so a
+ * blocked/unconfigured Supabase client never breaks rendering. */
+async function fetchMyConnectStatus(userId) {
+  if (typeof sb === "undefined" || !userId) return null;
+  try {
+    const { data, error } = await sb
+      .from("users")
+      .select(
+        "stripe_connect_account_id,stripe_connect_charges_enabled,stripe_connect_payouts_enabled",
+      )
+      .eq("id", userId)
+      .single();
+    if (error) return null;
+    return data || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/* Starts (or resumes) Stripe Connect Express onboarding for the calling
+ * host and returns a one-time hosted URL to redirect to. */
+async function startConnectOnboarding() {
+  try {
+    const { data, error } = await sb.functions.invoke("connect-onboarding", {
+      body: { origin: location.origin },
+    });
+    if (error) return { error: error.message || "Could not start onboarding" };
+    return data;
+  } catch (e) {
+    return { error: "unavailable" };
+  }
+}
+
+/* Asks release-payout to check for (and actually move) any of the caller's
+ * own due payouts. Safe to call from the payouts panel — no-ops if nothing
+ * is due yet or the host hasn't finished Connect onboarding. */
+async function checkMyPayoutReleases() {
+  try {
+    const { data, error } = await sb.functions.invoke("release-payout", { body: {} });
+    if (error) return { error: error.message || "unavailable" };
+    return data;
+  } catch (e) {
+    return { error: "unavailable" };
+  }
+}
+
+/* Generalised Squad-claim-code mechanism (see start_ticket_transfer() in the
+ * migration): puts a fresh, unclaimed code on a ticket the caller owns, for
+ * a self-serve "transfer this ticket to someone else" share link. */
+async function startTicketTransfer(ticketCode) {
+  try {
+    const { data, error } = await sb.rpc("start_ticket_transfer", {
+      p_ticket_code: ticketCode,
+    });
+    if (error) return { ok: false, error: error.message };
+    return data;
+  } catch (e) {
+    return { ok: false, error: "unavailable" };
+  }
+}
+
+/* Host/admin: cancels an event and refunds every active ticket's Stripe
+ * payment intent. See cancel-event-refund's own header for the ordering
+ * guarantee (refunds attempted before DB state claims "refunded"). */
+async function cancelEventRefund(eventId) {
+  try {
+    const { data, error } = await sb.functions.invoke("cancel-event-refund", {
+      body: { eventId },
+    });
+    if (error) return { ok: false, error: error.message || "Could not cancel event" };
+    return data;
+  } catch (e) {
+    return { ok: false, error: "unavailable" };
+  }
+}

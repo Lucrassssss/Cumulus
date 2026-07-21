@@ -7,27 +7,11 @@
 subject = "Your Cumulus sign-in code"
 content_path = "./supabase/templates/magic_link.html"
 
-[functions.identity-webhook]
-enabled = true
-# false: this endpoint is called by Stripe, not by a logged-in member, so
-# there's no user JWT to check. Trust is instead established per-request by
-# verifying the stripe-signature header inside the function itself.
-verify_jwt = false
-import_map = "./functions/identity-webhook/deno.json"
-entrypoint = "./functions/identity-webhook/index.ts"
-
-[functions.create-verification-session]
-enabled = true
-# true: this endpoint is called by a signed-in member from the app, so the
-# gateway must reject missing/expired/invalid tokens before our code runs.
-verify_jwt = true
-entrypoint = "./functions/create-verification-session/index.ts"
-
 [functions.notify-admin-new-event]
 enabled = true
 # false: called by our own Postgres trigger via pg_net, not a signed-in
 # member — trust is established by the NOTIFY_WEBHOOK_SECRET check inside
-# the function instead, same pattern as identity-webhook.
+# the function instead, same pattern as stripe-webhook's signature check.
 verify_jwt = false
 entrypoint = "./functions/notify-admin-new-event/index.ts"
 
@@ -36,3 +20,36 @@ enabled = true
 # true: called by a signed-in member emailing themselves a ticket backup.
 verify_jwt = true
 entrypoint = "./functions/email-ticket/index.ts"
+
+[functions.create-checkout-session]
+enabled = true
+# true: called by a signed-in member starting a paid checkout.
+verify_jwt = true
+entrypoint = "./functions/create-checkout-session/index.ts"
+
+[functions.stripe-webhook]
+enabled = true
+# false: called by Stripe server-to-server, no user JWT exists on this
+# request — trust is the stripe-signature HMAC check inside the function.
+verify_jwt = false
+entrypoint = "./functions/stripe-webhook/index.ts"
+
+[functions.connect-onboarding]
+enabled = true
+# true: called by a signed-in host starting/resuming Stripe Connect setup.
+verify_jwt = true
+entrypoint = "./functions/connect-onboarding/index.ts"
+
+[functions.release-payout]
+enabled = true
+# false: accepts EITHER a member JWT (self-service, checked manually inside
+# the function) OR a RELEASE_PAYOUT_CRON_SECRET bearer token for a scheduled
+# job — the gateway's blanket verify_jwt can't express "either of these".
+verify_jwt = false
+entrypoint = "./functions/release-payout/index.ts"
+
+[functions.cancel-event-refund]
+enabled = true
+# true: called by a signed-in host or admin cancelling their own event.
+verify_jwt = true
+entrypoint = "./functions/cancel-event-refund/index.ts"
