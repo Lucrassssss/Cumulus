@@ -11711,6 +11711,118 @@ body,
   }
 }
 
+/* Mobile-only compaction — DICE/Eventbrite's mobile checkout runs noticeably
+ * tighter than a desktop one (smaller header, slimmer recap bar, shorter
+ * copy) rather than just a scaled-down version of the wide layout. Scoped to
+ * max-width so the >=860px two-column layout above is untouched byte-for-
+ * byte. The header/trust text itself doesn't change per breakpoint — the
+ * markup wraps the extra clause in .checkout-header-suffix/.checkout-trust-
+ * suffix and this just hides them below 860px, so the desktop copy stays
+ * exactly what it already was. */
+@media (max-width: 859px) {
+  #app[data-view="checkout"] .connect-header {
+    margin-bottom: 4px !important;
+  }
+  #app[data-view="checkout"] .connect-header h2 {
+    font-size: 19px !important;
+    margin: 4px 0 2px !important;
+  }
+  #app[data-view="checkout"] .connect-header p {
+    font-size: 11px !important;
+  }
+  .checkout-header-suffix {
+    display: none;
+  }
+
+  .checkout-layout {
+    gap: 10px;
+  }
+
+  .checkout-summary-toggle {
+    padding: 11px 12px;
+    gap: 10px;
+  }
+  .checkout-summary-thumb {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+  }
+  .checkout-summary-title {
+    font-size: 12.5px;
+  }
+  .checkout-summary-sub {
+    font-size: 10.5px;
+  }
+  .checkout-summary-amount {
+    font-size: 14px;
+  }
+  .checkout-summary-chevron {
+    width: 14px;
+    height: 14px;
+  }
+
+  .checkout-summary-details {
+    padding: 0 12px 12px;
+  }
+  .checkout-summary.expanded .checkout-summary-details {
+    padding-top: 10px;
+  }
+  .checkout-line {
+    font-size: 12px;
+    margin-bottom: 5px;
+  }
+  .checkout-line-total {
+    font-size: 14px;
+    padding-top: 6px;
+  }
+
+  .checkout-trust {
+    margin-top: 8px;
+    padding: 0 2px;
+    font-size: 10px;
+    gap: 6px;
+  }
+  .checkout-trust-suffix {
+    display: none;
+  }
+
+  .checkout-status {
+    padding: 4px 0 2px;
+  }
+  .checkout-skeleton {
+    gap: 8px;
+  }
+  .checkout-skeleton-row {
+    height: 14px;
+  }
+
+  .checkout-cta-bar {
+    padding: 10px 12px;
+    gap: 10px;
+    border-radius: 16px;
+    bottom: calc(var(--bot-h) + env(safe-area-inset-bottom, 0px) + 10px);
+  }
+  .checkout-cta-total strong {
+    font-size: 14px;
+  }
+  .checkout-cta-total span {
+    font-size: 9px;
+  }
+  .checkout-pay-btn {
+    padding: 11px;
+    font-size: 13.5px;
+  }
+
+  #app[data-view="checkout"] #view-container {
+    padding-bottom: 82px;
+  }
+
+  .checkout-footer-note {
+    margin-top: 6px;
+    font-size: 10px;
+  }
+}
+
 @media (min-width: 860px) {
   #app[data-view="checkout"] #view-container {
     max-width: 920px;

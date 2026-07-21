@@ -96,7 +96,7 @@ function renderCheckout() {
   const thumb = ev.photoUrl || ev.nightShotUrl || catImg(ev.category);
 
   return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>Payment</h2><p>Secure checkout · ${escapeHtml(ev.title)}</p></div>
+    <div class="connect-header"><h2>Payment</h2><p>Secure checkout<span class="checkout-header-suffix"> · ${escapeHtml(ev.title)}</span></p></div>
     <div class="checkout-layout">
       <div class="checkout-summary-col">
         <div class="panel checkout-summary" id="checkout-summary" style="--corner:${c.color};">
@@ -115,7 +115,7 @@ function renderCheckout() {
             <div class="checkout-line checkout-line-total"><span>Total</span><span style="color:${c.color};">£${total}</span></div>
           </div>
         </div>
-        <div class="checkout-trust">${lockIconSvg(14)}<span>Payments are encrypted and processed securely by Stripe — Cumulus never sees your card details.</span></div>
+        <div class="checkout-trust">${lockIconSvg(14)}<span>Payments are encrypted and processed securely by Stripe<span class="checkout-trust-suffix"> — Cumulus never sees your card details.</span></span></div>
       </div>
       <div class="checkout-main-col">
         <div id="checkout-status" class="checkout-status">
