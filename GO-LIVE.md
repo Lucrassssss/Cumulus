@@ -131,6 +131,15 @@ are stuck disabled, open a **new chat** and paste:
      this repo currently triggers it automatically (Supabase Cron / pg_cron
      / an external scheduler hitting it with `RELEASE_PAYOUT_CRON_SECRET`
      are all options, none chosen yet).
+- **Blueprint growth features — schema live, one new function deployed.**
+  `supabase/migrations/20260721020000_blueprint_growth_features.sql` (Magic
+  Link group-claim RPC, `price_tiers` columns, past-attendee-emails RPC) and
+  the new `invite-past-attendees` Edge Function — see ARCHITECTURE.md →
+  "Growth features — the founding Master Blueprint" for what each piece
+  does. Capacity-based tier flipping and full SSR event crawlability were
+  scoped out as honest gaps, not built partially and mislabeled — see the
+  same section for why. `invite-past-attendees` needs a verified Resend
+  sending domain before it can reach anyone but the Resend account owner.
 
 (The velvet-rope hosting-eligibility checklist and curator-code perk gating
 that used to be tracked here were removed outright by the

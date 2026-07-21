@@ -62,6 +62,21 @@ function cumulusFee(ticketPrice: number): number {
   return 4.5;
 }
 
+// Mirrors activeTicketTier()/eventPrice() in src/js/app.js EXACTLY — same
+// "first tier whose cutoff hasn't passed, else the last tier" rule. The
+// client's displayed price is cosmetic only; this is what actually prices
+// the Stripe line item.
+function activeTierPrice(ev: { price?: number; price_tiers?: any }): number {
+  const tiers = Array.isArray(ev.price_tiers) ? ev.price_tiers : null;
+  if (!tiers || !tiers.length) return Number(ev.price) || 0;
+  const now = Date.now();
+  const sorted = [...tiers].sort(
+    (a, b) => new Date(a.cutoff || 0).getTime() - new Date(b.cutoff || 0).getTime(),
+  );
+  const active = sorted.find((t) => !t.cutoff || new Date(t.cutoff).getTime() > now);
+  return Number((active || sorted[sorted.length - 1]).price) || 0;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
@@ -105,7 +120,7 @@ Deno.serve(async (req: Request) => {
   let ev: any;
   try {
     const res = await fetch(
-      `${supabaseUrl}/rest/v1/events?id=eq.${eventId}&select=id,title,price,status,host_id`,
+      `${supabaseUrl}/rest/v1/events?id=eq.${eventId}&select=id,title,price,price_tiers,status,host_id`,
       { headers: restHeaders },
     );
     const rows = await res.json();
@@ -117,7 +132,7 @@ Deno.serve(async (req: Request) => {
   if (ev.status !== "active") {
     return json({ error: "This event is no longer available" }, 400);
   }
-  const price = Number(ev.price) || 0;
+  const price = activeTierPrice(ev);
   if (price <= 0) {
     // Free events never touch Stripe — the client calls registerFree()
     // directly. Sending a free event here is a client bug, not a valid call.
