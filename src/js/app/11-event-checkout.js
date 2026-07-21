@@ -57,10 +57,13 @@ function renderBook() {
     <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:10px;">Free cancellation up to 24 hours before the event (Cumulus's standard policy, unless the host states otherwise) · <a href="terms.html" target="_blank" style="color:var(--gold-text);">See full policy</a></p>`;
 }
 
-// ─── Render: Mock payment ────────────────────────────────────────────────
-// Real Stripe Checkout redirect (create-checkout-session computes the
+// ─── Render: Payment ─────────────────────────────────────────────────────
+// Real Stripe Embedded Checkout (create-checkout-session computes the
 // authoritative price server-side from the events table — the numbers
 // rendered here are for display only, never sent as the charge amount).
+// No manual "Pay with card" tap: the iframe starts loading the instant this
+// screen renders (see afterRenderCheckout(), wired from renderView()) —
+// "Continue to Payment" IS the action, the same one-step feel as Eventbrite.
 function renderCheckout() {
   const ev = EVENTS.find((e) => e.id === bookingDraft.eventId);
   if (!ev) return "";
@@ -78,8 +81,18 @@ function renderCheckout() {
       <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-soft);margin-bottom:10px;"><span>Booking fee</span><span>£${((sel.platformFee || 0) * bookingDraft.qty).toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:var(--text);padding-top:10px;border-top:1px solid var(--line);"><span>Total</span><span>£${total}</span></div>
     </div>
-    <button id="pay-btn" class="btn" style="width:100%;background:${c.color};padding:14px;font-size:15px;margin-top:14px;" onclick="startStripeCheckout()">Pay with card — £${total} →</button>
+    <div id="checkout-status" style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:10px;padding:22px 0;color:var(--text-muted);font-size:13px;">
+      <span style="width:18px;height:18px;border-radius:50%;border:2px solid var(--line);border-top-color:${c.color};animation:checkout-spin .8s linear infinite;flex-shrink:0;"></span>
+      Loading secure payment…
+    </div>
+    <style>@keyframes checkout-spin{to{transform:rotate(360deg)}}</style>
     <div id="stripe-checkout-embedded" style="margin-top: 20px;"></div>`;
+}
+
+// Fired from renderView() right after the checkout screen mounts. Kicks off
+// the Stripe session immediately — see startStripeCheckout() below.
+function afterRenderCheckout() {
+  startStripeCheckout();
 }
 
 // ─── Render: Ticket confirmation ─────────────────────────────────────────

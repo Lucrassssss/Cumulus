@@ -1374,19 +1374,21 @@ async function registerFree(evId) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// Redirects to a real Stripe Checkout Session. Ticket rows are created ONLY
-// by stripe-webhook once Stripe confirms payment — this function never
-// writes to the tickets table itself. checkStripeCheckoutReturn() (boot)
-// picks the tickets up again once the browser comes back from Stripe.
+// Starts a real Stripe Embedded Checkout session — auto-triggered by
+// afterRenderCheckout() the instant the payment screen renders, so
+// "Continue to Payment" reads as one action, not two. Ticket rows are
+// created ONLY by stripe-webhook once Stripe confirms payment — this
+// function never writes to the tickets table itself.
+// checkStripeCheckoutReturn() (boot) picks the tickets up again once the
+// browser comes back from Stripe.
 async function startStripeCheckout() {
   const ev = EVENTS.find((e) => e.id === bookingDraft.eventId);
   if (!ev) return;
-  const btn = document.getElementById("pay-btn");
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '<span style="opacity:.7">Preparing secure checkout…</span>';
-  }
-  
+  const status = document.getElementById("checkout-status");
+  const setStatus = (html) => {
+    if (status) status.innerHTML = html;
+  };
+
   try {
     const res = await createCheckoutSession(
       ev.id,
@@ -1397,31 +1399,35 @@ async function startStripeCheckout() {
       throw new Error(res?.error || "Could not start checkout");
     }
 
-    // Initialize Stripe Elements
     if (!window.stripeInstance) {
       window.stripeInstance = Stripe(window.CUMULUS_CONFIG.STRIPE_PUBLISHABLE_KEY);
     }
-    const checkout = await window.stripeInstance.initEmbeddedCheckout({
+    // Stripe.js renamed initEmbeddedCheckout() to createEmbeddedCheckoutPage()
+    // alongside the server-side ui_mode rename (see create-checkout-session).
+    // Fall back to the old name in case the loaded Stripe.js predates the
+    // rename — js.stripe.com/v3/ is unversioned, but this costs nothing to
+    // guard against.
+    const initFn =
+      window.stripeInstance.createEmbeddedCheckoutPage ||
+      window.stripeInstance.initEmbeddedCheckout;
+    const checkout = await initFn.call(window.stripeInstance, {
       clientSecret: res.clientSecret,
     });
-    
-    // Replace the button area with the Stripe embedded form
+
     const container = document.getElementById("stripe-checkout-embedded");
     if (container) {
-      if (btn) btn.style.display = 'none'; // hide the old pay button
-      // hide the intro form
-      const introForm = document.querySelector('.intro-form');
-      if (introForm) introForm.style.display = 'none';
-      
+      if (status) status.style.display = "none";
+      const introForm = document.querySelector(".intro-form");
+      if (introForm) introForm.style.display = "none";
       checkout.mount("#stripe-checkout-embedded");
     }
   } catch (err) {
-    showToast(err.message || "Could not start checkout — try again", "error");
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = "Pay with card →";
-      btn.style.display = 'block';
-    }
+    setStatus(
+      `<div style="text-align:center;width:100%;">
+        <div style="color:var(--danger, #dc2626);font-size:13px;margin-bottom:10px;">${escapeHtml(err.message || "Could not start checkout")}</div>
+        <button class="btn btn-outline" onclick="startStripeCheckout()">Try again</button>
+      </div>`,
+    );
   }
 }
 

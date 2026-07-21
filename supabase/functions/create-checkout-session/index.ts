@@ -1,12 +1,14 @@
 /* Creates a real Stripe Checkout Session in EMBEDDED mode (ui_mode:
- * "embedded") and hands back its `client_secret` for the browser to mount
- * in-page via Stripe.js's stripe.initEmbeddedCheckout() — the buyer never
- * leaves cumulus's own origin. return_url points back at this app's own
- * page (see checkStripeCheckoutReturn() in src/js/app/10-badges.js), which
- * is what makes it "embedded" rather than a redirect to a Stripe-hosted
- * page. Stripe.js (https://js.stripe.com/v3/) is loaded client-side for
- * this — the one exception to this repo's "no SDK" house style, required
- * because Embedded Checkout's iframe is mounted and driven by that library.
+ * "embedded_page" as of the 2026-03-25 API version — see the note at its
+ * call site below) and hands back its `client_secret` for the browser to
+ * mount in-page via Stripe.js's stripe.createEmbeddedCheckoutPage() — the
+ * buyer never leaves cumulus's own origin. return_url points back at this
+ * app's own page (see checkStripeCheckoutReturn() in
+ * src/js/app/10-badges.js), which is what makes it "embedded" rather than a
+ * redirect to a Stripe-hosted page. Stripe.js (https://js.stripe.com/v3/) is
+ * loaded client-side for this — the one exception to this repo's "no SDK"
+ * house style, required because Embedded Checkout's iframe is mounted and
+ * driven by that library.
  *
  * "Separate charges and transfers": Checkout collects the FULL amount
  * (ticket price + booking fee) onto the PLATFORM's own Stripe account. The
@@ -152,7 +154,13 @@ Deno.serve(async (req: Request) => {
 
   const params = new URLSearchParams({
     mode: "payment",
-    ui_mode: "embedded",
+    // Stripe's 2026-03-25 ("dahlia") API version renamed the ui_mode enum —
+    // "embedded" (and "hosted"/"custom") now fail outright with an invalid-
+    // parameter error; the in-page mode is "embedded_page" going forward.
+    // Pinning Stripe-Version below (rather than trusting the account's
+    // dashboard-configured default) keeps this deterministic even if that
+    // default drifts again later.
+    ui_mode: "embedded_page",
     "line_items[0][price_data][currency]": "gbp",
     "line_items[0][price_data][product_data][name]": ev.title || "Cumulus ticket",
     "line_items[0][price_data][unit_amount]": String(unitAmountPence),
@@ -173,11 +181,19 @@ Deno.serve(async (req: Request) => {
       headers: {
         Authorization: `Bearer ${secretKey}`,
         "Content-Type": "application/x-www-form-urlencoded",
+        "Stripe-Version": "2026-03-25",
       },
       body: params.toString(),
     });
     const session = await res.json();
-    if (!res.ok) throw new Error(session.error?.message || "Stripe error");
+    if (!res.ok) {
+      // Logged server-side so a future Stripe-side rejection is diagnosable
+      // from `supabase functions logs` without guessing from a bare status
+      // code — this exact gap is why the 2026-03-25 ui_mode break took this
+      // long to root-cause.
+      console.error("Stripe checkout session creation failed:", session.error);
+      throw new Error(session.error?.message || "Stripe error");
+    }
     return json({ clientSecret: session.client_secret, id: session.id });
   } catch (err: any) {
     return json({ error: err.message }, 500);

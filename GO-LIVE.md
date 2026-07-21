@@ -109,6 +109,26 @@ are stuck disabled, open a **new chat** and paste:
 
 ## Still on the roadmap (code, not config)
 
+- **Fixed: every real checkout was silently 500ing (Stripe's own breaking
+  change).** Stripe's `2026-03-25` API version renamed the Checkout
+  Session `ui_mode` enum — the deployed `create-checkout-session` was
+  still sending the now-rejected `"embedded"` value (and the client was
+  calling the now-removed `stripe.initEmbeddedCheckout()`), so from the
+  moment Embedded Checkout first went live, every real purchase attempt
+  failed. Confirmed via Supabase's own edge-function logs (100% failure
+  rate on `create-checkout-session` after that deploy) before writing any
+  fix. Now sends `ui_mode: "embedded_page"`, pins `Stripe-Version:
+  2026-03-25` explicitly, calls `stripe.createEmbeddedCheckoutPage()`,
+  and logs the raw Stripe error server-side so this doesn't require
+  detective work again. Also removed a redundant manual "Pay with card"
+  tap that was hiding the failure behind what looked like a dead button —
+  "Continue to Payment" now goes straight into loading the embedded
+  checkout, no second click. See ARCHITECTURE.md → "Embedded Checkout
+  outage (2026-07-21)". **This could not be exercised end-to-end from this
+  session** (Stripe/Supabase network calls are blocked in this sandbox,
+  same limitation noted throughout this doc) — the fix is based on
+  Stripe's own changelog plus the live error logs, but the very first real
+  purchase attempt after this deploy is worth double-checking.
 - **Stripe Embedded Checkout — buyer never leaves the app.** Checkout used
   to redirect to a Stripe-hosted page; `create-checkout-session` now
   creates the session in `ui_mode: "embedded"` and the buyer pays inside a
