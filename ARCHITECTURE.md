@@ -221,6 +221,55 @@ else £4.50), creates a Stripe Checkout Session in **embedded** mode
 Checkout" below — this used to return a hosted `url` for `location.href` to
 redirect to; it doesn't anymore.
 
+### Embedded Checkout outage (2026-07-21) — Stripe's own breaking change
+
+Every real checkout attempt was returning a silent 500 from the moment
+Embedded Checkout was first deployed until this fix: Stripe shipped a
+breaking change in API version `2026-03-25` ("dahlia") that renamed the
+`ui_mode` enum — `"embedded"` (and `"hosted"`/`"custom"`) now fail outright
+with an invalid-parameter error instead of being accepted; the in-page mode
+is `"embedded_page"` going forward, and `stripe.initEmbeddedCheckout()` was
+renamed to `stripe.createEmbeddedCheckoutPage()` (the old name now throws
+`IntegrationError`). `create-checkout-session` was still sending the old
+`ui_mode: "embedded"`, so from the account's perspective every request was
+simply malformed — this shipped invisibly because the failure only
+surfaces on a real, authenticated, price-bearing request, which nothing in
+this repo's CI/Playwright suite exercises (Stripe/Supabase network calls
+are blocked in every sandboxed test run here by design).
+
+Symptom as the user experienced it: clicking "Continue to Payment" landed
+on a payment screen with its own separate "Pay with card" button that,
+when clicked, did nothing visible — the mount attempt failed inside a
+`catch` block whose only feedback was a toast easy to miss, so it read as
+a dead button rather than an error.
+
+Fixed two things together:
+1. **The actual bug**: `create-checkout-session` now sends
+   `ui_mode: "embedded_page"`, pins an explicit `Stripe-Version:
+   2026-03-25` header (rather than trusting the account's
+   dashboard-configured default, which is what silently changed
+   underneath this integration in the first place), and
+   `console.error`s the raw Stripe error before wrapping it in a 500 — so
+   a future Stripe-side rejection is diagnosable straight from
+   `get_logs`/`supabase functions logs` instead of requiring the same
+   research-from-first-principles this took. `startStripeCheckout()`
+   (`src/js/app/10-badges.js`) now calls
+   `stripe.createEmbeddedCheckoutPage()`, falling back to
+   `initEmbeddedCheckout()` only if the loaded Stripe.js predates the
+   rename (cheap insurance since `js.stripe.com/v3/` is unversioned).
+2. **The UX gap that made the bug look worse than it was**: the payment
+   screen required a second manual tap ("Pay with card") after "Continue
+   to Payment" before the Stripe iframe even started loading — visually a
+   redundant extra step, and one that hid the actual failure behind a
+   button that looked clickable but wasn't doing anything useful.
+   `renderCheckout()` no longer renders that button at all;
+   `afterRenderCheckout()` (wired into `renderView()`'s `"checkout"`
+   branch, same `setTimeout`-after-innerHTML pattern as
+   `afterRenderConfirmed()`) calls `startStripeCheckout()` the instant the
+   screen mounts, showing a spinner in its place. "Continue to Payment"
+   is now one action, not two. On failure, the spinner is replaced by the
+   real error message plus a "Try again" button — visible, not silent.
+
 ### Embedded Checkout — the buyer never leaves cumulus
 
 Checkout used to redirect the whole tab to a Stripe-hosted payment page.

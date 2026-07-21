@@ -1245,8 +1245,10 @@ function renderView() {
     container.innerHTML = renderHostView();
     if (mapboxConfigured()) setTimeout(initHostMap, 0);
   } else if (state.view === "book") container.innerHTML = renderBook();
-  else if (state.view === "checkout") container.innerHTML = renderCheckout();
-  else if (state.view === "confirmed") {
+  else if (state.view === "checkout") {
+    container.innerHTML = renderCheckout();
+    setTimeout(afterRenderCheckout, 0);
+  } else if (state.view === "confirmed") {
     container.innerHTML = renderConfirmed();
     setTimeout(afterRenderConfirmed, 60);
   } else if (state.view === "my-tickets")
