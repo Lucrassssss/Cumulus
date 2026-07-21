@@ -136,6 +136,9 @@ Tactile and inviting: buttons and cards are built to feel physically responsive 
 - **Shadow Strategy:** flat at rest; on hover, lifts `-3px` with a soft ambient shadow bloom (see Elevation).
 - **Border:** none by default; gold border reserved for active/selected/emphasis states.
 
+### Event list card
+- The default way to show an event in a list (calendar List mode, Day view): a square 88px image on the left (a real photo if one exists, else a category stock photo — same source the detail page's own hero uses) and a synopsis on the right — title, location with a small pin glyph, date/time, host, and price. The whole card is the tap target; it opens the real event page rather than acting on the event inline (no "Book Now" or "Add to calendar" buttons on the row itself — a synopsis links out, it isn't a second checkout flow).
+
 ### Navigation
 - Fixed nav bar (`--nav-h: 72px`), respects safe-area insets on mobile (notch/home-indicator aware). Uses the display font for wayfinding labels; gold marks the active/current state.
 

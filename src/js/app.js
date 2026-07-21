@@ -4803,6 +4803,20 @@ function ensurePinOverlay() {
   el.innerHTML = `<img alt="" />`;
   host.appendChild(el);
   _pinOverlayEl = el;
+  // The wrapper stays pointer-events:none (see CSS) so it never eats clicks
+  // meant for the map underneath it, but the <img> itself opts back in —
+  // it's the img that visually grows 18% on hover, and without this the
+  // grown outer ring of the pin looked clickable but silently did nothing,
+  // since the underlying WebGL layer's hit-box never grew to match. A click
+  // anywhere on the now fully-interactable pin (grown or not) opens it,
+  // mirroring the WebGL layer's own click handler exactly.
+  el.querySelector("img").addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (_pinOverlayEvId == null) return;
+    removeHoverPopup();
+    hidePinOverlay();
+    openActiveEventMarker(_pinOverlayEvId);
+  });
   return el;
 }
 let _pinOverlayEvId = null;
@@ -4819,8 +4833,14 @@ function showPinOverlay(ev) {
   img.src = pinImageDataUrls[ev.category] || "";
   positionPinOverlay([ev.lon, ev.lat]);
   el.style.display = "block";
-  // Force layout before adding the class so the scale transition plays
-  void el.offsetWidth;
+  // Always retrigger the bounce-in from a clean state, even when the
+  // overlay is already showing a different pin (moving mouse from pin to
+  // pin) — otherwise .grown was already applied and re-adding a class
+  // that's already present is a no-op, so the pin just snapped to the new
+  // position with no bounce, which read as a glitchy jump rather than a
+  // deliberate hover transition.
+  el.classList.remove("grown");
+  void el.offsetWidth; // force reflow so the removal actually takes effect
   el.classList.add("grown");
 }
 function hidePinOverlay() {
@@ -5043,6 +5063,20 @@ function loadWebGLIcons() {
   });
 }
 
+// Pin canvas is 40x50 (loadWebGLIcons) with icon-anchor:'bottom', so the
+// event coordinate sits at the pin's TIP — the visual pin extends ~50px up
+// the screen from that point, growing to ~59px on hover (.grown scale 1.18).
+// The old bottom offset (-14) cleared only the tip, so the tooltip rendered
+// overlapping the pin's own head/icon instead of sitting above it. -66
+// clears the full grown pin plus a small breathing gap. Shared by both the
+// click popup and the hover popup so they can never drift out of sync.
+const PIN_POPUP_OFFSET = {
+  top: [0, 8],
+  bottom: [0, -66],
+  left: [22, 0],
+  right: [-22, 0],
+};
+
 function openActiveEventMarker(evId) {
   removeActiveHtmlMarker(); // tears down prior beacon + popup
   const ev = EVENTS.find((e) => String(e.id) === String(evId));
@@ -5062,7 +5096,7 @@ function openActiveEventMarker(evId) {
 
   // ── Mapbox Popup (unchanged — still a lightweight overlay, not DOM-heavy) ─
   const popup = new mapboxgl.Popup({
-    offset: { top: [0, 8], bottom: [0, -14], left: [14, 0], right: [-14, 0] },
+    offset: PIN_POPUP_OFFSET,
     closeButton: false,
     closeOnClick: false,
     className: "evtip-popup",
@@ -5250,7 +5284,7 @@ function attachMapLayers() {
     if (!ev || ev.lon == null || ev.lat == null) return;
     showPinOverlay(ev);
     hoverPopup = new mapboxgl.Popup({
-      offset: { top: [0, 8], bottom: [0, -14], left: [14, 0], right: [-14, 0] },
+      offset: PIN_POPUP_OFFSET,
       closeButton: false,
       closeOnClick: false,
       className: "evtip-popup",
@@ -9793,15 +9827,37 @@ function almostFullBadgeHtml(ev) {
   return "";
 }
 
-function miniEventCardHtml(ev) {
-  const c = CATS[ev.category] || { color: "var(--accent)" };
-  return `<div class="lp-comm-card mini-ev-card" onclick="openEvent(${ev.id})" role="button" tabindex="0">
-    <span class="cal-agenda-dot" style="background:${c.color};"></span>
-    <div class="lp-comm-text">
-      <div class="lp-comm-title">${escapeHtml(ev.title)}</div>
-      <div class="lp-comm-sub">${escapeHtml(ev.date)} · ${escapeHtml(ev.venue || ev.area || "")}</div>
+const ELC_LOCATION_ICON = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 21s7-7.58 7-12A7 7 0 0 0 5 9c0 4.42 7 12 7 12Z"/><circle cx="12" cy="9" r="2.3"/></svg>`;
+
+// Shared event row used everywhere the app needs a bigger, richer synopsis
+// card rather than a bare title — calendar List mode and Day view. A square
+// image (a real photo if one exists — currently only ev.nightShotUrl, a
+// past-event memory shot — else a category stock photo via catImg(), same
+// source the detail page's own hero already uses) plus title/location/host,
+// nothing else: no inline "Book"/"Add to calendar" actions, since the point
+// is a synopsis, not a duplicate purchase flow — the whole card opens the
+// real detail page, where buying actually happens.
+function eventListCardHtml(ev) {
+  const c = CATS[ev.category] || { color: "var(--accent)", textColor: "#fff" };
+  const status = eventStatus(ev);
+  const price = eventPrice(ev);
+  const img = ev.nightShotUrl || catImg(ev.category);
+  return `<div class="panel event-list-card" style="--corner:${c.color};" onclick="openEvent(${ev.id})" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
+    <div class="elc-img" style="background-image:url('${img}');"></div>
+    <div class="elc-body">
+      <div class="elc-top-row">
+        <span class="event-badge" style="--cat:${c.color};--cat-text:${c.textColor};margin-bottom:0;">${ev.category}</span>
+        ${status === "live" ? `<span class="live-chip" style="margin-left:0;"><span class="dot"></span>Live</span>` : ""}
+        ${almostFullBadgeHtml(ev)}
+      </div>
+      <div class="elc-title">${escapeHtml(ev.title)}</div>
+      <div class="elc-meta">${ELC_LOCATION_ICON}<span>${escapeHtml(ev.venue || "")}${ev.area ? `, ${escapeHtml(ev.area)}` : ""}</span></div>
+      <div class="elc-meta">${escapeHtml(ev.date)} · ${escapeHtml(ev.time)}</div>
+      <div class="elc-foot">
+        ${ev.host ? `<span class="elc-host">Hosted by ${escapeHtml(ev.host)}</span>` : `<span></span>`}
+        <span class="elc-price">${price ? `From £${price}` : "Free"}</span>
+      </div>
     </div>
-    ${almostFullBadgeHtml(ev)}
   </div>`;
 }
 
@@ -9873,11 +9929,13 @@ function renderCalendar() {
         .join(""),
     )
     .join("");
+  // Month view is the grid alone — no card list duplicated underneath it
+  // (that's what List mode is for). The one exception is an empty month,
+  // where a bare grid of dot-less cells reads as broken rather than "there's
+  // just nothing on yet", so that case still gets a prompt.
   const agendaHtml = monthEvents.length
-    ? `<div class="cal-agenda">
-        ${monthEvents.slice(0, 6).map(miniEventCardHtml).join("")}
-      </div>`
-    : `<div class="cal-agenda cal-agenda-empty">
+    ? ""
+    : `<div class="cal-agenda-empty">
         <div class="map-empty-card" role="status" style="max-width:100%;">
           <div class="me-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5.5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg></div>
           <div class="me-title">Nothing on the calendar yet</div>
@@ -9948,23 +10006,10 @@ function calendarListItemsHtml(events, query) {
     .map(
       (g) => `<div class="cal-list-group">
         <div class="cal-list-date">${escapeHtml(g.key)}</div>
-        ${g.items.map(calendarListRowHtml).join("")}
+        ${g.items.map(eventListCardHtml).join("")}
       </div>`,
     )
     .join("");
-}
-
-function calendarListRowHtml(ev) {
-  const c = CATS[ev.category] || { color: "var(--accent)" };
-  const att = attendeesFor(ev.id);
-  return `<div class="panel cal-list-row" style="--corner:${c.color};" onclick="openEvent(${ev.id})" role="button" tabindex="0">
-    <div class="cal-list-row-main">
-      <div class="cal-list-row-title">${escapeHtml(ev.title)}</div>
-      <div class="cal-list-row-sub">${ev.time} · ${escapeHtml(ev.venue)}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""} · ${att.length} going</div>
-    </div>
-    ${almostFullBadgeHtml(ev)}
-    <span class="event-badge" style="--cat:${c.color};--cat-text:${c.textColor};margin-bottom:0;flex-shrink:0;">${ev.category}</span>
-  </div>`;
 }
 
 function filterCalendarList() {
@@ -10709,41 +10754,9 @@ function renderCalendarDay() {
     return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="connect-header"><h2>${dayLabel}</h2><p>Nothing scheduled today</p></div>
     <div class="empty-state">Nothing on this day. <button class="btn-text" onclick="openHost()">Host one?</button></div>`;
-  const cards = dayEvents
-    .map((ev) => {
-      const c = CATS[ev.category];
-      const status = eventStatus(ev);
-      const att = attendeesFor(ev.id);
-      const ticket = getTicketForEvent(ev.id);
-      const price = eventPrice(ev);
-      const spacesLeft = ev.capacity
-        ? Math.max(0, ev.capacity - att.length)
-        : null;
-      return `<div class="panel" style="--corner:${c.color};padding:18px 20px;margin-bottom:12px;">
-      <div style="display:flex;align-items:flex-start;gap:12px;justify-content:space-between;">
-        <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
-            <span class="event-badge" style="--cat:;margin-bottom:0;">${ev.category}</span>
-            ${status === "live" ? `<span class="live-chip" style="margin-left:0;"><span class="dot"></span>Live now</span>` : `<span class="upcoming-chip" style="margin-left:0;">Upcoming</span>`}
-          </div>
-          <div style="font-size:16px;font-weight:800;line-height:1.2;margin-bottom:5px;color:var(--text);">${escapeHtml(ev.title)}</div>
-          <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:2px;">${ev.time}</div>
-          <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:6px;">${escapeHtml(ev.venue)}, ${escapeHtml(ev.area)}</div>
-          <div style="font-size:12px;color:var(--text-soft);">${att.length} going${spacesLeft !== null ? ` · ${spacesLeft} spaces left` : ""} · ${price ? `From £${price}` : "Free"}</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
-        ${
-          ticket
-            ? `<button class="btn btn-small" style="background:#22C55E;" onclick="openViewTicket(${ev.id})">${checkIconSvg(13)} View Ticket</button>`
-            : `<button class="btn btn-small" style="background:${c.color};" onclick="openBook(${ev.id})">${price ? "Book Now" : "Register Free"}</button>`
-        }
-        <button class="btn btn-outline btn-small" onclick="downloadICS(${ev.id})">+ Add to Calendar</button>
-        <button class="btn btn-text btn-small" onclick="openEvent(${ev.id})">Details</button>
-      </div>
-    </div>`;
-    })
-    .join("");
+  // Synopsis only — same card as List mode, not a second purchase flow.
+  // Tapping opens the real event page, where booking actually happens.
+  const cards = dayEvents.map(eventListCardHtml).join("");
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="connect-header"><h2>${dateObj.toLocaleDateString("en-GB", { weekday: "long" })}, ${dateObj.toLocaleDateString("en-GB", { day: "numeric", month: "long" })}</h2><p>${dayEvents.length} event${dayEvents.length !== 1 ? "s" : ""}</p></div>
     ${cards}`;
