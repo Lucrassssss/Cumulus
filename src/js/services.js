@@ -317,7 +317,20 @@ async function createCheckoutSession(eventId, qty, marketingOptIn) {
         marketingOptIn: !!marketingOptIn,
       },
     });
-    if (error) return { error: error.message || "Could not start checkout" };
+    if (error) {
+      // supabase-js's FunctionsHttpError.message is always the generic
+      // "Edge Function returned a non-2xx status code" — the actual error
+      // text our function sent back (e.g. a real Stripe rejection message)
+      // only lives on error.context, the raw Response object. Without this,
+      // every real failure looks identical from the UI no matter what
+      // actually went wrong server-side.
+      let detail = null;
+      try {
+        const body = await error.context?.json();
+        detail = body?.error;
+      } catch (_) {}
+      return { error: detail || error.message || "Could not start checkout" };
+    }
     return data;
   } catch (e) {
     return { error: "unavailable" };
