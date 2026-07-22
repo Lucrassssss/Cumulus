@@ -690,6 +690,80 @@ remains server-side RLS (`events_insert_own`, the two policies above) — this
 gating is about not offering a dead-end UI to accounts with no privileges,
 not the enforcement itself.
 
+## Account & Admin — the gamified card/badge system removal (2026-07-22)
+
+Cumulus briefly grew a full "Cumulus Pass" member card system — a
+customizable ID card (background style, accent color, border, layout,
+typography, patterns, curated "Signature Look" presets, front/back flip),
+a milestone/category/special-badge achievement system with levels, an
+About Me section (bio, interest tags, "London spots"), and an achievements
+page — all reachable from a Profile tab. It was explicitly cut: "we need to
+scrap the card design and all this profile bloat along with achievements
+and everything, the ticket tab is all we really need." The directive
+covered *only* this member-facing gamification layer — host-profile pages
+(viewing another user's public host page) and account-level host
+customization were explicitly kept out of scope ("host profiles can be
+customised but a full revamp of that system is needed... we will revamp
+this into the site once this full audit removal is done").
+
+**What replaced it — a lean Account tab.** `renderAccount()`
+(`10-badges.js`) is now just: My Tickets (the actual cards, via
+`myTicketsCardsHtml()`, `12-ticket-wallet.js` — tickets used to live on two
+separate near-duplicate screens; there's one implementation now, embedded
+directly here rather than behind its own nav destination), then a settings
+list — edit name/email (`accountEditFormHtml()`/`saveAccountDetails()`,
+a genuinely working implementation; the pre-removal `editProfile()` set
+`state.editingProfile = true` but nothing ever consumed the flag, so the
+button was a silent no-op), scan tickets (host-scanner entry point, gated
+by `canAccessScanner()`), become a host / application status, help &
+support, sign out. No card, no badges, no levels, no about-me.
+
+**Admin got its own tab instead of living inside Profile.** `openAdmin()` /
+`renderAdmin()` (`09-host-analytics.js`) is a separate, owner-only
+(`isAdminAccount()`) nav entry — Admin sign-in, Finances, Host
+applications, Event approvals, and the test-data-wipe utilities that used
+to be a buried section at the bottom of the old Profile screen, past the
+entire card/achievements layout.
+
+**What was deleted, in full:** every `CARD_*` constant (`01-core-
+constants.js`) and the `cardDraft`/`myCard` state; `resolveCardColors()`/
+`getBgStyle()`/`getTheme()` (`02-core-storage.js`); the card_theme/
+card_bio/card_interests/card_fact/card_border/card_layout/card_font/
+card_accent/card_featured_badges/avatar_url read+write in
+`persistProfile()`/`_restoreUserFromRow()` (`03-core-theme.js` — the DB
+columns and the `public_profiles` view stay; the app just stops touching
+them); the entire card editor (`04-auth-onboarding.js`, ~900 lines,
+`openCardEditor()`→`closeCardEditor()`, plus its welcome-step wiring in
+`enterApp()`); `CARD_FIELD_TO_COLUMN`/`saveMyCardFields()`/
+`uploadAvatarPhoto()`/`fetchPublicProfile()` (`services.js`); the whole
+badge/achievement system (`getAllBadges`, `getBadgeById`,
+`openExpandedCard`, `openBadgePicker`, `openAchievements`,
+`renderAchievements`, medallion/trophy/badge-cell renderers); About Me
+(`updateAboutCounter`/`saveProfileAbout`/`toggleProfileInterest`); and
+roughly 320 now-dead CSS rules across two passes (the card editor's tabs/
+swatches/pattern pickers, the Cumulus Pass card faces and flip animation,
+badges/trophies/levels, the About Me layout, the old ID-card display) —
+including compound selectors like `.badge-cell.earned:hover .trophy-coin`
+that survive a naive "is this class used" sweep because the modifier half
+(`.earned`, `.active`, `.locked`, `.flipped`) is too generic to blacklist
+outright; those needed verifying by hand that the *root* class no longer
+renders anywhere.
+
+**What was deliberately preserved.** `special_badges` / the
+`"verified-host"` string is untouched end to end (DB column,
+`persistProfile()`'s write, `reviewHost()`'s write, `isApprovedHost()`'s
+read) — it looks like it lives in the same neighborhood as the badge
+display system, but it's the actual mechanism gating the Host nav tab, not
+cosmetic. `almostFullBadgeHtml()` (an unrelated "spaces running low" event
+pill) survived despite the name collision with the badge system. The host-
+profile page (`openHostProfile()`/`renderHostProfile()`,
+`09-host-analytics.js` — cover band, name, "Reviewed" badge, stats,
+upcoming-event cards, Follow button) stays, but was stripped back to its
+original card-system-independent form: a plain two-letter monogram avatar,
+no bio paragraph, no featured-badges row — it had briefly picked up
+`avatar_url`/`card_accent`/`card_bio`/`card_featured_badges` dependencies
+via `fetchPublicProfile()`, which is now gone along with them.
+
 ## The "Master Development Codex" reconciliation
 
 A second founder-supplied document (a 7-page "Master Development Codex")
@@ -983,5 +1057,5 @@ per step, rather than in one mechanical sweep.
 
 5. **Testing.** ✅ Done — `tests/smoke.spec.js` runs a Playwright smoke suite
    (mobile + desktop) over the core flows (boot, landing, sign-up/log-in
-   toggle, 4-tab nav, core views, Cumulus Pass, theme toggle, local assets).
-   Extend it as the refactors above land.
+   toggle, bottom nav incl. Host/Admin gating, core views, day/night theme,
+   local assets). Extend it as the refactors above land.

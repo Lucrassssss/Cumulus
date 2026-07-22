@@ -233,47 +233,46 @@ async function loadAllRsvps() {
 
 
 function renderNav() {
-  const activeTab = [
-    "tickets",
-    "my-tickets",
-    "book",
-    "checkout",
-    "confirmed",
-    "owner-dash",
-    "review",
-    "achievements",
-    "scan-picker",
-    "scan",
-  ].includes(state.view)
-    ? "profile"
-    : ["calendar", "calendar-day"].includes(state.view)
-      ? "calendar"
-      : state.view;
+  const activeTab = ["owner-dash", "review", "event-approvals"].includes(
+    state.view,
+  )
+    ? "admin"
+    : ["book", "checkout", "confirmed", "scan-picker", "scan"].includes(
+          state.view,
+        )
+      ? "account"
+      : ["calendar", "calendar-day"].includes(state.view)
+        ? "calendar"
+        : state.view;
   const navContainer = document.getElementById("nav-container");
   const hostApproved = isApprovedHost();
+  const isOwnerAccount = isAdminAccount();
 
-  // Rebuild the tab bar if it doesn't exist yet, OR if host-tab visibility
-  // has changed since it was last built (e.g. an admin verifies mid-session,
-  // or a host application gets approved and the page hasn't reloaded yet).
+  // Rebuild the tab bar if it doesn't exist yet, OR if host-tab/admin-tab
+  // visibility has changed since it was last built (e.g. an admin verifies
+  // mid-session, or a host application gets approved and the page hasn't
+  // reloaded yet).
   if (
     !navContainer.querySelector(".bottom-nav") ||
-    navContainer.dataset.hostShown !== String(hostApproved)
+    navContainer.dataset.hostShown !== String(hostApproved) ||
+    navContainer.dataset.adminShown !== String(isOwnerAccount)
   ) {
     navContainer.dataset.hostShown = String(hostApproved);
+    navContainer.dataset.adminShown = String(isOwnerAccount);
     const icons = {
       browse: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5 5-2Z"/></svg>`,
       tickets: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/></svg>`,
       calendar: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><rect x="3.5" y="5.5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>`,
       host: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>`,
-      profile: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1-4 4-6 7.5-6s6.5 2 7.5 6"/></svg>`,
-      review: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3.5h6v2H9z"/><path d="M8.5 13l2 2 4-4.5"/></svg>`,
+      account: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1-4 4-6 7.5-6s6.5 2 7.5 6"/></svg>`,
+      admin: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3.5h6v2H9z"/><path d="M8.5 13l2 2 4-4.5"/></svg>`,
     };
     const NAV_TABS = [
       { label: "Explore", v: "browse", action: "goBrowse()" },
       // Only shown once an account is an approved host (verified-host badge,
       // granted on host_applications approval) or an admin — otherwise any
       // signed-up user could reach the event-creation form with zero
-      // hosting privileges. Non-hosts apply via Profile → "Become a host"
+      // hosting privileges. Non-hosts apply via Account → "Become a host"
       // instead (openHostApply()).
       ...(hostApproved
         ? [{ label: "Host", v: "host", action: "navStack=[];openHost()" }]
@@ -283,7 +282,13 @@ function renderNav() {
         v: "calendar",
         action: "navStack=[];openCalendar()",
       },
-      { label: "Profile", v: "profile", action: "navStack=[];openProfile()" },
+      { label: "Account", v: "account", action: "navStack=[];openAccount()" },
+      // Owner-only: event approvals, host application review, live
+      // finances — used to be buried inside Profile with no other home;
+      // now its own tab, hidden entirely for every other account.
+      ...(isOwnerAccount
+        ? [{ label: "Admin", v: "admin", action: "navStack=[];openAdmin()" }]
+        : []),
     ];
     navContainer.innerHTML = `
       <div class="top-bar">
@@ -376,7 +381,6 @@ async function signOut(confirmed) {
   state.profileEmail = "";
   state.profileId = null;
   state.specialBadges = [];
-  state.myCard = null;
   state.editingProfile = false;
   state.view = "browse";
   state.rsvps = {};
@@ -492,10 +496,10 @@ function checkEventDeepLink() {
   const ev = EVENTS.find((e) => String(e.id) === String(id));
   if (ev) openEvent(ev.id);
 }
-function openProfile() {
+function openAccount() {
   pushNav();
   state.editingProfile = false;
-  state.view = "profile";
+  state.view = "account";
   renderNav();
   renderView();
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -515,6 +519,12 @@ function openCalendar() {
 // still RLS (events_insert_own), this just decides what the UI offers.
 function isApprovedHost() {
   return state.isAdmin || (state.specialBadges || []).includes("verified-host");
+}
+// Gates the owner-only Admin nav tab — same boundary isApprovedHost() uses
+// (state.isAdmin, set after admin OTP verification), so any signed-in admin
+// sees it, not just approved hosts.
+function isAdminAccount() {
+  return !!state.isAdmin;
 }
 function openHost() {
   if (!isApprovedHost()) {
@@ -539,40 +549,6 @@ function closeAttendeePeek() {
   if (ov) ov.classList.remove("open");
 }
 
-function getMyEvents() {
-  return EVENTS.filter((ev) =>
-    (state.rsvps[ev.id] || []).includes(state.profileName),
-  );
-}
-function getMyCategories() {
-  const s = new Set();
-  getMyEvents().forEach((ev) => s.add(ev.category));
-  return s;
-}
-async function redeemBadge() {
-  const input = document.getElementById("redeem-input");
-  const code = (input?.value || "").trim().toUpperCase();
-  if (!code) return;
-  const match = SPECIAL_BADGES.find((b) => b.code === code);
-  if (!match) {
-    showToast("Code not recognised. Check and try again.", "error");
-    return;
-  }
-  if (state.specialBadges.includes(match.id)) {
-    showToast(`You already have the "${match.name}" badge.`);
-    return;
-  }
-  state.specialBadges.push(match.id);
-  if (state.userId) {
-    await sb
-      .from("users")
-      .update({ special_badges: state.specialBadges })
-      .eq("id", state.userId);
-  }
-  input.value = "";
-  renderView();
-  showToast(`Unlocked: ${match.name}`, "success");
-}
 function getEventDay(ev, year, monthIdx) {
   if (ev.startsAt == null) return null;
   const d = new Date(ev.startsAt);

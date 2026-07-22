@@ -3,9 +3,8 @@
 // app's "no build step" constraint. A real flyer replaces the category
 // stock photo (catImg()) wherever an event's image renders; no flyer just
 // falls back to that stock photo exactly as before, so this is additive.
-// { square: true } (used by uploadAvatarPhoto, services.js) center-crops to
-// a 1:1 canvas first — avatars render circular/square everywhere, so a
-// non-square source would otherwise get squashed rather than cropped.
+// { square: true } center-crops to a 1:1 canvas first, for callers that
+// need a square source rather than a squashed one.
 function compressImageFile(file, maxDim = 1600, quality = 0.75, opts = {}) {
   return new Promise((resolve, reject) => {
     const img = new Image();

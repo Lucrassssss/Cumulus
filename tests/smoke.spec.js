@@ -123,8 +123,8 @@ test.describe("Cumulus smoke", () => {
       typeof enterApp,
       typeof showLpSignup,
       typeof renderView,
-      typeof openExpandedCard,
-      typeof openBadgePicker,
+      typeof renderAccount,
+      typeof renderAdmin,
     ]);
     expect(
       types.every((t) => t === "function"),
@@ -161,7 +161,7 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator("#gate-field-error")).toBeVisible();
   });
 
-  test("enter app → 3-tab bottom nav (Host hidden until approved)", async ({
+  test("enter app → 3-tab bottom nav (Host/Admin hidden until earned)", async ({
     page,
   }) => {
     await page.goto("/");
@@ -169,7 +169,7 @@ test.describe("Cumulus smoke", () => {
     const labels = (
       await page.locator(".bottom-nav .nav-link").allInnerTexts()
     ).map((s) => s.trim().toUpperCase());
-    for (const tab of ["EXPLORE", "CALENDAR", "PROFILE"]) {
+    for (const tab of ["EXPLORE", "CALENDAR", "ACCOUNT"]) {
       expect(
         labels.some((l) => l.includes(tab)),
         `${tab} tab present`,
@@ -177,10 +177,15 @@ test.describe("Cumulus smoke", () => {
     }
     // Host tab is gated behind approved-host status (verified-host special
     // badge or admin) — a freshly signed-up account has neither, so it must
-    // not be able to spam the event-creation form.
+    // not be able to spam the event-creation form. Admin tab is likewise
+    // hidden for every non-admin account.
     expect(
       labels.some((l) => l.includes("HOST")),
       "Host tab hidden for a non-approved account",
+    ).toBeFalsy();
+    expect(
+      labels.some((l) => l.includes("ADMIN")),
+      "Admin tab hidden for a non-admin account",
     ).toBeFalsy();
   });
 
@@ -203,29 +208,32 @@ test.describe("Cumulus smoke", () => {
     ).toBeTruthy();
   });
 
-  test("core views render (host / calendar / profile)", async ({ page }) => {
+  test("Admin tab appears only for an admin account", async ({ page }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      /* global state, renderNav */
+      state.isAdmin = true;
+      renderNav();
+    });
+    const labels = (
+      await page.locator(".bottom-nav .nav-link").allInnerTexts()
+    ).map((s) => s.trim().toUpperCase());
+    expect(
+      labels.some((l) => l.includes("ADMIN")),
+      "Admin tab present for an admin account",
+    ).toBeTruthy();
+  });
+
+  test("core views render (host / calendar / account)", async ({ page }) => {
     await page.goto("/");
     await enterApp(page);
     await setView(page, "host");
     await expect(page.locator(".host-section").first()).toBeVisible();
     await setView(page, "calendar");
     await expect(page.locator(".calendar-scroll")).toBeVisible();
-    await setView(page, "profile");
-    await expect(page.locator(".profile-id-card")).toBeVisible();
-  });
-
-  test("Cumulus Pass opens with featured badges + picker", async ({ page }) => {
-    await page.goto("/");
-    await enterApp(page);
-    await page.evaluate(() => {
-      state.profileName = "Test User";
-      state.myCard = { name: "Test User", interests: "", bio: "" };
-      openExpandedCard();
-    });
-    await expect(page.locator(".cpass-card")).toBeVisible();
-    await expect(page.locator(".cpass-badges")).toBeVisible();
-    await page.evaluate(() => openBadgePicker());
-    await expect(page.locator(".cpass-picker")).toBeVisible();
+    await setView(page, "account");
+    await expect(page.locator(".connect-header h2")).toHaveText("Account");
   });
 
   test("event detail: fully visible and bookable, no gating", async ({

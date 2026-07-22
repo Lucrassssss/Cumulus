@@ -165,10 +165,6 @@ async function persistProfile() {
     profile_id: state.profileId,
     special_badges: state.specialBadges,
     theme: state.theme,
-    card_theme: state.myCard?.theme || "crimson",
-    card_bio: state.myCard?.bio || "",
-    card_interests: Array.isArray(state.myCard?.areas) ? state.myCard.areas.join(", ") : "",
-    card_fact: state.myCard?.fact || "",
   };
   if (state.userId) payload.id = state.userId;
   const { data, error } = await sb
@@ -993,31 +989,6 @@ function _restoreUserFromRow(existing) {
   state.profileEmail = existing.email;
   state.specialBadges = existing.special_badges || [];
   // Theme is driven by the day/night cycle, not the saved profile value.
-  // Every field here now round-trips through the DB (see saveMyCardFields,
-  // services.js) — the whole Cumulus Pass used to have an "extended" half
-  // (accent/border/layout/font/pattern/areas/featured badges/avatar) that
-  // only ever lived in localStorage, invisible to anyone but the same
-  // browser on the same device. That's gone; this is the one canonical
-  // source now, restored fresh on every session rather than falling back to
-  // a stale local cache.
-  if (existing.card_bio || existing.card_theme) {
-    state.myCard = {
-      name: existing.name,
-      avatarUrl: existing.avatar_url || "",
-      theme: existing.card_theme || "crimson",
-      accent: existing.card_accent || "gold",
-      border: existing.card_border || "classic",
-      layout: existing.card_layout || "standard",
-      font: existing.card_font || "inter",
-      bio: existing.card_bio || "",
-      areas: existing.card_interests
-        ? existing.card_interests.split(",").map((s) => s.trim()).filter(Boolean)
-        : [],
-      fact: existing.card_fact || "",
-      featuredBadges: existing.card_featured_badges || [],
-      memberSince: existing.created_at || null,
-    };
-  }
 }
 
 async function submitGate() {
@@ -1097,7 +1068,4 @@ async function submitGate() {
 
 // Pending onboarding context between "send code" and "verify code".
 let _pendingAuth = null;
-// Set when a brand-new member finishes OTP verification: enterApp() opens
-// the card builder as a welcome step instead of dead loader time.
-let _welcomeCardPending = false;
 

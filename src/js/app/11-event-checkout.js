@@ -240,7 +240,7 @@ function renderConfirmed() {
     ${walletSection}
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;">
       <button class="btn" style="background:${c.color};" onclick="downloadICS('${ev.id}')">+ Add to Calendar</button>
-      <button class="btn btn-text" onclick="openTicketsTab()">View all my tickets →</button>
+      <button class="btn btn-text" onclick="openAccount()">View all my tickets →</button>
     </div>
     <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:14px;">Free cancellation up to 24 hours before the event · <a href="terms.html" target="_blank" style="color:var(--gold-text);">See full policy</a></p>`;
 }

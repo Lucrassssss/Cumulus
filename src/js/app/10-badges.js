@@ -1,585 +1,19 @@
-// ── Badges: unified list + earned status + chosen "featured" set ──────────
-function getAllBadges() {
-  const myEvents = getMyEvents();
-  const myCats = getMyCategories();
-  const list = [];
-  MILESTONE_BADGES.forEach((b) =>
-    list.push({
-      id: b.id,
-      name: b.name,
-      glyph: b.glyph,
-      desc: b.desc,
-      color: b.metal,
-      earned: myEvents.length >= b.need,
-      kind: "Milestone",
-    }),
-  );
-  CATEGORY_BADGES.forEach((b) =>
-    list.push({
-      id: b.id,
-      name: b.name,
-      glyph: b.glyph,
-      desc: b.desc,
-      color: (CATS[b.cat] || { color: "#FFCF33" }).color,
-      earned: myCats.has(b.cat),
-      kind: "Category",
-    }),
-  );
-  SPECIAL_BADGES.forEach((b) =>
-    list.push({
-      id: b.id,
-      name: b.name,
-      glyph: b.glyph,
-      desc: b.desc,
-      color: "#FFCF33",
-      earned: state.specialBadges.includes(b.id),
-      kind: "Special",
-    }),
-  );
-  return list;
-}
-function getBadgeById(id) {
-  return getAllBadges().find((b) => b.id === id);
-}
-// Chosen badges that are actually earned (max 3), in the user's chosen
-// order — state.myCard.featuredBadges is DB-backed now (card_featured_
-// badges), not the old device-local card_ext blob, so this is the same
-// list a host profile / another viewer would also see.
-function getFeaturedBadges() {
-  const chosen = (state.myCard && state.myCard.featuredBadges) || [];
-  const all = getAllBadges();
-  return chosen
-    .map((id) => all.find((b) => b.id === id && b.earned))
-    .filter(Boolean)
-    .slice(0, 3);
-}
-
-const CPASS_FLIP_ICON = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.1v-2a4 4 0 0 1 4-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.9v2a4 4 0 0 1-4 4H3"/></svg>`;
-
-function openExpandedCard() {
-  const old = document.getElementById("card-xl-overlay");
-  if (old) old.remove();
-  const card = state.myCard || {};
-
-  const accentDef =
-    CARD_ACCENT_COLORS.find((c) => c.id === card.accent) || CARD_ACCENT_COLORS[0];
-  const accent = accentDef.hex;
-  const themeDef =
-    CARD_BG_STYLES.find((s) => s.id === card.theme) ||
-    CARD_BG_STYLES.find((s) => s.id === "obsidian") ||
-    CARD_BG_STYLES[0];
-  const borderDef = CARD_BORDERS.find((b) => b.id === card.border) || CARD_BORDERS[0];
-  const layout = card.layout || "standard";
-  const fontDef = CARD_FONTS.find((f) => f.id === card.font) || CARD_FONTS[0];
-  const fontStyle = `font-family:${fontDef.family};font-weight:${fontDef.weight};${fontDef.italic ? "font-style:italic;" : ""}`;
-  // Light CARD_BG_STYLES entries need dark ink, not the card's default
-  // cream-on-dark text — same split resolveCardColors() already applies to
-  // the small profile-tab card.
-  const cardFgRgb = themeDef.dark ? "244,241,234" : "30,41,59";
-
-  const accentAlpha = (a, op) => {
-    const m = a.match(/^#([0-9a-f]{6})$/i);
-    if (!m) return `rgba(255,255,255,${op})`;
-    const r2 = parseInt(m[1].slice(0, 2), 16),
-      g2 = parseInt(m[1].slice(2, 4), 16),
-      b2 = parseInt(m[1].slice(4, 6), 16);
-    return `rgba(${r2},${g2},${b2},${op})`;
-  };
-
-  const myEvents = getMyEvents();
-  const earnedTotal = getAllBadges().filter((b) => b.earned).length;
-  const lv = getLevel(earnedTotal);
-  const nextLv = LEVELS[LEVELS.findIndex((l) => l === lv) + 1];
-
-  const uid =
-    "CU·" +
-    btoa(state.profileName || "anon")
-      .replace(/[^A-Z0-9]/gi, "")
-      .substring(0, 8)
-      .toUpperCase();
-  const areas = Array.isArray(card.areas) && card.areas.length ? card.areas.join(" · ") : "";
-  const bioText = card.bio || "";
-  const initStr = (card.name || state.profileName || "?")
-    .split(" ")
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-  const memberSince = card.memberSince
-    ? new Date(card.memberSince).toLocaleDateString("en-GB", { month: "short", year: "numeric" })
-    : "";
-
-  const avatar = card.avatarUrl
-    ? `<div class="cpass-avatar" style="border-color:${accent};"><img src="${card.avatarUrl}" alt=""/></div>`
-    : `<div class="cpass-avatar cpass-avatar-mono" style="border-color:${accentAlpha(accent, 0.55)};background:${accentAlpha(accent, 0.16)};color:${accent};">${initStr}</div>`;
-
-  // Featured badges — the hero, always on the front face. 3 slots: chosen
-  // earned badge, or an "add" placeholder. "spotlight" layout enlarges slot
-  // 0 and shrinks the other two.
-  const featured = getFeaturedBadges();
-  const slotsHtml = [0, 1, 2]
-    .map((i) => {
-      const spotlightClass =
-        layout === "spotlight" ? (i === 0 ? " cpass-badge-hero" : " cpass-badge-mini") : "";
-      const b = featured[i];
-      if (b) {
-        return `<button class="cpass-badge${spotlightClass}" onclick="openBadgePicker()" title="${escapeHtml(b.name)}" style="--bc:${b.color};--bcg:${accentAlpha(b.color, 0.55)};">
-        <span class="cpass-coin"><span class="cpass-coin-shine"></span><span class="cpass-coin-glyph">${b.glyph}</span></span>
-        <span class="cpass-badge-name">${escapeHtml(b.name)}</span>
-      </button>`;
-      }
-      return `<button class="cpass-badge cpass-badge-empty${spotlightClass}" onclick="openBadgePicker()" title="Add a badge">
-      <span class="cpass-coin-empty">+</span>
-      <span class="cpass-badge-name">Add</span>
-    </button>`;
-    })
-    .join("");
-
-  // Real pass anatomy (Apple Wallet's front/back split, applied to the one
-  // thing Cumulus's own card already calls itself — a "Pass"): front is the
-  // glanceable identity + featured badges; back is the scrollable detail —
-  // stats, tier progress, membership fine print. Nothing here is fabricated
-  // — memberSince/uid/areas/stats are all real fields already on state.myCard.
-  const frontFace = `<div class="cpass-card cpass-face cpass-face-front cpass-border-${borderDef.id} cpass-layout-${layout}" id="cpass-card">
-        <div class="cpass-ambient"></div>
-
-        <div class="cpass-head">
-          <div class="cpass-logo">
-            <span class="cpass-logo-mark" style="background:${accent};"><svg viewBox="0 0 10 10"><circle cx="5" cy="4" r="2.5"/><ellipse cx="5" cy="7.5" rx="3.5" ry="1.5"/></svg></span>
-            <span class="cpass-logo-text">Cumulus</span>
-          </div>
-          <div class="cpass-tier" style="border-color:${accentAlpha(accent, 0.45)};background:${accentAlpha(accent, 0.14)};color:${accent};">
-            <span class="cpass-tier-dot" style="background:${accent};"></span>${lv.title}
-          </div>
-        </div>
-
-        <div class="cpass-id">
-          ${avatar}
-          <div class="cpass-id-text">
-            <div class="cpass-name" style="${fontStyle}">${escapeHtml(card.name || state.profileName || "")}</div>
-            <div class="cpass-sub" style="${fontStyle}">${bioText ? escapeHtml(bioText) : "London Community Member"}</div>
-          </div>
-        </div>
-
-        <div class="cpass-badges-section">
-          <div class="cpass-section-head">
-            <span class="cpass-section-label">Featured badges</span>
-            <button class="cpass-edit" onclick="openBadgePicker()">Edit</button>
-          </div>
-          <div class="cpass-badges">${slotsHtml}</div>
-        </div>
-
-        <button class="cpass-flip-btn" onclick="flipExpandedCard()" aria-label="Flip pass to see stats and details">${CPASS_FLIP_ICON}</button>
-        <div class="cpass-sheen" id="card-xl-sheen"></div>
-        <div class="cpass-edge" style="background:linear-gradient(90deg,${accentAlpha(accent, 0.6)},${accent},${accentAlpha(accent, 0.6)});"></div>
-      </div>`;
-
-  // "minimal" drops the stats block entirely on the back (just membership
-  // fine print); "stats-first" adds a level-progress bar above the raw
-  // numbers; standard/compact/spotlight get the numbers alone.
-  const statsBlockHtml =
-    layout === "minimal"
-      ? ""
-      : `<div class="cpass-stats">
-          <div class="cpass-stat"><span class="cpass-stat-num">${myEvents.length}</span><span class="cpass-stat-label">Events</span></div>
-          <div class="cpass-stat"><span class="cpass-stat-num">${earnedTotal}</span><span class="cpass-stat-label">Badges</span></div>
-        </div>
-        ${
-          layout === "stats-first"
-            ? `<div class="cpass-progress" role="progressbar" aria-valuenow="${earnedTotal}" aria-valuemin="${lv.min}" aria-valuemax="${nextLv ? nextLv.min : lv.min}" aria-label="Progress to ${nextLv ? nextLv.title : "max rank"}">
-                <div class="cpass-progress-fill" style="width:${nextLv ? Math.min(100, Math.round(((earnedTotal - lv.min) / (nextLv.min - lv.min)) * 100)) : 100}%;background:${accent};"></div>
-              </div>
-              <div class="cpass-progress-label">${nextLv ? `${nextLv.min - earnedTotal} more to ${nextLv.title}` : "Max rank reached"}</div>`
-            : ""
-        }`;
-
-  const backFace = `<div class="cpass-card cpass-face cpass-face-back cpass-border-${borderDef.id} cpass-layout-${layout}">
-        <div class="cpass-ambient"></div>
-
-        <div class="cpass-head">
-          <div class="cpass-logo">
-            <span class="cpass-logo-mark" style="background:${accent};"><svg viewBox="0 0 10 10"><circle cx="5" cy="4" r="2.5"/><ellipse cx="5" cy="7.5" rx="3.5" ry="1.5"/></svg></span>
-            <span class="cpass-logo-text">Pass details</span>
-          </div>
-          <div class="cpass-tier" style="border-color:${accentAlpha(accent, 0.45)};background:${accentAlpha(accent, 0.14)};color:${accent};">
-            <span class="cpass-tier-dot" style="background:${accent};"></span>${lv.title}
-          </div>
-        </div>
-
-        <div class="cpass-back-body">${statsBlockHtml}</div>
-
-        <div class="cpass-back-fineprint">
-          ${memberSince ? `<div class="cpass-fineprint-row"><span>Member since</span><span>${escapeHtml(memberSince)}</span></div>` : ""}
-          ${areas ? `<div class="cpass-fineprint-row"><span>London spots</span><span>${escapeHtml(areas)}</span></div>` : ""}
-        </div>
-
-        <div class="cpass-foot">
-          <div>
-            <div class="cpass-foot-label">Cumulus Pass</div>
-            <div class="cpass-foot-uid">${uid}</div>
-          </div>
-          <div class="cpass-foot-mark" style="background:${accentAlpha(accent, 0.2)};color:${accent};">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="5"/><ellipse cx="12" cy="19" rx="8" ry="4"/></svg>
-          </div>
-        </div>
-
-        <button class="cpass-flip-btn" onclick="flipExpandedCard()" aria-label="Flip back to front">${CPASS_FLIP_ICON}</button>
-        <div class="cpass-sheen cpass-sheen-static"></div>
-        <div class="cpass-edge" style="background:linear-gradient(90deg,${accentAlpha(accent, 0.6)},${accent},${accentAlpha(accent, 0.6)});"></div>
-      </div>`;
-
-  const html = `<div class="card-xl-overlay" id="card-xl-overlay" onclick="if(event.target===this)closeExpandedCard()">
-    <div class="card-xl-outer">
-      <button class="card-xl-close" onclick="closeExpandedCard()" aria-label="Close">✕</button>
-      <div class="cpass-flip" id="cpass-flip" style="--acc:${accent};--acc-glow:${accentAlpha(accent, 0.3)};--acc-soft:${accentAlpha(accent, 0.14)};--card-bg:${themeDef.bg};--card-fg-rgb:${cardFgRgb};">
-        <div class="cpass-flip-inner" id="cpass-flip-inner">
-          ${frontFace}
-          ${backFace}
-        </div>
-      </div>
-    </div>
-  </div>`;
-
-  document.body.insertAdjacentHTML("beforeend", html);
-  requestAnimationFrame(() => {
-    const ov = document.getElementById("card-xl-overlay");
-    if (ov)
-      requestAnimationFrame(() => {
-        ov.classList.add("open");
-        initCardSheen();
-      });
-  });
-}
-
-function flipExpandedCard() {
-  const inner = document.getElementById("cpass-flip-inner");
-  if (!inner) return;
-  inner.classList.toggle("flipped");
-}
-
-// ── Badge picker — choose up to 3 earned badges to feature on the pass ──────
-function openBadgePicker() {
-  const old = document.getElementById("cpass-picker-overlay");
-  if (old) old.remove();
-  const chosen = ((state.myCard && state.myCard.featuredBadges) || []).slice(0, 3);
-  const all = getAllBadges();
-  const earned = all.filter((b) => b.earned);
-  const locked = all.filter((b) => !b.earned);
-  const cell = (b, isChosen, isLocked) => `
-    <button class="bpick-cell${isChosen ? " chosen" : ""}${isLocked ? " locked" : ""}" ${isLocked ? "disabled" : `onclick="toggleFeaturedBadge('${b.id}')"`} style="--bc:${b.color};">
-      <span class="bpick-coin"><span class="bpick-coin-glyph">${b.glyph}</span></span>
-      <span class="bpick-name">${escapeHtml(b.name)}</span>
-      <span class="bpick-kind">${b.kind}</span>
-      ${isChosen ? `<span class="bpick-check">${checkIconSvg(13)}</span>` : ""}
-      ${isLocked ? `<span class="bpick-lock">${lockIconSvg(14)}</span>` : ""}
-    </button>`;
-  const earnedHtml = earned.length
-    ? earned.map((b) => cell(b, chosen.includes(b.id), false)).join("")
-    : `<div class="bpick-empty">No badges yet — RSVP to events to start earning them.</div>`;
-  const lockedHtml = locked.map((b) => cell(b, false, true)).join("");
-  const html = `<div class="cpass-picker-overlay" id="cpass-picker-overlay" onclick="if(event.target===this)closeBadgePicker()">
-    <div class="cpass-picker">
-      <div class="bpick-head">
-        <div>
-          <div class="bpick-title">Featured badges</div>
-          <div class="bpick-help" id="bpick-help">Choose up to 3 to show on your pass · <b id="bpick-count">${chosen.length}</b>/3</div>
-        </div>
-        <button class="bpick-close" onclick="closeBadgePicker()" aria-label="Close">✕</button>
-      </div>
-      <div class="bpick-scroll">
-        <div class="bpick-grid">${earnedHtml}</div>
-        ${locked.length ? `<div class="bpick-locked-label">Locked</div><div class="bpick-grid">${lockedHtml}</div>` : ""}
-      </div>
-      <button class="btn bpick-done" onclick="closeBadgePicker()">Done</button>
-    </div>
-  </div>`;
-  document.body.insertAdjacentHTML("beforeend", html);
-  requestAnimationFrame(() => {
-    const ov = document.getElementById("cpass-picker-overlay");
-    if (ov) requestAnimationFrame(() => ov.classList.add("open"));
-  });
-}
-function toggleFeaturedBadge(id) {
-  const current = (state.myCard && state.myCard.featuredBadges) || [];
-  let arr = current.filter((x) => getBadgeById(x)); // prune stale
-  const i = arr.indexOf(id);
-  if (i >= 0) {
-    arr.splice(i, 1);
-  } else {
-    if (arr.length >= 3) {
-      showToast("You can feature up to 3 badges", "info");
-      return;
-    }
-    arr.push(id);
-  }
-  saveMyCardFields({ featuredBadges: arr });
-  // update cells + count without full re-render
-  document.querySelectorAll(".bpick-cell").forEach((c) => {});
-  const cnt = document.getElementById("bpick-count");
-  if (cnt) cnt.textContent = arr.length;
-  document.querySelectorAll(".bpick-cell").forEach((cell) => {
-    const oc = cell.getAttribute("onclick") || "";
-    const m = oc.match(/'([^']+)'/);
-    if (!m) return;
-    const chosen = arr.includes(m[1]);
-    cell.classList.toggle("chosen", chosen);
-    let chk = cell.querySelector(".bpick-check");
-    if (chosen && !chk) {
-      chk = document.createElement("span");
-      chk.className = "bpick-check";
-      chk.innerHTML = checkIconSvg(13);
-      cell.appendChild(chk);
-    } else if (!chosen && chk) {
-      chk.remove();
-    }
-  });
-}
-function closeBadgePicker() {
-  const ov = document.getElementById("cpass-picker-overlay");
-  if (ov) {
-    ov.classList.remove("open");
-    setTimeout(() => ov.remove(), 220);
-  }
-  // rebuild the pass so featured badges reflect the new choice
-  if (document.getElementById("card-xl-overlay")) openExpandedCard();
-}
-
-function closeExpandedCard() {
-  const ov = document.getElementById("card-xl-overlay");
-  if (!ov) return;
-  if (_sheenHandler) {
-    window.removeEventListener("deviceorientation", _sheenHandler);
-    _sheenHandler = null;
-  }
-  if (_sheenMouseHandler && _sheenCard) {
-    _sheenCard.removeEventListener("mousemove", _sheenMouseHandler);
-    _sheenMouseHandler = null;
-    _sheenCard = null;
-  }
-  ov.classList.remove("open");
-  setTimeout(() => {
-    if (ov.parentNode) ov.remove();
-  }, 320);
-}
-
-const LOCK_SVG = `<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>`;
-function medallionHtml(glyph, color, earned) {
-  const ring = earned ? color : "var(--line)";
-  const fill = earned ? hexToRgba(color, 0.14) : "transparent";
-  const gc = earned ? color : "var(--text-muted)";
-  const lock = earned ? "" : `<span class="lock">${LOCK_SVG}</span>`;
-  return `<div class="medallion" style="border-color:${ring};background:${fill};color:${gc};">${glyph}${lock}</div>`;
-}
-function badgeCellHtml(name, desc, glyph, color, earned, progressText) {
-  return `<div class="panel badge-cell ${earned ? "earned" : "locked"}" style="--corner:${earned ? color : "var(--line)"};">${medallionHtml(glyph, color, earned)}<div class="badge-name">${name}</div><div class="badge-desc">${desc}</div>${!earned && progressText ? `<div class="badge-progress">${progressText}</div>` : ""}</div>`;
-}
-function trophyHtml(glyph, metal, glow, earned) {
-  if (!earned)
-    return `<div class="trophy-wrap"><div class="trophy-coin locked"><span>${glyph}</span><span class="trophy-lock">${LOCK_SVG}</span></div><div class="trophy-stand locked"></div></div>`;
-  return `<div class="trophy-wrap"><div class="trophy-coin" style="background:radial-gradient(circle at 32% 28%,rgba(255,255,255,0.65),rgba(255,255,255,0) 40%),${metal};box-shadow:0 8px 18px rgba(0,0,0,0.3),0 0 14px ${hexToRgba(glow, 0.4)},inset 0 -5px 8px rgba(0,0,0,0.2),inset 0 3px 6px rgba(255,255,255,0.35);"><span class="trophy-shine"></span><span style="position:relative;color:#1B1D21;">${glyph}</span></div><div class="trophy-stand" style="background:${glow};filter:brightness(0.65);"></div></div>`;
-}
-function trophyCellHtml(
-  name,
-  desc,
-  glyph,
-  metal,
-  glow,
-  tier,
-  earned,
-  progressText,
-) {
-  return `<div class="panel badge-cell ${earned ? "earned" : "locked"}" style="--corner:${earned ? glow : "var(--line)"};">${trophyHtml(glyph, metal, glow, earned)}${tier ? `<div class="trophy-tier" style="color:${earned ? glow : "var(--text-muted)"};">${tier}</div>` : ""}<div class="badge-name">${name}</div><div class="badge-desc">${desc}</div>${!earned && progressText ? `<div class="badge-progress">${progressText}</div>` : ""}</div>`;
-}
-
-function renderProfile() {
-  const myEvents = getMyEvents();
-  const myCats = getMyCategories();
-  const count = myEvents.length;
-  const card = state.myCard;
-
-  let profileAbout = "";
-  try {
-    profileAbout =
-      localStorage.getItem("profile_about:" + state.profileName) || "";
-  } catch (e) {}
-  let profileInterests = [];
-  try {
-    const pi = localStorage.getItem("profile_interests:" + state.profileName);
-    if (pi) profileInterests = JSON.parse(pi);
-  } catch (e) {}
-
-  // Level + badges
-  let earnedCount = 0;
-  MILESTONE_BADGES.forEach((b) => {
-    if (count >= b.need) earnedCount++;
-  });
-  CATEGORY_BADGES.forEach((b) => {
-    if (myCats.has(b.cat)) earnedCount++;
-  });
-  if (myCats.size >= TOTAL_CATEGORIES) earnedCount++;
-  earnedCount += state.specialBadges.length;
-  const lv = getLevel(earnedCount);
-  const nextLvIdx = LEVELS.findIndex((l) => l === lv) + 1;
-  const nextLv = LEVELS[nextLvIdx];
-
-  const topAreas = (card && Array.isArray(card.areas) && card.areas.length) ? card.areas : [];
-
-  // Card HTML (inline profile card) — reads the same DB-backed
-  // state.myCard the full Cumulus Pass (openExpandedCard()) reads, so this
-  // preview never drifts from what a host profile viewer would see.
-  function profileCardHtml(c) {
-    const cols = resolveCardColors(c?.theme || "obsidian", c?.accent || "#FFCF33");
-    const { bg, accent, text: textCol, textSoft } = cols;
-    const tagBg = cols.dark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.08)";
-    const tagBorder = cols.dark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.12)";
-    const tags = (c && Array.isArray(c.areas) ? c.areas : [])
-      .slice(0, 5)
-      .map(
-        (s) =>
-          `<span class="id-card-tag" style="background:${tagBg};border:1px solid ${tagBorder};color:${textCol};">${escapeHtml(s)}</span>`,
-      )
-      .join("");
-    const borderStyle = lv.ring;
-    const shadowStyle = `0 8px 28px rgba(0,0,0,0.22),0 0 0 1px rgba(0,0,0,0.08),0 0 18px ${lv.glow}`;
-    const initStr = (c?.name || state.profileName)
-      .split(" ")
-      .map((w) => w[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
-    const photoSticker = c?.avatarUrl
-      ? `<div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid ${accent};flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><img src="${c.avatarUrl}" style="width:100%;height:100%;object-fit:cover;display:block;" alt="${escapeHtml(c?.name || state.profileName)}"/></div>`
-      : `<div style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${accent}22;border:2px solid ${accent}55;flex-shrink:0;font-size:18px;font-weight:800;color:${accent};">${initStr}</div>`;
-    return `<div class="id-card profile-id-card prof-avatar-float" style="background:${bg};border:${borderStyle};box-shadow:${shadowStyle};">
-      <div class="ce-card-shine"></div>
-      <div style="position:relative;z-index:2;display:flex;flex-direction:column;height:100%;">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;">
-          <div>
-            <div class="id-card-label" style="color:${textSoft};">// Cumulus Pass</div>
-            <div style="width:24px;height:2px;background:${accent};border-radius:99px;margin-top:4px;"></div>
-          </div>
-          ${photoSticker}
-        </div>
-        <div class="id-card-name" style="color:${textCol};">${escapeHtml(c ? c.name : state.profileName)}</div>
-        ${c && c.bio ? `<div class="id-card-bio" style="color:${textSoft};">${escapeHtml(c.bio)}</div>` : ""}
-        <div class="id-card-tags" style="margin-top:auto;">${tags}</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
-          <div style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${textSoft};">London Member</div>
-          <span class="level-badge" style="color:${textCol};border-color:${lv.color};background:${lv.color}33;font-size:8.5px;"><span class="level-dot" style="background:${lv.color};"></span>${lv.title}</span>
-        </div>
-      </div>
-      <div class="id-card-watermark" style="color:${accent};">CU</div>
-    </div>`;
-  }
-
-  // Night Shot memories — past events with a saved shot
-  const memories = myEvents.filter(
-    (ev) =>
-      eventStatus(ev) === "past" &&
-      (ev.nightShotUrl || localStorage.getItem("night_shot:" + ev.id)),
-  );
-  const memoriesHtml = memories
-    .slice(0, 6)
-    .map((ev) => {
-      const shotUrl =
-        ev.nightShotUrl || localStorage.getItem("night_shot:" + ev.id);
-      const shortTitle =
-        ev.title.length > 22 ? ev.title.substring(0, 20) + "…" : ev.title;
-      return `<div class="ns-tile" onclick="openEvent('${ev.id}')" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
-      <img src="${shotUrl}" alt="${escapeHtml(ev.title)}"/>
-      <div class="ns-tile-label">${escapeHtml(shortTitle)}</div>
-    </div>`;
-    })
-    .join("");
-
-  // Recent events — last 4 only (not 12)
-  const recentEvents = myEvents.slice(-4).reverse();
-  const MUTED_CATS = {
-    Creative: "rgba(232,184,75,0.10)",
-    Gaming: "rgba(232,184,75,0.10)",
-    "Movie Nights": "rgba(232,184,75,0.10)",
-    "Board Games": "rgba(232,184,75,0.10)",
-    Meetups: "rgba(232,184,75,0.10)",
-    "Food & Drink": "rgba(232,184,75,0.10)",
-    "Live Music": "rgba(232,184,75,0.10)",
-    "Wellness & Outdoors": "rgba(232,184,75,0.10)",
-    "Tech & Talks": "rgba(232,184,75,0.10)",
-  };
-  const recentEvHtml = recentEvents
-    .map((ev) => {
-      const c2 = CATS[ev.category] || { color: "#FFCF33" };
-      const mutedBg = hexToRgba(c2.color, 0.09);
-      const shortTitle =
-        ev.title.length > 28 ? ev.title.substring(0, 26) + "…" : ev.title;
-      const evDate = ev.startsAt
-        ? new Date(ev.startsAt).toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "short",
-          })
-        : "";
-      const status = eventStatus(ev);
-      const statusDot =
-        status === "live"
-          ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-right:4px;box-shadow:0 0 5px #22c55e88;"></span>`
-          : status === "upcoming"
-            ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c2.color};margin-right:4px;opacity:0.7;"></span>`
-            : "";
-      return `<div class="ev-plate" onclick="openEvent('${ev.id}')" style="background:${mutedBg};border:1px solid ${c2.color}28;" title="${escapeHtml(ev.title)}" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
-      <div style="font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;">${escapeHtml(shortTitle)}</div>
-      <div style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;">${statusDot}${escapeHtml(ev.category)}</div>
-      ${evDate ? `<div style="font-size:10px;color:${c2.color};font-weight:600;margin-top:4px;">${evDate}</div>` : ""}
-    </div>`;
-    })
-    .join("");
-
-  // Interests pills
-  const interestPillsHtml = INTEREST_PRESETS.map((tag) => {
-    const active = profileInterests.includes(tag);
-    return `<button class="interest-pill${active ? " active" : ""}" onclick="toggleProfileInterest('${escapeHtml(tag)}')">${escapeHtml(tag)}</button>`;
-  }).join("");
-
-  const badgeHint = nextLv
-    ? `${earnedCount} badge${earnedCount !== 1 ? "s" : ""} earned · ${nextLv.min - earnedCount} more to reach ${nextLv.title}`
-    : "✦ Max rank achieved";
-
+// Account — replaces the old gamified Profile (ID card, levels/badges,
+// achievements page, about-me/interests, memories, recent-events recap).
+// Tickets are the actual reason this app exists, so they're the headline
+// content here rather than a link buried under a stats row; everything else
+// is a lean, purely functional settings list. No admin tools here at all —
+// those moved to their own owner-only nav tab (renderAdmin()).
+function renderAccount() {
   return `
-    <!-- Card -->
-    <div class="prof-card-section">
-      ${profileCardHtml(card)}
-      <div class="prof-card-btns">
-        ${
-          card
-            ? `<button class="btn btn-small" onclick="openCardEditor(null)">Edit card</button>
-             <button class="btn btn-outline btn-small" onclick="openExpandedCard()">View + QR</button>`
-            : `<button class="btn btn-small" style="flex:1;" onclick="openCardEditor(null)">Create your card</button>`
-        }
-      </div>
-    </div>
+    <div class="connect-header"><h2>Account</h2><p>${escapeHtml(state.profileName)}</p></div>
 
-    <!-- Stats row -->
-    <div class="prof-stats-row list-item-stagger">
-      <div class="pstat"><div class="pstat-num">${count}</div><div class="pstat-lbl">Events</div></div>
-      <div class="pstat"><div class="pstat-num">${myTickets.length}</div><div class="pstat-lbl">Tickets</div></div>
-      <div class="pstat"><div class="pstat-num">${earnedCount}</div><div class="pstat-lbl">Badges</div></div>
-    </div>
+    <div class="section-title">My Tickets</div>
+    ${myTicketsCardsHtml()}
 
-    <!-- Achievements card -->
-    <div class="prof-achievements-card" onclick="openAchievements()" role="button" tabindex="0">
-      <div class="prof-ach-header">
-        <span class="prof-ach-title">Achievements</span>
-        <span class="prof-ach-level" style="color:${lv.color};">${lv.title}</span>
-      </div>
-      <div class="prof-ach-sub">${earnedCount} badge${earnedCount !== 1 ? "s" : ""} earned${nextLv ? ` · ${nextLv.min - earnedCount} more to reach ${nextLv.title}` : " · Max rank"}</div>
-      <div class="prof-ach-progress"><div class="prof-ach-fill" style="width:${nextLv ? Math.min(100, Math.round(((earnedCount - lv.min) / (nextLv.min - lv.min)) * 100)) : 100}%;background:${lv.color};"></div></div>
-      <div class="prof-ach-cta">View badges &amp; history →</div>
-    </div>
-
-    <!-- Action list -->
+    <div class="section-title">Settings</div>
     <div class="prof-action-list">
-      <button class="prof-action-row" onclick="openMyTickets()">
-        <span class="prof-action-label">My Tickets</span>
-        <span class="prof-action-right">${myTickets.length > 0 ? myTickets.length + " " : ""}›</span>
-      </button>
+      ${state.editingProfile ? accountEditFormHtml() : accountEditRowHtml()}
       ${
         canAccessScanner()
           ? `<button class="prof-action-row" onclick="openScannerPicker()">
@@ -600,10 +34,6 @@ function renderProfile() {
         <span class="prof-action-right">›</span>
       </button>`
       }
-      <button class="prof-action-row" onclick="editProfile()">
-        <span class="prof-action-label">Edit name &amp; email</span>
-        <span class="prof-action-right">›</span>
-      </button>
       <button class="prof-action-row" onclick="window.location.href='mailto:hello@cumulusapp.co'">
         <span class="prof-action-label">Help &amp; Support</span>
         <span class="prof-action-right">›</span>
@@ -613,311 +43,74 @@ function renderProfile() {
         <span class="prof-action-right">›</span>
       </button>
     </div>
-    ${
-      state.profileEmail === "gondoxml@gmail.com"
-        ? `
-    <div class="prof-admin-section">
-      <div class="prof-admin-label">Admin &amp; Finances</div>
-      <div class="prof-action-list">
-        <button class="prof-action-row" onclick="promptAdminSignIn()">
-          <span class="prof-action-label">Admin sign-in<span class="prof-action-sub" id="admin-auth-sub">Verify with a one-time code to approve events</span></span>
-          <span class="prof-action-right">›</span>
-        </button>
-        <button class="prof-action-row" onclick="openOwnerDash()">
-          <span class="prof-action-label">Finances<span class="prof-action-sub">Live revenue &amp; payouts</span></span>
-          <span class="prof-action-right">›</span>
-        </button>
-        <button class="prof-action-row" onclick="openReview()">
-          <span class="prof-action-label">Host applications<span class="prof-action-sub">Review &amp; approve hosts</span></span>
-          <span class="prof-action-right">›</span>
-        </button>
-        <button class="prof-action-row" onclick="openEventApprovals()">
-          <span class="prof-action-label">Event approvals<span class="prof-action-sub">Review &amp; publish public events</span></span>
-          <span class="prof-action-right">›</span>
-        </button>
-        <button class="prof-action-row prof-action-danger" onclick="clearAllUsers()">
-          <span class="prof-action-label">Clear all users<span class="prof-action-sub">Delete every account &amp; email (keeps events)</span></span>
-          <span class="prof-action-right">›</span>
-        </button>
-        <button class="prof-action-row prof-action-danger" onclick="if(confirm('Delete ALL rows in users, events, rsvps, tickets? This cannot be undone.')){clearAllTestData(true)}">
-          <span class="prof-action-label">Wipe all test data<span class="prof-action-sub">Users + events + everything</span></span>
-          <span class="prof-action-right">›</span>
-        </button>
-      </div>
-    </div>`
-        : ""
-    }
-
-
-    <!-- About me + interests + spots (all in one card) -->
-    <div class="prof-about-section">
-      <div class="prof-about-label">About me</div>
-      <div class="profile-about-wrap">
-        <textarea class="profile-about-input" id="profile-about-input" maxlength="150"
-          placeholder="Tell people a little about you…"
-          oninput="updateAboutCounter(this)"
-          onblur="saveProfileAbout(this.value)"
-        >${escapeHtml(profileAbout)}</textarea>
-        <div class="profile-about-counter" id="about-counter">${profileAbout.length}/150</div>
-      </div>
-
-      <div class="prof-divider"></div>
-      <div class="prof-about-label">Interests</div>
-      <div class="interests-grid" id="interests-grid">${interestPillsHtml}</div>
-
-      ${
-        topAreas.length
-          ? `
-      <div class="prof-divider"></div>
-      <div class="prof-about-label">My London spots</div>
-      <div class="area-chips">${topAreas.map((a) => `<div class="area-chip"><span>${escapeHtml(a)}</span></div>`).join("")}
-        <button class="btn btn-text btn-small" style="font-size:11px;" onclick="openCardEditor(null)">Edit in card →</button>
-      </div>`
-          : `<div class="prof-divider"></div>
-      <button class="btn btn-text btn-small" style="font-size:12px;padding:0;" onclick="openCardEditor(null)">+ Add your London spots in your card</button>`
-      }
-    </div>
-
-    <!-- Night Shot memories -->
-    ${
-      memories.length
-        ? `
-    <div class="profile-section">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <span class="profile-section-label" style="margin-bottom:0;color:#FCD34D;">📸 Memories</span>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">${memoriesHtml}</div>
-    </div>`
-        : ""
-    }
-
-    <!-- Recent events (only shown if user has any) -->
-    ${
-      recentEvents.length
-        ? `
-    <div class="profile-section">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <span class="profile-section-label" style="margin-bottom:0;flex:0 0 auto;">Recent events</span>
-        ${myEvents.length > 4 ? `<button class="btn btn-text btn-small" onclick="openAchievements()" style="font-size:11px;">See all ${myEvents.length} →</button>` : ""}
-      </div>
-      <div class="ev-plate-grid list-item-stagger">${recentEvHtml}</div>
-    </div>`
-        : ""
-    }
   `;
 }
 
-function openAchievements() {
-  pushNav();
-  state.view = "achievements";
-  renderNav();
-  renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+function accountEditRowHtml() {
+  return `<button class="prof-action-row" onclick="editProfile()">
+    <span class="prof-action-label">Edit name &amp; email<span class="prof-action-sub">${escapeHtml(state.profileName)} · ${escapeHtml(state.profileEmail)}</span></span>
+    <span class="prof-action-right">›</span>
+  </button>`;
 }
 
-function renderAchievements() {
-  const myEvents = getMyEvents();
-  const myCats = getMyCategories();
-  const count = myEvents.length;
-  let earnedCount = 0;
-  MILESTONE_BADGES.forEach((b) => {
-    if (count >= b.need) earnedCount++;
-  });
-  CATEGORY_BADGES.forEach((b) => {
-    if (myCats.has(b.cat)) earnedCount++;
-  });
-  if (myCats.size >= TOTAL_CATEGORIES) earnedCount++;
-  earnedCount += state.specialBadges.length;
-  const lv = getLevel(earnedCount);
-  const nextLvIdx = LEVELS.findIndex((l) => l === lv) + 1;
-  const nextLv = LEVELS[nextLvIdx];
-  const progressPct = nextLv
-    ? Math.min(
-        100,
-        Math.round(((earnedCount - lv.min) / (nextLv.min - lv.min)) * 100),
-      )
-    : 100;
+function accountEditFormHtml() {
+  return `<div class="prof-action-row prof-action-edit-form">
+    <div class="gate-field">
+      <label class="gate-label" for="account-edit-name">Name</label>
+      <input id="account-edit-name" class="gate-input" value="${escapeHtml(state.profileName)}" autocomplete="name"/>
+    </div>
+    <div class="gate-field">
+      <label class="gate-label" for="account-edit-email">Email</label>
+      <input id="account-edit-email" class="gate-input" type="email" value="${escapeHtml(state.profileEmail)}" autocomplete="email"/>
+    </div>
+    <div id="account-edit-error" style="display:none;color:var(--danger,#dc2626);font-size:12px;margin-bottom:8px;"></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-small" style="flex:1;" onclick="saveAccountDetails()">Save</button>
+      <button class="btn btn-outline btn-small" style="flex:1;" onclick="cancelEditAccount()">Cancel</button>
+    </div>
+  </div>`;
+}
 
-  const milestoneCells = MILESTONE_BADGES.map((b) => {
-    const earned = count >= b.need;
-    return trophyCellHtml(
-      b.name,
-      b.desc,
-      b.glyph,
-      b.metal,
-      b.metal,
-      b.tier,
-      earned,
-      earned ? "" : `${count} / ${b.need} events`,
-    );
-  }).join("");
-  const allRounderEarned = myCats.size >= TOTAL_CATEGORIES;
-  const allRounderCell = trophyCellHtml(
-    ALLROUNDER_BADGE.name,
-    ALLROUNDER_BADGE.desc,
-    ALLROUNDER_BADGE.glyph,
-    ALLROUNDER_BADGE.metal,
-    ALLROUNDER_BADGE.glow,
-    ALLROUNDER_BADGE.tier,
-    allRounderEarned,
-    allRounderEarned ? "" : `${myCats.size} / ${TOTAL_CATEGORIES} categories`,
-  );
-  const categoryCells = CATEGORY_BADGES.map((b) => {
-    const earned = myCats.has(b.cat);
-    return badgeCellHtml(
-      b.name,
-      b.desc,
-      b.glyph,
-      CATS[b.cat].color,
-      earned,
-      "",
-    );
-  }).join("");
-  const specialEarned = SPECIAL_BADGES.filter((b) =>
-    state.specialBadges.includes(b.id),
-  );
-  const specialCells = specialEarned
-    .map((b) => badgeCellHtml(b.name, b.desc, b.glyph, "var(--gold)", true, ""))
-    .join("");
-
-  // Full event history (all events)
-  const allEvents = myEvents.slice().reverse();
-  const MUTED_CATS_A = {
-    Creative: "rgba(232,184,75,0.10)",
-    Gaming: "rgba(232,184,75,0.10)",
-    "Movie Nights": "rgba(232,184,75,0.10)",
-    "Board Games": "rgba(232,184,75,0.10)",
-    Meetups: "rgba(232,184,75,0.10)",
-    "Food & Drink": "rgba(232,184,75,0.10)",
-    "Live Music": "rgba(232,184,75,0.10)",
-    "Wellness & Outdoors": "rgba(232,184,75,0.10)",
-    "Tech & Talks": "rgba(232,184,75,0.10)",
+// Real edit, unlike the old editProfile() it replaces — that one just
+// flipped state.editingProfile with no form ever consuming it, so the
+// button silently did nothing. persistProfile() already knows how to
+// upsert name/email; this just points it at the edited values first.
+async function saveAccountDetails() {
+  const nameEl = document.getElementById("account-edit-name");
+  const emailEl = document.getElementById("account-edit-email");
+  const errEl = document.getElementById("account-edit-error");
+  const name = (nameEl?.value || "").trim();
+  const email = (emailEl?.value || "").trim();
+  const showErr = (msg) => {
+    if (errEl) {
+      errEl.textContent = msg;
+      errEl.style.display = "block";
+    }
   };
-  const evTilesHtml = allEvents.length
-    ? allEvents
-        .map((ev) => {
-          const c2 = CATS[ev.category] || { color: "#FFCF33" };
-          const shortTitle =
-            ev.title.length > 28 ? ev.title.substring(0, 26) + "…" : ev.title;
-          const evDate = ev.startsAt
-            ? new Date(ev.startsAt).toLocaleDateString("en-GB", {
-                day: "numeric",
-                month: "short",
-              })
-            : "";
-          const status = eventStatus(ev);
-          const statusDot =
-            status === "live"
-              ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-right:4px;box-shadow:0 0 5px #22c55e88;"></span>`
-              : status === "upcoming"
-                ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c2.color};margin-right:4px;opacity:0.7;"></span>`
-                : "";
-          return `<div class="ev-plate" onclick="openEvent('${ev.id}')" style="background:${hexToRgba(c2.color, 0.08)};border:1px solid ${c2.color}28;" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}">
-          <div style="font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;">${escapeHtml(shortTitle)}</div>
-          <div style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;">${statusDot}${escapeHtml(ev.category)}</div>
-          ${evDate ? `<div style="font-size:10px;color:${c2.color};font-weight:600;margin-top:4px;">${evDate}</div>` : ""}
-        </div>`;
-        })
-        .join("")
-    : `<div style="color:var(--text-muted);font-size:13px;padding:4px 0;">No events yet — browse and RSVP to get started.</div>`;
+  if (!name) return showErr("Name can't be empty.");
+  if (!EMAIL_PATTERN.test(email)) return showErr("Enter a valid email.");
 
-  return `<button class="back-btn" onclick="goBack()">←</button>
+  state.profileName = name;
+  state.profileEmail = email;
+  state.editingProfile = false;
+  try {
+    await persistProfile();
+    showToast("Account updated", "success");
+  } catch (e) {
+    showToast("Couldn't reach the server — try again", "error");
+  }
+  renderView();
+}
 
-    <!-- Level hero -->
-    <div class="achieve-hero">
-      <div class="achieve-badge-big" style="background:${lv.color}22;border-color:${lv.color};color:${lv.color};">${lv.title.substring(0, 2).toUpperCase()}</div>
-      <div class="achieve-hero-text">
-        <div class="achieve-hero-level" style="color:${lv.color};">${lv.title}</div>
-        <div class="achieve-hero-sub">${earnedCount} badge${earnedCount !== 1 ? "s" : ""} earned${nextLv ? ` · ${nextLv.min - earnedCount} more to reach ${nextLv.title}` : " · Max rank!"}</div>
-        <div class="achieve-progress-bar"><div class="achieve-progress-fill" style="width:${progressPct}%;background:${lv.color};"></div></div>
-      </div>
-    </div>
-
-    <!-- Milestones -->
-    <div class="profile-section">
-      <div class="profile-section-label">Milestones</div>
-      <div class="badge-grid list-item-stagger">${milestoneCells}${allRounderCell}</div>
-    </div>
-
-    <!-- Categories explored -->
-    <div class="profile-section">
-      <div class="profile-section-label">Categories explored</div>
-      <div class="badge-grid list-item-stagger">${categoryCells}</div>
-    </div>
-
-    ${
-      specialCells
-        ? `
-    <div class="profile-section">
-      <div class="profile-section-label">Special &amp; community badges</div>
-      <div class="badge-grid list-item-stagger">${specialCells}</div>
-    </div>`
-        : ""
-    }
-
-    <!-- Event history (all) -->
-    ${
-      allEvents.length
-        ? `
-    <div class="profile-section">
-      <div class="profile-section-label">All events (${allEvents.length})</div>
-      <div class="ev-plate-grid list-item-stagger">${evTilesHtml}</div>
-    </div>`
-        : ""
-    }
-
-    <!-- Redeem -->
-    <div class="profile-section">
-      <div class="profile-section-label">Badge codes</div>
-      <div class="panel redeem-box" style="--corner:var(--gold);">
-        <h4>Redeem a badge code</h4>
-        <p>Promoters can issue collectible badges. Got a code from an event? Enter it here.</p>
-        <div class="redeem-row"><input id="redeem-input" class="redeem-input" placeholder="ENTER CODE" onkeydown="if(event.key==='Enter')redeemBadge()"/><button class="btn" style="background:var(--gold);color:#1a1400;" onclick="redeemBadge()">Redeem</button></div>
-        <div class="promoter-note">Running an event and want your own badge? Contact the Cumulus team.</div>
-      </div>
-    </div>`;
+function cancelEditAccount() {
+  state.editingProfile = false;
+  renderView();
 }
 
 function editProfile() {
   state.editingProfile = true;
   renderNav();
   renderView();
-}
-
-function updateAboutCounter(el) {
-  const ctr = document.getElementById("about-counter");
-  if (!ctr) return;
-  const n = el.value.length;
-  ctr.textContent = n + "/150";
-  ctr.classList.toggle("warn", n > 130);
-}
-
-function saveProfileAbout(val) {
-  try {
-    localStorage.setItem("profile_about:" + state.profileName, val.trim());
-  } catch (e) {}
-}
-
-function toggleProfileInterest(tag) {
-  let pi = [];
-  try {
-    const r = localStorage.getItem("profile_interests:" + state.profileName);
-    if (r) pi = JSON.parse(r);
-  } catch (e) {}
-  const idx = pi.indexOf(tag);
-  if (idx === -1) pi.push(tag);
-  else pi.splice(idx, 1);
-  try {
-    localStorage.setItem(
-      "profile_interests:" + state.profileName,
-      JSON.stringify(pi),
-    );
-  } catch (e) {}
-  // Toggle pill without full re-render
-  document.querySelectorAll(".interest-pill").forEach((btn) => {
-    if (btn.textContent === tag)
-      btn.classList.toggle("active", pi.includes(tag));
-  });
 }
 
 // Compact real-event preview card reused wherever a screen needs to show
@@ -1334,14 +527,6 @@ function openViewTicket(evId) {
   renderView();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
-function openMyTickets() {
-  pushNav();
-  state.view = "my-tickets";
-  renderNav();
-  renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
 async function registerFree(evId) {
   const ev = EVENTS.find((e) => e.id === evId);
   if (!ev) return;

@@ -1,10 +1,14 @@
-// ─── Render: My Tickets list ──────────────────────────────────────────────
-function renderMyTickets() {
+// ─── My Tickets — the cards shown inline on the Account screen ────────────
+// Used to be split across two separate near-duplicate screens (a flat list
+// here, and a by-event grouped list reached from the confirmation screen's
+// "View all my tickets" button, which lacked the Transfer/Cancel actions
+// below). Consolidated to this one implementation, embedded directly in
+// renderAccount() — tickets are the core of what the app is for, so they
+// don't need their own separate destination anymore.
+function myTicketsCardsHtml() {
   if (!myTickets.length)
-    return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>My Tickets</h2><p>All your event bookings</p></div>
-    <div class="empty-state">No tickets yet — browse events and book your first one.<br><br><button class="btn" onclick="goBrowse()">Browse Events</button></div>`;
-  const cards = [...myTickets]
+    return `<div class="empty-state">No tickets yet — browse events and book your first one.<br><br><button class="btn" onclick="goBrowse()">Browse Events</button></div>`;
+  return [...myTickets]
     .reverse()
     .map((t) => {
       const ev = EVENTS.find((e) => e.id === t.eventId);
@@ -49,9 +53,6 @@ function renderMyTickets() {
     </div>`;
     })
     .join("");
-  return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>My Tickets</h2><p>${myTickets.length} booking${myTickets.length !== 1 ? "s" : ""}</p></div>
-    ${cards}`;
 }
 
 // Real self-serve cancellation, mirroring deleteEvent()'s Supabase-delete
@@ -120,83 +121,6 @@ function renderCalendarDay() {
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="connect-header"><h2>${dateObj.toLocaleDateString("en-GB", { weekday: "long" })}, ${dateObj.toLocaleDateString("en-GB", { day: "numeric", month: "long" })}</h2><p>${dayEvents.length} event${dayEvents.length !== 1 ? "s" : ""}</p></div>
     ${cards}`;
-}
-
-// ── Nav helpers ──────────────────────────────────────────────────────────
-function openTicketsTab() {
-  state.view = "tickets";
-  renderNav();
-  renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-// ── Tickets tab ──────────────────────────────────────────────────────────
-function renderTicketsTab() {
-  const byEvent = {};
-  myTickets.forEach((t) => {
-    if (!byEvent[t.eventId]) byEvent[t.eventId] = [];
-    byEvent[t.eventId].push(t);
-  });
-  const sortedIds = Object.keys(byEvent)
-    .map(Number)
-    .sort((a, b) => {
-      const ea = EVENTS.find((e) => e.id === a),
-        eb = EVENTS.find((e) => e.id === b);
-      return (ea?.startsAt || 0) - (eb?.startsAt || 0);
-    });
-  const upcoming = sortedIds.filter((id) => {
-    const ev = EVENTS.find((e) => e.id === id);
-    return ev && eventStatus(ev) !== "past";
-  });
-  const past = sortedIds.filter((id) => {
-    const ev = EVENTS.find((e) => e.id === id);
-    return ev && eventStatus(ev) === "past";
-  });
-
-  const renderGroup = (ids, label) => {
-    if (!ids.length) return "";
-    const cards = ids
-      .map((evId) => {
-        const ev = EVENTS.find((e) => e.id === evId);
-        if (!ev) return "";
-        const c = CATS[ev.category];
-        const tickets = byEvent[evId];
-        const status = eventStatus(ev);
-        const total = tickets.reduce((s, t) => s + (t.total || 0), 0);
-        return `<div class="panel" style="--corner:${c.color};padding:16px 18px;margin-bottom:12px;">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;">
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:5px;">
-              <span class="event-badge" style="--cat:;margin-bottom:0;">${ev.category}</span>
-              ${status === "live" ? `<span class="live-chip" style="margin-left:0;"><span class="dot"></span>Live</span>` : ""}
-            </div>
-            <div style="font-size:15px;font-weight:700;line-height:1.2;margin-bottom:4px;">${escapeHtml(ev.title)}</div>
-            <div style="font-size:12px;color:var(--text-muted);">${ev.date} · ${ev.time}</div>
-            <div style="font-size:12px;color:var(--text-muted);">${escapeHtml(ev.venue)}, ${escapeHtml(ev.area)}</div>
-          </div>
-          <div style="text-align:right;flex-shrink:0;">
-            <div style="font-size:15px;font-weight:800;color:${c.color};">${total ? `£${total.toFixed(2)}` : "Free"}</div>
-            <div style="font-size:11px;color:var(--text-muted);">${tickets.length} ticket${tickets.length !== 1 ? "s" : ""}</div>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-small" style="background:${c.color};" onclick="openViewTicket('${evId}')">View Ticket${tickets.length > 1 ? "s" : ""}</button>
-          <button class="btn btn-text btn-small" onclick="downloadICS('${evId}')">+ Cal</button>
-        </div>
-      </div>`;
-      })
-      .join("");
-    return `<div class="section-title">${label}</div>${cards}`;
-  };
-
-  if (!myTickets.length)
-    return `
-    <div class="connect-header" style="padding-top:16px;"><h2>My Tickets</h2><p>Your event bookings</p></div>
-    <div class="empty-state">No tickets yet — browse events and book your first one.<br><br><button class="btn" onclick="goBrowse()">Browse Events</button></div>`;
-  return `
-    <div class="connect-header" style="padding-top:16px;"><h2>My Tickets</h2><p>${upcoming.length} upcoming · ${past.length} past</p></div>
-    ${renderGroup(upcoming, "Upcoming")}
-    ${renderGroup(past, "Past")}`;
 }
 
 // Hosting is frictionless — no eligibility checklist, no connections/check-in
@@ -301,8 +225,8 @@ function renderHostView() {
 // ══════════════════════════════════════════════
 // Protected in the sense that matters: the actual security boundary is
 // server-side (tickets_host_read RLS + check_in_ticket()'s host_id check),
-// not this client-side gate. The Profile entry point just decides whether
-// to *show* the door — see renderProfile()'s conditional row.
+// not this client-side gate. The Account entry point just decides whether
+// to *show* the door — see renderAccount()'s conditional row.
 //
 // Offline strategy: cache the guestlist in IndexedDB when the scanner opens
 // (while there's still signal), check people in against that cache so the
@@ -822,7 +746,7 @@ renderView = function () {
     container.classList.add("view-enter");
     // Stagger child panels
     const panels = container.querySelectorAll(
-      ".panel, .intro-card, .badge-cell, .stat-box",
+      ".panel, .intro-card, .stat-box",
     );
     panels.forEach((el, i) => {
       el.style.animationDelay = `${i * 0.045}s`;
@@ -896,34 +820,6 @@ renderGate = function () {
   });
 };
 
-// --- Card editor stagger ---
-const _origRenderCardEditor = renderCardEditor;
-renderCardEditor = function () {
-  _origRenderCardEditor.apply(this, arguments);
-  requestAnimationFrame(() => {
-    // The card editor's swatch/pattern/tag pickers add up to 250+ elements
-    // across its four tabs. Staggering by a flat per-element index (i * 50ms)
-    // meant elements late in DOM order — e.g. the Pattern tab's buttons —
-    // stayed invisible for 5-15+ seconds if a user switched to that tab
-    // before its turn came up, since switching tabs doesn't re-trigger this
-    // reveal. Cap the index so every field is visible within ~1s of the
-    // editor opening, no matter how many fields exist across all tabs.
-    const fields = document.querySelectorAll(
-      "#card-editor-root label, #card-editor-root input, #card-editor-root textarea, #card-editor-root button",
-    );
-    fields.forEach((el, i) => {
-      el.style.opacity = "0";
-      setTimeout(
-        () => {
-          el.style.transition = "opacity 0.28s ease";
-          el.style.opacity = "";
-        },
-        180 + Math.min(i, 14) * 50,
-      );
-    });
-  });
-};
-
 // --- Smooth map caption on load ---
 window.addEventListener("load", () => {
   setTimeout(() => setupReveal(document.getElementById("view-container")), 300);
@@ -951,14 +847,5 @@ document.addEventListener("keydown", (e) => {
   } catch (err) {}
   try {
     closeActivePopup();
-  } catch (err) {}
-  try {
-    closeBadgePicker();
-  } catch (err) {}
-  try {
-    closeExpandedCard();
-  } catch (err) {}
-  try {
-    if (document.getElementById("card-editor-root")?.innerHTML) closeCardEditor();
   } catch (err) {}
 });

@@ -597,6 +597,51 @@ async function hostCancelEvent(eventId, title) {
   renderView();
 }
 
+// Admin — its own owner-only nav tab (gated by isAdminAccount() in
+// renderNav(), 05-data-loaders.js). Used to be a section buried at the
+// bottom of the old Profile screen, reachable only by scrolling past the
+// whole gamified card/badges layout — now it's one tap away and nothing
+// else shares the screen with it.
+function openAdmin() {
+  pushNav();
+  state.view = "admin";
+  renderNav();
+  renderView();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function renderAdmin() {
+  return `
+    <div class="connect-header"><h2>Admin</h2><p>Approvals, hosts &amp; finances</p></div>
+    <div class="prof-action-list">
+      <button class="prof-action-row" onclick="promptAdminSignIn()">
+        <span class="prof-action-label">Admin sign-in<span class="prof-action-sub" id="admin-auth-sub">Verify with a one-time code to approve events</span></span>
+        <span class="prof-action-right">›</span>
+      </button>
+      <button class="prof-action-row" onclick="openOwnerDash()">
+        <span class="prof-action-label">Finances<span class="prof-action-sub">Live revenue &amp; payouts</span></span>
+        <span class="prof-action-right">›</span>
+      </button>
+      <button class="prof-action-row" onclick="openReview()">
+        <span class="prof-action-label">Host applications<span class="prof-action-sub">Review &amp; approve hosts</span></span>
+        <span class="prof-action-right">›</span>
+      </button>
+      <button class="prof-action-row" onclick="openEventApprovals()">
+        <span class="prof-action-label">Event approvals<span class="prof-action-sub">Review &amp; publish public events</span></span>
+        <span class="prof-action-right">›</span>
+      </button>
+      <button class="prof-action-row prof-action-danger" onclick="clearAllUsers()">
+        <span class="prof-action-label">Clear all users<span class="prof-action-sub">Delete every account &amp; email (keeps events)</span></span>
+        <span class="prof-action-right">›</span>
+      </button>
+      <button class="prof-action-row prof-action-danger" onclick="if(confirm('Delete ALL rows in users, events, rsvps, tickets? This cannot be undone.')){clearAllTestData(true)}">
+        <span class="prof-action-label">Wipe all test data<span class="prof-action-sub">Users + events + everything</span></span>
+        <span class="prof-action-right">›</span>
+      </button>
+    </div>
+  `;
+}
+
 function openOwnerDash() {
   pushNav();
   state.view = "owner-dash";
@@ -1239,9 +1284,8 @@ function renderView() {
     container.innerHTML = renderDetail(state.selectedEventId);
   else if (state.view === "host-profile")
     container.innerHTML = renderHostProfile();
-  else if (state.view === "profile") container.innerHTML = renderProfile();
-  else if (state.view === "achievements")
-    container.innerHTML = renderAchievements();
+  else if (state.view === "account") container.innerHTML = renderAccount();
+  else if (state.view === "admin") container.innerHTML = renderAdmin();
   else if (state.view === "calendar") container.innerHTML = renderCalendar();
   else if (state.view === "host") {
     container.innerHTML = renderHostView();
@@ -1253,11 +1297,8 @@ function renderView() {
   } else if (state.view === "confirmed") {
     container.innerHTML = renderConfirmed();
     setTimeout(afterRenderConfirmed, 60);
-  } else if (state.view === "my-tickets")
-    container.innerHTML = renderMyTickets();
-  else if (state.view === "calendar-day")
+  } else if (state.view === "calendar-day")
     container.innerHTML = renderCalendarDay();
-  else if (state.view === "tickets") container.innerHTML = renderTicketsTab();
   else if (state.view === "scan-picker")
     container.innerHTML = renderScannerPicker();
   else if (state.view === "scan") container.innerHTML = renderScanner();
@@ -1597,26 +1638,10 @@ function openHostProfile(hostKey, hostName) {
   pushNav();
   state.selectedHostKey = hostKey;
   state.selectedHostName = hostName;
-  state.viewedHostProfile = null;
   state.view = "host-profile";
   renderNav();
   renderView();
   window.scrollTo({ top: 0, behavior: "smooth" });
-  // hostKey is only a real users.id (so a public_profiles lookup is
-  // possible) for reviewed hosts — legacy events store a bare name string
-  // in e.host with no linked account, and fetchPublicProfile would just
-  // come back empty for those anyway. Fetched in the background so nav
-  // never blocks on it; re-renders only if still on this same host's page
-  // once it resolves.
-  const isRealHost = EVENTS.some((e) => e.hostId === hostKey);
-  if (isRealHost) {
-    fetchPublicProfile(hostKey).then((profile) => {
-      if (state.view === "host-profile" && state.selectedHostKey === hostKey) {
-        state.viewedHostProfile = profile;
-        renderView();
-      }
-    });
-  }
 }
 
 // Big square card for the host profile's horizontally-scrolling event row —
@@ -1674,31 +1699,7 @@ function renderHostProfile() {
   const following = isFollowingHost(hostKey);
   const safeKey = escapeHtml(String(hostKey)).replace(/'/g, "&#39;");
   const safeName = escapeHtml(hostName).replace(/'/g, "&#39;");
-
-  // Real card/badge data for reviewed hosts, once fetchPublicProfile()
-  // (kicked off from openHostProfile) resolves — null on first paint or for
-  // legacy hosts with no linked account, in which case this whole block
-  // just falls back to the plain monogram + no achievements row.
-  const profile = state.viewedHostProfile;
-  const accentDef = profile && CARD_ACCENT_COLORS.find((c) => c.id === profile.card_accent);
-  const accentHex = (accentDef && accentDef.hex) || "#FFCF33";
-  const avatarHtml = profile && profile.avatar_url
-    ? `<div class="host-profile-avatar host-profile-avatar-photo"><img src="${profile.avatar_url}" alt=""/></div>`
-    : `<div class="host-profile-avatar" style="${profile ? `background:${accentHex}22;border-color:${accentHex}55;color:${accentHex};` : ""}">${hostInitials(hostName)}</div>`;
-  const featuredIds = (profile && profile.card_featured_badges) || [];
-  const featuredBadges = featuredIds.map((id) => getBadgeById(id)).filter(Boolean);
-  const achievementsHtml = featuredBadges.length
-    ? `<div class="section-title">Achievements</div>
-       <div class="host-achievements-row">${featuredBadges
-         .map(
-           (b) =>
-             `<div class="host-achievement-chip" style="--bc:${b.color};" title="${escapeHtml(b.desc)}"><span class="host-achievement-glyph">${b.glyph}</span><span>${escapeHtml(b.name)}</span></div>`,
-         )
-         .join("")}</div>`
-    : "";
-  const bioHtml = profile && profile.card_bio
-    ? `<p class="host-profile-bio">${escapeHtml(profile.card_bio)}</p>`
-    : "";
+  const avatarHtml = `<div class="host-profile-avatar">${hostInitials(hostName)}</div>`;
 
   const statsHtml = `<div class="host-stats-row">
     <div class="host-stat"><div class="host-stat-num">${hostEvents.length}</div><div class="host-stat-label">Event${hostEvents.length !== 1 ? "s" : ""} hosted</div></div>
@@ -1722,9 +1723,7 @@ function renderHostProfile() {
       </div>
       <button class="btn-follow-host${following ? " following" : ""}" onclick="toggleFollowHost('${safeKey}','${safeName}')">${following ? "Following" : "Follow"}</button>
     </div>
-    ${bioHtml}
     ${statsHtml}
-    ${achievementsHtml}
     <div class="section-title">Upcoming events</div>
     ${upcomingHtml}`;
 }
@@ -1867,37 +1866,5 @@ function toggleFollowHost(hostKey, hostName) {
     );
   } catch (e) {}
   renderView();
-}
-
-let _sheenHandler = null,
-  _sheenMouseHandler = null,
-  _sheenCard = null;
-
-function initCardSheen() {
-  const sheen = document.getElementById("card-xl-sheen");
-  if (!sheen) return;
-  // Scoped to the front face specifically — openExpandedCard() now renders
-  // two .cpass-card elements (front + back, see the flip redesign), and the
-  // mouse-tracked shine only makes sense on whichever face is actually
-  // facing the pointer by default.
-  const card = document.querySelector(".cpass-face-front");
-  if (!card) return;
-  _sheenCard = card;
-  function applySheen(sx, sy) {
-    sheen.style.transform = `translate(${sx}px,${sy}px)`;
-  }
-  _sheenHandler = (e) => {
-    const g = Math.max(-50, Math.min(50, e.gamma || 0));
-    const b = Math.max(-40, Math.min(40, (e.beta || 15) - 15));
-    applySheen((g / 50) * 65, (b / 40) * 50);
-  };
-  _sheenMouseHandler = (e) => {
-    const r = card.getBoundingClientRect();
-    const x = ((e.clientX - r.left) / r.width - 0.5) * 2;
-    const y = ((e.clientY - r.top) / r.height - 0.5) * 2;
-    applySheen(x * 65, y * 50);
-  };
-  window.addEventListener("deviceorientation", _sheenHandler);
-  card.addEventListener("mousemove", _sheenMouseHandler);
 }
 

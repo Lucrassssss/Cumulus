@@ -67,25 +67,6 @@ function showConfirm(title, body, confirmLabel, dangerFnName) {
   ov.innerHTML = `<div class="cu-confirm-sheet" role="dialog" aria-modal="true"><div class="cu-confirm-title">${escapeHtml(title)}</div><div class="cu-confirm-body">${escapeHtml(body)}</div><div class="cu-confirm-actions"><button class="btn btn-cancel" onclick="document.getElementById('cu-confirm-overlay')?.remove()">Cancel</button><button class="btn" onclick="document.getElementById('cu-confirm-overlay')?.remove();window['${dangerFnName}'](true)">${escapeHtml(confirmLabel)}</button></div></div>`;
   document.body.appendChild(ov);
 }
-function getTheme(id) {
-  return CARD_THEMES.find((t) => t.id === id) || CARD_THEMES[0];
-}
-function getBgStyle(id) {
-  return CARD_BG_STYLES.find((s) => s.id === id) || CARD_BG_STYLES[0];
-}
-function resolveCardColors(bgStyleId, accentHex) {
-  const style = getBgStyle(bgStyleId);
-  const acc = accentHex || "#FFCF33";
-  const isDark = style.dark;
-  return {
-    bg: style.bg,
-    accent: acc,
-    text: isDark ? "#fff" : "#1e293b",
-    textSoft: isDark ? "rgba(255,255,255,0.6)" : "rgba(30,41,59,0.58)",
-    border: `${acc}40`,
-    dark: isDark,
-  };
-}
 function applyTheme() {
   document.documentElement.setAttribute("data-theme", state.theme);
 }
