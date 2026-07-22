@@ -1015,6 +1015,7 @@ function _restoreUserFromRow(existing) {
         : [],
       fact: existing.card_fact || "",
       featuredBadges: existing.card_featured_badges || [],
+      memberSince: existing.created_at || null,
     };
   }
 }

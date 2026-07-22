@@ -1876,7 +1876,11 @@ let _sheenHandler = null,
 function initCardSheen() {
   const sheen = document.getElementById("card-xl-sheen");
   if (!sheen) return;
-  const card = document.querySelector(".cpass-card");
+  // Scoped to the front face specifically — openExpandedCard() now renders
+  // two .cpass-card elements (front + back, see the flip redesign), and the
+  // mouse-tracked shine only makes sense on whichever face is actually
+  // facing the pointer by default.
+  const card = document.querySelector(".cpass-face-front");
   if (!card) return;
   _sheenCard = card;
   function applySheen(sx, sy) {

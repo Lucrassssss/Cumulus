@@ -54,6 +54,8 @@ function getFeaturedBadges() {
     .slice(0, 3);
 }
 
+const CPASS_FLIP_ICON = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.1v-2a4 4 0 0 1 4-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.9v2a4 4 0 0 1-4 4H3"/></svg>`;
+
 function openExpandedCard() {
   const old = document.getElementById("card-xl-overlay");
   if (old) old.remove();
@@ -87,6 +89,7 @@ function openExpandedCard() {
   const myEvents = getMyEvents();
   const earnedTotal = getAllBadges().filter((b) => b.earned).length;
   const lv = getLevel(earnedTotal);
+  const nextLv = LEVELS[LEVELS.findIndex((l) => l === lv) + 1];
 
   const uid =
     "CU·" +
@@ -102,13 +105,17 @@ function openExpandedCard() {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+  const memberSince = card.memberSince
+    ? new Date(card.memberSince).toLocaleDateString("en-GB", { month: "short", year: "numeric" })
+    : "";
 
   const avatar = card.avatarUrl
     ? `<div class="cpass-avatar" style="border-color:${accent};"><img src="${card.avatarUrl}" alt=""/></div>`
     : `<div class="cpass-avatar cpass-avatar-mono" style="border-color:${accentAlpha(accent, 0.55)};background:${accentAlpha(accent, 0.16)};color:${accent};">${initStr}</div>`;
 
-  // Featured badges — the hero. 3 slots: chosen earned badge, or an "add"
-  // placeholder. "spotlight" layout enlarges slot 0 and shrinks the other two.
+  // Featured badges — the hero, always on the front face. 3 slots: chosen
+  // earned badge, or an "add" placeholder. "spotlight" layout enlarges slot
+  // 0 and shrinks the other two.
   const featured = getFeaturedBadges();
   const slotsHtml = [0, 1, 2]
     .map((i) => {
@@ -128,34 +135,14 @@ function openExpandedCard() {
     })
     .join("");
 
-  const statsHtml = `<div class="cpass-stats">
-          <div class="cpass-stat"><span class="cpass-stat-num">${myEvents.length}</span><span class="cpass-stat-label">Events</span></div>
-          <div class="cpass-stat"><span class="cpass-stat-num">${earnedTotal}</span><span class="cpass-stat-label">Badges</span></div>
-        </div>`;
-  const badgesHtml = `<div class="cpass-badges-section">
-          <div class="cpass-section-head">
-            <span class="cpass-section-label">Featured badges</span>
-            <button class="cpass-edit" onclick="openBadgePicker()">Edit</button>
-          </div>
-          <div class="cpass-badges">${slotsHtml}</div>
-        </div>`;
-  // "standard"/"compact" keep badges-then-stats; "stats-first" swaps the
-  // order; "minimal" drops stats entirely; "spotlight" keeps standard order
-  // (the enlarged slot above is what distinguishes it).
-  const bodySectionsHtml =
-    layout === "stats-first"
-      ? statsHtml + badgesHtml
-      : layout === "minimal"
-        ? badgesHtml
-        : badgesHtml + statsHtml;
-
-  const html = `<div class="card-xl-overlay" id="card-xl-overlay" onclick="if(event.target===this)closeExpandedCard()">
-    <div class="card-xl-outer">
-      <button class="card-xl-close" onclick="closeExpandedCard()" aria-label="Close">✕</button>
-      <div class="cpass-card cpass-border-${borderDef.id} cpass-layout-${layout}" id="cpass-card" style="--acc:${accent};--acc-glow:${accentAlpha(accent, 0.3)};--acc-soft:${accentAlpha(accent, 0.14)};--card-bg:${themeDef.bg};--card-fg-rgb:${cardFgRgb};">
+  // Real pass anatomy (Apple Wallet's front/back split, applied to the one
+  // thing Cumulus's own card already calls itself — a "Pass"): front is the
+  // glanceable identity + featured badges; back is the scrollable detail —
+  // stats, tier progress, membership fine print. Nothing here is fabricated
+  // — memberSince/uid/areas/stats are all real fields already on state.myCard.
+  const frontFace = `<div class="cpass-card cpass-face cpass-face-front cpass-border-${borderDef.id} cpass-layout-${layout}" id="cpass-card">
         <div class="cpass-ambient"></div>
 
-        <!-- Header: wordmark + tier -->
         <div class="cpass-head">
           <div class="cpass-logo">
             <span class="cpass-logo-mark" style="background:${accent};"><svg viewBox="0 0 10 10"><circle cx="5" cy="4" r="2.5"/><ellipse cx="5" cy="7.5" rx="3.5" ry="1.5"/></svg></span>
@@ -166,7 +153,6 @@ function openExpandedCard() {
           </div>
         </div>
 
-        <!-- Identity -->
         <div class="cpass-id">
           ${avatar}
           <div class="cpass-id-text">
@@ -175,21 +161,81 @@ function openExpandedCard() {
           </div>
         </div>
 
-        ${bodySectionsHtml}
+        <div class="cpass-badges-section">
+          <div class="cpass-section-head">
+            <span class="cpass-section-label">Featured badges</span>
+            <button class="cpass-edit" onclick="openBadgePicker()">Edit</button>
+          </div>
+          <div class="cpass-badges">${slotsHtml}</div>
+        </div>
 
-        <!-- Footer pass band -->
+        <button class="cpass-flip-btn" onclick="flipExpandedCard()" aria-label="Flip pass to see stats and details">${CPASS_FLIP_ICON}</button>
+        <div class="cpass-sheen" id="card-xl-sheen"></div>
+        <div class="cpass-edge" style="background:linear-gradient(90deg,${accentAlpha(accent, 0.6)},${accent},${accentAlpha(accent, 0.6)});"></div>
+      </div>`;
+
+  // "minimal" drops the stats block entirely on the back (just membership
+  // fine print); "stats-first" adds a level-progress bar above the raw
+  // numbers; standard/compact/spotlight get the numbers alone.
+  const statsBlockHtml =
+    layout === "minimal"
+      ? ""
+      : `<div class="cpass-stats">
+          <div class="cpass-stat"><span class="cpass-stat-num">${myEvents.length}</span><span class="cpass-stat-label">Events</span></div>
+          <div class="cpass-stat"><span class="cpass-stat-num">${earnedTotal}</span><span class="cpass-stat-label">Badges</span></div>
+        </div>
+        ${
+          layout === "stats-first"
+            ? `<div class="cpass-progress" role="progressbar" aria-valuenow="${earnedTotal}" aria-valuemin="${lv.min}" aria-valuemax="${nextLv ? nextLv.min : lv.min}" aria-label="Progress to ${nextLv ? nextLv.title : "max rank"}">
+                <div class="cpass-progress-fill" style="width:${nextLv ? Math.min(100, Math.round(((earnedTotal - lv.min) / (nextLv.min - lv.min)) * 100)) : 100}%;background:${accent};"></div>
+              </div>
+              <div class="cpass-progress-label">${nextLv ? `${nextLv.min - earnedTotal} more to ${nextLv.title}` : "Max rank reached"}</div>`
+            : ""
+        }`;
+
+  const backFace = `<div class="cpass-card cpass-face cpass-face-back cpass-border-${borderDef.id} cpass-layout-${layout}">
+        <div class="cpass-ambient"></div>
+
+        <div class="cpass-head">
+          <div class="cpass-logo">
+            <span class="cpass-logo-mark" style="background:${accent};"><svg viewBox="0 0 10 10"><circle cx="5" cy="4" r="2.5"/><ellipse cx="5" cy="7.5" rx="3.5" ry="1.5"/></svg></span>
+            <span class="cpass-logo-text">Pass details</span>
+          </div>
+          <div class="cpass-tier" style="border-color:${accentAlpha(accent, 0.45)};background:${accentAlpha(accent, 0.14)};color:${accent};">
+            <span class="cpass-tier-dot" style="background:${accent};"></span>${lv.title}
+          </div>
+        </div>
+
+        <div class="cpass-back-body">${statsBlockHtml}</div>
+
+        <div class="cpass-back-fineprint">
+          ${memberSince ? `<div class="cpass-fineprint-row"><span>Member since</span><span>${escapeHtml(memberSince)}</span></div>` : ""}
+          ${areas ? `<div class="cpass-fineprint-row"><span>London spots</span><span>${escapeHtml(areas)}</span></div>` : ""}
+        </div>
+
         <div class="cpass-foot">
           <div>
             <div class="cpass-foot-label">Cumulus Pass</div>
-            <div class="cpass-foot-uid">${uid}${areas ? ` · ${escapeHtml(areas)}` : ""}</div>
+            <div class="cpass-foot-uid">${uid}</div>
           </div>
           <div class="cpass-foot-mark" style="background:${accentAlpha(accent, 0.2)};color:${accent};">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="5"/><ellipse cx="12" cy="19" rx="8" ry="4"/></svg>
           </div>
         </div>
 
-        <div class="cpass-sheen" id="card-xl-sheen"></div>
+        <button class="cpass-flip-btn" onclick="flipExpandedCard()" aria-label="Flip back to front">${CPASS_FLIP_ICON}</button>
+        <div class="cpass-sheen cpass-sheen-static"></div>
         <div class="cpass-edge" style="background:linear-gradient(90deg,${accentAlpha(accent, 0.6)},${accent},${accentAlpha(accent, 0.6)});"></div>
+      </div>`;
+
+  const html = `<div class="card-xl-overlay" id="card-xl-overlay" onclick="if(event.target===this)closeExpandedCard()">
+    <div class="card-xl-outer">
+      <button class="card-xl-close" onclick="closeExpandedCard()" aria-label="Close">✕</button>
+      <div class="cpass-flip" id="cpass-flip" style="--acc:${accent};--acc-glow:${accentAlpha(accent, 0.3)};--acc-soft:${accentAlpha(accent, 0.14)};--card-bg:${themeDef.bg};--card-fg-rgb:${cardFgRgb};">
+        <div class="cpass-flip-inner" id="cpass-flip-inner">
+          ${frontFace}
+          ${backFace}
+        </div>
       </div>
     </div>
   </div>`;
@@ -200,13 +246,15 @@ function openExpandedCard() {
     if (ov)
       requestAnimationFrame(() => {
         ov.classList.add("open");
-        const sheenCard = document.getElementById("cpass-card");
-        if (sheenCard) {
-          window.__cpassCard = sheenCard;
-        }
         initCardSheen();
       });
   });
+}
+
+function flipExpandedCard() {
+  const inner = document.getElementById("cpass-flip-inner");
+  if (!inner) return;
+  inner.classList.toggle("flipped");
 }
 
 // ── Badge picker — choose up to 3 earned badges to feature on the pass ──────

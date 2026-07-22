@@ -361,6 +361,7 @@ function openCardEditor(eventId, welcome) {
         photo: "",
         avatarUrl: ex.avatarUrl || "",
         areas: Array.isArray(ex.areas) ? ex.areas.slice() : [],
+        _appliedLook: null,
       }
     : {
         theme: "obsidian",
@@ -376,6 +377,7 @@ function openCardEditor(eventId, welcome) {
         photo: "",
         avatarUrl: "",
         areas: [],
+        _appliedLook: null,
       };
   renderCardEditor();
 }
@@ -438,10 +440,19 @@ function removeCardPhoto() {
     </div>
     <div class="ce-photo-about-lbl">Add photo<span>Shows in your card corner</span></div>`;
 }
+// A manual tweak on any single axis means the draft no longer matches
+// whichever Signature Look (if any) seeded it — un-mark it rather than
+// leave a stale "active" preset that no longer reflects the real draft.
+function _clearAppliedLook() {
+  if (!cardDraft._appliedLook) return;
+  cardDraft._appliedLook = null;
+  document.querySelectorAll(".ce-look-card").forEach((b) => b.classList.remove("active"));
+}
 function selectCardTheme(id) {
   captureDraftFields();
   cardDraft.theme = id;
   cardDraft.bgStyle = id;
+  _clearAppliedLook();
   updateCardPreview();
   document
     .querySelectorAll(".cc-style-btn")
@@ -450,6 +461,7 @@ function selectCardTheme(id) {
 function selectCardAccentColor(hex, id) {
   captureDraftFields();
   cardDraft.accentColor = hex;
+  _clearAppliedLook();
   updateCardPreview();
   document
     .querySelectorAll(".cc-swatch")
@@ -458,6 +470,7 @@ function selectCardAccentColor(hex, id) {
 function selectCardBorder(id) {
   captureDraftFields();
   cardDraft.border = id;
+  _clearAppliedLook();
   updateCardPreview();
   document
     .querySelectorAll("[data-border]")
@@ -466,6 +479,7 @@ function selectCardBorder(id) {
 function selectCardLayout(id) {
   captureDraftFields();
   cardDraft.layout = id;
+  _clearAppliedLook();
   updateCardPreview();
   document
     .querySelectorAll("[data-layout]")
@@ -474,6 +488,7 @@ function selectCardLayout(id) {
 function selectCardFont(id) {
   captureDraftFields();
   cardDraft.font = id;
+  _clearAppliedLook();
   updateCardPreview();
   document
     .querySelectorAll("[data-font]")
@@ -558,12 +573,46 @@ function updateCardPreview() {
     ph.style.borderColor = t.accent;
   }
 }
+// Applying a Signature Look just seeds the five underlying fields
+// (theme/accent/border/layout/font) that the granular pickers already
+// control — nothing new to persist, saveCard() sends the same patch either
+// way. Re-renders the whole editor rather than patching each tab/preview
+// individually since a look touches every tab at once.
+function applySignatureLook(id) {
+  const look = CARD_SIGNATURE_LOOKS.find((l) => l.id === id);
+  if (!look) return;
+  const accentDef = CARD_ACCENT_COLORS.find((c) => c.id === look.accent);
+  captureDraftFields();
+  cardDraft.theme = look.theme;
+  cardDraft.bgStyle = look.theme;
+  cardDraft.accentColor = (accentDef && accentDef.hex) || cardDraft.accentColor;
+  cardDraft.border = look.border;
+  cardDraft.layout = look.layout;
+  cardDraft.font = look.font;
+  cardDraft._appliedLook = id;
+  renderCardEditor();
+}
+
 function renderCardEditor() {
   const allowSkip = true;
   const t = resolveCardColors(
     cardDraft.bgStyle || cardDraft.theme,
     cardDraft.accentColor,
   );
+
+  const signatureLooksHtml = `<div class="ce-looks-row">
+    ${CARD_SIGNATURE_LOOKS.map((look) => {
+      const looksAccent = CARD_ACCENT_COLORS.find((c) => c.id === look.accent);
+      const looksTheme = CARD_BG_STYLES.find((s) => s.id === look.theme);
+      const active = cardDraft._appliedLook === look.id;
+      return `<button class="ce-look-card${active ? " active" : ""}" onclick="applySignatureLook('${look.id}')" title="${escapeHtml(look.blurb)}">
+        <span class="ce-look-swatch" style="background:${looksTheme ? looksTheme.bg : "#222"};">
+          <span class="ce-look-swatch-dot" style="background:${looksAccent ? looksAccent.hex : "#FFCF33"};"></span>
+        </span>
+        <span class="ce-look-name">${escapeHtml(look.name)}</span>
+      </button>`;
+    }).join("")}
+  </div>`;
 
   // Build color swatch grid by color family
   const colorFamilies = [
@@ -979,6 +1028,14 @@ function renderCardEditor() {
 
       <!-- RIGHT — tabbed controls -->
       <div class="ce-right">
+
+        <!-- Signature Looks: curated one-tap presets across all 5 axes,
+             sitting above the granular pickers as the fast path to a good
+             result — see CARD_SIGNATURE_LOOKS. -->
+        <div class="ce-section ce-looks-section">
+          <div class="ce-section-label">Signature looks</div>
+          ${signatureLooksHtml}
+        </div>
 
         <!-- Tab bar: Card Base | Frame | Accent | About You -->
         <div class="ce-tabs-bar">

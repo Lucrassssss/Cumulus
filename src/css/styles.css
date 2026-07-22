@@ -4317,6 +4317,168 @@ body.no-scroll {
   max-width: 420px;
   position: relative;
   height: min(88dvh, 760px);
+  transform: scale(0.94) translateY(10px);
+  opacity: 0;
+  transition:
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.4s ease-out;
+}
+
+.card-xl-overlay.open .card-xl-outer {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-xl-outer {
+    transition: opacity 0.2s ease-out;
+    transform: none;
+  }
+}
+
+/* ── Pass flip: front (identity + featured badges) / back (stats, tier
+ * progress, membership fine print) — the real front/back split a physical
+ * pass or Wallet card has, instead of one face carrying everything. ── */
+.cpass-flip {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  perspective: 1800px;
+}
+
+.cpass-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cpass-flip-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.cpass-card.cpass-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.cpass-face-back {
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cpass-flip-inner {
+    transition: none;
+  }
+}
+
+.cpass-flip-btn {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  min-width: 44px;
+  min-height: 44px;
+  margin: -2px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--card-fg-rgb, 244, 241, 234), 0.1);
+  border: 1px solid rgba(var(--card-fg-rgb, 244, 241, 234), 0.18);
+  color: rgb(var(--card-fg-rgb, 244, 241, 234));
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+  z-index: 5;
+}
+
+.cpass-flip-btn:hover {
+  background: rgba(var(--card-fg-rgb, 244, 241, 234), 0.18);
+}
+
+.cpass-flip-btn:active {
+  transform: scale(0.92);
+}
+
+.cpass-flip-btn:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+}
+
+.cpass-sheen-static {
+  opacity: 0.22;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 65%
+  );
+}
+
+.cpass-back-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+}
+
+.cpass-back-fineprint {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(var(--card-fg-rgb, 244, 241, 234), 0.1);
+  border-bottom: 1px solid rgba(var(--card-fg-rgb, 244, 241, 234), 0.1);
+}
+
+.cpass-fineprint-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11.5px;
+}
+
+.cpass-fineprint-row span:first-child {
+  color: rgba(var(--card-fg-rgb, 244, 241, 234), 0.5);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+.cpass-fineprint-row span:last-child {
+  color: rgba(var(--card-fg-rgb, 244, 241, 234), 0.82);
+  font-weight: 600;
+  text-align: right;
+}
+
+.cpass-progress {
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(var(--card-fg-rgb, 244, 241, 234), 0.14);
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.cpass-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cpass-progress-label {
+  margin-top: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: rgba(var(--card-fg-rgb, 244, 241, 234), 0.55);
 }
 
 .profile-id-card {
@@ -4447,6 +4609,80 @@ body.no-scroll {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+}
+
+/* ── Signature Looks: the one-tap fast path, sits above the granular
+ * pickers in the card editor ── */
+.ce-looks-section {
+  padding-bottom: 16px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ce-looks-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 2px 2px 6px;
+  margin: 0 -2px;
+}
+
+.ce-look-card {
+  flex: 0 0 auto;
+  width: 84px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 14px;
+  transition: transform 0.14s ease;
+}
+
+.ce-look-card:hover {
+  transform: translateY(-2px);
+}
+
+.ce-look-swatch {
+  width: 100%;
+  height: 52px;
+  border-radius: 11px;
+  border: 1.5px solid var(--line);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 6px;
+  transition:
+    border-color 0.14s,
+    box-shadow 0.14s;
+}
+
+.ce-look-card.active .ce-look-swatch {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.ce-look-swatch-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.ce-look-name {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-soft);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.ce-look-card.active .ce-look-name {
+  color: var(--text);
 }
 
 .cc-pattern-btn {
@@ -9650,16 +9886,21 @@ textarea.gate-input {
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  animation: cpass-foil-sweep 7s ease-in-out infinite;
+  background-position: 100% 50%;
+  animation: cpass-foil-sweep 2.4s cubic-bezier(0.16, 1, 0.3, 1) 1;
   pointer-events: none;
   z-index: 2;
 }
+/* One sweep on open (the pass "catching the light" as it's revealed), then
+ * it rests — an infinite loop reads as decoration running forever rather
+ * than a moment, the exact distinction Discord draws between its Profile
+ * Effects (play once on open) and an ambient background loop. Re-triggers
+ * naturally every time openExpandedCard() re-inserts this element. */
 @keyframes cpass-foil-sweep {
-  0%,
-  100% {
+  0% {
     background-position: 0% 50%;
   }
-  50% {
+  100% {
     background-position: 100% 50%;
   }
 }
@@ -9715,6 +9956,15 @@ textarea.gate-input {
 .cpass-card > *:not(.cpass-ambient):not(.cpass-sheen) {
   position: relative;
   z-index: 1;
+}
+
+/* Equal-specificity re-assertion (three class-selectors, matching the
+ * exclusion rule above), placed after it so source order breaks the tie:
+ * .cpass-flip-btn's own position:absolute (0,1,0) alone would otherwise
+ * lose to the exclusion rule above (0,3,0) regardless of order. */
+.cpass-card.cpass-face > .cpass-flip-btn {
+  position: absolute;
+  z-index: 5;
 }
 
 .cpass-head {

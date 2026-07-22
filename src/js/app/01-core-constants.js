@@ -1185,6 +1185,80 @@ const CARD_FONTS = [
   { id: "dm-mono", name: "DM Mono", family: "'DM Mono', monospace", weight: 500 },
 ];
 
+// ─── Signature Looks (curated presets) ──────────────────────────────────────
+// The granular theme/accent/border/layout/font pickers below are a genuine
+// combinatorial space, which is exactly the problem: five independent axes
+// can just as easily land on a muddy, mismatched combo as a great one. Each
+// entry here is a hand-picked combination across all five axes that's
+// already proven to work together — a one-tap "great result" rather than
+// forcing every user through five separate decisions to get there (same
+// shape as Steam's bundled "Special Profile", one purchase = frame + BG +
+// mini-profile matched as a set). Picking a look just seeds the five
+// pickers with these values — nothing is removed, a user can still tweak
+// any single axis afterward.
+const CARD_SIGNATURE_LOOKS = [
+  {
+    id: "golden-hour",
+    name: "Golden Hour",
+    blurb: "The house gold, dusk-warmed",
+    theme: "sunset",
+    accent: "gold",
+    border: "glow",
+    layout: "standard",
+    font: "dm-sans",
+  },
+  {
+    id: "obsidian-foil",
+    name: "Obsidian Foil",
+    blurb: "Sleek dark, shimmering edge",
+    theme: "obsidian",
+    accent: "neon-cyan",
+    border: "foil",
+    layout: "spotlight",
+    font: "sora",
+  },
+  {
+    id: "night-market",
+    name: "Night Market",
+    blurb: "Ticket-stub formal, jade pop",
+    theme: "midnight",
+    accent: "jade-ac",
+    border: "double",
+    layout: "stats-first",
+    font: "plex-mono",
+  },
+  {
+    id: "vintage-stamp",
+    name: "Vintage Stamp",
+    blurb: "Sepia, pressed-edge, serif",
+    theme: "sepia",
+    accent: "bronze",
+    border: "engraved",
+    layout: "compact",
+    font: "instrument-serif",
+  },
+  {
+    id: "rooftop-glow",
+    name: "Rooftop Glow",
+    blurb: "Twilight gradient, corner marks",
+    theme: "twilight",
+    accent: "hot-pink",
+    border: "corner",
+    layout: "standard",
+    font: "inter",
+  },
+  {
+    id: "midnight-ink",
+    name: "Midnight Ink",
+    blurb: "Understated, hairline edge",
+    theme: "cosmos",
+    accent: "silver",
+    border: "hairline",
+    layout: "minimal",
+    font: "newsreader",
+  },
+];
+
 const LONDON_AREAS = [
   "Shoreditch",
   "Dalston",
