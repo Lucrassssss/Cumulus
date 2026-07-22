@@ -11493,6 +11493,33 @@ body,
 
 #app[data-view="checkout"] #view-container {
   padding-bottom: 92px;
+  /* #view-container's own will-change:opacity,transform (base rule above)
+   * makes it a containing block for position:fixed descendants per spec —
+   * so .checkout-cta-bar below was never actually fixed to the real
+   * viewport, it was fixed relative to THIS scrolling column instead,
+   * drifting as content (the real Stripe card form) grew taller and
+   * colliding with whatever followed it. Same gotcha already hit once in
+   * this codebase (see the app.dataset.view comment in 09-host-
+   * analytics.js) — same fix: opt this view back out of it.
+   *
+   * will-change:auto alone wasn't enough — confirmed by moving the CTA
+   * bar to a live page (document.body.appendChild) and watching it snap
+   * to the correct position, then moving it back under #view-container
+   * and watching it break again, with every containing-block-triggering
+   * *property* (transform/filter/backdrop-filter/contain/perspective)
+   * checked and reading `none`/`auto` throughout the whole ancestor
+   * chain. The actual cause: .view-enter's `animation: viewSlideUp ...
+   * both` is still an ACTIVE running animation targeting `transform` —
+   * browsers key containing-block creation off "has an animation
+   * currently in effect on transform", not off the resolved value, so
+   * even overriding the resolved value with `transform: none !important`
+   * (an earlier attempt at this fix) doesn't stop it: the animation
+   * itself has to be turned off. `animation: none` does that. Trade-off:
+   * checkout loses the slide-up entrance every other view gets, in
+   * exchange for the Pay button actually being fixed to the screen. */
+  animation: none !important;
+  transform: none !important;
+  will-change: auto;
 }
 
 .checkout-summary-toggle {
@@ -11794,6 +11821,17 @@ body,
   }
   .checkout-skeleton-row {
     height: 14px;
+  }
+
+  /* Belt-and-suspenders alongside the will-change fix above: .checkout-
+   * cta-bar is position:fixed and contributes no flow height, so whatever
+   * follows it in the DOM (.checkout-footer-note) would otherwise render
+   * directly against #payment-element's real bottom edge — fine when the
+   * mounted Stripe form is short, but colliding with the bar once it has
+   * its actual card-field height. This guarantees clearance regardless of
+   * how tall the real payment element turns out to be. */
+  #payment-element {
+    margin-bottom: 88px;
   }
 
   .checkout-cta-bar {
