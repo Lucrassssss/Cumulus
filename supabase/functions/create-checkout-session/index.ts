@@ -173,7 +173,7 @@ Deno.serve(async (req: Request) => {
   const secretKey = Deno.env.get("STRIPE_SECRET_KEY");
   if (!secretKey) return json({ error: "Stripe is not configured" }, 500);
 
-  const params: Record<string, string> = {
+  const params = new URLSearchParams({
     amount: String(unitAmountPence),
     currency: "gbp",
     "automatic_payment_methods[enabled]": "true",
@@ -184,8 +184,19 @@ Deno.serve(async (req: Request) => {
     "metadata[platform_fee]": String(fee),
     "metadata[marketing_opt_in]": marketingOptIn ? "true" : "false",
     description: ev.title || "Cumulus ticket",
-  };
-  if (receiptEmail) params.receipt_email = receiptEmail;
+  });
+  if (receiptEmail) params.append("receipt_email", receiptEmail);
+  // Card/Apple Pay/Google Pay/PayPal/Link only — explicitly exclude BNPL
+  // methods at the API level so "no Klarna" is a code fact, not a Dashboard
+  // toggle someone can silently flip back on. automatic_payment_methods still
+  // decides availability among what's left (currency/country eligible +
+  // enabled in the Dashboard), this just removes these three from that set
+  // regardless of Dashboard state. Apple Pay/Google Pay/Link can't be
+  // excluded this way (Stripe blocks it) — they're not in this list because
+  // we want them, not because the exclusion would fail.
+  for (const t of ["klarna", "afterpay_clearpay", "affirm"]) {
+    params.append("excluded_payment_method_types[]", t);
+  }
 
   try {
     const res = await fetch("https://api.stripe.com/v1/payment_intents", {
@@ -195,7 +206,7 @@ Deno.serve(async (req: Request) => {
         "Content-Type": "application/x-www-form-urlencoded",
         "Stripe-Version": "2026-03-25.dahlia",
       },
-      body: new URLSearchParams(params).toString(),
+      body: params.toString(),
     });
     const intent = await res.json();
     if (!res.ok) {

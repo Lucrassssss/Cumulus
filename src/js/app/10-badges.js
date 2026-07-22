@@ -1403,7 +1403,7 @@ function stripeAppearanceForCurrentTheme() {
         colorPrimaryText: "#0a0a0a",
         colorBackground: v("--surface", isDark ? "#16181b" : "#f7f6f2"),
         colorText: v("--text", isDark ? "#ece9e1" : "#191a1c"),
-        colorDanger: "#dc2626",
+        colorDanger: v("--danger", isDark ? "#f87171" : "#b91c1c"),
         fontFamily: v(
           "--font-sans",
           "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
@@ -1485,7 +1485,16 @@ async function startStripeCheckout() {
       appearance,
       fonts,
     });
-    const paymentElement = stripeElementsGroup.create("payment");
+    // Passing the already-known email as a default (rather than via a
+    // separate Link Authentication Element the buyer would have to fill in
+    // again) lets Stripe Link still recognize a returning buyer and offer
+    // one-tap autofill — without it, Link has no email to match against and
+    // silently degrades to a plain card form for repeat buyers.
+    const paymentElement = stripeElementsGroup.create("payment", {
+      defaultValues: state.profileEmail
+        ? { billingDetails: { email: state.profileEmail } }
+        : undefined,
+    });
     paymentElement.mount("#payment-element");
     paymentElement.on("ready", () => {
       if (status) status.style.display = "none";
@@ -1498,7 +1507,7 @@ async function startStripeCheckout() {
   } catch (err) {
     setStatus(
       `<div style="text-align:center;width:100%;">
-        <div style="color:var(--danger, #dc2626);font-size:13px;margin-bottom:10px;">${escapeHtml(err.message || "Could not start checkout")}</div>
+        <div style="color:var(--danger);font-size:13px;margin-bottom:10px;">${escapeHtml(err.message || "Could not start checkout")}</div>
         <button class="btn btn-outline" onclick="startStripeCheckout()">Try again</button>
       </div>`,
     );
@@ -1534,7 +1543,13 @@ async function submitStripePayment() {
   if (error) {
     if (status) {
       status.style.display = "flex";
-      status.innerHTML = `<div style="text-align:center;width:100%;"><div style="color:var(--danger, #dc2626);font-size:13px;">${escapeHtml(error.message || "Payment failed — try again")}</div></div>`;
+      status.innerHTML = `<div style="text-align:center;width:100%;"><div style="color:var(--danger);font-size:13px;">${escapeHtml(error.message || "Payment failed — try again")}</div></div>`;
+      // #checkout-status sits above the Payment Element, at the top of the
+      // scrollable checkout column — a buyer who scrolled down to reach a
+      // tall Payment Element (card + wallets + Link) can tap the fixed Pay
+      // bar without this ever entering view. Scroll it into view so the
+      // reason for the failure isn't silently missed above the fold.
+      status.scrollIntoView({ behavior: "smooth", block: "center" });
     }
     if (btn) {
       btn.disabled = false;

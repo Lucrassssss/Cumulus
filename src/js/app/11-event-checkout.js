@@ -30,9 +30,9 @@ function renderBook() {
         ? `
     <div class="section-title">Quantity</div>
     <div class="panel" style="--corner:var(--accent);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <button class="btn btn-outline" style="width:42px;height:42px;padding:0;font-size:22px;border-radius:50%;flex-shrink:0;" onclick="setBookingQty(${qty - 1})">−</button>
+      <button class="btn btn-outline" style="width:44px;height:44px;padding:0;font-size:22px;border-radius:50%;flex-shrink:0;" onclick="setBookingQty(${qty - 1})">−</button>
       <div style="text-align:center;"><div style="font-size:30px;font-weight:800;color:var(--text);">${qty}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">ticket${qty !== 1 ? "s" : ""}</div></div>
-      <button class="btn btn-outline" style="width:42px;height:42px;padding:0;font-size:22px;border-radius:50%;flex-shrink:0;" onclick="setBookingQty(${qty + 1})">+</button>
+      <button class="btn btn-outline" style="width:44px;height:44px;padding:0;font-size:22px;border-radius:50%;flex-shrink:0;" onclick="setBookingQty(${qty + 1})">+</button>
     </div>`
         : ""
     }
@@ -118,20 +118,23 @@ function renderCheckout() {
         <div class="checkout-trust">${lockIconSvg(14)}<span>Payments are encrypted and processed securely by Stripe<span class="checkout-trust-suffix"> — Cumulus never sees your card details.</span></span></div>
       </div>
       <div class="checkout-main-col">
-        <div id="checkout-status" class="checkout-status">
-          <div class="checkout-skeleton">
-            <div class="checkout-skeleton-row" style="width:55%;"></div>
-            <div class="checkout-skeleton-row" style="height:46px;"></div>
-            <div class="checkout-skeleton-row" style="height:46px;"></div>
-            <div class="checkout-skeleton-row" style="width:35%;"></div>
+        <div class="panel checkout-payment-panel" style="--corner:${c.color};">
+          <div id="checkout-status" class="checkout-status" role="status" aria-busy="true" aria-live="polite">
+            <span class="sr-only">Loading payment form…</span>
+            <div class="checkout-skeleton" aria-hidden="true">
+              <div class="checkout-skeleton-row" style="width:55%;"></div>
+              <div class="checkout-skeleton-row" style="height:46px;"></div>
+              <div class="checkout-skeleton-row" style="height:46px;"></div>
+              <div class="checkout-skeleton-row" style="width:35%;"></div>
+            </div>
           </div>
+          <div id="payment-element"></div>
         </div>
-        <div id="payment-element"></div>
         <div class="checkout-cta-bar" id="checkout-cta-bar">
           <div class="checkout-cta-total"><span>Total</span><strong style="color:${c.color};">£${total}</strong></div>
           <button id="pay-btn" class="btn checkout-pay-btn" data-label="Pay £${total} →" style="background:${c.color};" onclick="submitStripePayment()">Pay £${total} →</button>
         </div>
-        <p class="checkout-footer-note">Powered by Stripe · <a href="terms.html" target="_blank">Terms</a> · <a href="privacy.html" target="_blank">Privacy</a></p>
+        <p class="checkout-footer-note">Bank-level encryption on every payment · <a href="terms.html" target="_blank">Terms</a> · <a href="privacy.html" target="_blank">Privacy</a></p>
       </div>
     </div>`;
 }
@@ -227,7 +230,7 @@ function renderConfirmed() {
   </div>`;
 
   return `<div style="text-align:center;padding:20px 0 16px;">
-      <div style="width:58px;height:58px;border-radius:50%;background:#22C55E;color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 18px rgba(34,197,94,0.3);">${checkIconSvg(28)}</div>
+      <div style="width:58px;height:58px;border-radius:50%;background:var(--success);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 18px rgba(22,163,74,0.3);">${checkIconSvg(28)}</div>
       <div style="font-size:21px;font-weight:800;color:var(--text);">${totalPaid ? "Payment confirmed!" : "You're registered!"}</div>
       <div style="font-size:12.5px;color:var(--text-muted);margin-top:3px;">${tickets.length} ticket${tickets.length !== 1 ? "s" : ""} · ${totalPaid ? `£${totalPaid.toFixed(2)} total` : "Free"}</div>
     </div>
