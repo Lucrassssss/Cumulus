@@ -3,13 +3,25 @@
 // app's "no build step" constraint. A real flyer replaces the category
 // stock photo (catImg()) wherever an event's image renders; no flyer just
 // falls back to that stock photo exactly as before, so this is additive.
-function compressImageFile(file, maxDim = 1600, quality = 0.75) {
+// { square: true } (used by uploadAvatarPhoto, services.js) center-crops to
+// a 1:1 canvas first — avatars render circular/square everywhere, so a
+// non-square source would otherwise get squashed rather than cropped.
+function compressImageFile(file, maxDim = 1600, quality = 0.75, opts = {}) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
       let { width, height } = img;
-      if (width > maxDim || height > maxDim) {
+      let sx = 0,
+        sy = 0,
+        sw = width,
+        sh = height;
+      if (opts.square) {
+        sw = sh = Math.min(width, height);
+        sx = (width - sw) / 2;
+        sy = (height - sh) / 2;
+        width = height = Math.min(sw, maxDim);
+      } else if (width > maxDim || height > maxDim) {
         const scale = maxDim / Math.max(width, height);
         width = Math.round(width * scale);
         height = Math.round(height * scale);
@@ -18,7 +30,7 @@ function compressImageFile(file, maxDim = 1600, quality = 0.75) {
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, width, height);
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, width, height);
       canvas.toBlob(
         (blob) => {
           URL.revokeObjectURL(url);

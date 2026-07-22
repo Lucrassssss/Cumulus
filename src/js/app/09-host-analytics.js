@@ -1597,10 +1597,26 @@ function openHostProfile(hostKey, hostName) {
   pushNav();
   state.selectedHostKey = hostKey;
   state.selectedHostName = hostName;
+  state.viewedHostProfile = null;
   state.view = "host-profile";
   renderNav();
   renderView();
   window.scrollTo({ top: 0, behavior: "smooth" });
+  // hostKey is only a real users.id (so a public_profiles lookup is
+  // possible) for reviewed hosts — legacy events store a bare name string
+  // in e.host with no linked account, and fetchPublicProfile would just
+  // come back empty for those anyway. Fetched in the background so nav
+  // never blocks on it; re-renders only if still on this same host's page
+  // once it resolves.
+  const isRealHost = EVENTS.some((e) => e.hostId === hostKey);
+  if (isRealHost) {
+    fetchPublicProfile(hostKey).then((profile) => {
+      if (state.view === "host-profile" && state.selectedHostKey === hostKey) {
+        state.viewedHostProfile = profile;
+        renderView();
+      }
+    });
+  }
 }
 
 // Big square card for the host profile's horizontally-scrolling event row —
@@ -1659,6 +1675,31 @@ function renderHostProfile() {
   const safeKey = escapeHtml(String(hostKey)).replace(/'/g, "&#39;");
   const safeName = escapeHtml(hostName).replace(/'/g, "&#39;");
 
+  // Real card/badge data for reviewed hosts, once fetchPublicProfile()
+  // (kicked off from openHostProfile) resolves — null on first paint or for
+  // legacy hosts with no linked account, in which case this whole block
+  // just falls back to the plain monogram + no achievements row.
+  const profile = state.viewedHostProfile;
+  const accentDef = profile && CARD_ACCENT_COLORS.find((c) => c.id === profile.card_accent);
+  const accentHex = (accentDef && accentDef.hex) || "#FFCF33";
+  const avatarHtml = profile && profile.avatar_url
+    ? `<div class="host-profile-avatar host-profile-avatar-photo"><img src="${profile.avatar_url}" alt=""/></div>`
+    : `<div class="host-profile-avatar" style="${profile ? `background:${accentHex}22;border-color:${accentHex}55;color:${accentHex};` : ""}">${hostInitials(hostName)}</div>`;
+  const featuredIds = (profile && profile.card_featured_badges) || [];
+  const featuredBadges = featuredIds.map((id) => getBadgeById(id)).filter(Boolean);
+  const achievementsHtml = featuredBadges.length
+    ? `<div class="section-title">Achievements</div>
+       <div class="host-achievements-row">${featuredBadges
+         .map(
+           (b) =>
+             `<div class="host-achievement-chip" style="--bc:${b.color};" title="${escapeHtml(b.desc)}"><span class="host-achievement-glyph">${b.glyph}</span><span>${escapeHtml(b.name)}</span></div>`,
+         )
+         .join("")}</div>`
+    : "";
+  const bioHtml = profile && profile.card_bio
+    ? `<p class="host-profile-bio">${escapeHtml(profile.card_bio)}</p>`
+    : "";
+
   const statsHtml = `<div class="host-stats-row">
     <div class="host-stat"><div class="host-stat-num">${hostEvents.length}</div><div class="host-stat-label">Event${hostEvents.length !== 1 ? "s" : ""} hosted</div></div>
     <div class="host-stat"><div class="host-stat-num">${totalAttendees}</div><div class="host-stat-label">Attendee${totalAttendees !== 1 ? "s" : ""}</div></div>
@@ -1674,14 +1715,16 @@ function renderHostProfile() {
   return `<button class="back-btn host-profile-back" onclick="goBack()">←</button>
     <div class="host-profile-cover"></div>
     <div class="host-profile-header">
-      <div class="host-profile-avatar">${hostInitials(hostName)}</div>
+      ${avatarHtml}
       <div class="host-profile-identity">
         <h2>${escapeHtml(hostName)}${reviewed ? ` <span class="host-reviewed-badge" title="Host reviewed by Cumulus">${checkIconSvg(12)} Reviewed</span>` : ""}</h2>
         <p>Event host</p>
       </div>
       <button class="btn-follow-host${following ? " following" : ""}" onclick="toggleFollowHost('${safeKey}','${safeName}')">${following ? "Following" : "Follow"}</button>
     </div>
+    ${bioHtml}
     ${statsHtml}
+    ${achievementsHtml}
     <div class="section-title">Upcoming events</div>
     ${upcomingHtml}`;
 }

@@ -1143,6 +1143,48 @@ const CARD_PATTERNS = {
   )}${[40, 80, 120, 160].map((r) => `<ellipse cx="200" cy="125" rx="${r * 1.4}" ry="${r}"/>`).join("")}</g></svg>`,
 };
 
+// ─── Card Borders (frame + material finish) ─────────────────────────────────
+// Every treatment is expressed purely via border/shadow CSS driven off the
+// card's own --acc custom property (see openExpandedCard) — no new arbitrary
+// colors, so nothing here can introduce a fresh contrast failure the way a
+// hand-picked border color could. wcagSafe just documents that.
+const CARD_BORDERS = [
+  { id: "classic", name: "Classic", desc: "Thin accent border, the current default" },
+  { id: "bold", name: "Bold", desc: "Thicker accent border for real presence" },
+  { id: "hairline", name: "Hairline", desc: "Ultra-fine 1px edge, understated" },
+  { id: "double", name: "Double", desc: "Two parallel lines, a formal ticket-stub feel" },
+  { id: "dashed", name: "Dashed", desc: "Fine dashed edge" },
+  { id: "corner", name: "Corner Marks", desc: "Accent brackets at each corner only, no full border" },
+  { id: "glow", name: "Glow", desc: "No visible line — a soft accent-colored halo instead" },
+  { id: "engraved", name: "Engraved", desc: "Inset shadow, a pressed/stamped edge" },
+  { id: "embossed", name: "Embossed", desc: "Layered shadows for a raised, tactile edge" },
+  { id: "foil", name: "Foil Sweep", desc: "A slow shimmering gradient sweep along the edge" },
+];
+
+// ─── Card Layouts (arrangement of badges/stats/bio) ─────────────────────────
+const CARD_LAYOUTS = [
+  { id: "standard", name: "Standard", desc: "Identity, featured badges, stats, footer — the default order" },
+  { id: "stats-first", name: "Stats First", desc: "Stats sit right under your identity, badges below" },
+  { id: "minimal", name: "Minimal", desc: "Stats hidden — just identity, badges, and footer" },
+  { id: "spotlight", name: "Spotlight", desc: "Your top featured badge enlarged, the other two smaller beside it" },
+  { id: "compact", name: "Compact", desc: "Tighter spacing and smaller type throughout" },
+];
+
+// ─── Card Fonts (typography pairing for name/bio text) ──────────────────────
+// Inter/DM Sans/DM Mono are this app's own chrome typefaces (see DESIGN.md);
+// the rest are loaded solely for this personal customization feature (see
+// index.html) so cards have real pairing variety beyond the app's own faces.
+const CARD_FONTS = [
+  { id: "inter", name: "Inter", family: "'Inter', sans-serif", weight: 700 },
+  { id: "dm-sans", name: "DM Sans", family: "'DM Sans', sans-serif", weight: 700 },
+  { id: "newsreader", name: "Newsreader", family: "'Newsreader', serif", weight: 600 },
+  { id: "newsreader-italic", name: "Newsreader Italic", family: "'Newsreader', serif", weight: 500, italic: true },
+  { id: "instrument-serif", name: "Instrument Serif", family: "'Instrument Serif', serif", weight: 400 },
+  { id: "sora", name: "Sora", family: "'Sora', sans-serif", weight: 700 },
+  { id: "plex-mono", name: "IBM Plex Mono", family: "'IBM Plex Mono', monospace", weight: 600 },
+  { id: "dm-mono", name: "DM Mono", family: "'DM Mono', monospace", weight: 500 },
+];
+
 const LONDON_AREAS = [
   "Shoreditch",
   "Dalston",

@@ -341,54 +341,47 @@ function enterApp() {
 function openCardEditor(eventId, welcome) {
   cardEditorEventId = eventId ?? null;
   cardEditorWelcome = !!welcome;
+  // Draft always seeds from the DB-backed state.myCard — the same source
+  // openExpandedCard()/the host profile read — never from the old
+  // device-local card_ext/card_photo blobs.
   const ex = state.myCard;
-  // Load extended fields from localStorage
-  let ext = {};
-  try {
-    const r = localStorage.getItem("card_ext:" + state.profileName);
-    if (r) ext = JSON.parse(r);
-  } catch (e) {}
-  let savedPhoto = "";
-  try {
-    savedPhoto = localStorage.getItem("card_photo:" + state.profileName) || "";
-  } catch (e) {}
-  const savedBg = ext.bgStyle || ex?.theme || "obsidian";
-  const savedAccent = ext.accentColor || ex?.accentColor || "#FFCF33";
-  const savedOpacity = ext.patternOpacity != null ? ext.patternOpacity : 0.35;
+  const accentDef = ex && CARD_ACCENT_COLORS.find((c) => c.id === ex.accent);
   cardDraft = ex
     ? {
-        theme: savedBg,
-        bgStyle: savedBg,
-        accentColor: savedAccent,
-        pattern: ext.pattern || "lightning",
-        patternOpacity: savedOpacity,
+        theme: ex.theme || "obsidian",
+        bgStyle: ex.theme || "obsidian",
+        accentColor: (accentDef && accentDef.hex) || "#FFCF33",
+        border: ex.border || "classic",
+        layout: ex.layout || "standard",
+        font: ex.font || "inter",
         bio: ex.bio || "",
-        interests: ex.interests || "",
+        motto: "",
+        interests: "",
         fact: ex.fact || "",
-        motto: ext.motto || "",
-        photo: savedPhoto,
-        areas: ext.areas || [],
+        photo: "",
+        avatarUrl: ex.avatarUrl || "",
+        areas: Array.isArray(ex.areas) ? ex.areas.slice() : [],
       }
     : {
         theme: "obsidian",
         bgStyle: "obsidian",
         accentColor: "#FFCF33",
-        pattern: "constellation",
-        patternOpacity: 0.35,
+        border: "classic",
+        layout: "standard",
+        font: "inter",
         bio: "",
+        motto: "",
         interests: "",
         fact: "",
-        motto: "",
-        photo: savedPhoto,
-        areas: ext.areas || [],
+        photo: "",
+        avatarUrl: "",
+        areas: [],
       };
   renderCardEditor();
 }
 function captureDraftFields() {
   const b = document.getElementById("card-bio");
   if (b) cardDraft.bio = b.value;
-  const i = document.getElementById("card-interests");
-  if (i) cardDraft.interests = i.value;
   const f = document.getElementById("card-fact");
   if (f) cardDraft.fact = f.value;
   const m = document.getElementById("card-motto");
@@ -435,9 +428,8 @@ function handleCardPhoto(input) {
 }
 function removeCardPhoto() {
   cardDraft.photo = "";
-  try {
-    localStorage.removeItem("card_photo:" + state.profileName);
-  } catch (e) {}
+  cardDraft.avatarUrl = "";
+  cardDraft.avatarRemoved = true;
   const zone = document.getElementById("ce-photo-zone");
   if (zone)
     zone.innerHTML = `<input type="file" id="ce-photo-input" accept="image/*" onchange="handleCardPhoto(this)"/>
@@ -463,20 +455,29 @@ function selectCardAccentColor(hex, id) {
     .querySelectorAll(".cc-swatch")
     .forEach((b) => b.classList.toggle("active", b.dataset.id === id));
 }
-function selectCardPattern(pat) {
+function selectCardBorder(id) {
   captureDraftFields();
-  cardDraft.pattern = pat;
+  cardDraft.border = id;
   updateCardPreview();
   document
-    .querySelectorAll(".cc-pattern-btn")
-    .forEach((b) => b.classList.toggle("active", b.dataset.pat === pat));
+    .querySelectorAll("[data-border]")
+    .forEach((b) => b.classList.toggle("active", b.dataset.border === id));
 }
-function setPatternOpacity(val) {
-  cardDraft.patternOpacity = parseFloat(val);
-  const pat = document.getElementById("ce-pattern");
-  if (pat) pat.style.opacity = cardDraft.patternOpacity;
-  const lbl = document.getElementById("ce-opacity-val");
-  if (lbl) lbl.textContent = Math.round(cardDraft.patternOpacity * 100) + "%";
+function selectCardLayout(id) {
+  captureDraftFields();
+  cardDraft.layout = id;
+  updateCardPreview();
+  document
+    .querySelectorAll("[data-layout]")
+    .forEach((b) => b.classList.toggle("active", b.dataset.layout === id));
+}
+function selectCardFont(id) {
+  captureDraftFields();
+  cardDraft.font = id;
+  updateCardPreview();
+  document
+    .querySelectorAll("[data-font]")
+    .forEach((b) => b.classList.toggle("active", b.dataset.font === id));
 }
 function toggleCardArea(area) {
   const idx = cardDraft.areas.indexOf(area);
@@ -495,11 +496,16 @@ function toggleCardArea(area) {
   const hint = document.getElementById("ce-area-hint");
   if (hint)
     hint.textContent = `${cardDraft.areas.length}/3 selected${cardDraft.areas.length === 3 ? " · tap to deselect" : ""}`;
-  const det = document.getElementById("ce-preview-detail");
-  if (det)
-    det.textContent = cardDraft.areas.length
-      ? cardDraft.areas.join(" · ")
-      : "London Community Member";
+  const tags = document.getElementById("ce-preview-tags");
+  if (tags) {
+    const t = resolveCardColors(cardDraft.bgStyle || cardDraft.theme, cardDraft.accentColor);
+    tags.innerHTML = cardDraft.areas
+      .map(
+        (s) =>
+          `<span class="ce-preview-tag" style="border-color:${t.accent};color:${t.text};">${escapeHtml(s)}</span>`,
+      )
+      .join("");
+  }
 }
 function updateCardPreview() {
   const t = resolveCardColors(
@@ -511,12 +517,6 @@ function updateCardPreview() {
   el.style.background = t.bg;
   el.style.color = t.text;
   el.style.borderColor = t.border;
-  const pat = document.getElementById("ce-pattern");
-  if (pat) {
-    pat.style.color = t.accent;
-    pat.style.opacity = cardDraft.patternOpacity || 0.18;
-    pat.innerHTML = CARD_PATTERNS[cardDraft.pattern] || "";
-  }
   const nm = document.getElementById("ce-preview-name");
   if (nm) nm.style.color = t.text;
   const ac = document.getElementById("ce-preview-accent");
@@ -534,14 +534,8 @@ function updateCardPreview() {
     pmotto.style.color = t.accent;
   }
   const tags = document.getElementById("ce-preview-tags");
-  const int = document.getElementById("card-interests");
-  if (tags && int) {
-    const items = (int.value || "")
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .slice(0, 5);
-    tags.innerHTML = items
+  if (tags) {
+    tags.innerHTML = cardDraft.areas
       .map(
         (s) =>
           `<span class="ce-preview-tag" style="border-color:${t.accent};color:${t.text};">${escapeHtml(s)}</span>`,
@@ -891,35 +885,25 @@ function renderCardEditor() {
     )
     .join("");
 
-  // Pattern grid — vibrant (opacity controlled by slider)
-  const patternOptions = [
-    { id: "none", label: "✕  None" },
-    { id: "lines", label: "// Lines" },
-    { id: "mesh", label: "⊞ Mesh" },
-    { id: "dots", label: "· Dots" },
-    { id: "grid", label: "⊟ Grid" },
-    { id: "diagonal", label: "⟋ Diagonal" },
-    { id: "zigzag", label: "⟨⟩ Zigzag" },
-    { id: "dashes", label: "— Dashes" },
-    { id: "halftone", label: "⠿ Halftone" },
-    { id: "hexgrid", label: "⬡ Hex" },
-    { id: "topo", label: "⌇ Topo" },
-    { id: "triangles", label: "△ Triangles" },
-    { id: "constellation", label: "✦ Stars" },
-    { id: "blueprint", label: "⊕ Blueprint" },
-    { id: "waves", label: "∿ Waves" },
-    { id: "marble", label: "⌁ Marble" },
-    { id: "sparkle", label: "✴ Sparkle" },
-    { id: "circuits", label: "⊛ Circuit" },
-    { id: "plus", label: "+ Plus" },
-    { id: "rings", label: "◎ Rings" },
-    { id: "sunburst", label: "☀ Rays" },
-    { id: "petals", label: "❀ Petals" },
-    { id: "cobweb", label: "⊙ Cobweb" },
-    { id: "linen", label: "▦ Weave" },
-  ];
-  const patternTabHtml = `<div class="cc-pattern-grid">
-    ${patternOptions.map((p) => `<button class="cc-pattern-btn${cardDraft.pattern === p.id ? " active" : ""}" data-pat="${p.id}" onclick="selectCardPattern('${p.id}')">${p.label}</button>`).join("")}
+  // Frame tab: border, layout, and typeface — the three remaining
+  // customization axes (theme lives on Card Base, accent has its own tab).
+  const borderGridHtml = `<div class="cc-pattern-grid">
+    ${CARD_BORDERS.map(
+      (b) =>
+        `<button class="cc-pattern-btn${cardDraft.border === b.id ? " active" : ""}" data-border="${b.id}" onclick="selectCardBorder('${b.id}')" title="${escapeHtml(b.desc)}">${escapeHtml(b.name)}</button>`,
+    ).join("")}
+  </div>`;
+  const layoutGridHtml = `<div class="cc-pattern-grid">
+    ${CARD_LAYOUTS.map(
+      (l) =>
+        `<button class="cc-pattern-btn${cardDraft.layout === l.id ? " active" : ""}" data-layout="${l.id}" onclick="selectCardLayout('${l.id}')" title="${escapeHtml(l.desc)}">${escapeHtml(l.name)}</button>`,
+    ).join("")}
+  </div>`;
+  const fontGridHtml = `<div class="cc-pattern-grid">
+    ${CARD_FONTS.map(
+      (f) =>
+        `<button class="cc-pattern-btn${cardDraft.font === f.id ? " active" : ""}" data-font="${f.id}" onclick="selectCardFont('${f.id}')" style="font-family:${f.family};font-weight:${f.weight};${f.italic ? "font-style:italic;" : ""}">${escapeHtml(f.name)}</button>`,
+    ).join("")}
   </div>`;
 
   const areaPillsHtml = LONDON_AREAS.map((a) => {
@@ -929,10 +913,9 @@ function renderCardEditor() {
   }).join("");
 
   const liveCardHtml = `<div class="ce-live-card" id="ce-live-card" style="background:${t.bg};border-color:${t.border};">
-    <div class="ce-pattern" id="ce-pattern" style="color:${t.accent};opacity:${cardDraft.patternOpacity || 0.35};">${CARD_PATTERNS[cardDraft.pattern] || ""}</div>
     ${
-      cardDraft.photo
-        ? `<img src="${cardDraft.photo}" id="ce-preview-photo" style="position:absolute;top:0;right:0;width:56px;height:56px;object-fit:cover;border-radius:0 6px 0 10px;border-left:1.5px solid ${t.accent};border-bottom:1.5px solid ${t.accent};z-index:3;" alt=""/>`
+      cardDraft.photo || cardDraft.avatarUrl
+        ? `<img src="${cardDraft.photo || cardDraft.avatarUrl}" id="ce-preview-photo" style="position:absolute;top:0;right:0;width:56px;height:56px;object-fit:cover;border-radius:0 6px 0 10px;border-left:1.5px solid ${t.accent};border-bottom:1.5px solid ${t.accent};z-index:3;" alt=""/>`
         : `<div id="ce-preview-photo"></div>`
     }
     <div class="ce-card-shine"></div>
@@ -947,18 +930,13 @@ function renderCardEditor() {
       <div class="ce-preview-motto" id="ce-preview-motto" style="color:${t.accent};">${cardDraft.motto ? `"${escapeHtml(cardDraft.motto)}"` : ""}</div>
       <div class="ce-preview-bio" id="ce-preview-bio" style="color:${t.textSoft};">${cardDraft.bio || "Tell your story…"}</div>
       <div class="ce-preview-tags" id="ce-preview-tags">
-        ${(cardDraft.interests || "")
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-          .slice(0, 5)
+        ${cardDraft.areas
           .map(
             (s) =>
               `<span class="ce-preview-tag" style="border-color:${t.accent};color:${t.text};">${escapeHtml(s)}</span>`,
           )
           .join("")}
       </div>
-      <div class="ce-preview-detail" id="ce-preview-detail" style="color:${t.textSoft};">${cardDraft.areas.length ? cardDraft.areas.join(" · ") : "London Community Member"}</div>
     </div>
     <div class="ce-preview-wm" id="ce-preview-wm" style="color:${t.accent};">CU</div>
   </div>`;
@@ -1002,12 +980,12 @@ function renderCardEditor() {
       <!-- RIGHT — tabbed controls -->
       <div class="ce-right">
 
-        <!-- Tab bar: Card Base | Pattern | Accent | About You -->
+        <!-- Tab bar: Card Base | Frame | Accent | About You -->
         <div class="ce-tabs-bar">
-          <button class="ce-tab-btn active" data-tab="base"    onclick="switchCeTab('base')">Card Base</button>
-          <button class="ce-tab-btn"        data-tab="pattern" onclick="switchCeTab('pattern')">Pattern</button>
-          <button class="ce-tab-btn"        data-tab="accent"  onclick="switchCeTab('accent')">Accent</button>
-          <button class="ce-tab-btn"        data-tab="about"   onclick="switchCeTab('about')">About You</button>
+          <button class="ce-tab-btn active" data-tab="base"   onclick="switchCeTab('base')">Card Base</button>
+          <button class="ce-tab-btn"        data-tab="frame"  onclick="switchCeTab('frame')">Frame</button>
+          <button class="ce-tab-btn"        data-tab="accent" onclick="switchCeTab('accent')">Accent</button>
+          <button class="ce-tab-btn"        data-tab="about"  onclick="switchCeTab('about')">About You</button>
         </div>
 
         <!-- ─ CARD BASE TAB ─ -->
@@ -1018,21 +996,19 @@ function renderCardEditor() {
           </div>
         </div>
 
-        <!-- ─ PATTERN TAB ─ -->
-        <div class="ce-tab-panel" data-tab="pattern">
+        <!-- ─ FRAME TAB — border/material, badge layout, typeface ─ -->
+        <div class="ce-tab-panel" data-tab="frame">
           <div class="ce-section">
-            <div class="ce-section-label">Pattern overlay</div>
-            ${patternTabHtml}
+            <div class="ce-section-label">Border &amp; material</div>
+            ${borderGridHtml}
           </div>
           <div class="ce-section">
-            <div class="ce-section-label">Pattern intensity</div>
-            <div class="ce-intensity-bar">
-              <input type="range" id="ce-opacity-global" min="0.02" max="0.85" step="0.01"
-                value="${cardDraft.patternOpacity || 0.35}"
-                style="flex:1;accent-color:var(--accent);cursor:pointer;"
-                oninput="setPatternOpacity(this.value)"/>
-              <span class="ce-intensity-pct" id="ce-opacity-val">${Math.round((cardDraft.patternOpacity || 0.35) * 100)}%</span>
-            </div>
+            <div class="ce-section-label">Badge &amp; stats layout</div>
+            ${layoutGridHtml}
+          </div>
+          <div class="ce-section">
+            <div class="ce-section-label">Typeface</div>
+            ${fontGridHtml}
           </div>
         </div>
 
@@ -1052,14 +1028,14 @@ function renderCardEditor() {
             <div class="ce-photo-about" id="ce-photo-zone">
               <input type="file" id="ce-photo-input" accept="image/*" onchange="handleCardPhoto(this)"/>
               ${
-                cardDraft.photo
-                  ? `<img src="${cardDraft.photo}" class="ce-photo-about-img" id="ce-photo-img" alt=""/>
-                  <div class="ce-photo-about-lbl">Tap to change<span>Shows in your card corner</span></div>
+                cardDraft.photo || cardDraft.avatarUrl
+                  ? `<img src="${cardDraft.photo || cardDraft.avatarUrl}" class="ce-photo-about-img" id="ce-photo-img" alt=""/>
+                  <div class="ce-photo-about-lbl">Tap to change<span>Shows on your pass &amp; host profile</span></div>
                   <button class="ce-photo-remove" style="margin-left:auto;font-size:10px;" onclick="event.stopPropagation();removeCardPhoto()">Remove</button>`
                   : `<div style="width:48px;height:48px;border-radius:50%;background:var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                     <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="opacity:0.45;"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
                   </div>
-                  <div class="ce-photo-about-lbl">Add photo<span>Shows in your card corner</span></div>`
+                  <div class="ce-photo-about-lbl">Add photo<span>Shows on your pass &amp; host profile</span></div>`
               }
             </div>
           </div>
@@ -1067,18 +1043,12 @@ function renderCardEditor() {
           <div class="ce-section">
             <div class="ce-section-label">Your motto <span class="ce-optional">optional · 60 chars</span></div>
             <input id="card-motto" class="ce-input" placeholder="e.g. Always up for something new" value="${escapeHtml(cardDraft.motto)}" oninput="updateCardPreview()" autocomplete="off" maxlength="60"/>
-            <div class="ce-char-hint">Shown in italic under your name</div>
+            <div class="ce-char-hint">Shown under your name — takes priority over "About you" below if both are filled in</div>
           </div>
 
           <div class="ce-section">
             <div class="ce-section-label">About you <span class="ce-optional">optional</span></div>
             <textarea id="card-bio" class="ce-input ce-textarea" rows="3" placeholder="What brings you to events like these?" oninput="updateCardPreview()">${escapeHtml(cardDraft.bio)}</textarea>
-          </div>
-
-          <div class="ce-section">
-            <div class="ce-section-label">Interests <span class="ce-optional">comma separated</span></div>
-            <input id="card-interests" class="ce-input" placeholder="e.g. live music, board games, hiking" value="${escapeHtml(cardDraft.interests)}" oninput="updateCardPreview()" autocomplete="off"/>
-            <div class="ce-char-hint">Shown as tags on your card</div>
           </div>
 
           <div class="ce-section">
@@ -1184,50 +1154,51 @@ function switchCeTab(tab) {
 }
 async function saveCard() {
   captureDraftFields();
-  const card = {
-    name: state.profileName,
-    theme: cardDraft.bgStyle || cardDraft.theme,
-    bgStyle: cardDraft.bgStyle || cardDraft.theme,
-    accentColor: cardDraft.accentColor || "#FFCF33",
-    bio: cardDraft.bio.trim(),
-    interests: cardDraft.interests.trim(),
-    fact: cardDraft.fact.trim(),
+  // motto takes priority over bio for display (see openExpandedCard) —
+  // whichever the user actually filled in is what gets persisted as the
+  // one canonical card_bio, rather than keeping motto as a second
+  // local-only concept layered on top of a DB-backed bio.
+  const displayBio = (cardDraft.motto || cardDraft.bio || "").trim();
+  const accentMatch = CARD_ACCENT_COLORS.find(
+    (c) => c.hex === cardDraft.accentColor,
+  );
+  const patch = {
+    theme: cardDraft.bgStyle || cardDraft.theme || "crimson",
+    accent: (accentMatch && accentMatch.id) || "gold",
+    border: cardDraft.border || "classic",
+    layout: cardDraft.layout || "standard",
+    font: cardDraft.font || "inter",
+    bio: displayBio,
+    areas: Array.isArray(cardDraft.areas) ? cardDraft.areas : [],
+    fact: (cardDraft.fact || "").trim(),
   };
-  state.myCard = card;
-  // Save extended fields to localStorage
-  try {
-    localStorage.setItem(
-      "card_ext:" + state.profileName,
-      JSON.stringify({
-        pattern: cardDraft.pattern,
-        patternOpacity: cardDraft.patternOpacity,
-        motto: cardDraft.motto,
-        areas: cardDraft.areas,
-        accentColor: cardDraft.accentColor,
-        bgStyle: cardDraft.bgStyle,
-      }),
-    );
-  } catch (e) {}
-  // Save photo separately (can be large)
-  try {
-    if (cardDraft.photo)
-      localStorage.setItem("card_photo:" + state.profileName, cardDraft.photo);
-    else localStorage.removeItem("card_photo:" + state.profileName);
-  } catch (e) {}
-  if (state.userId) {
-    await sb
-      .from("users")
-      .update({
-        card_theme: card.theme,
-        card_bio: card.bio,
-        card_interests: card.interests,
-        card_fact: card.fact,
-      })
-      .eq("id", state.userId);
+  if (cardDraft.photo) {
+    const blob = dataUrlToBlob(cardDraft.photo);
+    const url = blob ? await uploadAvatarPhoto(blob) : null;
+    if (url) patch.avatarUrl = url;
+  } else if (cardDraft.avatarRemoved) {
+    patch.avatarUrl = "";
   }
+  await saveMyCardFields(patch);
   document.getElementById("card-editor-root").innerHTML = "";
   renderNav();
   renderView();
+}
+// canvas.toDataURL() (the onboarding photo-capture step, captureDraftFields
+// above) yields a base64 data URL, not a File/Blob — uploadAvatarPhoto
+// (services.js) needs a real Blob to run through compressImageFile's
+// canvas re-encode, same as a normal file-input upload would provide.
+function dataUrlToBlob(dataUrl) {
+  try {
+    const [meta, b64] = dataUrl.split(",");
+    const mime = meta.match(/:(.*?);/)[1];
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: mime });
+  } catch (e) {
+    return null;
+  }
 }
 function skipCard() {
   document.getElementById("card-editor-root").innerHTML = "";

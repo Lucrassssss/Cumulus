@@ -41,32 +41,14 @@ function getAllBadges() {
 function getBadgeById(id) {
   return getAllBadges().find((b) => b.id === id);
 }
-function getCardExt() {
-  let ext = {
-    motto: "",
-    pattern: "lines",
-    areas: [],
-    accentColor: "#FFCF33",
-    bgStyle: "obsidian",
-    badges: [],
-  };
-  try {
-    const r = localStorage.getItem("card_ext:" + state.profileName);
-    if (r) ext = { ...ext, ...JSON.parse(r) };
-  } catch (e) {}
-  if (!Array.isArray(ext.badges)) ext.badges = [];
-  return ext;
-}
-function saveCardExt(ext) {
-  try {
-    localStorage.setItem("card_ext:" + state.profileName, JSON.stringify(ext));
-  } catch (e) {}
-}
-// Chosen badges that are actually earned (max 3), in the user's chosen order
+// Chosen badges that are actually earned (max 3), in the user's chosen
+// order — state.myCard.featuredBadges is DB-backed now (card_featured_
+// badges), not the old device-local card_ext blob, so this is the same
+// list a host profile / another viewer would also see.
 function getFeaturedBadges() {
-  const ext = getCardExt();
+  const chosen = (state.myCard && state.myCard.featuredBadges) || [];
   const all = getAllBadges();
-  return ext.badges
+  return chosen
     .map((id) => all.find((b) => b.id === id && b.earned))
     .filter(Boolean)
     .slice(0, 3);
@@ -75,24 +57,24 @@ function getFeaturedBadges() {
 function openExpandedCard() {
   const old = document.getElementById("card-xl-overlay");
   if (old) old.remove();
-  const card = state.myCard;
-  let cardExt = {
-    motto: "",
-    pattern: "lines",
-    areas: [],
-    accentColor: "#FFCF33",
-    bgStyle: "obsidian",
-  };
-  try {
-    const r = localStorage.getItem("card_ext:" + state.profileName);
-    if (r) cardExt = { ...cardExt, ...JSON.parse(r) };
-  } catch (e) {}
-  let cardPhoto = "";
-  try {
-    cardPhoto = localStorage.getItem("card_photo:" + state.profileName) || "";
-  } catch (e) {}
+  const card = state.myCard || {};
 
-  const accent = cardExt.accentColor || card?.accentColor || "#FFCF33";
+  const accentDef =
+    CARD_ACCENT_COLORS.find((c) => c.id === card.accent) || CARD_ACCENT_COLORS[0];
+  const accent = accentDef.hex;
+  const themeDef =
+    CARD_BG_STYLES.find((s) => s.id === card.theme) ||
+    CARD_BG_STYLES.find((s) => s.id === "obsidian") ||
+    CARD_BG_STYLES[0];
+  const borderDef = CARD_BORDERS.find((b) => b.id === card.border) || CARD_BORDERS[0];
+  const layout = card.layout || "standard";
+  const fontDef = CARD_FONTS.find((f) => f.id === card.font) || CARD_FONTS[0];
+  const fontStyle = `font-family:${fontDef.family};font-weight:${fontDef.weight};${fontDef.italic ? "font-style:italic;" : ""}`;
+  // Light CARD_BG_STYLES entries need dark ink, not the card's default
+  // cream-on-dark text — same split resolveCardColors() already applies to
+  // the small profile-tab card.
+  const cardFgRgb = themeDef.dark ? "244,241,234" : "30,41,59";
+
   const accentAlpha = (a, op) => {
     const m = a.match(/^#([0-9a-f]{6})$/i);
     if (!m) return `rgba(255,255,255,${op})`;
@@ -103,7 +85,6 @@ function openExpandedCard() {
   };
 
   const myEvents = getMyEvents();
-  const myCats = getMyCategories();
   const earnedTotal = getAllBadges().filter((b) => b.earned).length;
   const lv = getLevel(earnedTotal);
 
@@ -113,44 +94,65 @@ function openExpandedCard() {
       .replace(/[^A-Z0-9]/gi, "")
       .substring(0, 8)
       .toUpperCase();
-  const areas =
-    cardExt.areas && cardExt.areas.length ? cardExt.areas.join(" · ") : "";
-  const motto = cardExt.motto
-    ? `${escapeHtml(cardExt.motto)}`
-    : escapeHtml(card && card.bio ? card.bio : "");
-  const initStr = ((card ? card.name : state.profileName) || "?")
+  const areas = Array.isArray(card.areas) && card.areas.length ? card.areas.join(" · ") : "";
+  const bioText = card.bio || "";
+  const initStr = (card.name || state.profileName || "?")
     .split(" ")
     .map((w) => w[0])
     .slice(0, 2)
     .join("")
     .toUpperCase();
 
-  const avatar = cardPhoto
-    ? `<div class="cpass-avatar" style="border-color:${accent};"><img src="${cardPhoto}" alt=""/></div>`
+  const avatar = card.avatarUrl
+    ? `<div class="cpass-avatar" style="border-color:${accent};"><img src="${card.avatarUrl}" alt=""/></div>`
     : `<div class="cpass-avatar cpass-avatar-mono" style="border-color:${accentAlpha(accent, 0.55)};background:${accentAlpha(accent, 0.16)};color:${accent};">${initStr}</div>`;
 
-  // Featured badges — the hero. 3 slots: chosen earned badge, or an "add" placeholder.
+  // Featured badges — the hero. 3 slots: chosen earned badge, or an "add"
+  // placeholder. "spotlight" layout enlarges slot 0 and shrinks the other two.
   const featured = getFeaturedBadges();
   const slotsHtml = [0, 1, 2]
     .map((i) => {
+      const spotlightClass =
+        layout === "spotlight" ? (i === 0 ? " cpass-badge-hero" : " cpass-badge-mini") : "";
       const b = featured[i];
       if (b) {
-        return `<button class="cpass-badge" onclick="openBadgePicker()" title="${escapeHtml(b.name)}" style="--bc:${b.color};--bcg:${accentAlpha(b.color, 0.55)};">
+        return `<button class="cpass-badge${spotlightClass}" onclick="openBadgePicker()" title="${escapeHtml(b.name)}" style="--bc:${b.color};--bcg:${accentAlpha(b.color, 0.55)};">
         <span class="cpass-coin"><span class="cpass-coin-shine"></span><span class="cpass-coin-glyph">${b.glyph}</span></span>
         <span class="cpass-badge-name">${escapeHtml(b.name)}</span>
       </button>`;
       }
-      return `<button class="cpass-badge cpass-badge-empty" onclick="openBadgePicker()" title="Add a badge">
+      return `<button class="cpass-badge cpass-badge-empty${spotlightClass}" onclick="openBadgePicker()" title="Add a badge">
       <span class="cpass-coin-empty">+</span>
       <span class="cpass-badge-name">Add</span>
     </button>`;
     })
     .join("");
 
+  const statsHtml = `<div class="cpass-stats">
+          <div class="cpass-stat"><span class="cpass-stat-num">${myEvents.length}</span><span class="cpass-stat-label">Events</span></div>
+          <div class="cpass-stat"><span class="cpass-stat-num">${earnedTotal}</span><span class="cpass-stat-label">Badges</span></div>
+        </div>`;
+  const badgesHtml = `<div class="cpass-badges-section">
+          <div class="cpass-section-head">
+            <span class="cpass-section-label">Featured badges</span>
+            <button class="cpass-edit" onclick="openBadgePicker()">Edit</button>
+          </div>
+          <div class="cpass-badges">${slotsHtml}</div>
+        </div>`;
+  // "standard"/"compact" keep badges-then-stats; "stats-first" swaps the
+  // order; "minimal" drops stats entirely; "spotlight" keeps standard order
+  // (the enlarged slot above is what distinguishes it).
+  const bodySectionsHtml =
+    layout === "stats-first"
+      ? statsHtml + badgesHtml
+      : layout === "minimal"
+        ? badgesHtml
+        : badgesHtml + statsHtml;
+
   const html = `<div class="card-xl-overlay" id="card-xl-overlay" onclick="if(event.target===this)closeExpandedCard()">
     <div class="card-xl-outer">
       <button class="card-xl-close" onclick="closeExpandedCard()" aria-label="Close">✕</button>
-      <div class="cpass-card" id="cpass-card" style="--acc:${accent};--acc-glow:${accentAlpha(accent, 0.3)};--acc-soft:${accentAlpha(accent, 0.14)};">
+      <div class="cpass-card cpass-border-${borderDef.id} cpass-layout-${layout}" id="cpass-card" style="--acc:${accent};--acc-glow:${accentAlpha(accent, 0.3)};--acc-soft:${accentAlpha(accent, 0.14)};--card-bg:${themeDef.bg};--card-fg-rgb:${cardFgRgb};">
         <div class="cpass-ambient"></div>
 
         <!-- Header: wordmark + tier -->
@@ -168,25 +170,12 @@ function openExpandedCard() {
         <div class="cpass-id">
           ${avatar}
           <div class="cpass-id-text">
-            <div class="cpass-name">${escapeHtml(card ? card.name : state.profileName)}</div>
-            <div class="cpass-sub">${motto ? escapeHtml(cardExt.motto || (card && card.bio) || "") : "London Community Member"}</div>
+            <div class="cpass-name" style="${fontStyle}">${escapeHtml(card.name || state.profileName || "")}</div>
+            <div class="cpass-sub" style="${fontStyle}">${bioText ? escapeHtml(bioText) : "London Community Member"}</div>
           </div>
         </div>
 
-        <!-- FEATURED BADGES — the hero -->
-        <div class="cpass-badges-section">
-          <div class="cpass-section-head">
-            <span class="cpass-section-label">Featured badges</span>
-            <button class="cpass-edit" onclick="openBadgePicker()">Edit</button>
-          </div>
-          <div class="cpass-badges">${slotsHtml}</div>
-        </div>
-
-        <!-- Stats -->
-        <div class="cpass-stats">
-          <div class="cpass-stat"><span class="cpass-stat-num">${myEvents.length}</span><span class="cpass-stat-label">Events</span></div>
-          <div class="cpass-stat"><span class="cpass-stat-num">${earnedTotal}</span><span class="cpass-stat-label">Badges</span></div>
-        </div>
+        ${bodySectionsHtml}
 
         <!-- Footer pass band -->
         <div class="cpass-foot">
@@ -224,8 +213,7 @@ function openExpandedCard() {
 function openBadgePicker() {
   const old = document.getElementById("cpass-picker-overlay");
   if (old) old.remove();
-  const ext = getCardExt();
-  const chosen = ext.badges.slice(0, 3);
+  const chosen = ((state.myCard && state.myCard.featuredBadges) || []).slice(0, 3);
   const all = getAllBadges();
   const earned = all.filter((b) => b.earned);
   const locked = all.filter((b) => !b.earned);
@@ -264,8 +252,8 @@ function openBadgePicker() {
   });
 }
 function toggleFeaturedBadge(id) {
-  const ext = getCardExt();
-  let arr = ext.badges.filter((x) => getBadgeById(x)); // prune stale
+  const current = (state.myCard && state.myCard.featuredBadges) || [];
+  let arr = current.filter((x) => getBadgeById(x)); // prune stale
   const i = arr.indexOf(id);
   if (i >= 0) {
     arr.splice(i, 1);
@@ -276,8 +264,7 @@ function toggleFeaturedBadge(id) {
     }
     arr.push(id);
   }
-  ext.badges = arr;
-  saveCardExt(ext);
+  saveMyCardFields({ featuredBadges: arr });
   // update cells + count without full re-render
   document.querySelectorAll(".bpick-cell").forEach((c) => {});
   const cnt = document.getElementById("bpick-count");
@@ -362,24 +349,6 @@ function renderProfile() {
   const count = myEvents.length;
   const card = state.myCard;
 
-  // Extended card fields
-  let cardExt = {
-    motto: "",
-    pattern: "lines",
-    areas: [],
-    accentColor: "#FFCF33",
-    bgStyle: "obsidian",
-    patternOpacity: 0.18,
-  };
-  try {
-    const r = localStorage.getItem("card_ext:" + state.profileName);
-    if (r) cardExt = { ...cardExt, ...JSON.parse(r) };
-  } catch (e) {}
-  let profilePhoto = "";
-  try {
-    profilePhoto =
-      localStorage.getItem("card_photo:" + state.profileName) || "";
-  } catch (e) {}
   let profileAbout = "";
   try {
     profileAbout =
@@ -405,29 +374,23 @@ function renderProfile() {
   const nextLvIdx = LEVELS.findIndex((l) => l === lv) + 1;
   const nextLv = LEVELS[nextLvIdx];
 
-  const topAreas = cardExt.areas || [];
+  const topAreas = (card && Array.isArray(card.areas) && card.areas.length) ? card.areas : [];
 
-  // Card HTML (inline profile card)
-  function profileCardHtml(c, ext) {
-    const cols = resolveCardColors(
-      ext.bgStyle || c?.theme || "obsidian",
-      ext.accentColor || c?.accentColor || "#FFCF33",
-    );
+  // Card HTML (inline profile card) — reads the same DB-backed
+  // state.myCard the full Cumulus Pass (openExpandedCard()) reads, so this
+  // preview never drifts from what a host profile viewer would see.
+  function profileCardHtml(c) {
+    const cols = resolveCardColors(c?.theme || "obsidian", c?.accent || "#FFCF33");
     const { bg, accent, text: textCol, textSoft } = cols;
-    const pat = CARD_PATTERNS[ext.pattern || "lightning"] || "";
     const tagBg = cols.dark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.08)";
     const tagBorder = cols.dark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.12)";
-    const tags =
-      c && c.interests
-        ? c.interests
-            .split(",")
-            .slice(0, 5)
-            .map(
-              (s) =>
-                `<span class="id-card-tag" style="background:${tagBg};border:1px solid ${tagBorder};color:${textCol};">${escapeHtml(s.trim())}</span>`,
-            )
-            .join("")
-        : "";
+    const tags = (c && Array.isArray(c.areas) ? c.areas : [])
+      .slice(0, 5)
+      .map(
+        (s) =>
+          `<span class="id-card-tag" style="background:${tagBg};border:1px solid ${tagBorder};color:${textCol};">${escapeHtml(s)}</span>`,
+      )
+      .join("");
     const borderStyle = lv.ring;
     const shadowStyle = `0 8px 28px rgba(0,0,0,0.22),0 0 0 1px rgba(0,0,0,0.08),0 0 18px ${lv.glow}`;
     const initStr = (c?.name || state.profileName)
@@ -436,11 +399,10 @@ function renderProfile() {
       .slice(0, 2)
       .join("")
       .toUpperCase();
-    const photoSticker = profilePhoto
-      ? `<div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid ${accent};flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><img src="${profilePhoto}" style="width:100%;height:100%;object-fit:cover;display:block;" alt="${escapeHtml(c?.name || state.profileName)}"/></div>`
+    const photoSticker = c?.avatarUrl
+      ? `<div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid ${accent};flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><img src="${c.avatarUrl}" style="width:100%;height:100%;object-fit:cover;display:block;" alt="${escapeHtml(c?.name || state.profileName)}"/></div>`
       : `<div style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${accent}22;border:2px solid ${accent}55;flex-shrink:0;font-size:18px;font-weight:800;color:${accent};">${initStr}</div>`;
     return `<div class="id-card profile-id-card prof-avatar-float" style="background:${bg};border:${borderStyle};box-shadow:${shadowStyle};">
-      <div style="position:absolute;inset:0;pointer-events:none;color:${accent};opacity:${ext.patternOpacity || 0.35};">${pat}</div>
       <div class="ce-card-shine"></div>
       <div style="position:relative;z-index:2;display:flex;flex-direction:column;height:100%;">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;">
@@ -451,7 +413,6 @@ function renderProfile() {
           ${photoSticker}
         </div>
         <div class="id-card-name" style="color:${textCol};">${escapeHtml(c ? c.name : state.profileName)}</div>
-        ${ext.motto ? `<div style="font-size:11px;font-style:italic;font-weight:700;color:${accent};margin-bottom:4px;">"${escapeHtml(ext.motto)}"</div>` : ""}
         ${c && c.bio ? `<div class="id-card-bio" style="color:${textSoft};">${escapeHtml(c.bio)}</div>` : ""}
         <div class="id-card-tags" style="margin-top:auto;">${tags}</div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
@@ -536,7 +497,7 @@ function renderProfile() {
   return `
     <!-- Card -->
     <div class="prof-card-section">
-      ${profileCardHtml(card, cardExt)}
+      ${profileCardHtml(card)}
       <div class="prof-card-btns">
         ${
           card
