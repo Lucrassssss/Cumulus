@@ -520,12 +520,8 @@ function buildCalendarWeeks(year, monthIdx) {
 // separate WebGL pins stacked directly on top of each other
 // (icon-allow-overlap/icon-ignore-placement), visually indistinguishable and
 // with clicks landing on whichever one Mapbox's hit-test happened to return.
-// Grouped into a single "deck" feature instead: one pin per physical spot,
-// a small count badge (see the "stack-count" layer in attachMapLayers) hints
-// there's more than one, and tapping it opens an inline carousel
-// (openPinDeck(), 06-map-animations.js) rather than an arbitrary single event.
-// toFixed(6) (~0.1m precision) groups by "the same point", not "nearby" —
-// two genuinely different venues a few doors down stay separate pins.
+// toFixed(6) (~0.1m precision) groups by "the same point", not "nearby" — two
+// genuinely different venues a few doors down stay separate pins.
 function groupEventsByLocation(events) {
   const groups = new Map();
   events.forEach((ev) => {
@@ -534,6 +530,35 @@ function groupEventsByLocation(events) {
     groups.get(key).push(ev);
   });
   return groups;
+}
+
+// Fans a group out into a hand-of-cards arc instead of collapsing it into
+// one pin: every event keeps its own real, independently-clickable pin (no
+// count badge, no click-to-expand step), each shifted by a constant
+// screen-space icon-offset/icon-rotate so they visually spread left-to-right
+// above the shared coordinate, overlapping at the base the way a fanned hand
+// of physical cards does, but clearly separated at the head/glyph. Capped at
+// a fixed max spread — beyond ~6 pins the arc would fan wide enough to be
+// more confusing than a tight overlap, so extra pins compress toward the
+// spread's edges rather than the arc growing without bound.
+const PIN_FAN_RADIUS = 34; // px from the shared point to each fanned pin's tip
+const PIN_FAN_MAX_ANGLE = 76; // total arc width in degrees, single event = 0
+function fanOffsetsFor(count) {
+  if (count <= 1) return [{ dx: 0, dy: 0, rotate: 0 }];
+  const spread = Math.min(PIN_FAN_MAX_ANGLE, 18 * (count - 1));
+  const step = spread / (count - 1);
+  const start = -spread / 2;
+  return Array.from({ length: count }, (_, i) => {
+    const deg = start + step * i;
+    const rad = (deg * Math.PI) / 180;
+    return {
+      // Arc opens upward (negative dy) so the fan reads as cards held above
+      // the venue's actual point, never covering it.
+      dx: Math.round(PIN_FAN_RADIUS * Math.sin(rad)),
+      dy: Math.round(-PIN_FAN_RADIUS * (1 - Math.cos(rad)) - PIN_FAN_RADIUS * 0.15),
+      rotate: Math.round(deg * 0.6),
+    };
+  });
 }
 
 function buildEventsGeoJSON() {
@@ -547,24 +572,23 @@ function buildEventsGeoJSON() {
   const groups = groupEventsByLocation(withLocation);
   const features = [];
   groups.forEach((group) => {
-    // Soonest-starting event at this spot represents the pin's own
-    // category/color/free-ness — arbitrary but stable, and the most
-    // relevant one to lead with when there's a choice.
     const sorted = [...group].sort((a, b) => a.startsAt - b.startsAt);
-    const lead = sorted[0];
-    features.push({
-      type: "Feature",
-      id: lead.id,
-      geometry: { type: "Point", coordinates: [lead.lon, lead.lat] },
-      properties: {
-        id: lead.id,
-        color: CATS[lead.category].color,
-        status: eventStatus(lead),
-        category: lead.category,
-        free: eventPrice(lead) <= 0,
-        stack_count: sorted.length,
-        stack_ids: sorted.map((ev) => ev.id).join(","),
-      },
+    const offsets = fanOffsetsFor(sorted.length);
+    sorted.forEach((ev, i) => {
+      features.push({
+        type: "Feature",
+        id: ev.id,
+        geometry: { type: "Point", coordinates: [ev.lon, ev.lat] },
+        properties: {
+          id: ev.id,
+          color: CATS[ev.category].color,
+          status: eventStatus(ev),
+          category: ev.category,
+          free: eventPrice(ev) <= 0,
+          fan_offset: [offsets[i].dx, offsets[i].dy],
+          fan_rotate: offsets[i].rotate,
+        },
+      });
     });
   });
   return { type: "FeatureCollection", features };

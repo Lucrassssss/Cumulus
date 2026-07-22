@@ -1603,6 +1603,39 @@ function openHostProfile(hostKey, hostName) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+// Big square card for the host profile's horizontally-scrolling event row —
+// deliberately a different, larger format from eventListCardHtml's compact
+// list rows (Calendar/search results): this is a browsing surface for one
+// host's own lineup, closer to how a portfolio or gallery presents a body of
+// work, so each event gets real visual weight instead of a dense row.
+function hostEventBigCardHtml(ev) {
+  const c = CATS[ev.category] || { color: "var(--accent)", textColor: "#fff" };
+  const price = eventPrice(ev);
+  const img = ev.photoUrl || ev.nightShotUrl || catImg(ev.category);
+  return `<button type="button" class="host-event-card" style="--corner:${c.color};" onclick="openEvent('${ev.id}')">
+    <div class="host-event-card-img" style="background-image:url('${img}');">
+      <span class="event-badge" style="--cat:${c.color};--cat-text:${c.textColor};position:absolute;top:10px;left:10px;margin-bottom:0;">${ev.category}</span>
+    </div>
+    <div class="host-event-card-body">
+      <div class="host-event-card-title">${escapeHtml(ev.title)}</div>
+      <div class="host-event-card-meta">${escapeHtml(ev.date)} · ${escapeHtml(ev.time)}</div>
+      <div class="host-event-card-price">${price ? `From £${price}` : "Free"}</div>
+    </div>
+  </button>`;
+}
+
+// Deterministic 2-letter monogram from a host's display name — "Nova
+// Collective" -> "NC", a single-word name -> its first two letters. Used for
+// the avatar placeholder in place of a real photo, since no avatar_url (or
+// any host-facing photo field) exists anywhere in the schema yet — see
+// PRODUCT.md/ARCHITECTURE.md for the real-data-only convention this follows.
+function hostInitials(name) {
+  const words = (name || "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return "?";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
 function renderHostProfile() {
   const hostKey = state.selectedHostKey;
   const hostName = state.selectedHostName;
@@ -1632,18 +1665,22 @@ function renderHostProfile() {
   </div>`;
 
   const upcomingHtml = upcoming.length
-    ? upcoming.map(eventListCardHtml).join("")
+    ? `<div class="host-event-row">${upcoming.map(hostEventBigCardHtml).join("")}</div>`
     : `<div class="map-empty-card" role="status" style="max-width:100%;margin:0 auto;">
         <div class="me-title">Nothing upcoming right now</div>
         <div class="me-sub">${escapeHtml(hostName)} doesn't have any upcoming events listed at the moment.</div>
       </div>`;
 
-  return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header">
-      <h2>${escapeHtml(hostName)}${reviewed ? ` <span class="host-reviewed-badge" title="Host reviewed by Cumulus">${checkIconSvg(12)} Reviewed</span>` : ""}</h2>
-      <p>Event host</p>
+  return `<button class="back-btn host-profile-back" onclick="goBack()">←</button>
+    <div class="host-profile-cover"></div>
+    <div class="host-profile-header">
+      <div class="host-profile-avatar">${hostInitials(hostName)}</div>
+      <div class="host-profile-identity">
+        <h2>${escapeHtml(hostName)}${reviewed ? ` <span class="host-reviewed-badge" title="Host reviewed by Cumulus">${checkIconSvg(12)} Reviewed</span>` : ""}</h2>
+        <p>Event host</p>
+      </div>
+      <button class="btn-follow-host${following ? " following" : ""}" onclick="toggleFollowHost('${safeKey}','${safeName}')">${following ? "Following" : "Follow"}</button>
     </div>
-    <button class="btn-follow-host${following ? " following" : ""}" style="margin-bottom:16px;" onclick="toggleFollowHost('${safeKey}','${safeName}')">${following ? "Following" : "Follow"}</button>
     ${statsHtml}
     <div class="section-title">Upcoming events</div>
     ${upcomingHtml}`;

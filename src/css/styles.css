@@ -751,132 +751,6 @@ body.no-scroll {
   transform: scale(1.18);
 }
 
-/* Inline pin-deck carousel — anchored at the deck pin's projected screen
- * position via JS (transform: translate(x,y), see positionPinDeck() in
- * 06-map-animations.js), with the visual clearance-above-the-pin baked into
- * this static margin instead of the JS transform, so the two never fight
- * each other. Horizontal scroll-snap gives real swipe-through on touch and
- * a natural "peek the next card" edge with no hand-rolled drag code. */
-.pin-deck {
-  position: absolute;
-  top: 0;
-  left: 0;
-  margin-left: -95px;
-  margin-top: -222px;
-  width: 190px;
-  z-index: 5;
-  display: none;
-  opacity: 0;
-  transform-origin: 50% 100%;
-  transition:
-    opacity 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
-  transform: translate(0, 0) scale(0.92);
-}
-
-.pin-deck.open {
-  opacity: 1;
-  transform: translate(0, 0) scale(1);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pin-deck {
-    transition: opacity 0.15s ease;
-  }
-}
-
-.pin-deck-close {
-  position: absolute;
-  top: -11px;
-  right: -11px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 1.5px solid var(--line);
-  background: var(--surface);
-  color: var(--text);
-  font-size: 12px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 12px var(--shadow);
-  z-index: 1;
-}
-
-.pin-deck-track {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  padding: 2px;
-  -webkit-overflow-scrolling: touch;
-}
-
-.pin-deck-track::-webkit-scrollbar {
-  display: none;
-}
-
-.pin-deck-card {
-  scroll-snap-align: start;
-  flex: 0 0 150px;
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-  background: var(--surface);
-  border: 1.5px solid var(--line);
-  border-radius: 14px;
-  padding: 8px;
-  cursor: pointer;
-  font: inherit;
-  box-shadow: 0 8px 22px var(--shadow);
-}
-
-.pin-deck-card-img {
-  width: 100%;
-  height: 64px;
-  border-radius: 9px;
-  background-color: var(--surface-2);
-  background-size: cover;
-  background-position: center;
-  margin-bottom: 6px;
-}
-
-.pin-deck-card-cat {
-  font-size: 9.5px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: var(--c, var(--accent));
-}
-
-.pin-deck-card-title {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1.25;
-  margin-top: 1px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.pin-deck-card-meta {
-  font-size: 10.5px;
-  color: var(--text-muted);
-  margin-top: 3px;
-}
-
-.pin-deck-card-price {
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--text);
-  margin-top: 4px;
-}
-
 .map-empty {
   position: absolute;
   inset: 0;
@@ -6811,6 +6685,134 @@ select.gate-input {
 .host-byline-link:hover {
   color: var(--gold-text);
   text-decoration-color: currentColor;
+}
+
+/* Cover + avatar use the same gold gradient as buttons (--grad-gold) rather
+ * than a per-host hue — DESIGN.md's One Thread Rule keeps gold the only
+ * accent across the system, so host identity here comes from the monogram
+ * and stats, not a second color introduced per profile. No avatar_url or
+ * cover field exists anywhere in the schema yet (checked before building
+ * this), so this is an honest placeholder, not a stand-in for a missing
+ * photo the code pretends exists. */
+.host-profile-cover {
+  height: 110px;
+  border-radius: var(--r-lg);
+  background: var(--grad-gold);
+  margin-bottom: -34px;
+}
+
+.host-profile-header {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  padding: 0 4px;
+  margin-bottom: 18px;
+}
+
+.host-profile-avatar {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--grad-gold);
+  border: 3px solid var(--bg);
+  box-shadow: 0 4px 14px var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  color: #0a0a0a;
+}
+
+.host-profile-identity {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 6px;
+}
+
+.host-profile-identity h2 {
+  margin: 0;
+}
+
+.host-profile-identity p {
+  margin: 2px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.host-profile-header .btn-follow-host {
+  margin-bottom: 6px;
+}
+
+.host-event-row {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 4px 4px 10px;
+  margin: 0 -4px;
+}
+
+.host-event-card {
+  scroll-snap-align: start;
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s ease;
+}
+
+.host-event-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px var(--shadow);
+}
+
+.host-event-card-img {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  background-color: var(--surface-2);
+  background-size: cover;
+  background-position: center;
+}
+
+.host-event-card-body {
+  padding: 12px 14px 14px;
+}
+
+.host-event-card-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.host-event-card-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 5px;
+}
+
+.host-event-card-price {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  margin-top: 6px;
 }
 
 .host-stats-row {

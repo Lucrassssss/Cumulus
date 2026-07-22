@@ -547,7 +547,6 @@ const PIN_POPUP_OFFSET = {
 
 function openActiveEventMarker(evId) {
   removeActiveHtmlMarker(); // tears down prior beacon + popup
-  closePinDeck(); // and any open deck carousel — only one overlay at a time
   const ev = EVENTS.find((e) => String(e.id) === String(evId));
   if (!ev || ev.lat == null || ev.lon == null) return;
 
@@ -597,97 +596,6 @@ function openActiveEventMarker(evId) {
     );
   }
   lmap.easeTo({ center: [ev.lon, ev.lat] });
-}
-
-// ── Pin deck ───────────────────────────────────────────────────────────────
-// Inline carousel for a "deck" pin (stack_count > 1 in buildEventsGeoJSON) —
-// several events grouped at the same spot. Anchored at the pin's projected
-// screen position exactly like the hover overlay (positionPinOverlay above),
-// so it reads as expanding out of that specific pin rather than a generic
-// modal. A horizontally-scrolling row with CSS scroll-snap gives real
-// swipe-through on touch and a natural "peek the next card" edge, with no
-// hand-rolled drag/gesture code. Tapping a card opens its normal summary
-// popup (openActiveEventMarker) — same "tap once for a summary" model as any
-// other pin, just reached through the deck first.
-let _pinDeckEl = null;
-let _pinDeckCoords = null;
-
-function ensurePinDeck() {
-  if (_pinDeckEl) return _pinDeckEl;
-  const host = document.getElementById("main-map");
-  if (!host) return null;
-  const el = document.createElement("div");
-  el.className = "pin-deck";
-  el.innerHTML = `<button type="button" class="pin-deck-close" aria-label="Close">✕</button><div class="pin-deck-track"></div>`;
-  host.appendChild(el);
-  _pinDeckEl = el;
-  el.querySelector(".pin-deck-close").addEventListener("click", (e) => {
-    e.stopPropagation();
-    closePinDeck();
-  });
-  // Swallow clicks on the track background (between/around cards) so they
-  // don't bubble to the map's own catch-all click handler and immediately
-  // close the deck they just opened.
-  el.querySelector(".pin-deck-track").addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
-  return el;
-}
-
-function positionPinDeck() {
-  if (!_pinDeckEl || !lmap || !_pinDeckCoords) return;
-  const p = lmap.project(_pinDeckCoords);
-  _pinDeckEl.style.transform = `translate(${p.x}px, ${p.y}px)`;
-}
-
-function pinDeckCardHtml(ev) {
-  const c = CATS[ev.category] || { color: "var(--accent)" };
-  const status = eventStatus(ev);
-  const price = eventPrice(ev);
-  const img = ev.photoUrl || ev.nightShotUrl || catImg(ev.category);
-  const priceLabel =
-    status === "past" ? "Ended" : price ? `From £${price}` : "Free";
-  return `<button type="button" class="pin-deck-card" style="--c:${c.color};" onclick="openPinDeckCard('${ev.id}')">
-    <div class="pin-deck-card-img" style="background-image:url('${img}');"></div>
-    <div class="pin-deck-card-cat">${escapeHtml(ev.category)}</div>
-    <div class="pin-deck-card-title">${escapeHtml(ev.title)}</div>
-    <div class="pin-deck-card-meta">${escapeHtml(ev.date)} · ${escapeHtml(ev.time)}</div>
-    <div class="pin-deck-card-price">${priceLabel}</div>
-  </button>`;
-}
-
-function openPinDeck(ids, coordinates) {
-  removeActiveHtmlMarker();
-  const el = ensurePinDeck();
-  if (!el) return;
-  const events = ids
-    .map((id) => EVENTS.find((e2) => String(e2.id) === String(id)))
-    .filter(Boolean)
-    .sort((a, b) => a.startsAt - b.startsAt);
-  if (!events.length) return;
-  _pinDeckCoords = coordinates;
-  el.querySelector(".pin-deck-track").innerHTML = events
-    .map(pinDeckCardHtml)
-    .join("");
-  positionPinDeck();
-  el.style.display = "flex";
-  void el.offsetWidth; // force reflow so the entrance transition actually plays
-  el.classList.add("open");
-}
-
-function closePinDeck() {
-  if (!_pinDeckEl || !_pinDeckCoords) return;
-  _pinDeckEl.classList.remove("open");
-  const el = _pinDeckEl;
-  setTimeout(() => {
-    if (!_pinDeckCoords) el.style.display = "none";
-  }, 200);
-  _pinDeckCoords = null;
-}
-
-function openPinDeckCard(id) {
-  closePinDeck();
-  openActiveEventMarker(id);
 }
 
 function updateClusterPaint() {
@@ -791,7 +699,13 @@ function attachMapLayers() {
     },
   });
 
-  // Native WebGL symbol layer to render all individual event pins directly in WebGL
+  // Native WebGL symbol layer to render all individual event pins directly
+  // in WebGL. icon-offset/icon-rotate are per-feature (fan_offset/
+  // fan_rotate, computed in buildEventsGeoJSON's fanOffsetsFor()) so events
+  // sharing a coordinate fan out into a hand-of-cards arc instead of
+  // rendering as indistinguishable stacked icons — each fanned pin is a
+  // real, independently-hit-testable feature at its own shifted screen
+  // position, so browsing them is just tapping the one you want directly.
   lmap.addLayer({
     id: "unclustered-events",
     type: "symbol",
@@ -805,45 +719,17 @@ function attachMapLayers() {
       ],
       "icon-size": 1.0,
       "icon-anchor": "bottom",
+      "icon-offset": ["get", "fan_offset"],
+      "icon-rotate": ["get", "fan_rotate"],
+      "icon-rotation-alignment": "viewport",
       "icon-allow-overlap": true,
       "icon-ignore-placement": true,
     },
   });
 
-  // Small count badge on "deck" pins (stack_count > 1 — several events
-  // grouped at the same spot in buildEventsGeoJSON) so the deck is
-  // discoverable at rest, not just revealed by tapping. Same text-layer
-  // pattern as "cluster-count" above, positioned at the pin's head via
-  // icon-anchor's own bottom offset (the pin canvas is 40x50 — the head
-  // sits ~30px up from the tip, so a small negative text-offset in ems
-  // lands it just off the top-right of the head-hole).
-  lmap.addLayer({
-    id: "stack-count",
-    type: "symbol",
-    source: "events-source",
-    filter: ["all", ["!", ["has", "point_count"]], [">", ["get", "stack_count"], 1]],
-    layout: {
-      "text-field": ["concat", "×", ["get", "stack_count"]],
-      "text-font": ["DIN Offc Pro Bold", "Arial Unicode MS Bold"],
-      "text-size": 10.5,
-      "text-anchor": "left",
-      "text-offset": [0.55, -3.55],
-      "icon-allow-overlap": true,
-      "icon-ignore-placement": true,
-      "text-allow-overlap": true,
-      "text-ignore-placement": true,
-    },
-    paint: {
-      "text-color": "#ffffff",
-      "text-halo-color": "rgba(0,0,0,0.55)",
-      "text-halo-width": 1.4,
-    },
-  });
-
-  // Click handler: a single event opens the usual summary popup; a "deck"
-  // (stack_count > 1) opens the inline carousel instead (openPinDeck) so
-  // overlapping pins are actually browsable rather than an arbitrary pick
-  // of whichever one Mapbox's hit-test happened to return.
+  // Click handler — always the single event's own summary popup now; the
+  // fan means every pin, including ones sharing a venue, is already its own
+  // independently-tappable target at rest.
   lmap.on("click", "unclustered-events", (e) => {
     const features = lmap.queryRenderedFeatures(e.point, {
       layers: ["unclustered-events"],
@@ -852,11 +738,7 @@ function attachMapLayers() {
     const props = features[0].properties;
     removeHoverPopup();
     hidePinOverlay();
-    if (props.stack_count > 1) {
-      openPinDeck(props.stack_ids.split(","), features[0].geometry.coordinates);
-    } else {
-      openActiveEventMarker(props.id);
-    }
+    openActiveEventMarker(props.id);
   });
   lmap.on("mouseenter", "unclustered-events", () => {
     lmap.getCanvas().style.cursor = "pointer";
@@ -902,7 +784,6 @@ function attachMapLayers() {
       const ev = EVENTS.find((e2) => String(e2.id) === String(_pinOverlayEvId));
       if (ev) positionPinOverlay([ev.lon, ev.lat]);
     }
-    if (_pinDeckCoords) positionPinDeck();
   });
 
   // Cluster click → zoom in
@@ -935,10 +816,7 @@ function attachMapLayers() {
     const hits = lmap.queryRenderedFeatures(e.point, {
       layers: ["clusters", "unclustered-events"],
     });
-    if (!hits.length) {
-      removeActiveHtmlMarker();
-      closePinDeck();
-    }
+    if (!hits.length) removeActiveHtmlMarker();
   });
 
   // After each camera settle, fetch only the events within the new viewport.
