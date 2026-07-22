@@ -728,6 +728,12 @@ body.no-scroll {
   pointer-events: none;
   z-index: 3;
   display: none;
+  /* Matches icon-anchor:"bottom" on the WebGL layer — rotation (applied via
+   * JS as part of the same transform as the position translate, see
+   * positionPinOverlay) pivots around this same bottom-center tip, so a
+   * fanned pin's hover overlay rotates in place exactly like its real icon
+   * instead of swinging around the box's default center. */
+  transform-origin: 50% 100%;
 }
 
 .pin-hover-overlay img {

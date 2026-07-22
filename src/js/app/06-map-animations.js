@@ -270,20 +270,28 @@ function ensurePinOverlay() {
   return el;
 }
 let _pinOverlayEvId = null;
-function positionPinOverlay(lngLat) {
+let _pinOverlayRotate = 0;
+// Rotates around the same bottom-center point icon-anchor:"bottom" pivots
+// the WebGL icon around (see .pin-hover-overlay's transform-origin in
+// styles.css) — without this, a fanned pin's hover overlay always rendered
+// upright and dead-center on the shared coordinate no matter which rotated
+// pin was actually being hovered, reading as a phantom pin popping up in
+// the middle of the fan instead of previewing the one under the cursor.
+function positionPinOverlay(lngLat, rotateDeg = _pinOverlayRotate) {
   if (!_pinOverlayEl || !lmap) return;
   const p = lmap.project(lngLat);
-  _pinOverlayEl.style.transform = `translate(${p.x - 20}px, ${p.y - 50}px)`;
+  _pinOverlayEl.style.transform = `translate(${p.x - 20}px, ${p.y - 50}px) rotate(${rotateDeg}deg)`;
 }
-function showPinOverlay(ev) {
+function showPinOverlay(ev, rotateDeg = 0) {
   const el = ensurePinOverlay();
   if (!el) return;
   _pinOverlayEvId = ev.id;
+  _pinOverlayRotate = rotateDeg;
   const img = el.querySelector("img");
   const isFree = eventPrice(ev) <= 0;
   img.src =
     (isFree ? pinFreeImageDataUrls[ev.category] : pinImageDataUrls[ev.category]) || "";
-  positionPinOverlay([ev.lon, ev.lat]);
+  positionPinOverlay([ev.lon, ev.lat], rotateDeg);
   el.style.display = "block";
   // Always retrigger the bounce-in from a clean state, even when the
   // overlay is already showing a different pin (moving mouse from pin to
@@ -727,38 +735,45 @@ function attachMapLayers() {
     },
   });
 
-  // Click handler — every pin in a fanned group shares the exact same tip
-  // coordinate (rotation only, no translation — see above), so
-  // queryRenderedFeatures' candidates can't be told apart by anchor
-  // position the way a translated fan could be. Instead, reconstruct where
-  // each candidate's own head (its visually identifying glyph, ~32px up the
-  // pin from its tip in the unrotated 40x50 icon) actually renders after
-  // its own fan_rotate is applied, and pick whichever rendered head is
-  // nearest the real click point.
+  // Every pin in a fanned group shares the exact same tip coordinate
+  // (rotation only, no translation — see buildEventsGeoJSON), so
+  // queryRenderedFeatures' candidates can't be told apart by anchor position
+  // the way a translated fan could be. Reconstruct where each candidate's
+  // own head (its visually identifying glyph, ~32px up the pin from its tip
+  // in the unrotated 40x50 icon) actually renders after its own fan_rotate
+  // is applied, and return whichever rendered head is nearest the real
+  // point — shared by both click and hover so they always agree on which
+  // pin is actually "under" the cursor.
   const PIN_HEAD_DISTANCE = 32; // px from tip to head-glyph in the pin icon
-  lmap.on("click", "unclustered-events", (e) => {
-    const features = lmap.queryRenderedFeatures(e.point, {
-      layers: ["unclustered-events"],
-    });
-    if (!features.length) return;
+  function resolveFannedFeature(features, point) {
     let best = features[0];
     let bestDist = Infinity;
+    let bestHead = null;
     features.forEach((f) => {
       const p = lmap.project(f.geometry.coordinates);
       const deg = Number(f.properties.fan_rotate) || 0;
       const rad = (deg * Math.PI) / 180;
       const headX = p.x + PIN_HEAD_DISTANCE * Math.sin(rad);
       const headY = p.y - PIN_HEAD_DISTANCE * Math.cos(rad);
-      const dist = Math.hypot(headX - e.point.x, headY - e.point.y);
+      const dist = Math.hypot(headX - point.x, headY - point.y);
       if (dist < bestDist) {
         bestDist = dist;
         best = f;
+        bestHead = { x: headX, y: headY, deg };
       }
     });
-    const props = best.properties;
+    return { feature: best, head: bestHead };
+  }
+
+  lmap.on("click", "unclustered-events", (e) => {
+    const features = lmap.queryRenderedFeatures(e.point, {
+      layers: ["unclustered-events"],
+    });
+    if (!features.length) return;
+    const { feature } = resolveFannedFeature(features, e.point);
     removeHoverPopup();
     hidePinOverlay();
-    openActiveEventMarker(props.id);
+    openActiveEventMarker(feature.properties.id);
   });
   lmap.on("mouseenter", "unclustered-events", () => {
     lmap.getCanvas().style.cursor = "pointer";
@@ -771,30 +786,41 @@ function attachMapLayers() {
 
   // Hover preview (pointer/mouse devices only — touch never fires mousemove
   // here) — shows the same info as the click popup, without the click's
-  // lightning-beacon "selected" effect. Click still behaves exactly as
-  // before; this is purely additive. The DOM overlay pin (same image as the
-  // WebGL icon, see showPinOverlay) gives a real per-pin hover-grow bounce
-  // that a WebGL layout property can't do on its own.
+  // lightning-beacon "selected" effect. The DOM overlay pin (same image as
+  // the WebGL icon, see showPinOverlay) now rotates and repositions to match
+  // whichever fanned pin is actually under the cursor — it used to always
+  // render upright and dead-center on the shared coordinate regardless of
+  // rotation, which read as a phantom pin popping up in the middle of the
+  // fan instead of previewing the one actually being hovered.
   lmap.on("mousemove", "unclustered-events", (e) => {
     const features = lmap.queryRenderedFeatures(e.point, {
       layers: ["unclustered-events"],
     });
     if (!features.length) return;
-    const evId = features[0].properties.id;
+    const { feature, head } = resolveFannedFeature(features, e.point);
+    const evId = feature.properties.id;
     if (evId === hoverPopupEventId || evId === activePopupEventId) return;
     removeHoverPopup();
     const ev = EVENTS.find((e2) => String(e2.id) === String(evId));
     if (!ev || ev.lon == null || ev.lat == null) return;
-    showPinOverlay(ev);
+    const rotateDeg = Number(feature.properties.fan_rotate) || 0;
+    showPinOverlay(ev, rotateDeg);
+    // Anchor the tooltip near the pin's own rotated head instead of the
+    // shared coordinate, so it appears where that specific pin's glyph
+    // actually is rather than in one fixed spot for every pin in the fan.
+    // PIN_POPUP_OFFSET's -66 clears a full grown pin measured from its TIP;
+    // the head is already 32px up from the tip, so the remaining clearance
+    // needed from here is 66-32=34px, not the full 66.
+    const headLngLat = head ? lmap.unproject([head.x, head.y]) : [ev.lon, ev.lat];
     hoverPopup = new mapboxgl.Popup({
-      offset: PIN_POPUP_OFFSET,
+      offset: { bottom: [0, -34] },
       closeButton: false,
       closeOnClick: false,
       className: "evtip-popup",
       anchor: "bottom",
       maxWidth: "240px",
     })
-      .setLngLat([ev.lon, ev.lat])
+      .setLngLat(headLngLat)
       .setHTML(pinTooltipHtml(ev))
       .addTo(lmap);
     hoverPopupEventId = ev.id;
