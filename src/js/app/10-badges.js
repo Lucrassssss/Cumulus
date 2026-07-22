@@ -1487,9 +1487,11 @@ async function startStripeCheckout() {
     });
     // Passing the already-known email as a default (rather than via a
     // separate Link Authentication Element the buyer would have to fill in
-    // again) lets Stripe Link still recognize a returning buyer and offer
-    // one-tap autofill — without it, Link has no email to match against and
-    // silently degrades to a plain card form for repeat buyers.
+    // again) just prefills the card form's billing email now — Link itself
+    // is deliberately excluded from create-checkout-session's payment_method_
+    // types allow-list (card + PayPal only, per product decision), so this
+    // no longer triggers Link's own one-tap recognition, only the plain
+    // autofill.
     const paymentElement = stripeElementsGroup.create("payment", {
       defaultValues: state.profileEmail
         ? { billingDetails: { email: state.profileEmail } }

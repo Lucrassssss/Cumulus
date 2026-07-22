@@ -176,7 +176,6 @@ Deno.serve(async (req: Request) => {
   const params = new URLSearchParams({
     amount: String(unitAmountPence),
     currency: "gbp",
-    "automatic_payment_methods[enabled]": "true",
     "metadata[event_id]": eventId,
     "metadata[user_id]": userId,
     "metadata[qty]": String(qty),
@@ -186,17 +185,33 @@ Deno.serve(async (req: Request) => {
     description: ev.title || "Cumulus ticket",
   });
   if (receiptEmail) params.append("receipt_email", receiptEmail);
-  // Card/Apple Pay/Google Pay/PayPal/Link only — explicitly exclude BNPL
-  // methods at the API level so "no Klarna" is a code fact, not a Dashboard
-  // toggle someone can silently flip back on. automatic_payment_methods still
-  // decides availability among what's left (currency/country eligible +
-  // enabled in the Dashboard), this just removes these three from that set
-  // regardless of Dashboard state. Apple Pay/Google Pay/Link can't be
-  // excluded this way (Stripe blocks it) — they're not in this list because
-  // we want them, not because the exclusion would fail.
-  for (const t of ["klarna", "afterpay_clearpay", "affirm"]) {
-    params.append("excluded_payment_method_types[]", t);
-  }
+  // Hard allow-list, not automatic_payment_methods alone + an exclude-list.
+  // The Stripe account has ~15 other wallets/redirects toggled on in the
+  // Dashboard (Amazon Pay, Revolut Pay, Cartes Bancaires, Kakao Pay, Pix,
+  // Bancontact, BLIK, EPS, etc.) that plain automatic_payment_methods would
+  // happily surface for a GBP PaymentIntent since they're Dashboard-eligible.
+  // An exclude-list only blocks what's named here today — anything
+  // re-enabled later (Klarna included) or newly added by Stripe would
+  // silently leak through. automatic_payment_methods[enabled] still has to
+  // stay on (Stripe's dynamic-eligibility engine), but
+  // allowed_payment_method_types constrains what it's allowed to pick FROM
+  // to just these two — confirmed against the current API reference
+  // (Stripe-Version 2026-03-25.dahlia below) that allowed_payment_method_
+  // types is the live create-time parameter; the older bare
+  // payment_method_types[] array is response-only on this API version, not
+  // an input. "card" + "paypal" is the actual full set we want: Apple Pay
+  // and Google Pay aren't separate payment_method_types, they're wallet
+  // detection layered onto "card" by the Payment Element itself (domain
+  // verification + device support), so this pair alone is card + Apple Pay
+  // + Google Pay + PayPal and nothing else, regardless of Dashboard state.
+  // Trade-off: Link (previously along for the ride under unconstrained
+  // automatic_payment_methods) no longer appears — the email prefill in
+  // startStripeCheckout() (10-badges.js) is now inert for Link recognition
+  // specifically, though it still harmlessly prefills the card form's
+  // billing email.
+  params.append("automatic_payment_methods[enabled]", "true");
+  params.append("allowed_payment_method_types[]", "card");
+  params.append("allowed_payment_method_types[]", "paypal");
 
   try {
     const res = await fetch("https://api.stripe.com/v1/payment_intents", {

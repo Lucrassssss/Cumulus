@@ -430,12 +430,27 @@ preview build and looked like a strong candidate for a fifth outage.
   it creates a **PaymentIntent** (`POST /v1/payment_intents`) for the full
   charge amount (ticket price + booking fee, × quantity — PaymentIntents
   have no line-items/quantity concept, so the server multiplies once
-  up front) and returns its `client_secret`. `automatic_payment_methods`
-  is left enabled so Stripe still offers whatever's eligible (cards,
-  wallets, bank debits) without the function hard-coding a method list.
-  Also looks up the buyer's email from `public.users` and passes it as
-  `receipt_email`, so the new form never needs to ask for an email the
-  app already has (unlike the old Checkout form's own Email field).
+  up front) and returns its `client_secret`. Also looks up the buyer's
+  email from `public.users` and passes it as `receipt_email`, so the new
+  form never needs to ask for an email the app already has (unlike the
+  old Checkout form's own Email field).
+  **Update (product decision, post-launch-prep):** `automatic_payment_
+  methods` is still enabled (Stripe's dynamic-eligibility engine), but
+  it's now paired with `allowed_payment_method_types: ["card", "paypal"]`
+  — a hard allow-list rather than "whatever's eligible." The Stripe
+  account has ~15 other wallets/redirects toggled on in the Dashboard
+  (Amazon Pay, Revolut Pay, Cartes Bancaires, Kakao Pay, Pix, Bancontact,
+  BLIK, EPS, etc.) that unconstrained automatic_payment_methods would
+  happily surface for a GBP charge; card + PayPal is the actual full set
+  wanted (Apple Pay/Google Pay ride on "card," they aren't separate
+  types), and an allow-list survives Dashboard changes an exclude-list
+  wouldn't. Confirmed against the live API reference for this pinned
+  Stripe-Version that `allowed_payment_method_types` is the correct
+  create-time parameter — the bare `payment_method_types` array is
+  response-only on this API version. Trade-off: Link no longer appears
+  as its own payment method (the `receiptEmail`/`billingDetails.email`
+  default in `startStripeCheckout()` now only prefills the card form's
+  email field, not Link's one-tap recognition).
 - `startStripeCheckout()` (`src/js/app/10-badges.js`) now calls
   `stripe.elements({ clientSecret, appearance, fonts })` (the SAME
   `stripeAppearanceForCurrentTheme()` color/font values computed for the
