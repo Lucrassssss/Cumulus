@@ -620,6 +620,21 @@ function updateClusterPaint() {
   );
 }
 
+// queryRenderedFeatures() sometimes hands array-typed GeoJSON properties
+// back as a JSON string rather than a real array (a known Mapbox GL JS
+// quirk for GeoJSON sources) — this reads fan_offset correctly either way.
+function readFanOffset(props) {
+  const raw = props && props.fan_offset;
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {}
+  }
+  return [0, 0];
+}
+
 function attachMapLayers() {
   if (!lmap || lmap.getSource("events-source")) return;
 
@@ -735,7 +750,28 @@ function attachMapLayers() {
       layers: ["unclustered-events"],
     });
     if (!features.length) return;
-    const props = features[0].properties;
+    // Fanned pins can still have some hit-box overlap near the shared base
+    // point (same as physical cards fanned in a hand do) — queryRendered
+    // Features returns every candidate under the click in render order,
+    // topmost first, which isn't necessarily the one actually tapped.
+    // Resolve by real screen distance instead: project each candidate's true
+    // coordinate plus its own fan_offset (the same offset the layer renders
+    // it at) and pick whichever rendered anchor is nearest the click point.
+    let best = features[0];
+    let bestDist = Infinity;
+    features.forEach((f) => {
+      const p = lmap.project(f.geometry.coordinates);
+      const offset = readFanOffset(f.properties);
+      const dist = Math.hypot(
+        p.x + offset[0] - e.point.x,
+        p.y + offset[1] - e.point.y,
+      );
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = f;
+      }
+    });
+    const props = best.properties;
     removeHoverPopup();
     hidePinOverlay();
     openActiveEventMarker(props.id);

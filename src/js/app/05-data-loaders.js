@@ -616,27 +616,38 @@ function groupEventsByLocation(events) {
 // one pin: every event keeps its own real, independently-clickable pin (no
 // count badge, no click-to-expand step), each shifted by a constant
 // screen-space icon-offset/icon-rotate so they visually spread left-to-right
-// above the shared coordinate, overlapping at the base the way a fanned hand
-// of physical cards does, but clearly separated at the head/glyph. Capped at
-// a fixed max spread — beyond ~6 pins the arc would fan wide enough to be
-// more confusing than a tight overlap, so extra pins compress toward the
-// spread's edges rather than the arc growing without bound.
-const PIN_FAN_RADIUS = 34; // px from the shared point to each fanned pin's tip
-const PIN_FAN_MAX_ANGLE = 76; // total arc width in degrees, single event = 0
+// above the shared coordinate.
+//
+// Spacing is a fixed pixel distance between adjacent pin CENTERS, not an
+// angle — an angle+radius approach (the first version of this) put adjacent
+// pins as little as ~10px apart for a 3-event group, which is well inside a
+// single 40px-wide pin icon: their hit-boxes overlapped almost entirely, so
+// only the topmost-rendered pin in an overlap zone was ever actually
+// clickable there, defeating the point of fanning them out at all. Fixed
+// spacing guarantees real separation between every pin's own head/glyph
+// (the part you'd actually tap) regardless of how many are in the group;
+// only the base near the shared point is meant to overlap, the same way
+// physical cards fanned in a hand overlap low and separate up top. Capped
+// total width for large groups so it compresses rather than fanning
+// arbitrarily wide.
+const PIN_FAN_SPACING = 34; // px between adjacent pins' centers
+const PIN_FAN_ARC_LIFT = 14; // px the center of the fan lifts above the edges
+const PIN_FAN_MAX_WIDTH = 240; // total horizontal spread cap for large groups
 function fanOffsetsFor(count) {
   if (count <= 1) return [{ dx: 0, dy: 0, rotate: 0 }];
-  const spread = Math.min(PIN_FAN_MAX_ANGLE, 18 * (count - 1));
-  const step = spread / (count - 1);
-  const start = -spread / 2;
+  const spacing = Math.min(PIN_FAN_SPACING, PIN_FAN_MAX_WIDTH / (count - 1));
+  const mid = (count - 1) / 2;
   return Array.from({ length: count }, (_, i) => {
-    const deg = start + step * i;
-    const rad = (deg * Math.PI) / 180;
+    const t = i - mid; // symmetric around 0: e.g. -1,0,1 or -1.5,-0.5,0.5,1.5
+    const norm = mid ? t / mid : 0; // -1..1, position within the fan
     return {
-      // Arc opens upward (negative dy) so the fan reads as cards held above
-      // the venue's actual point, never covering it.
-      dx: Math.round(PIN_FAN_RADIUS * Math.sin(rad)),
-      dy: Math.round(-PIN_FAN_RADIUS * (1 - Math.cos(rad)) - PIN_FAN_RADIUS * 0.15),
-      rotate: Math.round(deg * 0.6),
+      dx: Math.round(t * spacing),
+      // Arc opens upward (negative = up in screen space) so the fan reads
+      // as cards held above the venue's actual point, never covering it —
+      // the center pin lifts highest, the outer ones settle lower, like a
+      // hand fanned toward the viewer.
+      dy: Math.round(-PIN_FAN_ARC_LIFT * (1 - norm * norm) - 6),
+      rotate: Math.max(-24, Math.min(24, Math.round(t * 9))),
     };
   });
 }
