@@ -1237,6 +1237,8 @@ function renderView() {
   document.body.classList.remove("no-scroll");
   if (state.view === "detail")
     container.innerHTML = renderDetail(state.selectedEventId);
+  else if (state.view === "host-profile")
+    container.innerHTML = renderHostProfile();
   else if (state.view === "profile") container.innerHTML = renderProfile();
   else if (state.view === "achievements")
     container.innerHTML = renderAchievements();
@@ -1282,6 +1284,11 @@ function getFilteredEvents() {
     // from My Tickets to see the cancellation notice) but never show up on
     // the map or in browse/search results.
     if (ev.status === "cancelled") return false;
+    // Ended events stay findable through Calendar (renderCalendar/
+    // eventListCardHtml show them greyed out as "Event ended") but never as
+    // a live pin or in browse/search — a map full of pins for things that
+    // already happened would just confuse people looking for what's on now.
+    if (eventStatus(ev) === "past") return false;
     const hasLocation = ev.lat != null && ev.lon != null;
     const mc =
       state.selectedCategory === "all" ||
@@ -1573,9 +1580,73 @@ function renderHostByline(ev) {
   // is never a fabricated trust signal.
   const reviewed = ev.hostId != null;
   return `<span class="detail-host-byline">
-    <span>By ${escapeHtml(ev.host)}${hostCount >= 2 ? ` · ${hostCount} events hosted` : ""}${reviewed ? ` <span class="host-reviewed-badge" title="Host reviewed by Cumulus">${checkIconSvg(11)} Reviewed</span>` : ""}</span>
+    <span>Hosted by <button type="button" class="host-byline-link" onclick="openHostProfile('${safeKey}','${safeName}')">${escapeHtml(ev.host)}</button>${hostCount >= 2 ? ` · ${hostCount} events hosted` : ""}${reviewed ? ` <span class="host-reviewed-badge" title="Host reviewed by Cumulus">${checkIconSvg(11)} Reviewed</span>` : ""}</span>
     <button class="btn-follow-host${following ? " following" : ""}" onclick="toggleFollowHost('${safeKey}','${safeName}')">${following ? "Following" : "Follow"}</button>
   </span>`;
+}
+
+// ── Host Profile ──────────────────────────────────────────────────────────
+// Eventbrite-style organizer page, built only from data that's actually
+// real: events hosted, tickets/attendees across those events (from EVENTS
+// loaded this session — same "real data only" convention as hostCount
+// above), and the existing Reviewed badge. No follower count (following is
+// a local-device bookmark, see toggleFollowHost — never a real cross-user
+// number) and no star rating (no reviews/ratings model exists anywhere in
+// this schema) — showing either would be a fabricated trust signal.
+function openHostProfile(hostKey, hostName) {
+  pushNav();
+  state.selectedHostKey = hostKey;
+  state.selectedHostName = hostName;
+  state.view = "host-profile";
+  renderNav();
+  renderView();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function renderHostProfile() {
+  const hostKey = state.selectedHostKey;
+  const hostName = state.selectedHostName;
+  if (!hostKey || !hostName)
+    return `<div class="empty-state">Host not found.</div>`;
+  const hostEvents = EVENTS.filter(
+    (e) => (e.hostId || e.host) === hostKey || e.host === hostName,
+  );
+  const reviewed = hostEvents.some((e) => e.hostId != null);
+  const totalAttendees = hostEvents.reduce(
+    (sum, e) => sum + attendeesFor(e.id).length,
+    0,
+  );
+  const upcoming = hostEvents
+    .filter((e) => {
+      const st = eventStatus(e);
+      return (st === "live" || st === "upcoming") && e.status !== "cancelled";
+    })
+    .sort((a, b) => a.startsAt - b.startsAt);
+  const following = isFollowingHost(hostKey);
+  const safeKey = escapeHtml(String(hostKey)).replace(/'/g, "&#39;");
+  const safeName = escapeHtml(hostName).replace(/'/g, "&#39;");
+
+  const statsHtml = `<div class="host-stats-row">
+    <div class="host-stat"><div class="host-stat-num">${hostEvents.length}</div><div class="host-stat-label">Event${hostEvents.length !== 1 ? "s" : ""} hosted</div></div>
+    <div class="host-stat"><div class="host-stat-num">${totalAttendees}</div><div class="host-stat-label">Attendee${totalAttendees !== 1 ? "s" : ""}</div></div>
+  </div>`;
+
+  const upcomingHtml = upcoming.length
+    ? upcoming.map(eventListCardHtml).join("")
+    : `<div class="map-empty-card" role="status" style="max-width:100%;margin:0 auto;">
+        <div class="me-title">Nothing upcoming right now</div>
+        <div class="me-sub">${escapeHtml(hostName)} doesn't have any upcoming events listed at the moment.</div>
+      </div>`;
+
+  return `<button class="back-btn" onclick="goBack()">←</button>
+    <div class="connect-header">
+      <h2>${escapeHtml(hostName)}${reviewed ? ` <span class="host-reviewed-badge" title="Host reviewed by Cumulus">${checkIconSvg(12)} Reviewed</span>` : ""}</h2>
+      <p>Event host</p>
+    </div>
+    <button class="btn-follow-host${following ? " following" : ""}" style="margin-bottom:16px;" onclick="toggleFollowHost('${safeKey}','${safeName}')">${following ? "Following" : "Follow"}</button>
+    ${statsHtml}
+    <div class="section-title">Upcoming events</div>
+    ${upcomingHtml}`;
 }
 
 function renderDetail(id) {
@@ -1605,6 +1676,11 @@ function renderDetail(id) {
     bookBtn = `<div style="background:#b3261e18;border:1px solid #b3261e55;color:#b3261e;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;text-align:center;">This event was cancelled${ticket ? " — your ticket has been refunded." : "."}</div>`;
   } else if (ticket) {
     bookBtn = `<button class="btn" style="background:transparent;border:2px solid #147136;color:#147136;box-shadow:none;width:100%;" onclick="openViewTicket('${id}')">${checkIconSvg(15)} You have a ticket — View it</button>`;
+  } else if (status === "past") {
+    // Ended events are locked — never bookable, no matter capacity/tier
+    // state. Ticket-holders still get the branch above (their own record
+    // stays viewable); everyone else sees this instead of a live Book Now.
+    bookBtn = `<div style="background:var(--surface-2);border:1px solid var(--line);color:var(--text-muted);border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;text-align:center;">This event has ended.</div>`;
   } else if (isFull) {
     bookBtn = `<button class="btn" style="background:var(--surface-2);color:var(--text-muted);cursor:not-allowed;width:100%;">Sold Out</button>`;
   } else {

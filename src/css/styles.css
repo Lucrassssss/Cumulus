@@ -735,18 +735,146 @@ body.no-scroll {
   height: 100%;
   display: block;
   transform-origin: 50% 100%;
-  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
   filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.3));
-  /* Opts back into hit-testing so the whole visible pin — including the
-     18% it grows on hover, past the wrapper's static box — stays
-     clickable. The wrapper itself stays pointer-events:none so it never
-     steals clicks meant for the map underneath. */
-  pointer-events: auto;
-  cursor: pointer;
+  /* Purely visual — this overlay only draws the hover-grow bounce; hit-
+     testing lives entirely on the WebGL "unclustered-events" layer
+     underneath (see attachMapLayers() in 06-map-animations.js). It used to
+     also opt back into pointer-events here with its own click listener,
+     which meant two independent, differently-shaped hit targets covered
+     the same visual pin — the actual source of the reported cursor/click
+     glitchiness. One hit target now; this is display-only. */
+  pointer-events: none;
 }
 
 .pin-hover-overlay.grown img {
   transform: scale(1.18);
+}
+
+/* Inline pin-deck carousel — anchored at the deck pin's projected screen
+ * position via JS (transform: translate(x,y), see positionPinDeck() in
+ * 06-map-animations.js), with the visual clearance-above-the-pin baked into
+ * this static margin instead of the JS transform, so the two never fight
+ * each other. Horizontal scroll-snap gives real swipe-through on touch and
+ * a natural "peek the next card" edge with no hand-rolled drag code. */
+.pin-deck {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin-left: -95px;
+  margin-top: -222px;
+  width: 190px;
+  z-index: 5;
+  display: none;
+  opacity: 0;
+  transform-origin: 50% 100%;
+  transition:
+    opacity 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translate(0, 0) scale(0.92);
+}
+
+.pin-deck.open {
+  opacity: 1;
+  transform: translate(0, 0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pin-deck {
+    transition: opacity 0.15s ease;
+  }
+}
+
+.pin-deck-close {
+  position: absolute;
+  top: -11px;
+  right: -11px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px var(--shadow);
+  z-index: 1;
+}
+
+.pin-deck-track {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pin-deck-track::-webkit-scrollbar {
+  display: none;
+}
+
+.pin-deck-card {
+  scroll-snap-align: start;
+  flex: 0 0 150px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 8px;
+  cursor: pointer;
+  font: inherit;
+  box-shadow: 0 8px 22px var(--shadow);
+}
+
+.pin-deck-card-img {
+  width: 100%;
+  height: 64px;
+  border-radius: 9px;
+  background-color: var(--surface-2);
+  background-size: cover;
+  background-position: center;
+  margin-bottom: 6px;
+}
+
+.pin-deck-card-cat {
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--c, var(--accent));
+}
+
+.pin-deck-card-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+  margin-top: 1px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pin-deck-card-meta {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.pin-deck-card-price {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text);
+  margin-top: 4px;
 }
 
 .map-empty {
@@ -6667,6 +6795,54 @@ select.gate-input {
   font-weight: 700;
 }
 
+.host-byline-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 2px;
+}
+
+.host-byline-link:hover {
+  color: var(--gold-text);
+  text-decoration-color: currentColor;
+}
+
+.host-stats-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.host-stat {
+  flex: 1;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 12px;
+  text-align: center;
+}
+
+.host-stat-num {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.host-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-top: 2px;
+}
+
 .detail-card [style*="📅"] {
   display: inline-flex !important;
   align-items: center !important;
@@ -8958,6 +9134,26 @@ body.app-active .bg-grain {
   margin-bottom: 12px;
   cursor: pointer;
   align-items: stretch;
+}
+
+/* Ended events stay visible in Calendar (never on the map/browse — see
+ * getFilteredEvents()) but read as inactive: muted image, faded copy, no
+ * category-corner accent. Still fully tappable — opens the real detail
+ * page, which is how you reach the host's other upcoming events. */
+.event-list-card-ended {
+  --corner: var(--line) !important;
+}
+
+.event-list-card-ended .elc-img {
+  filter: grayscale(0.85);
+  opacity: 0.7;
+}
+
+.event-list-card-ended .elc-title,
+.event-list-card-ended .elc-meta,
+.event-list-card-ended .elc-host,
+.event-list-card-ended .elc-price {
+  color: var(--text-muted) !important;
 }
 
 .elc-img {

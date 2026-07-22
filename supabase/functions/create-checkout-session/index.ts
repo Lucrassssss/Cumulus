@@ -185,31 +185,27 @@ Deno.serve(async (req: Request) => {
     description: ev.title || "Cumulus ticket",
   });
   if (receiptEmail) params.append("receipt_email", receiptEmail);
-  // Hard allow-list, not automatic_payment_methods alone + an exclude-list.
-  // The Stripe account has ~15 other wallets/redirects toggled on in the
-  // Dashboard (Amazon Pay, Revolut Pay, Cartes Bancaires, Kakao Pay, Pix,
-  // Bancontact, BLIK, EPS, etc.) that plain automatic_payment_methods would
-  // happily surface for a GBP PaymentIntent since they're Dashboard-eligible.
-  // An exclude-list only blocks what's named here today — anything
-  // re-enabled later (Klarna included) or newly added by Stripe would
-  // silently leak through. automatic_payment_methods[enabled] still has to
-  // stay on (Stripe's dynamic-eligibility engine), but
-  // allowed_payment_method_types constrains what it's allowed to pick FROM
-  // to just these two — confirmed against the current API reference
-  // (Stripe-Version 2026-03-25.dahlia below) that allowed_payment_method_
-  // types is the live create-time parameter; the older bare
-  // payment_method_types[] array is response-only on this API version, not
-  // an input. "card" + "paypal" is the actual full set we want: Apple Pay
-  // and Google Pay aren't separate payment_method_types, they're wallet
-  // detection layered onto "card" by the Payment Element itself (domain
-  // verification + device support), so this pair alone is card + Apple Pay
-  // + Google Pay + PayPal and nothing else, regardless of Dashboard state.
-  // Trade-off: Link (previously along for the ride under unconstrained
-  // automatic_payment_methods) no longer appears — the email prefill in
-  // startStripeCheckout() (10-badges.js) is now inert for Link recognition
-  // specifically, though it still harmlessly prefills the card form's
-  // billing email.
-  params.append("automatic_payment_methods[enabled]", "true");
+  // Hard allow-list. The Stripe account has ~15 other wallets/redirects
+  // toggled on in the Dashboard (Amazon Pay, Revolut Pay, Cartes Bancaires,
+  // Kakao Pay, Pix, Bancontact, BLIK, EPS, etc.) that automatic_payment_
+  // methods would happily surface for a GBP PaymentIntent since they're
+  // Dashboard-eligible. allowed_payment_method_types and automatic_payment_
+  // methods are MUTUALLY EXCLUSIVE on PaymentIntent create — Stripe rejects
+  // the request with a multi_exclusive_parameters error if both are present
+  // (verified live via a real test PaymentIntent in the sandbox's Workbench
+  // Shell after the first attempt combining both failed with exactly that
+  // error). allowed_payment_method_types works standalone with no automatic_
+  // payment_methods flag at all — confirmed the same way: a bare
+  // allowed_payment_method_types=[card,paypal] request returned
+  // payment_method_types:["card","paypal"] on the created PaymentIntent.
+  // "card" + "paypal" is the actual full set we want: Apple Pay and Google
+  // Pay aren't separate payment_method_types, they're wallet detection
+  // layered onto "card" by the Payment Element itself (domain verification +
+  // device support), so this pair alone is card + Apple Pay + Google Pay +
+  // PayPal and nothing else, regardless of Dashboard state. Trade-off: Link
+  // no longer appears — the email prefill in startStripeCheckout()
+  // (10-badges.js) is now inert for Link recognition specifically, though it
+  // still harmlessly prefills the card form's billing email.
   params.append("allowed_payment_method_types[]", "card");
   params.append("allowed_payment_method_types[]", "paypal");
 
