@@ -620,21 +620,6 @@ function updateClusterPaint() {
   );
 }
 
-// queryRenderedFeatures() sometimes hands array-typed GeoJSON properties
-// back as a JSON string rather than a real array (a known Mapbox GL JS
-// quirk for GeoJSON sources) — this reads fan_offset correctly either way.
-function readFanOffset(props) {
-  const raw = props && props.fan_offset;
-  if (Array.isArray(raw)) return raw;
-  if (typeof raw === "string") {
-    try {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
-    } catch (e) {}
-  }
-  return [0, 0];
-}
-
 function attachMapLayers() {
   if (!lmap || lmap.getSource("events-source")) return;
 
@@ -715,12 +700,13 @@ function attachMapLayers() {
   });
 
   // Native WebGL symbol layer to render all individual event pins directly
-  // in WebGL. icon-offset/icon-rotate are per-feature (fan_offset/
-  // fan_rotate, computed in buildEventsGeoJSON's fanOffsetsFor()) so events
-  // sharing a coordinate fan out into a hand-of-cards arc instead of
-  // rendering as indistinguishable stacked icons — each fanned pin is a
-  // real, independently-hit-testable feature at its own shifted screen
-  // position, so browsing them is just tapping the one you want directly.
+  // in WebGL. icon-rotate is per-feature (fan_rotate, computed in
+  // buildEventsGeoJSON's fanAnglesFor()) — icon-anchor:"bottom" puts every
+  // pin's tip on its own coordinate, and events sharing a coordinate all
+  // share that same tip, so rotating each one by a different angle sweeps
+  // their heads out into an arc while every tip stays exactly on the real
+  // point — a fan held from one corner, not a row of pins translated
+  // sideways away from the venue (the wrong first version of this).
   lmap.addLayer({
     id: "unclustered-events",
     type: "symbol",
@@ -734,7 +720,6 @@ function attachMapLayers() {
       ],
       "icon-size": 1.0,
       "icon-anchor": "bottom",
-      "icon-offset": ["get", "fan_offset"],
       "icon-rotate": ["get", "fan_rotate"],
       "icon-rotation-alignment": "viewport",
       "icon-allow-overlap": true,
@@ -742,30 +727,29 @@ function attachMapLayers() {
     },
   });
 
-  // Click handler — always the single event's own summary popup now; the
-  // fan means every pin, including ones sharing a venue, is already its own
-  // independently-tappable target at rest.
+  // Click handler — every pin in a fanned group shares the exact same tip
+  // coordinate (rotation only, no translation — see above), so
+  // queryRenderedFeatures' candidates can't be told apart by anchor
+  // position the way a translated fan could be. Instead, reconstruct where
+  // each candidate's own head (its visually identifying glyph, ~32px up the
+  // pin from its tip in the unrotated 40x50 icon) actually renders after
+  // its own fan_rotate is applied, and pick whichever rendered head is
+  // nearest the real click point.
+  const PIN_HEAD_DISTANCE = 32; // px from tip to head-glyph in the pin icon
   lmap.on("click", "unclustered-events", (e) => {
     const features = lmap.queryRenderedFeatures(e.point, {
       layers: ["unclustered-events"],
     });
     if (!features.length) return;
-    // Fanned pins can still have some hit-box overlap near the shared base
-    // point (same as physical cards fanned in a hand do) — queryRendered
-    // Features returns every candidate under the click in render order,
-    // topmost first, which isn't necessarily the one actually tapped.
-    // Resolve by real screen distance instead: project each candidate's true
-    // coordinate plus its own fan_offset (the same offset the layer renders
-    // it at) and pick whichever rendered anchor is nearest the click point.
     let best = features[0];
     let bestDist = Infinity;
     features.forEach((f) => {
       const p = lmap.project(f.geometry.coordinates);
-      const offset = readFanOffset(f.properties);
-      const dist = Math.hypot(
-        p.x + offset[0] - e.point.x,
-        p.y + offset[1] - e.point.y,
-      );
+      const deg = Number(f.properties.fan_rotate) || 0;
+      const rad = (deg * Math.PI) / 180;
+      const headX = p.x + PIN_HEAD_DISTANCE * Math.sin(rad);
+      const headY = p.y - PIN_HEAD_DISTANCE * Math.cos(rad);
+      const dist = Math.hypot(headX - e.point.x, headY - e.point.y);
       if (dist < bestDist) {
         bestDist = dist;
         best = f;

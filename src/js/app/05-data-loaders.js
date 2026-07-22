@@ -612,44 +612,34 @@ function groupEventsByLocation(events) {
   return groups;
 }
 
-// Fans a group out into a hand-of-cards arc instead of collapsing it into
-// one pin: every event keeps its own real, independently-clickable pin (no
-// count badge, no click-to-expand step), each shifted by a constant
-// screen-space icon-offset/icon-rotate so they visually spread left-to-right
-// above the shared coordinate.
-//
-// Spacing is a fixed pixel distance between adjacent pin CENTERS, not an
-// angle — an angle+radius approach (the first version of this) put adjacent
-// pins as little as ~10px apart for a 3-event group, which is well inside a
-// single 40px-wide pin icon: their hit-boxes overlapped almost entirely, so
-// only the topmost-rendered pin in an overlap zone was ever actually
-// clickable there, defeating the point of fanning them out at all. Fixed
-// spacing guarantees real separation between every pin's own head/glyph
-// (the part you'd actually tap) regardless of how many are in the group;
-// only the base near the shared point is meant to overlap, the same way
-// physical cards fanned in a hand overlap low and separate up top. Capped
-// total width for large groups so it compresses rather than fanning
-// arbitrarily wide.
-const PIN_FAN_SPACING = 34; // px between adjacent pins' centers
-const PIN_FAN_ARC_LIFT = 14; // px the center of the fan lifts above the edges
-const PIN_FAN_MAX_WIDTH = 240; // total horizontal spread cap for large groups
-function fanOffsetsFor(count) {
-  if (count <= 1) return [{ dx: 0, dy: 0, rotate: 0 }];
-  const spacing = Math.min(PIN_FAN_SPACING, PIN_FAN_MAX_WIDTH / (count - 1));
-  const mid = (count - 1) / 2;
-  return Array.from({ length: count }, (_, i) => {
-    const t = i - mid; // symmetric around 0: e.g. -1,0,1 or -1.5,-0.5,0.5,1.5
-    const norm = mid ? t / mid : 0; // -1..1, position within the fan
-    return {
-      dx: Math.round(t * spacing),
-      // Arc opens upward (negative = up in screen space) so the fan reads
-      // as cards held above the venue's actual point, never covering it —
-      // the center pin lifts highest, the outer ones settle lower, like a
-      // hand fanned toward the viewer.
-      dy: Math.round(-PIN_FAN_ARC_LIFT * (1 - norm * norm) - 6),
-      rotate: Math.max(-24, Math.min(24, Math.round(t * 9))),
-    };
-  });
+// Fans a group out from the shared point itself, like a hand of cards held
+// at one corner — NOT translated sideways into a row. icon-anchor:"bottom"
+// already puts each pin's tip exactly on its coordinate; every event in a
+// group shares that exact coordinate, and rotating each pin around its own
+// (shared) tip by a different angle is what sweeps their heads out into an
+// arc while every tip stays glued to the true epicentre. No icon-offset at
+// all — a translated-row version of this was tried first and was wrong: it
+// moved each pin's own tip away from the real point, so the group no longer
+// visibly "came from" the venue at all. Pure rotation is the fix.
+// Separation between two rotated pins is a chord length, not the angle
+// itself: for a pin whose head sits L px up from its (shared, fixed) tip,
+// two heads at angles a distance step apart land 2*L*sin(step/2) px apart on
+// screen. With this icon's real geometry (head ~32px up the 40px-wide
+// canvas), a 22° step — the first attempt at this — only separates adjacent
+// heads by ~12px, well inside the icon's own width, so one pin fully hid
+// behind its neighbour. ~50° gives ~27px separation, close to the icon's
+// full width and enough for each head to actually stand apart. Capped total
+// spread so large groups compress their step rather than fanning past ~150°
+// (beyond that pins start pointing back toward each other from the other
+// side, which stops reading as a fan at all).
+const PIN_FAN_MAX_SPREAD = 150; // total arc width in degrees
+const PIN_FAN_STEP = 50; // degrees between adjacent pins before the cap kicks in
+function fanAnglesFor(count) {
+  if (count <= 1) return [0];
+  const spread = Math.min(PIN_FAN_MAX_SPREAD, PIN_FAN_STEP * (count - 1));
+  const step = spread / (count - 1);
+  const start = -spread / 2;
+  return Array.from({ length: count }, (_, i) => Math.round(start + step * i));
 }
 
 function buildEventsGeoJSON() {
@@ -664,7 +654,7 @@ function buildEventsGeoJSON() {
   const features = [];
   groups.forEach((group) => {
     const sorted = [...group].sort((a, b) => a.startsAt - b.startsAt);
-    const offsets = fanOffsetsFor(sorted.length);
+    const angles = fanAnglesFor(sorted.length);
     sorted.forEach((ev, i) => {
       features.push({
         type: "Feature",
@@ -676,8 +666,7 @@ function buildEventsGeoJSON() {
           status: eventStatus(ev),
           category: ev.category,
           free: eventPrice(ev) <= 0,
-          fan_offset: [offsets[i].dx, offsets[i].dy],
-          fan_rotate: offsets[i].rotate,
+          fan_rotate: angles[i],
         },
       });
     });
