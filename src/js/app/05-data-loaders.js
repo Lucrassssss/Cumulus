@@ -139,6 +139,86 @@ function loadDevFixtureEvents() {
     computeEventDates(ev);
     EVENTS.push(ev);
   });
+
+  // ─── TEMPORARY PREVIEW BLOCK — remove on request ──────────────────────────
+  // Added to preview the pin-fan + host-profile work: three events sharing
+  // one venue/host (see the fan in attachMapLayers) plus a past event on the
+  // same host (see the "Event ended" Calendar treatment, the locked detail
+  // page, and that host's profile page). Same localhost-only gate as the
+  // fixtures above — delete this whole block (down to the closing bracket
+  // before loadAllRsvps) whenever asked to wipe the preview.
+  const previewHost = { host: "Nova Collective", hostId: "preview-host-nova" };
+  const previewFixtures = [
+    {
+      id: "preview-fan-1",
+      title: "Rooftop Jazz Night",
+      category: "Live Music",
+      ...previewHost,
+      venue: "The Sky Lounge",
+      area: "Shoreditch",
+      address: "The Sky Lounge, Shoreditch, London E1",
+      lat: 51.5265,
+      lon: -0.0786,
+      startTime: hrs(1),
+      endTime: hrs(2),
+      desc: "Preview event — same venue as two others, to show the fanned pin.",
+      capacity: 80,
+      price: 18,
+    },
+    {
+      id: "preview-fan-2",
+      title: "Board Game Social",
+      category: "Board Games",
+      ...previewHost,
+      venue: "The Sky Lounge",
+      area: "Shoreditch",
+      address: "The Sky Lounge, Shoreditch, London E1",
+      lat: 51.5265,
+      lon: -0.0786,
+      startTime: hrs(2),
+      endTime: hrs(3),
+      desc: "Preview event — same venue as two others, to show the fanned pin.",
+      capacity: 40,
+      price: 0,
+    },
+    {
+      id: "preview-fan-3",
+      title: "Indie Film Screening",
+      category: "Movie Nights",
+      ...previewHost,
+      venue: "The Sky Lounge",
+      area: "Shoreditch",
+      address: "The Sky Lounge, Shoreditch, London E1",
+      lat: 51.5265,
+      lon: -0.0786,
+      startTime: hrs(3),
+      endTime: hrs(4),
+      desc: "Preview event — same venue as two others, to show the fanned pin.",
+      capacity: 60,
+      price: 10,
+    },
+    {
+      id: "preview-past-1",
+      title: "Retro Arcade Night",
+      category: "Gaming",
+      ...previewHost,
+      venue: "The Sky Lounge",
+      area: "Shoreditch",
+      address: "The Sky Lounge, Shoreditch, London E1",
+      lat: 51.5265,
+      lon: -0.0786,
+      startTime: hrs(-48),
+      endTime: hrs(-47),
+      desc: "Preview event — already ended, to show the Calendar/detail-page/host-profile treatment for past events.",
+      capacity: 80,
+      price: 12,
+    },
+  ];
+  previewFixtures.forEach((ev) => {
+    computeEventDates(ev);
+    EVENTS.push(ev);
+  });
+  // ─── END TEMPORARY PREVIEW BLOCK ───────────────────────────────────────────
 }
 
 async function loadAllRsvps() {
