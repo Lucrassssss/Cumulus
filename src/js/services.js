@@ -112,44 +112,44 @@ async function loadUserProfile(userId) {
 
 /* Compresses (center-cropped to a square for an avatar — renders circular
  * everywhere, so a square source avoids a stretched preview; a wide crop
- * for a cover/banner) and hands the bytes to the moderate-image-upload
- * edge function, which checks the image against Google Cloud Vision
- * SafeSearch before writing it anywhere — the client no longer has
- * storage-write access to either bucket at all (see the migration that
- * dropped those policies), so this edge function is the only path in.
- * Returns { url } on success or { error } with a message safe to show the
- * user (moderation rejection, not-configured, or a generic failure). */
-async function _uploadModeratedPhoto(file, kind) {
+ * for a cover/banner) and uploads straight to the caller's own folder in
+ * the avatars/covers bucket — same RLS-scoped-by-auth.uid() pattern as
+ * uploadHostFlyer() (08-event-creator.js). No moderation gate: the
+ * identity-verified host-onboarding flow (Twilio SMS OTP + Stripe Connect)
+ * is this app's actual anti-abuse check, and public.event_reports handles
+ * anything that slips through after the fact — see the migration that
+ * reverted the earlier Google Cloud Vision SafeSearch detour. upsert:true
+ * since each photo is a single slot per user, not a new file every time.
+ * Returns { url } on success or { error } with a message safe to show. */
+async function _uploadPhoto(file, kind) {
   if (!file || !state.userId) return { error: "Nothing to upload." };
   try {
     const square = kind === "avatar";
+    const bucket = kind === "avatar" ? "avatars" : "covers";
     const blob = await compressImageFile(file, square ? 480 : 1280, 0.85, {
       square,
     });
-    const { data, error } = await sb.functions.invoke(
-      "moderate-image-upload",
-      { body: blob, headers: { "x-upload-kind": kind } },
-    );
-    if (error) {
-      // Same FunctionsHttpError quirk as createCheckoutSession — the real
-      // message (moderation rejection, etc.) only lives on error.context.
-      let detail = null;
-      try {
-        const body = await error.context?.json();
-        detail = body?.error || null;
-      } catch (e2) {}
-      return { error: detail || "Couldn't upload that photo — try again." };
+    const path = `${state.userId}/${kind}.jpg`;
+    const { error } = await sb.storage
+      .from(bucket)
+      .upload(path, blob, { contentType: "image/jpeg", upsert: true });
+    if (error) return { error: "Couldn't upload that photo — try again." };
+    const { data } = sb.storage.from(bucket).getPublicUrl(path);
+    if (!data?.publicUrl) {
+      return { error: "Couldn't upload that photo — try again." };
     }
-    return { url: data?.url || null };
+    // Cache-bust: same path every time (upsert), so the browser/CDN would
+    // otherwise keep showing the old photo after a re-upload.
+    return { url: `${data.publicUrl}?v=${Date.now()}` };
   } catch (e) {
     return { error: "Couldn't upload that photo — try again." };
   }
 }
 async function uploadAvatarPhoto(file) {
-  return _uploadModeratedPhoto(file, "avatar");
+  return _uploadPhoto(file, "avatar");
 }
 async function uploadCoverPhoto(file) {
-  return _uploadModeratedPhoto(file, "cover");
+  return _uploadPhoto(file, "cover");
 }
 
 /* Real cross-user follow edges (public.host_follows) — replaces the old
@@ -563,5 +563,34 @@ async function invitePastAttendees(eventId) {
     return data;
   } catch (e) {
     return { ok: false, error: "unavailable" };
+  }
+}
+
+/* Community-driven moderation — flags an event as unsuitable. One row per
+ * (reporter, event) in public.event_reports; the primary key alone blocks
+ * a user reporting the same event twice, so a 23505 conflict here just
+ * means "already reported", not a real failure. A DB trigger
+ * (handle_event_report()) auto-hides the event once 3 different people
+ * have reported it, pending admin review — see the migration that
+ * replaced per-upload AI moderation with this. */
+async function reportEvent(eventId, reason) {
+  if (!eventId || !state.userId) {
+    return { ok: false, error: "Sign in to report an event." };
+  }
+  try {
+    const { error } = await sb.from("event_reports").insert({
+      reporter_id: state.userId,
+      event_id: eventId,
+      reason: reason || null,
+    });
+    if (error) {
+      if (error.code === "23505") {
+        return { ok: false, error: "You've already reported this event." };
+      }
+      return { ok: false, error: "Couldn't submit your report — try again." };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: "Couldn't submit your report — try again." };
   }
 }

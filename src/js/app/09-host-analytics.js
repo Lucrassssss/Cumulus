@@ -630,6 +630,10 @@ function renderAdmin() {
         <span class="prof-action-label">Event approvals<span class="prof-action-sub">Review &amp; publish public events</span></span>
         <span class="prof-action-right">›</span>
       </button>
+      <button class="prof-action-row" onclick="openReportedEvents()">
+        <span class="prof-action-label">Reported events<span class="prof-action-sub">Auto-hidden after 3+ community reports</span></span>
+        <span class="prof-action-right">›</span>
+      </button>
       <button class="prof-action-row prof-action-danger" onclick="clearAllUsers()">
         <span class="prof-action-label">Clear all users<span class="prof-action-sub">Delete every account &amp; email (keeps events)</span></span>
         <span class="prof-action-right">›</span>
@@ -1313,6 +1317,9 @@ function renderView() {
   } else if (state.view === "event-approvals") {
     renderEventApprovals();
     return;
+  } else if (state.view === "reported-events") {
+    renderReportedEvents();
+    return;
   } else if (state.view === "host-apply") {
     container.innerHTML = renderHostApplyView();
   }
@@ -1323,10 +1330,11 @@ function getFilteredEvents() {
     document.getElementById("search-input")?.value || ""
   ).toLowerCase();
   let list = EVENTS.filter((ev) => {
-    // Cancelled events stay in EVENTS (a ticket-holder can still open one
-    // from My Tickets to see the cancellation notice) but never show up on
-    // the map or in browse/search results.
-    if (ev.status === "cancelled") return false;
+    // Cancelled/hidden events stay in EVENTS (a ticket-holder can still
+    // open one from My Tickets to see the notice) but never show up on
+    // the map or in browse/search results. "hidden" = auto-hidden by the
+    // community-report trigger pending admin review (see event_reports).
+    if (ev.status === "cancelled" || ev.status === "hidden") return false;
     // Ended events stay findable through Calendar (renderCalendar/
     // eventListCardHtml show them greyed out as "Event ended") but never as
     // a live pin or in browse/search — a map full of pins for things that
@@ -1478,6 +1486,70 @@ function shareEvent(id) {
   } else {
     showToast("Share not supported on this browser");
   }
+}
+
+// Community-driven moderation UI — a lightweight reason-picker modal
+// (reuses the .card-xl-overlay/.card-xl-close chrome the admin sign-in
+// modal already uses) rather than window.prompt(), which gets silently
+// dismissed the moment the tab loses focus (see promptAdminSignIn's
+// comment above for the same reasoning). Submitting inserts into
+// public.event_reports; a DB trigger auto-hides the event once 3
+// different people have reported it — see the migration that replaced
+// per-upload AI image moderation with this.
+const REPORT_REASONS = [
+  "Inappropriate or explicit content",
+  "Spam or scam",
+  "Misleading event details",
+  "Something else",
+];
+
+function openReportEventModal(eventId) {
+  if (!state.userId) {
+    showToast("Sign in to report an event", "error");
+    return;
+  }
+  const old = document.getElementById("report-event-overlay");
+  if (old) old.remove();
+  const html = `<div class="card-xl-overlay open" id="report-event-overlay" onclick="if(event.target===this)closeReportEventModal()">
+    <div class="admin-auth-modal">
+      <button class="card-xl-close" onclick="closeReportEventModal()" aria-label="Close">✕</button>
+      <div class="lp-form-eyebrow">Report event</div>
+      <h3 class="lp-form-title">What's wrong with this event?</h3>
+      <p class="lp-form-sub">If enough people report it, it's hidden automatically pending review.</p>
+      <div id="report-event-reasons">
+        ${REPORT_REASONS.map(
+          (r, i) =>
+            `<label class="report-reason-option"><input type="radio" name="report-reason" value="${escapeHtml(r)}" ${i === 0 ? "checked" : ""}/> ${escapeHtml(r)}</label>`,
+        ).join("")}
+      </div>
+      <p id="report-event-error" class="gate-field-error" role="alert"></p>
+      <button class="lp-claim-btn" onclick="submitEventReport('${eventId}')">
+        <span class="lp-claim-btn-text">Submit report</span>
+      </button>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML("beforeend", html);
+}
+
+function closeReportEventModal() {
+  const ov = document.getElementById("report-event-overlay");
+  if (ov) ov.remove();
+}
+
+async function submitEventReport(eventId) {
+  const checked = document.querySelector('input[name="report-reason"]:checked');
+  const reason = checked ? checked.value : null;
+  const res = await reportEvent(eventId, reason);
+  if (!res.ok) {
+    const err = document.getElementById("report-event-error");
+    if (err) {
+      err.textContent = res.error || "Couldn't submit your report — try again.";
+      err.classList.add("show");
+    }
+    return;
+  }
+  closeReportEventModal();
+  showToast("Report submitted — thanks for flagging this", "success");
 }
 
 // Squad ticketing: a share link for one unclaimed ticket from a multi-ticket
@@ -1801,7 +1873,12 @@ function renderDetail(id) {
     ? `<span class="event-badge" style="background:var(--surface-2);color:var(--text) !important;border:1px solid var(--line);margin-left:6px;font-size:10px;">From £${price}</span>`
     : `<span class="event-badge" style="background:#14713622;color:#147136 !important;border:1px solid #14713644;margin-left:6px;font-size:10px;">Free</span>`;
   let bookBtn = "";
-  if (ev.status === "cancelled") {
+  if (ev.status === "hidden") {
+    // Auto-hidden by the community-report trigger (3+ unique reporters) —
+    // pending an admin's review, not a host-initiated cancellation, so
+    // existing tickets/bookings are left untouched in case it's restored.
+    bookBtn = `<div style="background:#b3261e18;border:1px solid #b3261e55;color:#b3261e;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;text-align:center;">This event has been reported by the community and is under review.</div>`;
+  } else if (ev.status === "cancelled") {
     bookBtn = `<div style="background:#b3261e18;border:1px solid #b3261e55;color:#b3261e;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;text-align:center;">This event was cancelled${ticket ? " — your ticket has been refunded." : "."}</div>`;
   } else if (ticket) {
     bookBtn = `<button class="btn" style="background:transparent;border:2px solid #147136;color:#147136;box-shadow:none;width:100%;" onclick="openViewTicket('${id}')">${checkIconSvg(15)} You have a ticket — View it</button>`;
@@ -1819,6 +1896,7 @@ function renderDetail(id) {
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="panel detail-card" style="--corner:${c.color};">
       <div class="detail-hero" style="background-image:url('${ev.photoUrl || catImg(ev.category)}');">
+        <button class="detail-share-btn detail-report-btn" onclick="openReportEventModal('${ev.id}')" aria-label="Report event"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4a1 1 0 0 1 1-1h11l-1.5 5L18 13H6"/></svg></button>
         <button class="detail-share-btn" onclick="shareEvent('${ev.id}')" aria-label="Share event"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.7l7.6-4.4M8.2 13.3l7.6 4.4"/></svg></button>
       </div>
       <span class="event-badge" style="--cat:${c.color};--cat-text:${c.textColor};">${ev.category}</span>${statusChip}${capBadge}${priceBadge}
@@ -1843,8 +1921,15 @@ function renderDetail(id) {
             : `<span style="color:var(--text-muted);font-size:13px;">No bookings yet.</span>`
         }</div>
       </div>
-      ${ev.hostId === state.userId ? `<div style="margin-top:10px;"><button class="btn btn-outline" style="width:100%;" onclick="inviteMyPastAttendees('${id}','${escapeHtml(ev.title).replace(/'/g, "&#39;")}')">📣 Invite past attendees</button></div>` : ""}
-      ${state.isAdmin || ev.hostId === state.userId ? `<div style="margin-top:10px;"><button class="btn btn-outline" style="color:#E23B3B;border-color:#E23B3B;width:100%;" onclick="if(confirm('Delete this event permanently?')) deleteEvent('${id}')">Delete Event</button></div>` : ""}
+      ${ev.hostId === state.userId && ev.status !== "hidden" ? `<div style="margin-top:10px;"><button class="btn btn-outline" style="width:100%;" onclick="inviteMyPastAttendees('${id}','${escapeHtml(ev.title).replace(/'/g, "&#39;")}')">📣 Invite past attendees</button></div>` : ""}
+      ${
+        // Once reported+hidden, only an admin may delete it — a host losing
+        // write access to their own flagged event (see events_modify_own/
+        // events_delete_own) is the whole point of the report system.
+        state.isAdmin || (ev.hostId === state.userId && ev.status !== "hidden")
+          ? `<div style="margin-top:10px;"><button class="btn btn-outline" style="color:#E23B3B;border-color:#E23B3B;width:100%;" onclick="if(confirm('Delete this event permanently?')) deleteEvent('${id}')">Delete Event</button></div>`
+          : ""
+      }
     </div>`;
 }
 
@@ -1883,6 +1968,134 @@ async function deleteEvent(id) {
   goBack();
 }
 
+/* ══════════════════════════════════════════════════
+   REPORTED EVENTS — admin only. Community-flagged events land here once
+   3+ unique users have reported them (handle_event_report() trigger sets
+   status='hidden') — the zero-cost replacement for pre-publish AI image
+   moderation. Same review-card pattern as event approvals: Restore
+   dismisses the reports and un-hides the event; Delete removes it (and
+   its reports, via ON DELETE CASCADE) for good.
+   ══════════════════════════════════════════════════ */
+function openReportedEvents() {
+  pushNav();
+  state.view = "reported-events";
+  renderNav();
+  renderView();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function renderReportedEvents() {
+  const container = document.getElementById("view-container");
+  container.innerHTML = `
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="connect-header">
+      <h2>Reported Events</h2>
+      <p>Auto-hidden after 3+ unique community reports</p>
+    </div>
+    <div id="reportedev-content">
+      <div class="review-empty"><div class="review-empty-icon">🚩</div><div>Loading reports…</div></div>
+    </div>`;
+  setTimeout(loadAndRenderReportedEvents, 0);
+}
+
+async function loadAndRenderReportedEvents() {
+  const content = document.getElementById("reportedev-content");
+  if (!content) return;
+  try {
+    const { data: hidden, error } = await sb
+      .from("events")
+      .select("*")
+      .eq("status", "hidden")
+      .order("start_time", { ascending: true });
+    if (error) throw error;
+    if (!hidden || !hidden.length) {
+      content.innerHTML = `<div class="review-empty"><div class="review-empty-icon">✅</div><div style="font-weight:700;margin-bottom:4px;">All clear</div><div>No events currently reported.</div></div>`;
+      return;
+    }
+    const ids = hidden.map((e) => e.id);
+    const { data: reports } = await sb
+      .from("event_reports")
+      .select("event_id, reason, created_at")
+      .in("event_id", ids);
+    content.innerHTML = hidden
+      .map((ev) =>
+        _buildReportedEventCard(
+          ev,
+          (reports || []).filter((r) => r.event_id === ev.id),
+        ),
+      )
+      .join("");
+  } catch (err) {
+    content.innerHTML = `<div class="review-empty"><div class="review-empty-icon">⚠️</div><div style="font-weight:700;margin-bottom:4px;">Error Loading Panel</div><div>${escapeHtml(err.message)}</div></div>`;
+  }
+}
+
+function _buildReportedEventCard(ev, reports) {
+  const id = escapeHtml(String(ev.id));
+  let when = "";
+  if (ev.start_time) {
+    const d = new Date(ev.start_time);
+    if (!isNaN(d)) {
+      when = d.toLocaleString("en-GB", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+  }
+  const reasonsList = reports.length
+    ? `<div class="review-detail"><div class="review-detail-lbl">${reports.length} report${reports.length === 1 ? "" : "s"}</div><div class="review-detail-val">${reports.map((r) => escapeHtml(r.reason || "No reason given")).join(" · ")}</div></div>`
+    : "";
+  return `<div class="review-card list-item-stagger">
+    <div class="review-card-top">
+      <div>
+        <div class="review-card-name">${escapeHtml(ev.title || "Untitled event")}</div>
+        <div class="review-card-email">${escapeHtml(ev.host_name || "Unknown host")}</div>
+      </div>
+      <span class="review-status-badge hidden">hidden</span>
+    </div>
+    ${when ? `<div class="review-detail"><div class="review-detail-lbl">When</div><div class="review-detail-val">${when}</div></div>` : ""}
+    ${ev.venue ? `<div class="review-detail"><div class="review-detail-lbl">Venue</div><div class="review-detail-val">${escapeHtml(ev.venue)}${ev.area ? ", " + escapeHtml(ev.area) : ""}</div></div>` : ""}
+    ${reasonsList}
+    <div class="review-actions">
+      <button class="btn btn-small review-approve-btn" style="flex:1;" onclick="restoreReportedEvent('${id}')">Restore</button>
+      <button class="btn btn-outline btn-small review-reject-btn" style="flex:1;" onclick="if(confirm('Delete this event permanently?')) deleteReportedEvent('${id}')">Delete permanently</button>
+    </div>
+  </div>`;
+}
+
+// Dismisses every report on the event and restores it to 'active'. Reports
+// are cleared (not just the status flipped) because handle_event_report()
+// counts ALL rows for the event — leaving old ones in place would re-hide
+// it the instant a 4th report ever landed, even years later.
+async function restoreReportedEvent(id) {
+  try {
+    await sb.from("event_reports").delete().eq("event_id", id);
+    const { error } = await sb
+      .from("events")
+      .update({ status: "active" })
+      .eq("id", id);
+    if (error) throw error;
+    showToast("Event restored", "success");
+  } catch (e) {
+    showToast("Couldn't restore that event — try again", "error");
+    return;
+  }
+  await loadAndRenderReportedEvents();
+}
+
+async function deleteReportedEvent(id) {
+  const { error } = await sb.from("events").delete().eq("id", id);
+  if (error) {
+    showToast("Error deleting event: " + error.message, "error");
+    return;
+  }
+  showToast("Event deleted", "success");
+  EVENTS = EVENTS.filter((e) => String(e.id) !== String(id));
+  await loadAndRenderReportedEvents();
+}
 
 
 // Follow a host to flag interest in their future events — a real

@@ -353,6 +353,47 @@ test.describe("Cumulus smoke", () => {
     ).toBeVisible();
   });
 
+  test("event detail: report button opens a reason-picker modal, signed-out is blocked", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await enterApp(page);
+    const evId = await seedFixtureEvent(page);
+    await page.evaluate((id) => {
+      state.view = "detail";
+      state.selectedEventId = id;
+      renderNav();
+      renderView();
+    }, evId);
+    await expect(page.locator(".detail-report-btn")).toBeVisible();
+    // Signed out: no report — window.prompt()-free feedback, just a toast.
+    await page.evaluate(() => {
+      state.userId = null;
+    });
+    await page.click(".detail-report-btn");
+    await expect(page.locator("#report-event-overlay")).toHaveCount(0);
+    // Signed in: opens the reason-picker modal (not window.prompt(), which
+    // gets silently dismissed on a tab switch — see the modal's own comment).
+    await page.evaluate(() => {
+      state.userId = "test-user-uuid";
+    });
+    await page.click(".detail-report-btn");
+    await expect(page.locator("#report-event-overlay")).toBeVisible();
+    await expect(page.locator(".report-reason-option")).toHaveCount(4);
+  });
+
+  test("Admin panel: Reported events entry present", async ({ page }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      state.isAdmin = true;
+      openAdmin();
+    });
+    await expect(
+      page.getByRole("button", { name: /Reported events/i }),
+    ).toBeVisible();
+  });
+
   test("day/night cycle sets a valid theme", async ({ page }) => {
     // Manual toggleTheme was removed in favour of the day/night cycle —
     // assert the cycle (or saved pref) resolves to a real theme value,

@@ -130,10 +130,11 @@ function renderAccountDetails() {
     <button class="btn" style="width:100%;" onclick="saveAccountDetailsForm()">Save changes</button>`;
 }
 
-// Both handlers below route through services.js's moderated upload path
-// (moderate-image-upload edge function, Google Cloud Vision SafeSearch) —
-// the client has no direct storage-write access to either bucket, so a
-// rejected photo never reaches a public URL in the first place.
+// Both handlers below route through services.js's direct-upload path
+// (uploadAvatarPhoto/uploadCoverPhoto — straight to the caller's own
+// storage folder, no moderation gate; see the migration that reverted the
+// earlier Google Cloud Vision SafeSearch detour in favour of the
+// event_reports community-report system).
 async function handleAccountAvatarChange(input) {
   const file = input.files && input.files[0];
   if (!file) return;

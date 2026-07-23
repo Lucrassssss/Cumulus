@@ -33,27 +33,6 @@ migration" for the full rationale and what changed.
 
 ---
 
-## 🚨 REQUIRED — Google Cloud Vision API key (avatar/banner photo uploads)
-
-Profile-photo and host-banner uploads (Account details → avatar/banner)
-now route through a `moderate-image-upload` edge function that checks
-every image against Google Cloud Vision's SafeSearch Detection before
-publishing it — nothing reaches a public URL without passing this check
-first (the client's direct write access to the `avatars`/`covers` storage
-buckets was removed in the same migration that added this). Until the key
-below is set, the function **fails closed**: every upload attempt returns
-"Photo uploads are temporarily unavailable" rather than silently
-publishing something unmoderated.
-
-**Supabase Dashboard → Project Settings → Edge Functions → Secrets → add
-`GOOGLE_VISION_API_KEY`** (a Cloud Vision API key from a Google Cloud
-project with the Vision API enabled — [console.cloud.google.com](https://console.cloud.google.com/apis/library/vision.googleapis.com),
-free tier covers ~1,000 images/month, ~$1.50/1,000 after that). No code
-change needed once it's set — the function picks it up on the next
-invocation.
-
----
-
 ## ✅ Already done (verified in production)
 
 - **Auth model migrated to Supabase Auth** (Phase 1 + 2). Sign-up/login use email

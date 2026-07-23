@@ -4048,6 +4048,12 @@ body.no-scroll {
   border: 1px solid rgba(226, 59, 59, 0.18);
 }
 
+.review-status-badge.hidden {
+  background: rgba(226, 59, 59, 0.08);
+  color: #e23b3b;
+  border: 1px solid rgba(226, 59, 59, 0.18);
+}
+
 .review-detail {
   padding: 7px 0;
   border-bottom: 1px solid var(--line);
@@ -7556,10 +7562,41 @@ textarea.gate-input {
   background: rgba(0, 0, 0, 0.65);
 }
 
+.detail-report-btn {
+  right: 54px;
+}
+
+.report-reason-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 4px;
+  font-size: 13.5px;
+  color: var(--text);
+  cursor: pointer;
+  border-bottom: 1px solid var(--line);
+}
+
+.report-reason-option:last-of-type {
+  border-bottom: none;
+}
+
+.report-reason-option input {
+  accent-color: var(--gold);
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
 .detail-hero::after {
   content: "";
   position: absolute;
   inset: 0;
+  /* Purely decorative — generated content paints after real DOM children
+   * by default, so without this it silently sits on top of and blocks
+   * clicks on .detail-share-btn/.detail-report-btn (only surfaced once a
+   * test actually clicked one of them instead of just checking it exists). */
+  pointer-events: none;
   background: linear-gradient(
     180deg,
     transparent 55%,
@@ -8213,6 +8250,11 @@ textarea.gate-input {
 }
 
 .review-status-badge.rejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+.review-status-badge.hidden {
   background: rgba(239, 68, 68, 0.15);
   color: #dc2626;
 }

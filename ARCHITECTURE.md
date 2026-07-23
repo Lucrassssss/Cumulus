@@ -782,25 +782,62 @@ profile page — see below). `accountAvatarHtml()` renders a real photo
 when set, a plain initials monogram otherwise, shared between the Account
 header and this page.
 
-**Both uploads are moderated before anything publishes.** A new
-`moderate-image-upload` edge function is now the *only* write path into
-the `avatars`/`covers` storage buckets — migration
-`20260723000000_moderated_avatar_and_cover_uploads.sql` drops the old
-client-writable storage policies entirely, so the JS client has no direct
-storage-write access to either bucket anymore (a motivated user could
-otherwise bypass moderation by calling the storage API directly). The
-client compresses the image (`compressImageFile()`, unchanged), then
-`uploadAvatarPhoto()`/`uploadCoverPhoto()` (`services.js`) hand the bytes
-to the edge function via `sb.functions.invoke()`; the function checks the
-image against Google Cloud Vision's SafeSearch Detection (adult/violence/
-racy — rejects on `LIKELY`/`VERY_LIKELY`), and only then uploads via the
-service-role key (bypassing RLS, since it's the trusted path) and writes
-the resulting URL straight onto the caller's own `users` row. **Fails
-closed**: with no `GOOGLE_VISION_API_KEY` edge function secret set, every
-upload is rejected with a "temporarily unavailable" error rather than
-silently publishing something unchecked — see GO-LIVE.md for the
-dashboard step to set it (same "no MCP tool can set an edge function
-secret" situation as `STRIPE_SECRET_KEY` before it).
+**Uploads are trust-gated, not AI-moderated.** A same-day follow-up
+(`20260723010000_revert_image_moderation.sql`) undid an earlier detour
+through a `moderate-image-upload` edge function that scanned every avatar/
+banner with Google Cloud Vision's SafeSearch Detection before publishing
+it. That cost real money per upload and added a server round-trip for a
+risk this app already gates elsewhere: hosts can't publish anything
+without first passing a real identity check (Twilio SMS OTP + Stripe
+Connect), and that friction — not a per-image AI scan — is what actually
+keeps a troll from bothering to upload something bad in the first place.
+`uploadAvatarPhoto()`/`uploadCoverPhoto()` (`services.js`) went back to
+uploading straight to the caller's own folder in the `avatars`/`covers`
+bucket (`compressImageFile()` first, same as before), RLS-scoped to
+`auth.uid()` — the same pattern every other storage bucket in this app
+uses. Anything that slips through is handled after the fact by the
+community, not screened before the fact by a vendor API — see "Community
+event reporting" below.
+
+### Community event reporting (2026-07-23)
+
+Zero-cost replacement for the reverted per-upload AI moderation, aimed
+squarely at *not* slowing down the app's core loop: a host should be able
+to publish in under a minute, not wait on a review queue. Any signed-in
+user can flag an event they think is inappropriate, spam, or misleading
+(`openReportEventModal()`/`submitEventReport()`, `09-host-analytics.js` —
+a small reason-picker modal reusing the admin sign-in modal's chrome,
+rather than `window.prompt()`, which gets silently dismissed on a tab
+switch). Reports land in `public.event_reports` (`reporter_id`, `event_id`,
+`reason`, PK on the pair — one row per person per event, which is also
+exactly what the report count needs). A trigger, `handle_event_report()`
+(`SECURITY DEFINER`, so it can act regardless of who's calling), flips the
+event's `status` to `'hidden'` the moment a 3rd unique reporter lands —
+counted server-side, not trusted to client code. `getFilteredEvents()`
+excludes `'hidden'` events from the map/browse/search the same way it
+already excluded `'cancelled'` ones; `renderDetail()` shows a "reported,
+under review" notice instead of a book button, and existing
+tickets/bookings are left untouched (unlike a cancellation, a report might
+turn out to be unfounded).
+
+Closing the obvious loophole mattered as much as building the feature:
+without it, a reported host could just run their own `UPDATE` (e.g. from
+devtools) the instant their event got auto-hidden and flip `status` right
+back to `'active'`, since the pre-existing `events_modify_own`/
+`events_delete_own` RLS policies only checked `host_id = auth.uid()` with
+no awareness of status. Both policies now additionally require
+`status <> 'hidden'` for a non-admin — once reported, only an admin can
+touch the event at all, which is what "goes to the admin panel for manual
+review" has to mean for the report system to be worth anything.
+
+Admin review lives at **Admin → Reported events**
+(`openReportedEvents()`/`renderReportedEvents()`, same review-card layout
+as Event approvals): each hidden event lists its report count and reasons,
+with **Restore** (deletes the event's `event_reports` rows and flips
+`status` back to `'active'` — rows are actually deleted, not just
+ignored, since the trigger counts *all* rows for an event and would
+otherwise re-hide it the instant any future report landed) or **Delete
+permanently** (reuses the existing `deleteEvent()`).
 
 **Host follows became real.** The host-profile page's own comment used to
 say the exact opposite of what it now does: "No follower count (following
