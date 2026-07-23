@@ -225,6 +225,44 @@ test.describe("Cumulus smoke", () => {
     ).toBeTruthy();
   });
 
+  test("Admin status auto-verifies at boot — no manual re-sign-in needed for a real admin account", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    // A real admins-table account should get the Admin tab automatically
+    // the moment it signs in — initApp() calls the server-verified
+    // isAdminSession() check itself now. Stub it (network is offline in
+    // this harness) to exercise that auto-verify path without a live
+    // Supabase session, the same way other tests inject fixture data.
+    await page.evaluate(() => {
+      /* global window */
+      window.isAdminSession = async () => true;
+    });
+    await page.evaluate(() => {
+      /* global state */
+      state.userId = "test-admin-uuid";
+    });
+    await enterApp(page);
+    await page.waitForTimeout(300);
+    const labels = (
+      await page.locator(".bottom-nav .nav-link").allInnerTexts()
+    ).map((s) => s.trim().toUpperCase());
+    expect(
+      labels.some((l) => l.includes("ADMIN")),
+      "Admin tab present automatically, no manual step taken",
+    ).toBeTruthy();
+    await page.evaluate(() => {
+      /* global openAdmin */
+      openAdmin();
+    });
+    // The manual "Admin sign-in" re-verify row is redundant once the
+    // automatic check already confirmed the session — hidden so it
+    // doesn't read as "you're not actually signed in as admin".
+    await expect(
+      page.getByRole("button", { name: /Admin sign-in/i }),
+    ).toHaveCount(0);
+  });
+
   test("core views render (host / calendar / account)", async ({ page }) => {
     await page.goto("/");
     await enterApp(page);

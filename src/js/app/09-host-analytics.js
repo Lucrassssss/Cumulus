@@ -614,10 +614,20 @@ function renderAdmin() {
   return `
     <div class="connect-header"><h2>Admin</h2><p>Approvals, hosts &amp; finances</p></div>
     <div class="prof-action-list">
-      <button class="prof-action-row" onclick="promptAdminSignIn()">
+      ${
+        // Admin status is now auto-verified at boot (initApp() calls
+        // isAdminSession()) for any account actually listed in
+        // public.admins — this manual re-verify row only still matters as
+        // a fallback for the rare case that check didn't run this session
+        // (e.g. a transient network error), which is why it's hidden once
+        // state._verifiedAdmin confirms the automatic check already ran.
+        state._verifiedAdmin
+          ? ""
+          : `<button class="prof-action-row" onclick="promptAdminSignIn()">
         <span class="prof-action-label">Admin sign-in<span class="prof-action-sub" id="admin-auth-sub">Verify with a one-time code to approve events</span></span>
         <span class="prof-action-right">›</span>
-      </button>
+      </button>`
+      }
       <button class="prof-action-row" onclick="openOwnerDash()">
         <span class="prof-action-label">Finances<span class="prof-action-sub">Live revenue &amp; payouts</span></span>
         <span class="prof-action-right">›</span>

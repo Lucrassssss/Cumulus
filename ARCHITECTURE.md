@@ -870,6 +870,31 @@ The avatar now overlaps the banner in its own isolated row
 (`.host-profile-avatar-wrap`); the name/Follow row sits fully below it and
 can never intrude on the banner regardless of name length.
 
+### Fixed: admin accounts had no way to reach admin mode (2026-07-23)
+
+A real lockout, not just a rough edge: the Admin nav tab only renders when
+`isAdminAccount()` (`state.isAdmin`) is already true, but the *only* place
+that ever set `state.isAdmin = true` was the "Admin sign-in" OTP modal —
+which lives **inside** the Admin tab. An account genuinely listed in
+`public.admins` (confirmed live for the site's own owner account) had no
+path in the UI to ever reach that modal after a normal sign-in; the tab
+that contains the unlock button was itself hidden until the button had
+already been pressed.
+
+`initApp()` (`04-auth-onboarding.js`) now calls the existing
+`isAdminSession()` (`services.js` — `sb.rpc("is_admin")`, unchanged, still
+the real server-side check against `public.admins`) automatically for any
+signed-in session, and sets `state.isAdmin`/`state._verifiedAdmin` before
+calling `renderNav()` again so the tab appears without any manual step —
+admin status is just on by default for an actual admin account, the same
+way `isApprovedHost()`'s badge is read automatically rather than requiring
+a second re-verification click. The manual "Admin sign-in" row inside
+`renderAdmin()` is now hidden once `state._verifiedAdmin` is already true
+(it would otherwise read as "you're not really signed in as admin" to
+someone looking at a screen they could only reach by already being one) —
+left in place, unhidden, as a fallback for the rare case the automatic
+check didn't run this session (e.g. a transient network error at boot).
+
 ## The "Master Development Codex" reconciliation
 
 A second founder-supplied document (a 7-page "Master Development Codex")

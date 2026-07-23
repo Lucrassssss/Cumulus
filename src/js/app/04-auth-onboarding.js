@@ -325,6 +325,24 @@ function enterApp() {
 }
 
 async function initApp() {
+  // Auto-detect admin status for the signed-in session — server-verified via
+  // is_admin() (checks the real auth.uid() against public.admins), so it
+  // can't be spoofed client-side. Previously this only ever got set inside
+  // the "Admin sign-in" OTP modal, but that modal lives *inside* the Admin
+  // nav tab, which itself only renders once state.isAdmin is already true —
+  // a real account in public.admins had no way to ever reach it after a
+  // normal sign-in. Admin status should just be on by default for an actual
+  // admin account, not gated behind a second manual re-verification step.
+  if (state.userId) {
+    try {
+      if (await isAdminSession()) {
+        state.isAdmin = true;
+        state._verifiedAdmin = true;
+        renderNav();
+      }
+    } catch (e) {}
+  }
+
   // Background data load — enterApp() rendered the shell already; this fills it
   // with real events from Supabase without blocking the cloud animation. With no
   // seed data, the map/list show empty states until this resolves (or stay empty
