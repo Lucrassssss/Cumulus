@@ -277,6 +277,14 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator("#map-filters")).toHaveClass(/open/);
     await expect(page.locator("#map-filters")).toBeVisible();
     await expect(page.locator("#map-filters .mchip").first()).toBeVisible();
+    // Grouped into labelled sections (Category / Happening now / When)
+    // rather than one flat cluster of a dozen chips.
+    const groupLabels = await page
+      .locator("#map-filters .filter-group-title")
+      .allInnerTexts();
+    // .filter-group-title is CSS text-transform:uppercase — allInnerTexts()
+    // reflects the rendered case, not the raw DOM text.
+    expect(groupLabels).toEqual(["CATEGORY", "HAPPENING NOW", "WHEN"]);
 
     // Selecting a category keeps the panel open (multi-adjust) and updates
     // the underlying filter state.
@@ -303,7 +311,7 @@ test.describe("Cumulus smoke", () => {
     await enterApp(page);
     await page.evaluate(() => updateMapCaptionBar());
     await expect(page.locator("#map-caption-copy")).toHaveText(
-      "Nothing live right now — check back later",
+      "Nothing live right now",
     );
     await expect(page.locator("#map-caption-bar .cap-live")).toBeHidden();
 
@@ -331,7 +339,9 @@ test.describe("Cumulus smoke", () => {
       updateMapCaptionBar();
     });
     await expect(page.locator("#map-caption-bar")).toHaveClass(/has-live/);
-    await expect(page.locator("#map-caption-copy")).toContainText("1 live now");
+    await expect(page.locator("#map-caption-copy")).toContainText(
+      "1 pulsing live now",
+    );
     await expect(page.locator("#map-caption-bar .cap-live")).toBeVisible();
 
     // Regression check: the dot used to vanish (display:none) the instant

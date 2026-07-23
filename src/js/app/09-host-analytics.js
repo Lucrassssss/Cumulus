@@ -1427,23 +1427,42 @@ function toggleStartingSoonOnly() {
   }
   renderView();
 }
+// Three labelled groups instead of one flat cluster of a dozen chips —
+// Eventbrite/Dice/Luma-style filter sheets all separate "what kind of
+// event" from "what's happening right now" from "which date", rather than
+// dumping category + status + date into a single undifferentiated row.
 function refreshFilters() {
   const el = document.getElementById("map-filters");
   if (!el) return;
   const aa = state.selectedCategory === "all";
-  let html = `<button class="mchip ${aa ? "active" : ""}" style="${aa ? "background:var(--accent);color:#fff;border-color:transparent;" : ""}" onclick="setCategory('all')">All</button>`;
-  html += Object.entries(CATS)
-    .map(([cat, c]) => {
-      const a = state.selectedCategory === cat;
-      return `<button class="mchip ${a ? "active" : ""}" style="${a ? `background:${c.color};color:#fff;border-color:transparent;` : ""}" onclick="setCategory('${cat}')"><span style="color:${a ? "#fff" : c.color};display:inline-flex;">${categoryChipIconSvg(cat)}</span>${cat}</button>`;
-    })
-    .join("");
-  html += `<button class="mchip ${state.liveOnly ? "active" : ""}" style="${state.liveOnly ? "background:#E23B3B;color:#fff;border-color:transparent;" : ""}" onclick="toggleLiveOnly()"><span style="width:6px;height:6px;border-radius:50%;background:${state.liveOnly ? "#fff" : "#E23B3B"};display:inline-block;margin-right:2px;animation:${state.liveOnly ? "blink 1.3s ease-in-out infinite" : "none"}"></span>Live</button>`;
-  html += `<button class="mchip ${state.hotOnly ? "active" : ""}" style="${state.hotOnly ? "background:#F97316;color:#fff;border-color:transparent;" : ""}" onclick="toggleHotOnly()"><span style="display:inline-flex;color:#F97316;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c2 3 5 6 5 10a5 5 0 0 1-10 0c0-1.8.7-3 1.6-4.1.2 1.3.9 2 1.8 2.3-.4-2.7.4-5.3 1.6-8.2Z"/></svg></span> Hot</button>`;
-  html += `<button class="mchip ${state.startingSoonOnly ? "active" : ""}" style="${state.startingSoonOnly ? "background:#8B5CF6;color:#fff;border-color:transparent;" : ""}" onclick="toggleStartingSoonOnly()"><span style="display:inline-flex;color:${state.startingSoonOnly ? "#fff" : "#8B5CF6"};"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span> Starting soon</button>`;
-  html += `<button class="mchip ${state.dateFilter === "today" ? "active" : ""}" style="${state.dateFilter === "today" ? "background:var(--accent);color:#fff;border-color:transparent;" : ""}" onclick="setDateFilter('today')">Today</button>`;
-  html += `<button class="mchip ${state.dateFilter === "weekend" ? "active" : ""}" style="${state.dateFilter === "weekend" ? "background:var(--accent);color:#fff;border-color:transparent;" : ""}" onclick="setDateFilter('weekend')">This weekend</button>`;
-  el.innerHTML = html;
+  const categoryChips =
+    `<button class="mchip ${aa ? "active" : ""}" style="${aa ? "background:var(--accent);color:#fff;border-color:transparent;" : ""}" onclick="setCategory('all')">All</button>` +
+    Object.entries(CATS)
+      .map(([cat, c]) => {
+        const a = state.selectedCategory === cat;
+        return `<button class="mchip ${a ? "active" : ""}" style="${a ? `background:${c.color};color:#fff;border-color:transparent;` : ""}" onclick="setCategory('${cat}')"><span style="color:${a ? "#fff" : c.color};display:inline-flex;">${categoryChipIconSvg(cat)}</span>${cat}</button>`;
+      })
+      .join("");
+  const happeningChips =
+    `<button class="mchip ${state.liveOnly ? "active" : ""}" style="${state.liveOnly ? "background:#E23B3B;color:#fff;border-color:transparent;" : ""}" onclick="toggleLiveOnly()"><span style="width:6px;height:6px;border-radius:50%;background:${state.liveOnly ? "#fff" : "#E23B3B"};display:inline-block;margin-right:2px;animation:${state.liveOnly ? "blink 1.3s ease-in-out infinite" : "none"}"></span>Live</button>` +
+    `<button class="mchip ${state.hotOnly ? "active" : ""}" style="${state.hotOnly ? "background:#F97316;color:#fff;border-color:transparent;" : ""}" onclick="toggleHotOnly()"><span style="display:inline-flex;color:#F97316;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c2 3 5 6 5 10a5 5 0 0 1-10 0c0-1.8.7-3 1.6-4.1.2 1.3.9 2 1.8 2.3-.4-2.7.4-5.3 1.6-8.2Z"/></svg></span> Hot</button>` +
+    `<button class="mchip ${state.startingSoonOnly ? "active" : ""}" style="${state.startingSoonOnly ? "background:#8B5CF6;color:#fff;border-color:transparent;" : ""}" onclick="toggleStartingSoonOnly()"><span style="display:inline-flex;color:${state.startingSoonOnly ? "#fff" : "#8B5CF6"};"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span> Starting soon</button>`;
+  const whenChips =
+    `<button class="mchip ${state.dateFilter === "today" ? "active" : ""}" style="${state.dateFilter === "today" ? "background:var(--accent);color:#fff;border-color:transparent;" : ""}" onclick="setDateFilter('today')">Today</button>` +
+    `<button class="mchip ${state.dateFilter === "weekend" ? "active" : ""}" style="${state.dateFilter === "weekend" ? "background:var(--accent);color:#fff;border-color:transparent;" : ""}" onclick="setDateFilter('weekend')">This weekend</button>`;
+  el.innerHTML = `
+    <div class="filter-group">
+      <div class="filter-group-title">Category</div>
+      <div class="filter-chip-row">${categoryChips}</div>
+    </div>
+    <div class="filter-group">
+      <div class="filter-group-title">Happening now</div>
+      <div class="filter-chip-row">${happeningChips}</div>
+    </div>
+    <div class="filter-group">
+      <div class="filter-group-title">When</div>
+      <div class="filter-chip-row">${whenChips}</div>
+    </div>`;
   // Finances now live in Profile → Admin & Finances (no floating map button)
   const fab = document.getElementById("owner-fin-fab");
   if (fab) fab.innerHTML = "";

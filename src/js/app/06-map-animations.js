@@ -638,8 +638,17 @@ function attachMapLayers() {
     type: "geojson",
     data: { type: "FeatureCollection", features: [] },
     cluster: true,
-    clusterMaxZoom: 14,
-    clusterRadius: 50,
+    // Pins at the exact same venue are already handled separately by the
+    // fan-out system below (resolveFannedFeature) — this geo-clustering is
+    // only meant to stop *visually overlapping* nearby-but-distinct pins
+    // from stacking. The old clusterRadius:50/clusterMaxZoom:14 kept
+    // clustering active through almost the entire practical browsing zoom
+    // range, which is exactly what made a live pin unclickable (and its
+    // pulse invisible) until you zoomed in far past where you'd normally
+    // stop. Tightened so clustering only kicks in for pins that would
+    // genuinely overlap, and lets go much earlier.
+    clusterMaxZoom: 11,
+    clusterRadius: 30,
   });
 
   // Native Mapbox GL cluster layers — palette matches light/dark via updateClusterPaint()
@@ -937,8 +946,8 @@ function updateMapCaptionBar() {
   const isLive = liveCount > 0;
   bar.classList.toggle("has-live", isLive);
   copy.innerHTML = isLive
-    ? `<strong>${liveCount} live now</strong> — tap a pulsing pin to jump in`
-    : "Nothing live right now — check back later";
+    ? `<strong>${liveCount}</strong> pulsing live now`
+    : "Nothing live right now";
 }
 
 function refreshMarkers() {
