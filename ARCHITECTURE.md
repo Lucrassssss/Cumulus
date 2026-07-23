@@ -895,6 +895,47 @@ someone looking at a screen they could only reach by already being one) —
 left in place, unhidden, as a fallback for the rare case the automatic
 check didn't run this session (e.g. a transient network error at boot).
 
+### Fixed: "can't create new events" — a regressed trigger + a footgun admin button (2026-07-23)
+
+Two stacked bugs, found live while investigating the report above.
+
+**1. `handle_new_user()` regressed a bug that was already fixed once.**
+`20260708000000_fix_handle_new_user_missing_name.sql` fixed this trigger
+for never setting `public.users.name` (`NOT NULL`, no default — a legacy
+column predating `display_name`), which raised inside the `AFTER INSERT`
+trigger on `auth.users` and silently rolled back the *entire signup* for
+every new account. `20260720010000_pivot_frictionless_ticketing.sql`
+later redefined the same function to drop its invite-code-minting logic
+(invites were removed in the pivot) and, in simplifying it, reintroduced
+the exact same bug — back down to inserting only `(id, email,
+display_name)`. Every signup since that pivot has been failing to create
+its `public.users` mirror row. Re-fixed in
+`20260723030000_fix_handle_new_user_regression_and_restore_data.sql`,
+reapplying the 2026-07-08 fix on top of the current (invite-free) version.
+
+**2. "Clear all users" deleted the calling admin's own row too.** The
+Admin panel's "Clear all users" button (`clearAllUsers()`,
+`08-event-creator.js`) ran `DELETE FROM users` with no `WHERE` excluding
+the caller — a real, in-production trigger for exactly this incident: the
+site owner's own `public.users` row got deleted, which (since
+`events.host_id` FKs to `public.users(id)`) made every event-creation
+attempt fail with a foreign-key violation, even though `auth.users` and
+`public.admins` were untouched (so sign-in and `is_admin()` still worked
+fine — the account just couldn't do anything requiring its own profile
+row: create events, follow hosts, etc). `clearAllUsers()` now excludes
+`state.userId` from the delete (`.neq("id", state.userId)`) and no longer
+force-signs-out the caller afterward, since their own account is left
+intact; the confirm copy and Admin-panel row label were updated to say
+"every OTHER account" instead of "every account".
+
+The same migration also backfills a `public.users` row for any
+`auth.users` account currently missing one (using the same
+`id`/`email`/`name`/`display_name` shape `handle_new_user()` would have
+used), which is how the site owner's own row was restored. Any per-account
+state that lived only in the deleted row (Stripe Connect status, special
+badges, card customization, etc.) was **not** recoverable — it started
+over at column defaults, same as a brand-new signup.
+
 ## The "Master Development Codex" reconciliation
 
 A second founder-supplied document (a 7-page "Master Development Codex")

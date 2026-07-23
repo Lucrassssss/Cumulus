@@ -464,8 +464,16 @@ async function clearAllTestData(confirmed) {
   }
 }
 
-// Admin: clear ONLY the users table (all accounts / emails). Events & other
+// Admin: clear the users table (every OTHER account/email). Events & other
 // test data are left intact. Owner-only, test-environment convenience.
+//
+// Excludes the caller's own row — this previously deleted the owner's own
+// public.users row along with everyone else's, which silently broke their
+// own ability to do anything requiring it (create events, RSVPs, etc. all
+// FK to public.users) since the mirror row only ever gets (re)created by
+// the on-signup DB trigger, never by signing back in to an existing
+// session. Discovered live: the site owner's account lost admin/host state
+// and couldn't publish events until the row was manually restored.
 async function clearAllUsers(confirmed) {
   if (state.profileEmail !== "gondoxml@gmail.com") {
     showToast("Owner only", "error");
@@ -474,17 +482,19 @@ async function clearAllUsers(confirmed) {
   if (!confirmed) {
     if (
       !confirm(
-        "Delete ALL user accounts (every email) from the users table? Events and other data are kept. This cannot be undone.",
+        "Delete every OTHER user account (all emails except yours) from the users table? Events and other data are kept. This cannot be undone.",
       )
     )
       return;
   }
   showToast("Clearing user accounts…", "info");
   try {
-    const { error } = await sb.from("users").delete().not("id", "is", null);
+    const { error } = await sb
+      .from("users")
+      .delete()
+      .neq("id", state.userId);
     if (error) throw error;
-    showToast("All user accounts cleared. Signing out…", "success");
-    setTimeout(() => resetProfile(true), 1200);
+    showToast("All other user accounts cleared", "success");
   } catch (err) {
     showToast("Clear failed — check console", "error");
   }

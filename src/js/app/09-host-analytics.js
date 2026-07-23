@@ -645,7 +645,7 @@ function renderAdmin() {
         <span class="prof-action-right">›</span>
       </button>
       <button class="prof-action-row prof-action-danger" onclick="clearAllUsers()">
-        <span class="prof-action-label">Clear all users<span class="prof-action-sub">Delete every account &amp; email (keeps events)</span></span>
+        <span class="prof-action-label">Clear all users<span class="prof-action-sub">Delete every OTHER account (keeps yours &amp; events)</span></span>
         <span class="prof-action-right">›</span>
       </button>
       <button class="prof-action-row prof-action-danger" onclick="if(confirm('Delete ALL rows in users, events, rsvps, tickets? This cannot be undone.')){clearAllTestData(true)}">
