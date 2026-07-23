@@ -11,8 +11,13 @@ function renderAccount() {
       <div><h2>Account</h2><p>${escapeHtml(state.profileName)}</p></div>
     </div>
 
-    <div class="section-title">My Tickets</div>
-    ${myTicketsCardsHtml()}
+    <div class="section-title">Tickets</div>
+    <div class="prof-action-list">
+      <button class="prof-action-row" onclick="openMyTickets()">
+        <span class="prof-action-label">My Tickets<span class="prof-action-sub">${myTickets.length ? `${myTickets.length} ticket${myTickets.length !== 1 ? "s" : ""}` : "No tickets yet"}</span></span>
+        <span class="prof-action-right">›</span>
+      </button>
+    </div>
 
     <div class="section-title">Settings</div>
     <div class="prof-action-list">

@@ -1301,6 +1301,8 @@ function renderView() {
   else if (state.view === "account") container.innerHTML = renderAccount();
   else if (state.view === "account-details")
     container.innerHTML = renderAccountDetails();
+  else if (state.view === "my-tickets")
+    container.innerHTML = renderMyTickets();
   else if (state.view === "admin") container.innerHTML = renderAdmin();
   else if (state.view === "calendar") container.innerHTML = renderCalendar();
   else if (state.view === "host") {

@@ -248,7 +248,6 @@ function bounceInPinLayer(features) {
 // Data-URL cache of each category's pin image, captured in loadWebGLIcons —
 // reused by the DOM hover-overlay so it's pixel-identical to the WebGL pin.
 const pinImageDataUrls = {};
-const pinFreeImageDataUrls = {};
 
 let _pinOverlayEl = null;
 function ensurePinOverlay() {
@@ -288,9 +287,7 @@ function showPinOverlay(ev, rotateDeg = 0) {
   _pinOverlayEvId = ev.id;
   _pinOverlayRotate = rotateDeg;
   const img = el.querySelector("img");
-  const isFree = eventPrice(ev) <= 0;
-  img.src =
-    (isFree ? pinFreeImageDataUrls[ev.category] : pinImageDataUrls[ev.category]) || "";
+  img.src = pinImageDataUrls[ev.category] || "";
   positionPinOverlay([ev.lon, ev.lat], rotateDeg);
   el.style.display = "block";
   // Always retrigger the bounce-in from a clean state, even when the
@@ -478,26 +475,18 @@ function drawCategoryGlyph(ctx, name, cx, cy, r) {
 // category-colour inner pin, white circle "head-hole" near the top with a
 // small category glyph inside it. The tip sits near the bottom of the canvas
 // so icon-anchor:'bottom' on the symbol layer plants the tip — not the
-// visual centre — on the event's coordinate.
-// Codex pin taxonomy: "Standard Pins" (paid) vs "Ghost Pins" (free events,
-// visually distinct/muted so a scan of the map reads price at a glance).
-// "Sponsored Pins" from the same spec are deliberately not built — there's
-// no brand/sponsorship data model anywhere in this schema, and drawing a
-// glowing pin for a feature that doesn't exist would be UI for nothing (see
-// PRODUCT.md — sponsorship is a manual sales process, not a product
-// surface). A ghost pin is just the same silhouette in a muted grey instead
-// of the category colour, at reduced opacity — still shows the category
-// glyph, so "cheap/free" doesn't come at the cost of "what kind of event".
-const GHOST_PIN_COLOR = "#9CA3AF";
-function drawPinIcon(ctx, name, cat, muted) {
+// visual centre — on the event's coordinate. Every pin always uses its
+// category colour at full opacity — free events used to render as a
+// desaturated "ghost pin", but a map full of grey pins made live events
+// harder to spot at a glance, so price is no longer encoded in pin colour.
+function drawPinIcon(ctx, name, cat) {
   const outerPin = new Path2D(
     "M20 3C11.72 3 5 9.72 5 18c0 11.6 15 31 15 31s15-19.4 15-31C35 9.72 28.28 3 20 3Z",
   );
   const innerPin = new Path2D(
     "M20 6C13.4 6 8 11.4 8 18c0 9.6 12 27 12 27s12-17.4 12-27C32 11.4 26.6 6 20 6Z",
   );
-  const fill = muted ? GHOST_PIN_COLOR : cat.color;
-  ctx.globalAlpha = muted ? 0.62 : 1;
+  const fill = cat.color;
   ctx.save();
   ctx.shadowColor = "rgba(0,0,0,0.35)";
   ctx.shadowBlur = 3;
@@ -513,29 +502,25 @@ function drawPinIcon(ctx, name, cat, muted) {
   ctx.fill();
   ctx.fillStyle = fill;
   drawCategoryGlyph(ctx, name, 20, 18, 5.6);
-  ctx.globalAlpha = 1;
 }
 function loadWebGLIcons() {
   if (!lmap) return;
   Object.entries(CATS).forEach(([name, cat]) => {
     const w = 40,
       h = 50;
-    [false, true].forEach((muted) => {
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      drawPinIcon(ctx, name, cat, muted);
-      // ctx.getImageData() reads the actual pixel buffer back from the
-      // canvas as a flat Uint8ClampedArray — the format Mapbox addImage()
-      // requires.
-      const imageData = ctx.getImageData(0, 0, w, h);
-      const imgId = (muted ? "pin-free-" : "pin-") + name;
-      try {
-        lmap.addImage(imgId, { width: w, height: h, data: imageData.data });
-      } catch (e) {}
-      (muted ? pinFreeImageDataUrls : pinImageDataUrls)[name] = canvas.toDataURL();
-    });
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    drawPinIcon(ctx, name, cat);
+    // ctx.getImageData() reads the actual pixel buffer back from the
+    // canvas as a flat Uint8ClampedArray — the format Mapbox addImage()
+    // requires.
+    const imageData = ctx.getImageData(0, 0, w, h);
+    try {
+      lmap.addImage("pin-" + name, { width: w, height: h, data: imageData.data });
+    } catch (e) {}
+    pinImageDataUrls[name] = canvas.toDataURL();
   });
 }
 
@@ -730,11 +715,7 @@ function attachMapLayers() {
     source: "events-source",
     filter: ["!", ["has", "point_count"]],
     layout: {
-      "icon-image": [
-        "concat",
-        ["case", ["==", ["get", "free"], true], "pin-free-", "pin-"],
-        ["get", "category"],
-      ],
+      "icon-image": ["concat", "pin-", ["get", "category"]],
       "icon-size": 1.0,
       "icon-anchor": "bottom",
       "icon-rotate": ["get", "fan_rotate"],

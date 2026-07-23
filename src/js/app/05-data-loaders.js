@@ -244,6 +244,7 @@ function renderNav() {
           "scan-picker",
           "scan",
           "account-details",
+          "my-tickets",
         ].includes(state.view)
       ? "account"
       : ["calendar", "calendar-day"].includes(state.view)
@@ -650,7 +651,6 @@ function buildEventsGeoJSON() {
           color: CATS[ev.category].color,
           status: eventStatus(ev),
           category: ev.category,
-          free: eventPrice(ev) <= 0,
           fan_rotate: angles[i],
         },
       });

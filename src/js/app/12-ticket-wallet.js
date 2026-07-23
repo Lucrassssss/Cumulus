@@ -1,15 +1,38 @@
-// ─── My Tickets — the cards shown inline on the Account screen ────────────
+// ─── My Tickets — its own screen, reached from a single row on Account ─────
 // Used to be split across two separate near-duplicate screens (a flat list
 // here, and a by-event grouped list reached from the confirmation screen's
 // "View all my tickets" button, which lacked the Transfer/Cancel actions
-// below). Consolidated to this one implementation, embedded directly in
-// renderAccount() — tickets are the core of what the app is for, so they
-// don't need their own separate destination anymore.
+// below), then briefly rendered fully inline on Account itself. Account now
+// just links to this dedicated view — a wallet full of ticket cards doesn't
+// belong crowding the settings list above it.
+function openMyTickets() {
+  pushNav();
+  state.view = "my-tickets";
+  renderNav();
+  renderView();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function renderMyTickets() {
+  return `<button class="back-btn" onclick="goBack()">←</button>
+  <div class="connect-header" style="padding-top:8px;">
+    <h2>My Tickets</h2>
+    <p>${myTickets.length} ticket${myTickets.length !== 1 ? "s" : ""}</p>
+  </div>
+  ${myTicketsCardsHtml()}`;
+}
+
+// Sorted soonest-event-first (not purchase order) — a ticket wallet reads
+// as "what's coming up", so the next thing you're going to is always on top.
 function myTicketsCardsHtml() {
   if (!myTickets.length)
     return `<div class="empty-state">No tickets yet — browse events and book your first one.<br><br><button class="btn" onclick="goBrowse()">Browse Events</button></div>`;
   return [...myTickets]
-    .reverse()
+    .sort((a, b) => {
+      const evA = EVENTS.find((e) => e.id === a.eventId);
+      const evB = EVENTS.find((e) => e.id === b.eventId);
+      return (evA?.startsAt ?? 0) - (evB?.startsAt ?? 0);
+    })
     .map((t) => {
       const ev = EVENTS.find((e) => e.id === t.eventId);
       if (!ev) return "";

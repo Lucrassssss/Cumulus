@@ -990,13 +990,16 @@ full-viewport flash (green/red), retriggered cleanly on every scan the same
 remove-reflow-add way the map's pin-hover bounce works, with a
 `prefers-reduced-motion` fallback that skips the animation for a plain flash.
 
-**Ghost pins for free events.** The Codex's pin taxonomy (Standard/Ghost/
-Sponsored) was only partly buildable: free events now render as a visually
-distinct, desaturated grey pin (still showing the category glyph) instead
-of the category colour — real, cheap, and already wired through
-`buildEventsGeoJSON()`'s `free` property into the WebGL symbol layer's
-`icon-image` expression. **Sponsored pins were not built** — there is no
-brand/sponsorship data model anywhere in this schema (no `sponsor_id`
+**Ghost pins for free events (built, then reverted).** The Codex's pin
+taxonomy (Standard/Ghost/Sponsored) called for free events to render as a
+desaturated grey "ghost pin" instead of their category colour. This shipped
+once, then was reverted on user feedback: a map scattered with grey pins
+made it harder to spot what's actually on at a glance, and category colour
+is the primary way this map reads at a glance — price isn't. Every pin now
+always renders in its category colour (`drawPinIcon()`/`loadWebGLIcons()` in
+`06-map-animations.js`, `icon-image: ["concat", "pin-", ["get", "category"]]`
+in the WebGL symbol layer). **Sponsored pins were never built** — there is
+no brand/sponsorship data model anywhere in this schema (no `sponsor_id`
 column, nothing to attach a brand to), and drawing a glowing pin for a
 feature that doesn't exist would be UI for nothing. This matches
 `PRODUCT.md`'s existing stance that the Experiential Sponsorship Moat is a
