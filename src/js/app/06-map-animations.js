@@ -503,22 +503,35 @@ function drawPinIcon(ctx, name, cat) {
   ctx.fillStyle = fill;
   drawCategoryGlyph(ctx, name, 20, 18, 5.6);
 }
+// Drawn at the screen's actual device pixel ratio (capped at 3x — beyond
+// that is wasted memory with no visible gain) rather than a flat 40x50
+// raster. Mapbox's own map canvas already renders at devicePixelRatio, so a
+// 1x pin sprite got upscaled right along with it and came out visibly soft/
+// pixelated on any retina phone — exactly the "pins need to look sharper"
+// complaint. addImage()'s pixelRatio option tells Mapbox how many raster
+// pixels back this image at native size, so it stops upscaling it.
+const PIN_ICON_DPR = Math.min(window.devicePixelRatio || 1, 3);
 function loadWebGLIcons() {
   if (!lmap) return;
   Object.entries(CATS).forEach(([name, cat]) => {
     const w = 40,
       h = 50;
     const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
+    canvas.width = w * PIN_ICON_DPR;
+    canvas.height = h * PIN_ICON_DPR;
     const ctx = canvas.getContext("2d");
+    ctx.scale(PIN_ICON_DPR, PIN_ICON_DPR);
     drawPinIcon(ctx, name, cat);
     // ctx.getImageData() reads the actual pixel buffer back from the
     // canvas as a flat Uint8ClampedArray — the format Mapbox addImage()
     // requires.
-    const imageData = ctx.getImageData(0, 0, w, h);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     try {
-      lmap.addImage("pin-" + name, { width: w, height: h, data: imageData.data });
+      lmap.addImage(
+        "pin-" + name,
+        { width: canvas.width, height: canvas.height, data: imageData.data },
+        { pixelRatio: PIN_ICON_DPR },
+      );
     } catch (e) {}
     pinImageDataUrls[name] = canvas.toDataURL();
   });
@@ -572,21 +585,22 @@ function openActiveEventMarker(evId) {
 
   const popupEl = popup.getElement();
   if (popupEl) {
+    // A plain "click" already fires correctly for a tap on a real DOM node
+    // (unlike the WebGL pin layer above, which needs Mapbox's own
+    // queryRenderedFeatures-based click handler). This used to also have a
+    // manual touchend listener with preventDefault+stopPropagation to feel
+    // more responsive, but that swallowed the touchend before it reached
+    // Mapbox's own gesture handlers bound higher up on the map container —
+    // leaving Mapbox's internal touch-tracking thinking that finger never
+    // lifted. The next real touch (e.g. panning the map) then got read
+    // against that phantom stuck touch point as a two-finger pinch, which is
+    // exactly the "feels like holding the screen down" / "moving the map
+    // zooms instead" bug this was causing. One listener, no early-exit.
     popupEl.addEventListener("click", (e) => {
       e.stopPropagation();
       removeActiveHtmlMarker();
       openEvent(ev.id);
     });
-    popupEl.addEventListener(
-      "touchend",
-      (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        removeActiveHtmlMarker();
-        openEvent(ev.id);
-      },
-      { passive: false },
-    );
   }
   lmap.easeTo({ center: [ev.lon, ev.lat] });
 }
