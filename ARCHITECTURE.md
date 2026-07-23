@@ -764,6 +764,53 @@ no bio paragraph, no featured-badges row — it had briefly picked up
 `avatar_url`/`card_accent`/`card_bio`/`card_featured_badges` dependencies
 via `fetchPublicProfile()`, which is now gone along with them.
 
+## Account details, avatar upload, and real host follows (2026-07-23)
+
+A follow-up audit after the removal above: an "Edit name & email" row
+that swapped in place inline wasn't enough — industry norm (Eventbrite,
+Luma, most consumer apps) is a dedicated "Account details" page covering
+name/email/phone/photo, and both attendees and hosts needed a way to set
+a profile photo now that the card system's avatar upload went with it.
+
+`openAccountDetails()`/`renderAccountDetails()` (`10-badges.js`) replace
+the old inline `editProfile()`/`accountEditFormHtml()` pair with a real
+full-page view (`state.view = "account-details"`) — avatar upload zone,
+name, email, phone (new `phone_number` column, optional, lenient
+`PHONE_PATTERN`), one Save button. `uploadAvatarPhoto()` (`services.js`)
+is a lean re-add of the same function the card-system removal deleted —
+same `avatars` storage bucket, same `avatar_url` column, no card baggage
+this time. `accountAvatarHtml()` renders a real photo when set, a plain
+initials monogram otherwise, shared between the Account header and this
+page.
+
+**Host follows became real.** The host-profile page's own comment used to
+say the exact opposite of what it now does: "No follower count (following
+is a local-device bookmark)... showing one would be a fabricated trust
+signal." A new `public.host_follows` table (`follower_id`, `host_id`, both
+`uuid` FKs to `auth.users`, public SELECT so any visitor's client can
+compute a count, INSERT/DELETE scoped to `follower_id = auth.uid()`)
+replaces the old `localStorage` bookmark. `isFollowingHost()` still has to
+be synchronous — the event-detail byline renders synchronously and can't
+await mid-render — so it reads an in-memory cache (`state.followedHostIds`)
+loaded once at boot (`loadMyFollows()`, called from `initApp()`);
+`toggleFollowHost()` updates that cache optimistically and fires the real
+write in the background, rolling back on failure. The Follow button itself
+only renders for reviewed hosts (a real linked account) in both the byline
+and the profile page, since `host_follows.host_id` has a real FK — there's
+nothing valid to follow for a legacy events-only host string.
+
+Host profile page: real avatar photo when set (`fetchHostProfileExtras()`,
+`public.public_profiles` — avatar_url + created_at only, nothing
+card-related), a "Member since" line, and a three-stat row (events hosted
+/ attendees / followers). Fixed a genuine layout bug surfaced while
+testing with a realistic two-word host name: the avatar and the name/
+Follow row previously shared one flex container pulled up over the cover
+band, so a name that wrapped to two lines could paint its second line
+directly on top of the gold banner (unreadable at the color-boundary).
+The avatar now overlaps the banner in its own isolated row
+(`.host-profile-avatar-wrap`); the name/Follow row sits fully below it and
+can never intrude on the banner regardless of name length.
+
 ## The "Master Development Codex" reconciliation
 
 A second founder-supplied document (a 7-page "Master Development Codex")
