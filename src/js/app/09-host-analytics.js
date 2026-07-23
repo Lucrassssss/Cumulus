@@ -1548,15 +1548,20 @@ function pinTooltipHtml(ev) {
   const capLine = ev.capacity
     ? `<div class="tip-going" style="margin-top:2px;"><strong>${Math.max(0, ev.capacity - att.length)} spaces left</strong></div>`
     : "";
+  const img = ev.photoUrl || ev.nightShotUrl || catImg(ev.category);
   return `<div class="evtip-inner" style="--c:${c.color}">
-    <div class="tip-top">${statusBadge}<span class="tip-cat" style="background:${c.color}">${ev.category}</span></div>
-    <div class="tip-title">${escapeHtml(ev.title)}</div>
-    <div class="tip-meta">${ev.date} · ${ev.time}</div>
-    <div class="tip-meta">${escapeHtml(ev.venue)}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""}</div>
-    ${goingLine}${capLine}
-    <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;font-size:10.5px;font-weight:700;color:${c.color};letter-spacing:0.04em;">
-      <span>Open &amp; RSVP</span>
-      <span style="font-size:13px;opacity:0.85;">→</span>
+    <div class="tip-banner" style="background-image:url('${img}')">
+      <div class="tip-top">${statusBadge}<span class="tip-cat" style="background:${c.color};color:${c.textColor}">${ev.category}</span></div>
+    </div>
+    <div class="tip-body">
+      <div class="tip-title">${escapeHtml(ev.title)}</div>
+      <div class="tip-meta">${ev.date} · ${ev.time}</div>
+      <div class="tip-meta">${escapeHtml(ev.venue)}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""}</div>
+      ${goingLine}${capLine}
+      <div class="tip-cta" style="color:${c.color};">
+        <span>Open &amp; RSVP</span>
+        <span style="font-size:13px;opacity:0.85;">→</span>
+      </div>
     </div>
   </div>`;
 }
