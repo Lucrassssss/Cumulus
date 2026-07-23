@@ -585,6 +585,11 @@ let bookingDraft = {
 };
 
 function openBook(id) {
+  if (!state.userId) {
+    showToast("Sign in to book a ticket", "info");
+    showLpSignup();
+    return;
+  }
   pushNav();
   bookingDraft = { eventId: id, qty: 1, confirmedTicket: null };
   const ev = EVENTS.find((e) => e.id === id);

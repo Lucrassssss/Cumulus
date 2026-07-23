@@ -185,7 +185,7 @@ function renderHostView() {
     <div class="host-section">
       <div class="host-section-title">Date &amp; time</div>
       <label class="intro-field-label">Start date</label>
-      <input id="host-start-date" type="date" class="gate-input"/>
+      <input id="host-start-date" type="date" class="gate-input" onchange="const e=document.getElementById('host-end-date');if(!e.value)e.value=this.value;"/>
       <label class="intro-field-label">Start time</label>
       <input id="host-start-time" type="time" class="gate-input"/>
       <label class="intro-field-label" style="margin-top:14px;">End date</label>

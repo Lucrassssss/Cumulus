@@ -509,6 +509,11 @@ function checkEventDeepLink() {
   if (ev) openEvent(ev.id);
 }
 function openAccount() {
+  if (!state.userId) {
+    showToast("Sign in to view your account", "info");
+    showLpSignup();
+    return;
+  }
   pushNav();
   state.view = "account";
   renderNav();

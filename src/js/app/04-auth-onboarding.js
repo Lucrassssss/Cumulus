@@ -81,6 +81,13 @@ async function verifyGateCode() {
   _pendingAuth = null;
   document.body.style.overflow = "";
   document.getElementById("gate-root").innerHTML = "";
+  // closeLpSignup() (not just clearing #gate-root) matters now that
+  // showLpSignup() can lazily inject the modal directly onto <body> for a
+  // guest mid-session (see enterGuestBrowse()/openBook()/openAccount()) —
+  // in that path the modal was never inside #gate-root to begin with, so
+  // clearing #gate-root alone left it stuck open, fixed, and covering the
+  // freshly-entered authenticated app underneath.
+  closeLpSignup();
   enterApp();
 }
 
