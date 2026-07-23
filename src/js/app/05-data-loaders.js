@@ -299,7 +299,10 @@ function renderNav() {
       <div class="top-bar">
         <div class="logo-wrap" onclick="goBrowse()" role="button" tabindex="0" aria-label="Cumulus home">${BLOT_SVG}<span class="logo hide-mobile">Cumulus</span></div>
         <input id="search-input" class="search-input" placeholder="Search events..." oninput="onSearchInput()" autocomplete="off"/>
-
+        <button id="filter-toggle-btn" class="filter-toggle-btn" onclick="toggleMapFiltersPanel()" aria-label="Filters" aria-expanded="false" aria-controls="map-filters">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6.5 7.5V19l-3 1.5v-8L4 5Z"/></svg>
+          <span id="filter-count-badge" class="filter-count-badge" style="display:none;"></span>
+        </button>
       </div>
       <div class="bottom-nav">
         ${NAV_TABS.map(

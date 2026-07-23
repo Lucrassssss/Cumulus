@@ -921,6 +921,26 @@ function updateLivePulse() {
   _livePulseRAF = requestAnimationFrame(tick);
 }
 
+// The floating caption pill above the bottom nav used to just say the
+// static, meaningless "Live events pulse · tap pin to view" — no actual
+// information about what's live right now. Give it the real count and
+// spell out what tapping a pin does; also switches to a warmer glowing
+// treatment when something really is live so it reads as a live signal,
+// not decoration.
+function updateMapCaptionBar() {
+  const bar = document.getElementById("map-caption-bar");
+  const copy = document.getElementById("map-caption-copy");
+  if (!bar || !copy) return;
+  const liveCount = getFilteredEvents().filter(
+    (ev) => eventStatus(ev) === "live",
+  ).length;
+  const isLive = liveCount > 0;
+  bar.classList.toggle("has-live", isLive);
+  copy.innerHTML = isLive
+    ? `<strong>${liveCount} live now</strong> — tap a pulsing pin to jump in`
+    : "Nothing live right now — check back later";
+}
+
 function refreshMarkers() {
   if (!lmap || typeof mapboxgl === "undefined") return;
   const src = lmap.getSource("events-source");
@@ -938,6 +958,7 @@ function refreshMarkers() {
   const visibleEvents = getFilteredEvents();
   updateMapEmptyState(visibleEvents.length);
   updateLivePulse();
+  updateMapCaptionBar();
 
   if (!lmapFitted && geo.features.length > 0) {
     const coords = geo.features.map((f) => f.geometry.coordinates);

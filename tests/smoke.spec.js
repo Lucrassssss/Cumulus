@@ -263,6 +263,84 @@ test.describe("Cumulus smoke", () => {
     ).toHaveCount(0);
   });
 
+  test("map filters: collapsed by default, opens as a dropdown from the top-bar button", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await enterApp(page);
+    // browse/map is the default view after enterApp() — filters should not
+    // float open on their own; only #filter-toggle-btn opens them.
+    await expect(page.locator("#map-filters")).not.toHaveClass(/open/);
+    await expect(page.locator("#map-filters")).toBeHidden();
+
+    await page.click("#filter-toggle-btn");
+    await expect(page.locator("#map-filters")).toHaveClass(/open/);
+    await expect(page.locator("#map-filters")).toBeVisible();
+    await expect(page.locator("#map-filters .mchip").first()).toBeVisible();
+
+    // Selecting a category keeps the panel open (multi-adjust) and updates
+    // the underlying filter state.
+    await page.locator("#map-filters .mchip", { hasText: "Creative" }).click();
+    const cat = await page.evaluate(() => state.selectedCategory);
+    expect(cat).toBe("Creative");
+    await expect(page.locator("#map-filters")).toHaveClass(/open/);
+
+    // Toggling the button again closes it.
+    await page.click("#filter-toggle-btn");
+    await expect(page.locator("#map-filters")).not.toHaveClass(/open/);
+
+    // Leaving the map view force-closes the panel even if it were left open.
+    await page.click("#filter-toggle-btn");
+    await expect(page.locator("#map-filters")).toHaveClass(/open/);
+    await setView(page, "account");
+    await expect(page.locator("#map-filters")).not.toHaveClass(/open/);
+  });
+
+  test("live caption pill: real count, hides its dot when nothing is live, survives a map pan", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => updateMapCaptionBar());
+    await expect(page.locator("#map-caption-copy")).toHaveText(
+      "Nothing live right now — check back later",
+    );
+    await expect(page.locator("#map-caption-bar .cap-live")).toBeHidden();
+
+    await page.evaluate(() => {
+      const now = Date.now();
+      const ev = {
+        id: "live-fixture-1",
+        title: "Live Fixture",
+        category: "Creative",
+        host: "Test Host",
+        hostId: "test-host",
+        venue: "Test Venue",
+        area: "Soho",
+        address: "Soho, London",
+        lat: 51.5136,
+        lon: -0.1365,
+        startTime: new Date(now - 600000).toISOString(),
+        endTime: new Date(now + 3600000).toISOString(),
+        desc: "desc",
+        capacity: 20,
+        price: 0,
+      };
+      if (typeof computeEventDates === "function") computeEventDates(ev);
+      if (!EVENTS.some((e) => e.id === ev.id)) EVENTS.push(ev);
+      updateMapCaptionBar();
+    });
+    await expect(page.locator("#map-caption-bar")).toHaveClass(/has-live/);
+    await expect(page.locator("#map-caption-copy")).toContainText("1 live now");
+    await expect(page.locator("#map-caption-bar .cap-live")).toBeVisible();
+
+    // Regression check: the dot used to vanish (display:none) the instant
+    // the map started panning — .map-caption .dot was previously in the
+    // "pause expensive animations while moving" rule.
+    await page.evaluate(() => document.body.classList.add("map-moving"));
+    await expect(page.locator("#map-caption-bar .cap-live .dot")).toBeVisible();
+  });
+
   test("core views render (host / calendar / account)", async ({ page }) => {
     await page.goto("/");
     await enterApp(page);

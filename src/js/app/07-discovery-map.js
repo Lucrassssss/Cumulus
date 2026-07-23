@@ -85,6 +85,7 @@ async function fetchVisibleEvents() {
   src.setData(filteredGeo);
   updateMapEmptyState(filteredGeo.features.length);
   updateLivePulse();
+  updateMapCaptionBar();
 }
 
 // Debounce helper — executes fn at most once every `wait` ms after last call
@@ -142,6 +143,7 @@ function clearMapFilters() {
   state.liveOnly = false;
   state.hotOnly = false;
   state.startingSoonOnly = false;
+  state.dateFilter = "all";
   const si = document.getElementById("search-input");
   if (si) si.value = "";
   refreshFilters();

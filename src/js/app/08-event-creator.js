@@ -305,10 +305,18 @@ async function submitHostEvent() {
 }
 
 function showMapLayer(visible) {
-  ["main-map", "map-filters", "map-caption-bar"].forEach((id) => {
+  ["main-map", "map-caption-bar"].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.style.display = visible ? "" : "none";
   });
+  // #map-filters is a dropdown now (opened via #filter-toggle-btn), not a
+  // permanently-visible strip. Only force it closed when actually leaving
+  // the map view — showMapLayer(true) runs on every browse re-render
+  // (including the one triggered by tapping a filter chip itself, via
+  // setCategory()/toggleLiveOnly()/etc. → renderView()), so closing it here
+  // too would slam the panel shut the instant you picked a single filter,
+  // defeating the whole point of being able to adjust several at once.
+  if (!visible) closeMapFiltersPanel();
   const fab = document.getElementById("owner-fin-fab");
   if (fab)
     fab.style.display =

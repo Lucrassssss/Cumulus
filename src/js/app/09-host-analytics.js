@@ -1447,6 +1447,67 @@ function refreshFilters() {
   // Finances now live in Profile → Admin & Finances (no floating map button)
   const fab = document.getElementById("owner-fin-fab");
   if (fab) fab.innerHTML = "";
+
+  const badge = document.getElementById("filter-count-badge");
+  if (badge) {
+    const count =
+      (state.selectedCategory !== "all" ? 1 : 0) +
+      (state.liveOnly || state.hotOnly || state.startingSoonOnly ? 1 : 0) +
+      (state.dateFilter && state.dateFilter !== "all" ? 1 : 0);
+    badge.textContent = String(count);
+    badge.style.display = count > 0 ? "" : "none";
+  }
+}
+
+// The filter panel (#map-filters) is a dropdown anchored below the top bar,
+// opened via #filter-toggle-btn next to the search box. It lives outside
+// #view-container (see index.html) so it survives view changes untouched;
+// visibility is purely this "open" class, toggled here rather than by
+// showMapLayer() rebuilding inline styles on every render.
+function toggleMapFiltersPanel() {
+  if (state.view !== "browse") {
+    // Same redirect onSearchInput() already does — filters only make sense
+    // on the map, so jump there first (e.g. tapping the button from Account).
+    state.view = "browse";
+    state.selectedEventId = null;
+    renderNav();
+    renderView();
+  }
+  const panel = document.getElementById("map-filters");
+  const btn = document.getElementById("filter-toggle-btn");
+  if (!panel || !btn) return;
+  if (panel.classList.contains("open")) {
+    closeMapFiltersPanel();
+    return;
+  }
+  panel.classList.add("open");
+  btn.classList.add("active");
+  btn.setAttribute("aria-expanded", "true");
+  // Deferred so the click that just opened the panel doesn't immediately
+  // close it again via this same listener.
+  setTimeout(
+    () => document.addEventListener("click", _mapFiltersOutsideClick, true),
+    0,
+  );
+}
+
+function closeMapFiltersPanel() {
+  const panel = document.getElementById("map-filters");
+  const btn = document.getElementById("filter-toggle-btn");
+  if (panel) panel.classList.remove("open");
+  if (btn) {
+    btn.classList.remove("active");
+    btn.setAttribute("aria-expanded", "false");
+  }
+  document.removeEventListener("click", _mapFiltersOutsideClick, true);
+}
+
+function _mapFiltersOutsideClick(e) {
+  const panel = document.getElementById("map-filters");
+  const btn = document.getElementById("filter-toggle-btn");
+  if (!panel || !btn) return;
+  if (panel.contains(e.target) || btn.contains(e.target)) return;
+  closeMapFiltersPanel();
 }
 
 function pinTooltipHtml(ev) {
