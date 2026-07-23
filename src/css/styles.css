@@ -4458,23 +4458,43 @@ select.gate-input {
   text-decoration-color: currentColor;
 }
 
-/* Cover + avatar use the same gold gradient as buttons (--grad-gold) rather
- * than a per-host hue — DESIGN.md's One Thread Rule keeps gold the only
- * accent across the system, so host identity here comes from the monogram
- * and stats, not a second color introduced per profile. No avatar_url or
- * cover field exists anywhere in the schema yet (checked before building
- * this), so this is an honest placeholder, not a stand-in for a missing
- * photo the code pretends exists. */
+/* Cover uses the same gold gradient as buttons (--grad-gold) rather than a
+ * per-host hue — DESIGN.md's One Thread Rule keeps gold the only accent
+ * across the system — plus a soft dot texture so it reads as a banner
+ * rather than a flat swatch. The avatar shows a real uploaded photo
+ * (avatar_url, public.public_profiles) when the host has set one, falling
+ * back to the monogram otherwise — never a stand-in for a photo that
+ * doesn't exist. */
 .host-profile-cover {
   height: 110px;
   border-radius: var(--r-lg);
-  background: var(--grad-gold);
-  margin-bottom: -34px;
+  background:
+    radial-gradient(
+      circle at 18px 18px,
+      rgba(255, 255, 255, 0.16) 1.5px,
+      transparent 1.5px
+    ),
+    var(--grad-gold);
+  background-size:
+    22px 22px,
+    100% 100%;
+}
+
+/* Avatar overlaps the banner in its own row, decoupled from the name/
+ * follow row below — a long host name wrapping to two lines must never be
+ * able to paint over the banner (unreadable where it crosses the gold/
+ * dark-background boundary), so only the (fixed-size, never-reflowing)
+ * avatar is allowed to sit in the overlap band. */
+.host-profile-avatar-wrap {
+  margin-top: -34px;
+  margin-bottom: 10px;
+  padding: 0 4px;
 }
 
 .host-profile-header {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 14px;
   padding: 0 4px;
   margin-bottom: 18px;
@@ -4495,16 +4515,33 @@ select.gate-input {
   font-weight: 800;
   font-size: 20px;
   color: #0a0a0a;
+  overflow: hidden;
+}
+
+.host-profile-avatar-photo {
+  background: var(--surface-2);
+}
+.host-profile-avatar-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.host-profile-member-since {
+  margin: 2px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 .host-profile-identity {
   flex: 1;
   min-width: 0;
-  padding-bottom: 6px;
 }
 
 .host-profile-identity h2 {
   margin: 0;
+  overflow-wrap: break-word;
 }
 
 .host-profile-identity p {
@@ -4514,7 +4551,8 @@ select.gate-input {
 }
 
 .host-profile-header .btn-follow-host {
-  margin-bottom: 6px;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .host-event-row {
@@ -5666,6 +5704,71 @@ textarea:focus {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+/* ── Account avatar (Account header + Account details page) ────────────── */
+.connect-header-avatar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.connect-header-avatar h2 {
+  margin: 0 0 2px !important;
+}
+.account-avatar {
+  border-radius: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  border: 1.5px solid var(--line);
+}
+.account-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.account-avatar-mono {
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface-2));
+  color: var(--accent-deep, var(--text));
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.account-avatar-edit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 22px;
+}
+.account-avatar-edit-zone {
+  position: relative;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.account-avatar-edit-badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  border: 2.5px solid var(--surface);
+}
+.gate-label-optional {
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .panel.intro-form {

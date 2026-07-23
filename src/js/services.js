@@ -110,6 +110,107 @@ async function loadUserProfile(userId) {
   }
 }
 
+/* Compresses/center-crops to a square (avatars render circular everywhere,
+ * so a square source avoids a stretched preview) and uploads to the
+ * caller's own folder in the avatars bucket — same RLS-scoped-by-
+ * auth.uid() pattern as uploadHostFlyer() (08-event-creator.js). upsert:true
+ * since an avatar is a single slot per user, not a new file every time.
+ * Returns the public URL, or null if there's nothing to upload or it fails
+ * (never blocks the rest of the save). */
+async function uploadAvatarPhoto(file) {
+  if (!file || !state.userId) return null;
+  try {
+    const blob = await compressImageFile(file, 480, 0.85, { square: true });
+    const path = `${state.userId}/avatar.jpg`;
+    const { error } = await sb.storage
+      .from("avatars")
+      .upload(path, blob, { contentType: "image/jpeg", upsert: true });
+    if (error) return null;
+    const { data } = sb.storage.from("avatars").getPublicUrl(path);
+    // Cache-bust: same path every time (upsert), so the browser/CDN would
+    // otherwise keep showing the old photo after a re-upload.
+    return data?.publicUrl ? `${data.publicUrl}?v=${Date.now()}` : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/* Real cross-user follow edges (public.host_follows) — replaces the old
+ * localStorage-only "follow" bookmark, which lived on one device and could
+ * never tell a host how many people actually follow them. */
+async function followHost(hostId) {
+  if (!hostId || !state.userId) return false;
+  try {
+    const { error } = await sb
+      .from("host_follows")
+      .insert({ follower_id: state.userId, host_id: hostId });
+    return !error;
+  } catch (e) {
+    return false;
+  }
+}
+async function unfollowHost(hostId) {
+  if (!hostId || !state.userId) return false;
+  try {
+    const { error } = await sb
+      .from("host_follows")
+      .delete()
+      .eq("follower_id", state.userId)
+      .eq("host_id", hostId);
+    return !error;
+  } catch (e) {
+    return false;
+  }
+}
+/* Total follower count for a host's profile page — public, resolves for a
+ * signed-out visitor too. "Am I following" is answered separately by the
+ * synchronous isFollowingHost() cache (state.followedHostIds), not here. */
+async function getHostFollowerCount(hostId) {
+  if (!hostId) return 0;
+  try {
+    const res = await sb
+      .from("host_follows")
+      .select("follower_id", { count: "exact", head: true })
+      .eq("host_id", hostId);
+    return res.count || 0;
+  } catch (e) {
+    return 0;
+  }
+}
+/* Every host id the current user follows, loaded once (initApp()) so
+ * isFollowingHost() can stay a synchronous cache read everywhere it's
+ * used — the event-detail byline renders synchronously, so an async DB
+ * call can't live inside that check. */
+async function loadMyFollows() {
+  if (!state.userId) return [];
+  try {
+    const { data, error } = await sb
+      .from("host_follows")
+      .select("host_id")
+      .eq("follower_id", state.userId);
+    if (error || !data) return [];
+    return data.map((r) => r.host_id);
+  } catch (e) {
+    return [];
+  }
+}
+/* Another user's public avatar + member-since date, for the host profile
+ * page (public.public_profiles — never the private users table directly).
+ * Null on error/offline/not-found. */
+async function fetchHostProfileExtras(hostId) {
+  if (!hostId) return null;
+  try {
+    const { data } = await sb
+      .from("public_profiles")
+      .select("avatar_url, created_at")
+      .eq("id", hostId)
+      .single();
+    return data || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 /* Am I signed in as a real, server-verified partner_host? Used to gate the
  * host scanner route — the actual security boundary is RLS on tickets/events
  * (host_id = auth.uid()), this just decides whether to show the entry point. */

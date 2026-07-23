@@ -236,6 +236,77 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator(".connect-header h2")).toHaveText("Account");
   });
 
+  test("Account details opens as its own page with name/email/phone/avatar", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      state.profileName = "Nova Rivers";
+      state.profileEmail = "nova@example.com";
+      openAccountDetails();
+    });
+    await expect(page.locator("h2")).toHaveText("Account details");
+    await expect(page.locator("#account-details-name")).toHaveValue(
+      "Nova Rivers",
+    );
+    await expect(page.locator("#account-details-email")).toHaveValue(
+      "nova@example.com",
+    );
+    await expect(page.locator("#account-details-phone")).toBeVisible();
+    await expect(page.locator(".account-avatar")).toBeVisible();
+    // Invalid phone is rejected without touching the network.
+    await page.fill("#account-details-phone", "abc");
+    await page.evaluate(() => saveAccountDetailsForm());
+    await expect(page.locator("#account-details-error")).toBeVisible();
+  });
+
+  test("host profile page: real follower stat, Follow gated to reviewed hosts", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      const now = Date.now();
+      const ev = {
+        id: "host-fixture-1",
+        title: "Host Fixture Event",
+        category: "Creative",
+        host: "Nova Collective",
+        hostId: "host-uuid-123",
+        venue: "Test Venue",
+        area: "Soho",
+        address: "Soho, London",
+        lat: 51.5136,
+        lon: -0.1365,
+        startTime: new Date(now + 3600000).toISOString(),
+        endTime: new Date(now + 7200000).toISOString(),
+        desc: "desc",
+        capacity: 20,
+        price: 0,
+      };
+      if (typeof computeEventDates === "function") computeEventDates(ev);
+      if (!EVENTS.some((e) => e.id === ev.id)) EVENTS.push(ev);
+      openHostProfile("host-uuid-123", "Nova Collective");
+    });
+    await expect(page.locator(".host-profile-identity h2")).toContainText(
+      "Nova Collective",
+    );
+    await expect(page.locator(".host-reviewed-badge")).toBeVisible();
+    await expect(page.locator(".btn-follow-host")).toBeVisible();
+    const statLabels = await page
+      .locator(".host-stat-label")
+      .allInnerTexts();
+    expect(statLabels.some((l) => /Follower/i.test(l))).toBeTruthy();
+    // Legacy, unreviewed hosts (no linked account) never get a Follow
+    // button — host_follows has a real FK to auth.users, so there's
+    // nothing valid to follow.
+    await page.evaluate(() => {
+      openHostProfile("Legacy Host Name", "Legacy Host Name");
+    });
+    await expect(page.locator(".btn-follow-host")).toHaveCount(0);
+  });
+
   test("event detail: fully visible and bookable, no gating", async ({
     page,
   }) => {

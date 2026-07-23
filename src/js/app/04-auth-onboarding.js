@@ -350,6 +350,7 @@ async function initApp() {
   if (!isApprovedHost() && state.userId) {
     state.hostApplicationStatus = await getMyHostApplicationStatus(state.userId);
   }
+  if (state.userId) state.followedHostIds = await loadMyFollows();
 
   // Refresh view quietly once real data is in (still on map = update markers)
   if (state.view === "browse") renderView();

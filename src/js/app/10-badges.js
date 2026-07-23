@@ -6,14 +6,20 @@
 // those moved to their own owner-only nav tab (renderAdmin()).
 function renderAccount() {
   return `
-    <div class="connect-header"><h2>Account</h2><p>${escapeHtml(state.profileName)}</p></div>
+    <div class="connect-header connect-header-avatar">
+      ${accountAvatarHtml(56)}
+      <div><h2>Account</h2><p>${escapeHtml(state.profileName)}</p></div>
+    </div>
 
     <div class="section-title">My Tickets</div>
     ${myTicketsCardsHtml()}
 
     <div class="section-title">Settings</div>
     <div class="prof-action-list">
-      ${state.editingProfile ? accountEditFormHtml() : accountEditRowHtml()}
+      <button class="prof-action-row" onclick="openAccountDetails()">
+        <span class="prof-action-label">Account details<span class="prof-action-sub">Name, email, phone &amp; photo</span></span>
+        <span class="prof-action-right">›</span>
+      </button>
       ${
         canAccessScanner()
           ? `<button class="prof-action-row" onclick="openScannerPicker()">
@@ -46,41 +52,88 @@ function renderAccount() {
   `;
 }
 
-function accountEditRowHtml() {
-  return `<button class="prof-action-row" onclick="editProfile()">
-    <span class="prof-action-label">Edit name &amp; email<span class="prof-action-sub">${escapeHtml(state.profileName)} · ${escapeHtml(state.profileEmail)}</span></span>
-    <span class="prof-action-right">›</span>
-  </button>`;
+// Shared avatar — a real photo (state.profileAvatarUrl) once uploaded, a
+// plain initials monogram until then. Used in the Account header, the
+// Account details page, and the nav-adjacent contexts that want a small
+// identity marker.
+function accountAvatarHtml(size) {
+  const s = size || 40;
+  if (state.profileAvatarUrl) {
+    return `<div class="account-avatar" style="width:${s}px;height:${s}px;"><img src="${state.profileAvatarUrl}" alt="" width="${s}" height="${s}"/></div>`;
+  }
+  return `<div class="account-avatar account-avatar-mono" style="width:${s}px;height:${s}px;font-size:${Math.round(s * 0.38)}px;">${initials(state.profileName)}</div>`;
 }
 
-function accountEditFormHtml() {
-  return `<div class="prof-action-row prof-action-edit-form">
-    <div class="gate-field">
-      <label class="gate-label" for="account-edit-name">Name</label>
-      <input id="account-edit-name" class="gate-input" value="${escapeHtml(state.profileName)}" autocomplete="name"/>
-    </div>
-    <div class="gate-field">
-      <label class="gate-label" for="account-edit-email">Email</label>
-      <input id="account-edit-email" class="gate-input" type="email" value="${escapeHtml(state.profileEmail)}" autocomplete="email"/>
-    </div>
-    <div id="account-edit-error" style="display:none;color:var(--danger,#dc2626);font-size:12px;margin-bottom:8px;"></div>
-    <div style="display:flex;gap:8px;">
-      <button class="btn btn-small" style="flex:1;" onclick="saveAccountDetails()">Save</button>
-      <button class="btn btn-outline btn-small" style="flex:1;" onclick="cancelEditAccount()">Cancel</button>
-    </div>
-  </div>`;
+// ── Account details — its own full page (industry-standard "edit your
+// profile" pattern: name/email/phone/photo, one page, one Save), replacing
+// the old inline-swap row that used to live directly in the Settings list.
+function openAccountDetails() {
+  pushNav();
+  state.view = "account-details";
+  renderNav();
+  renderView();
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// Real edit, unlike the old editProfile() it replaces — that one just
-// flipped state.editingProfile with no form ever consuming it, so the
+function renderAccountDetails() {
+  return `<button class="back-btn" onclick="goBack()">←</button>
+    <div class="connect-header"><h2>Account details</h2><p>Your name, contact info &amp; photo</p></div>
+
+    <div class="account-avatar-edit">
+      <input id="account-avatar-input" type="file" accept="image/*" style="display:none;" onchange="handleAccountAvatarChange(this)"/>
+      <div class="account-avatar-edit-zone" onclick="document.getElementById('account-avatar-input').click()" role="button" tabindex="0" aria-label="Change profile photo">
+        ${accountAvatarHtml(84)}
+        <span class="account-avatar-edit-badge" aria-hidden="true">📷</span>
+      </div>
+      <button class="btn-text" style="font-size:12.5px;" onclick="document.getElementById('account-avatar-input').click()">${state.profileAvatarUrl ? "Change photo" : "Add a photo"}</button>
+    </div>
+
+    <div class="gate-field">
+      <label class="gate-label" for="account-details-name">Name</label>
+      <input id="account-details-name" class="gate-input" value="${escapeHtml(state.profileName)}" autocomplete="name"/>
+    </div>
+    <div class="gate-field">
+      <label class="gate-label" for="account-details-email">Email</label>
+      <input id="account-details-email" class="gate-input" type="email" value="${escapeHtml(state.profileEmail)}" autocomplete="email"/>
+    </div>
+    <div class="gate-field">
+      <label class="gate-label" for="account-details-phone">Phone number <span class="gate-label-optional">(optional)</span></label>
+      <input id="account-details-phone" class="gate-input" type="tel" value="${escapeHtml(state.profilePhone || "")}" autocomplete="tel" placeholder="+44 7700 900000"/>
+    </div>
+    <div id="account-details-error" style="display:none;color:var(--danger,#dc2626);font-size:12px;margin-bottom:8px;"></div>
+    <button class="btn" style="width:100%;" onclick="saveAccountDetailsForm()">Save changes</button>`;
+}
+
+async function handleAccountAvatarChange(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  showToast("Uploading photo…");
+  const url = await uploadAvatarPhoto(file);
+  input.value = "";
+  if (!url) {
+    showToast("Couldn't upload that photo — try again", "error");
+    return;
+  }
+  state.profileAvatarUrl = url;
+  try {
+    await persistProfile();
+  } catch (e) {}
+  showToast("Photo updated", "success");
+  renderView();
+}
+
+// Real edit, unlike the old editProfile() this page replaces — that one
+// just flipped state.editingProfile with no form ever consuming it, so the
 // button silently did nothing. persistProfile() already knows how to
-// upsert name/email; this just points it at the edited values first.
-async function saveAccountDetails() {
-  const nameEl = document.getElementById("account-edit-name");
-  const emailEl = document.getElementById("account-edit-email");
-  const errEl = document.getElementById("account-edit-error");
+// upsert name/email/phone/avatar; this just points it at the edited values.
+async function saveAccountDetailsForm() {
+  const nameEl = document.getElementById("account-details-name");
+  const emailEl = document.getElementById("account-details-email");
+  const phoneEl = document.getElementById("account-details-phone");
+  const errEl = document.getElementById("account-details-error");
   const name = (nameEl?.value || "").trim();
   const email = (emailEl?.value || "").trim();
+  const phone = (phoneEl?.value || "").trim();
   const showErr = (msg) => {
     if (errEl) {
       errEl.textContent = msg;
@@ -89,28 +142,19 @@ async function saveAccountDetails() {
   };
   if (!name) return showErr("Name can't be empty.");
   if (!EMAIL_PATTERN.test(email)) return showErr("Enter a valid email.");
+  if (phone && !PHONE_PATTERN.test(phone))
+    return showErr("Enter a valid phone number, or leave it blank.");
 
   state.profileName = name;
   state.profileEmail = email;
-  state.editingProfile = false;
+  state.profilePhone = phone;
   try {
     await persistProfile();
     showToast("Account updated", "success");
   } catch (e) {
     showToast("Couldn't reach the server — try again", "error");
   }
-  renderView();
-}
-
-function cancelEditAccount() {
-  state.editingProfile = false;
-  renderView();
-}
-
-function editProfile() {
-  state.editingProfile = true;
-  renderNav();
-  renderView();
+  goBack();
 }
 
 // Compact real-event preview card reused wherever a screen needs to show

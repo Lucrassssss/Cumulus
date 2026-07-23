@@ -283,6 +283,10 @@ function checkIconSvg(size = 16) {
   return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-0.15em;"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg>`;
 }
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Phone is optional and intentionally lenient — digits, spaces, and the
+// handful of punctuation marks real numbers use (+, -, (), .), 7-20 chars.
+// No country-specific format enforcement.
+const PHONE_PATTERN = /^[0-9+()\-.\s]{7,20}$/;
 
 let state = {
   view: "browse",
@@ -292,11 +296,13 @@ let state = {
   userId: null,
   profileName: "",
   profileEmail: "",
+  profilePhone: "",
+  profileAvatarUrl: "",
   profileId: null,
   specialBadges: [],
   hostApplicationStatus: null, // null | "pending" | "approved" | "rejected" — see loadHostApplicationStatus()
+  followedHostIds: [], // host_follows rows for the current user — see loadMyFollows()
   theme: "light",
-  editingProfile: false,
   rsvps: {},
   attendeeCards: {},
   goingOpen: {},

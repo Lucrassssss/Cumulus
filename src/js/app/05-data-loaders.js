@@ -237,9 +237,14 @@ function renderNav() {
     state.view,
   )
     ? "admin"
-    : ["book", "checkout", "confirmed", "scan-picker", "scan"].includes(
-          state.view,
-        )
+    : [
+          "book",
+          "checkout",
+          "confirmed",
+          "scan-picker",
+          "scan",
+          "account-details",
+        ].includes(state.view)
       ? "account"
       : ["calendar", "calendar-day"].includes(state.view)
         ? "calendar"
@@ -379,9 +384,11 @@ async function signOut(confirmed) {
   state.userId = null;
   state.profileName = "";
   state.profileEmail = "";
+  state.profilePhone = "";
+  state.profileAvatarUrl = "";
   state.profileId = null;
   state.specialBadges = [];
-  state.editingProfile = false;
+  state.followedHostIds = [];
   state.view = "browse";
   state.rsvps = {};
   myTickets = [];
@@ -498,7 +505,6 @@ function checkEventDeepLink() {
 }
 function openAccount() {
   pushNav();
-  state.editingProfile = false;
   state.view = "account";
   renderNav();
   renderView();
@@ -506,7 +512,6 @@ function openAccount() {
 }
 function openCalendar() {
   pushNav();
-  state.editingProfile = false;
   state.view = "calendar";
   renderNav();
   renderView();

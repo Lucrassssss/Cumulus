@@ -1285,6 +1285,8 @@ function renderView() {
   else if (state.view === "host-profile")
     container.innerHTML = renderHostProfile();
   else if (state.view === "account") container.innerHTML = renderAccount();
+  else if (state.view === "account-details")
+    container.innerHTML = renderAccountDetails();
   else if (state.view === "admin") container.innerHTML = renderAdmin();
   else if (state.view === "calendar") container.innerHTML = renderCalendar();
   else if (state.view === "host") {
@@ -1622,7 +1624,7 @@ function renderHostByline(ev) {
   const reviewed = ev.hostId != null;
   return `<span class="detail-host-byline">
     <span>Hosted by <button type="button" class="host-byline-link" onclick="openHostProfile('${safeKey}','${safeName}')">${escapeHtml(ev.host)}</button>${hostCount >= 2 ? ` · ${hostCount} events hosted` : ""}${reviewed ? ` <span class="host-reviewed-badge" title="Host reviewed by Cumulus">${checkIconSvg(11)} Reviewed</span>` : ""}</span>
-    <button class="btn-follow-host${following ? " following" : ""}" onclick="toggleFollowHost('${safeKey}','${safeName}')">${following ? "Following" : "Follow"}</button>
+    ${reviewed ? `<button class="btn-follow-host${following ? " following" : ""}" onclick="toggleFollowHost('${safeKey}','${safeName}')">${following ? "Following" : "Follow"}</button>` : ""}
   </span>`;
 }
 
@@ -1630,18 +1632,41 @@ function renderHostByline(ev) {
 // Eventbrite-style organizer page, built only from data that's actually
 // real: events hosted, tickets/attendees across those events (from EVENTS
 // loaded this session — same "real data only" convention as hostCount
-// above), and the existing Reviewed badge. No follower count (following is
-// a local-device bookmark, see toggleFollowHost — never a real cross-user
-// number) and no star rating (no reviews/ratings model exists anywhere in
-// this schema) — showing either would be a fabricated trust signal.
+// above), the real cross-user follower count (public.host_follows), and
+// the existing Reviewed badge. No star rating (no reviews/ratings model
+// exists anywhere in this schema) — showing one would be a fabricated
+// trust signal.
 function openHostProfile(hostKey, hostName) {
   pushNav();
   state.selectedHostKey = hostKey;
   state.selectedHostName = hostName;
+  state.viewedHostAvatarUrl = null;
+  state.viewedHostMemberSince = null;
+  state.viewedHostFollowerCount = null;
   state.view = "host-profile";
   renderNav();
   renderView();
   window.scrollTo({ top: 0, behavior: "smooth" });
+  // hostKey is only a real users.id (so these lookups are possible) for
+  // reviewed hosts — legacy events store a bare name string in e.host with
+  // no linked account. Both fetched in the background so nav never blocks
+  // on them; only re-renders if still on this same host's page once they
+  // resolve.
+  const isRealHost = EVENTS.some((e) => e.hostId === hostKey);
+  if (!isRealHost) return;
+  fetchHostProfileExtras(hostKey).then((profile) => {
+    if (state.view !== "host-profile" || state.selectedHostKey !== hostKey)
+      return;
+    state.viewedHostAvatarUrl = profile?.avatar_url || null;
+    state.viewedHostMemberSince = profile?.created_at || null;
+    renderView();
+  });
+  getHostFollowerCount(hostKey).then((count) => {
+    if (state.view !== "host-profile" || state.selectedHostKey !== hostKey)
+      return;
+    state.viewedHostFollowerCount = count;
+    renderView();
+  });
 }
 
 // Big square card for the host profile's horizontally-scrolling event row —
@@ -1677,6 +1702,13 @@ function hostInitials(name) {
   return (words[0][0] + words[1][0]).toUpperCase();
 }
 
+function _memberSinceLabel(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `Member since ${d.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}`;
+}
+
 function renderHostProfile() {
   const hostKey = state.selectedHostKey;
   const hostName = state.selectedHostName;
@@ -1699,11 +1731,19 @@ function renderHostProfile() {
   const following = isFollowingHost(hostKey);
   const safeKey = escapeHtml(String(hostKey)).replace(/'/g, "&#39;");
   const safeName = escapeHtml(hostName).replace(/'/g, "&#39;");
-  const avatarHtml = `<div class="host-profile-avatar">${hostInitials(hostName)}</div>`;
+  const avatarHtml = state.viewedHostAvatarUrl
+    ? `<div class="host-profile-avatar host-profile-avatar-photo"><img src="${state.viewedHostAvatarUrl}" alt=""/></div>`
+    : `<div class="host-profile-avatar">${hostInitials(hostName)}</div>`;
+  const memberSince = _memberSinceLabel(state.viewedHostMemberSince);
+  // Follower count resolves async (getHostFollowerCount) — null on first
+  // paint means "still loading", not "zero", so the stat card shows a
+  // placeholder dash rather than a wrong number that then jumps.
+  const followerCount = state.viewedHostFollowerCount;
 
   const statsHtml = `<div class="host-stats-row">
     <div class="host-stat"><div class="host-stat-num">${hostEvents.length}</div><div class="host-stat-label">Event${hostEvents.length !== 1 ? "s" : ""} hosted</div></div>
     <div class="host-stat"><div class="host-stat-num">${totalAttendees}</div><div class="host-stat-label">Attendee${totalAttendees !== 1 ? "s" : ""}</div></div>
+    <div class="host-stat"><div class="host-stat-num">${followerCount == null ? "–" : followerCount}</div><div class="host-stat-label">Follower${followerCount === 1 ? "" : "s"}</div></div>
   </div>`;
 
   const upcomingHtml = upcoming.length
@@ -1715,13 +1755,18 @@ function renderHostProfile() {
 
   return `<button class="back-btn host-profile-back" onclick="goBack()">←</button>
     <div class="host-profile-cover"></div>
+    <div class="host-profile-avatar-wrap">${avatarHtml}</div>
     <div class="host-profile-header">
-      ${avatarHtml}
       <div class="host-profile-identity">
         <h2>${escapeHtml(hostName)}${reviewed ? ` <span class="host-reviewed-badge" title="Host reviewed by Cumulus">${checkIconSvg(12)} Reviewed</span>` : ""}</h2>
         <p>Event host</p>
+        ${memberSince ? `<p class="host-profile-member-since">${memberSince}</p>` : ""}
       </div>
-      <button class="btn-follow-host${following ? " following" : ""}" onclick="toggleFollowHost('${safeKey}','${safeName}')">${following ? "Following" : "Follow"}</button>
+      ${
+        reviewed
+          ? `<button class="btn-follow-host${following ? " following" : ""}" onclick="toggleFollowHost('${safeKey}','${safeName}')">${following ? "Following" : "Follow"}</button>`
+          : ""
+      }
     </div>
     ${statsHtml}
     <div class="section-title">Upcoming events</div>
@@ -1835,36 +1880,44 @@ async function deleteEvent(id) {
 
 
 
-// Follow a host to flag interest in their future events. Stored locally per
-// profile (same pattern as profile_about:/profile_interests:) rather than a
-// new backend table — lightweight preference, not core transactional data.
-function getFollowedHosts() {
-  try {
-    const r = localStorage.getItem("followed_hosts:" + state.profileName);
-    return r ? JSON.parse(r) : [];
-  } catch (e) {
-    return [];
-  }
-}
+// Follow a host to flag interest in their future events — a real
+// cross-user edge (public.host_follows), not a local bookmark, so it can
+// back an honest follower count on the host's own profile page.
+// isFollowingHost() reads the in-memory cache loaded once at boot
+// (loadMyFollows(), state.followedHostIds) so it stays synchronous — the
+// event-detail byline renders synchronously and can't await a DB call
+// mid-render. toggleFollowHost() updates that cache optimistically and
+// fires the real write in the background.
 function isFollowingHost(hostKey) {
-  return getFollowedHosts().includes(hostKey);
+  return (state.followedHostIds || []).includes(hostKey);
 }
-function toggleFollowHost(hostKey, hostName) {
-  const list = getFollowedHosts();
-  const idx = list.indexOf(hostKey);
-  if (idx === -1) {
-    list.push(hostKey);
-    showToast(`Following ${hostName}`, "success");
-  } else {
-    list.splice(idx, 1);
-    showToast(`Unfollowed ${hostName}`, "success");
+async function toggleFollowHost(hostKey, hostName) {
+  if (!state.userId) {
+    showToast("Sign in to follow hosts", "error");
+    return;
   }
-  try {
-    localStorage.setItem(
-      "followed_hosts:" + state.profileName,
-      JSON.stringify(list),
-    );
-  } catch (e) {}
+  const list = state.followedHostIds || [];
+  const idx = list.indexOf(hostKey);
+  const nowFollowing = idx === -1;
+  if (nowFollowing) list.push(hostKey);
+  else list.splice(idx, 1);
+  state.followedHostIds = list;
   renderView();
+  const ok = nowFollowing
+    ? await followHost(hostKey)
+    : await unfollowHost(hostKey);
+  if (!ok) {
+    // Roll back on failure — the optimistic toggle above didn't stick.
+    state.followedHostIds = nowFollowing
+      ? state.followedHostIds.filter((id) => id !== hostKey)
+      : [...state.followedHostIds, hostKey];
+    showToast("Couldn't reach the server — try again", "error");
+    renderView();
+    return;
+  }
+  showToast(
+    nowFollowing ? `Following ${hostName}` : `Unfollowed ${hostName}`,
+    "success",
+  );
 }
 
