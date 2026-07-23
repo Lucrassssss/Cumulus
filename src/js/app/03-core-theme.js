@@ -164,6 +164,7 @@ async function persistProfile() {
     email: state.profileEmail,
     phone_number: state.profilePhone || null,
     avatar_url: state.profileAvatarUrl || null,
+    cover_url: state.profileCoverUrl || null,
     profile_id: state.profileId,
     special_badges: state.specialBadges,
     theme: state.theme,
@@ -991,6 +992,7 @@ function _restoreUserFromRow(existing) {
   state.profileEmail = existing.email;
   state.profilePhone = existing.phone_number || "";
   state.profileAvatarUrl = existing.avatar_url || "";
+  state.profileCoverUrl = existing.cover_url || "";
   state.specialBadges = existing.special_badges || [];
   // Theme is driven by the day/night cycle, not the saved profile value.
 }

@@ -386,6 +386,7 @@ async function signOut(confirmed) {
   state.profileEmail = "";
   state.profilePhone = "";
   state.profileAvatarUrl = "";
+  state.profileCoverUrl = "";
   state.profileId = null;
   state.specialBadges = [];
   state.followedHostIds = [];

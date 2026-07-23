@@ -5771,6 +5771,38 @@ textarea:focus {
   letter-spacing: 0;
 }
 
+.account-cover-edit-zone {
+  position: relative;
+  height: 110px;
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  background-size: cover;
+  background-position: center;
+  margin-bottom: 6px;
+}
+.account-cover-edit-empty {
+  background:
+    radial-gradient(
+      circle at 18px 18px,
+      rgba(255, 255, 255, 0.16) 1.5px,
+      transparent 1.5px
+    ),
+    var(--grad-gold);
+  background-size:
+    22px 22px,
+    100% 100%;
+}
+.account-cover-edit-badge {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+}
+.account-cover-hint {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin: 0 0 20px;
+}
+
 .panel.intro-form {
   border: 1.5px solid var(--line) !important;
   border-radius: 14px !important;

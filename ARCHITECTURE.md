@@ -776,12 +776,31 @@ a profile photo now that the card system's avatar upload went with it.
 the old inline `editProfile()`/`accountEditFormHtml()` pair with a real
 full-page view (`state.view = "account-details"`) — avatar upload zone,
 name, email, phone (new `phone_number` column, optional, lenient
-`PHONE_PATTERN`), one Save button. `uploadAvatarPhoto()` (`services.js`)
-is a lean re-add of the same function the card-system removal deleted —
-same `avatars` storage bucket, same `avatar_url` column, no card baggage
-this time. `accountAvatarHtml()` renders a real photo when set, a plain
-initials monogram otherwise, shared between the Account header and this
-page.
+`PHONE_PATTERN`), one Save button. Approved hosts also see a "Host banner"
+upload zone above the avatar (`cover_url`, shown on their public host
+profile page — see below). `accountAvatarHtml()` renders a real photo
+when set, a plain initials monogram otherwise, shared between the Account
+header and this page.
+
+**Both uploads are moderated before anything publishes.** A new
+`moderate-image-upload` edge function is now the *only* write path into
+the `avatars`/`covers` storage buckets — migration
+`20260723000000_moderated_avatar_and_cover_uploads.sql` drops the old
+client-writable storage policies entirely, so the JS client has no direct
+storage-write access to either bucket anymore (a motivated user could
+otherwise bypass moderation by calling the storage API directly). The
+client compresses the image (`compressImageFile()`, unchanged), then
+`uploadAvatarPhoto()`/`uploadCoverPhoto()` (`services.js`) hand the bytes
+to the edge function via `sb.functions.invoke()`; the function checks the
+image against Google Cloud Vision's SafeSearch Detection (adult/violence/
+racy — rejects on `LIKELY`/`VERY_LIKELY`), and only then uploads via the
+service-role key (bypassing RLS, since it's the trusted path) and writes
+the resulting URL straight onto the caller's own `users` row. **Fails
+closed**: with no `GOOGLE_VISION_API_KEY` edge function secret set, every
+upload is rejected with a "temporarily unavailable" error rather than
+silently publishing something unchecked — see GO-LIVE.md for the
+dashboard step to set it (same "no MCP tool can set an edge function
+secret" situation as `STRIPE_SECRET_KEY` before it).
 
 **Host follows became real.** The host-profile page's own comment used to
 say the exact opposite of what it now does: "No follower count (following
@@ -799,10 +818,13 @@ only renders for reviewed hosts (a real linked account) in both the byline
 and the profile page, since `host_follows.host_id` has a real FK — there's
 nothing valid to follow for a legacy events-only host string.
 
-Host profile page: real avatar photo when set (`fetchHostProfileExtras()`,
-`public.public_profiles` — avatar_url + created_at only, nothing
-card-related), a "Member since" line, and a three-stat row (events hosted
-/ attendees / followers). Fixed a genuine layout bug surfaced while
+Host profile page: real avatar photo and banner when set
+(`fetchHostProfileExtras()`, `public.public_profiles` — avatar_url,
+cover_url, created_at, nothing card-related), a "Member since" line, and a
+three-stat row (events hosted / attendees / followers). Both photos are
+edited exclusively from Account details, not from this page directly —
+one editing surface, not two to keep in sync. Fixed a genuine layout bug
+surfaced while
 testing with a realistic two-word host name: the avatar and the name/
 Follow row previously shared one flex container pulled up over the cover
 band, so a name that wrapped to two lines could paint its second line

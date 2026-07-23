@@ -261,6 +261,31 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator("#account-details-error")).toBeVisible();
   });
 
+  test("Account details: host banner editor only shown to approved hosts", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      state.profileName = "Nova Rivers";
+      state.profileEmail = "nova@example.com";
+      openAccountDetails();
+    });
+    // A regular (non-host) account gets the avatar editor only — no banner
+    // upload zone, since there's no host profile page for it to appear on.
+    await expect(page.locator(".account-cover-edit-zone")).toHaveCount(0);
+    await expect(page.locator(".account-avatar-edit-zone")).toBeVisible();
+
+    await page.evaluate(() => {
+      state.specialBadges = ["verified-host"];
+      openAccountDetails();
+    });
+    await expect(page.locator(".account-cover-edit-zone")).toBeVisible();
+    await expect(
+      page.locator("#account-cover-input"),
+    ).toBeAttached();
+  });
+
   test("host profile page: real follower stat, Follow gated to reviewed hosts", async ({
     page,
   }) => {

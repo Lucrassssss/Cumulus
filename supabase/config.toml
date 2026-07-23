@@ -60,3 +60,11 @@ enabled = true
 # past-attendee list (get_past_attendee_emails() RPC enforces that server-side).
 verify_jwt = true
 entrypoint = "./functions/invite-past-attendees/index.ts"
+
+[functions.moderate-image-upload]
+enabled = true
+# true: called by a signed-in member uploading their own avatar or host
+# cover photo. Sole write path for the avatars/covers storage buckets —
+# see the migration that drops their old client-writable policies.
+verify_jwt = true
+entrypoint = "./functions/moderate-image-upload/index.ts"

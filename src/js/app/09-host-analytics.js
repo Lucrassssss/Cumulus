@@ -1641,6 +1641,7 @@ function openHostProfile(hostKey, hostName) {
   state.selectedHostKey = hostKey;
   state.selectedHostName = hostName;
   state.viewedHostAvatarUrl = null;
+  state.viewedHostCoverUrl = null;
   state.viewedHostMemberSince = null;
   state.viewedHostFollowerCount = null;
   state.view = "host-profile";
@@ -1658,6 +1659,7 @@ function openHostProfile(hostKey, hostName) {
     if (state.view !== "host-profile" || state.selectedHostKey !== hostKey)
       return;
     state.viewedHostAvatarUrl = profile?.avatar_url || null;
+    state.viewedHostCoverUrl = profile?.cover_url || null;
     state.viewedHostMemberSince = profile?.created_at || null;
     renderView();
   });
@@ -1734,6 +1736,9 @@ function renderHostProfile() {
   const avatarHtml = state.viewedHostAvatarUrl
     ? `<div class="host-profile-avatar host-profile-avatar-photo"><img src="${state.viewedHostAvatarUrl}" alt=""/></div>`
     : `<div class="host-profile-avatar">${hostInitials(hostName)}</div>`;
+  const coverStyle = state.viewedHostCoverUrl
+    ? ` style="background-image:url('${state.viewedHostCoverUrl}');background-size:cover;background-position:center;"`
+    : "";
   const memberSince = _memberSinceLabel(state.viewedHostMemberSince);
   // Follower count resolves async (getHostFollowerCount) — null on first
   // paint means "still loading", not "zero", so the stat card shows a
@@ -1754,7 +1759,7 @@ function renderHostProfile() {
       </div>`;
 
   return `<button class="back-btn host-profile-back" onclick="goBack()">←</button>
-    <div class="host-profile-cover"></div>
+    <div class="host-profile-cover"${coverStyle}></div>
     <div class="host-profile-avatar-wrap">${avatarHtml}</div>
     <div class="host-profile-header">
       <div class="host-profile-identity">

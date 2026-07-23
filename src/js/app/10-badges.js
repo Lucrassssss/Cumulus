@@ -75,9 +75,35 @@ function openAccountDetails() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+// Banner shown on a host's own public profile page — a real uploaded
+// photo once set, the same textured gold gradient as a fallback otherwise
+// (matches .host-profile-cover exactly, so setting/clearing a banner never
+// jumps the layout). Only shown here at all for approved hosts: a banner
+// is meaningless for an account with no public host page to show it on.
+function accountCoverHtml() {
+  if (state.profileCoverUrl) {
+    return `<div class="account-cover-edit-zone" onclick="document.getElementById('account-cover-input').click()" role="button" tabindex="0" aria-label="Change host banner" style="background-image:url('${state.profileCoverUrl}');">
+      <span class="account-avatar-edit-badge account-cover-edit-badge" aria-hidden="true">📷</span>
+    </div>`;
+  }
+  return `<div class="account-cover-edit-zone account-cover-edit-empty" onclick="document.getElementById('account-cover-input').click()" role="button" tabindex="0" aria-label="Add a host banner">
+    <span class="account-avatar-edit-badge account-cover-edit-badge" aria-hidden="true">📷</span>
+  </div>`;
+}
+
 function renderAccountDetails() {
+  const showCover = isApprovedHost();
   return `<button class="back-btn" onclick="goBack()">←</button>
     <div class="connect-header"><h2>Account details</h2><p>Your name, contact info &amp; photo</p></div>
+
+    ${
+      showCover
+        ? `<div class="section-title">Host banner</div>
+    <input id="account-cover-input" type="file" accept="image/*" style="display:none;" onchange="handleAccountCoverChange(this)"/>
+    ${accountCoverHtml()}
+    <p class="account-cover-hint">Shown at the top of your public host page. Checked automatically — nothing unsuitable gets published.</p>`
+        : ""
+    }
 
     <div class="account-avatar-edit">
       <input id="account-avatar-input" type="file" accept="image/*" style="display:none;" onchange="handleAccountAvatarChange(this)"/>
@@ -104,14 +130,18 @@ function renderAccountDetails() {
     <button class="btn" style="width:100%;" onclick="saveAccountDetailsForm()">Save changes</button>`;
 }
 
+// Both handlers below route through services.js's moderated upload path
+// (moderate-image-upload edge function, Google Cloud Vision SafeSearch) —
+// the client has no direct storage-write access to either bucket, so a
+// rejected photo never reaches a public URL in the first place.
 async function handleAccountAvatarChange(input) {
   const file = input.files && input.files[0];
   if (!file) return;
-  showToast("Uploading photo…");
-  const url = await uploadAvatarPhoto(file);
+  showToast("Checking photo…");
+  const { url, error } = await uploadAvatarPhoto(file);
   input.value = "";
   if (!url) {
-    showToast("Couldn't upload that photo — try again", "error");
+    showToast(error || "Couldn't upload that photo — try again", "error");
     return;
   }
   state.profileAvatarUrl = url;
@@ -119,6 +149,24 @@ async function handleAccountAvatarChange(input) {
     await persistProfile();
   } catch (e) {}
   showToast("Photo updated", "success");
+  renderView();
+}
+
+async function handleAccountCoverChange(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  showToast("Checking photo…");
+  const { url, error } = await uploadCoverPhoto(file);
+  input.value = "";
+  if (!url) {
+    showToast(error || "Couldn't upload that photo — try again", "error");
+    return;
+  }
+  state.profileCoverUrl = url;
+  try {
+    await persistProfile();
+  } catch (e) {}
+  showToast("Banner updated", "success");
   renderView();
 }
 

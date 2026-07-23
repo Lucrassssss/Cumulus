@@ -110,29 +110,46 @@ async function loadUserProfile(userId) {
   }
 }
 
-/* Compresses/center-crops to a square (avatars render circular everywhere,
- * so a square source avoids a stretched preview) and uploads to the
- * caller's own folder in the avatars bucket — same RLS-scoped-by-
- * auth.uid() pattern as uploadHostFlyer() (08-event-creator.js). upsert:true
- * since an avatar is a single slot per user, not a new file every time.
- * Returns the public URL, or null if there's nothing to upload or it fails
- * (never blocks the rest of the save). */
-async function uploadAvatarPhoto(file) {
-  if (!file || !state.userId) return null;
+/* Compresses (center-cropped to a square for an avatar — renders circular
+ * everywhere, so a square source avoids a stretched preview; a wide crop
+ * for a cover/banner) and hands the bytes to the moderate-image-upload
+ * edge function, which checks the image against Google Cloud Vision
+ * SafeSearch before writing it anywhere — the client no longer has
+ * storage-write access to either bucket at all (see the migration that
+ * dropped those policies), so this edge function is the only path in.
+ * Returns { url } on success or { error } with a message safe to show the
+ * user (moderation rejection, not-configured, or a generic failure). */
+async function _uploadModeratedPhoto(file, kind) {
+  if (!file || !state.userId) return { error: "Nothing to upload." };
   try {
-    const blob = await compressImageFile(file, 480, 0.85, { square: true });
-    const path = `${state.userId}/avatar.jpg`;
-    const { error } = await sb.storage
-      .from("avatars")
-      .upload(path, blob, { contentType: "image/jpeg", upsert: true });
-    if (error) return null;
-    const { data } = sb.storage.from("avatars").getPublicUrl(path);
-    // Cache-bust: same path every time (upsert), so the browser/CDN would
-    // otherwise keep showing the old photo after a re-upload.
-    return data?.publicUrl ? `${data.publicUrl}?v=${Date.now()}` : null;
+    const square = kind === "avatar";
+    const blob = await compressImageFile(file, square ? 480 : 1280, 0.85, {
+      square,
+    });
+    const { data, error } = await sb.functions.invoke(
+      "moderate-image-upload",
+      { body: blob, headers: { "x-upload-kind": kind } },
+    );
+    if (error) {
+      // Same FunctionsHttpError quirk as createCheckoutSession — the real
+      // message (moderation rejection, etc.) only lives on error.context.
+      let detail = null;
+      try {
+        const body = await error.context?.json();
+        detail = body?.error || null;
+      } catch (e2) {}
+      return { error: detail || "Couldn't upload that photo — try again." };
+    }
+    return { url: data?.url || null };
   } catch (e) {
-    return null;
+    return { error: "Couldn't upload that photo — try again." };
   }
+}
+async function uploadAvatarPhoto(file) {
+  return _uploadModeratedPhoto(file, "avatar");
+}
+async function uploadCoverPhoto(file) {
+  return _uploadModeratedPhoto(file, "cover");
 }
 
 /* Real cross-user follow edges (public.host_follows) — replaces the old
@@ -194,15 +211,15 @@ async function loadMyFollows() {
     return [];
   }
 }
-/* Another user's public avatar + member-since date, for the host profile
- * page (public.public_profiles — never the private users table directly).
- * Null on error/offline/not-found. */
+/* Another user's public avatar, banner, and member-since date, for the
+ * host profile page (public.public_profiles — never the private users
+ * table directly). Null on error/offline/not-found. */
 async function fetchHostProfileExtras(hostId) {
   if (!hostId) return null;
   try {
     const { data } = await sb
       .from("public_profiles")
-      .select("avatar_url, created_at")
+      .select("avatar_url, cover_url, created_at")
       .eq("id", hostId)
       .single();
     return data || null;

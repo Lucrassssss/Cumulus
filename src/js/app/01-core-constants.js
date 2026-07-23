@@ -298,6 +298,7 @@ let state = {
   profileEmail: "",
   profilePhone: "",
   profileAvatarUrl: "",
+  profileCoverUrl: "",
   profileId: null,
   specialBadges: [],
   hostApplicationStatus: null, // null | "pending" | "approved" | "rejected" — see loadHostApplicationStatus()
