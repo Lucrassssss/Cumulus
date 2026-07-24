@@ -174,8 +174,9 @@ function renderCalendarDay() {
 // see the notify-admin-new-event edge function, which emails on every
 // submission).
 function renderHostView() {
+  const p = _hostPrefill || {};
   return `
-    <div class="connect-header" style="padding-top:16px;"><h2>Host an event</h2><p>Zero platform fee — you keep 100% of your ticket price.</p></div>
+    <div class="connect-header" style="padding-top:16px;"><h2>${p.title ? "Duplicate event" : "Host an event"}</h2><p>${p.title ? "Same details, new date — review and publish." : "Zero platform fee — you keep 100% of your ticket price."}</p></div>
     <div id="host-type-notice" class="host-notice">${
       state.isAdmin
         ? "⚡ Admin — event publishes immediately to the live map."
@@ -185,27 +186,31 @@ function renderHostView() {
     <div class="host-section">
       <div class="host-section-title">Flyer (optional)</div>
       <input id="host-flyer-input" type="file" accept="image/*" style="display:none;" onchange="handleHostFlyerSelect(this)"/>
-      <div id="host-flyer-preview" onclick="document.getElementById('host-flyer-input').click()" role="button" tabindex="0" aria-label="Upload a flyer photo" style="cursor:pointer;border:2px dashed var(--line);border-radius:14px;height:140px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--text-muted);font-size:13px;background:var(--surface-2);overflow:hidden;">
-        <span style="font-size:22px;">📷</span>
-        <span>Tap to upload a flyer photo</span>
+      <div id="host-flyer-preview" onclick="document.getElementById('host-flyer-input').click()" role="button" tabindex="0" aria-label="Upload a flyer photo" style="cursor:pointer;border:2px dashed var(--line);border-radius:14px;height:140px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--text-muted);font-size:13px;background:${p.photoUrl ? `var(--surface-2) url('${p.photoUrl}') center/cover` : "var(--surface-2)"};overflow:hidden;">
+        ${
+          p.photoUrl
+            ? ""
+            : `<span style="font-size:22px;">📷</span><span>Tap to upload a flyer photo</span>`
+        }
       </div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Compressed automatically. No flyer? We'll show a category photo instead.</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">${p.photoUrl ? "Reusing the original event's photo — tap to replace it." : "Compressed automatically. No flyer? We'll show a category photo instead."}</div>
     </div>
 
     <div class="host-section">
       <div class="host-section-title">Event basics</div>
       <label class="intro-field-label">Title</label>
-      <input id="host-title" class="gate-input" placeholder="e.g., Summer Park Picnic"/>
+      <input id="host-title" class="gate-input" placeholder="e.g., Summer Park Picnic" value="${escapeHtml(p.title || "")}"/>
       <label class="intro-field-label">Category</label>
       <select id="host-cat" class="gate-input">${Object.keys(CATS)
-        .map((c) => `<option value="${c}">${c}</option>`)
+        .map((c) => `<option value="${c}"${p.category === c ? " selected" : ""}>${c}</option>`)
         .join("")}</select>
       <label class="intro-field-label">Description</label>
-      <textarea id="host-desc" class="gate-input" rows="3" placeholder="What's the vibe? What should people expect?"></textarea>
+      <textarea id="host-desc" class="gate-input" rows="3" placeholder="What's the vibe? What should people expect?">${escapeHtml(p.desc || "")}</textarea>
     </div>
 
     <div class="host-section">
       <div class="host-section-title">Date &amp; time</div>
+      ${p.title ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Dates aren't carried over — pick a new one below.</div>` : ""}
       <label class="intro-field-label">Start date</label>
       <input id="host-start-date" type="date" class="gate-input" onchange="autofillEventEndDate(this.value)"/>
       <label class="intro-field-label">Start time</label>
@@ -220,41 +225,43 @@ function renderHostView() {
       <div class="host-section-title">Location</div>
       <label class="intro-field-label">Search address</label>
       <div style="position:relative;margin-bottom:10px;">
-        <input id="host-address-search" class="gate-input" placeholder="Street name or postcode..." oninput="handleAddressAutocomplete()" autocomplete="off"/>
+        <input id="host-address-search" class="gate-input" placeholder="Street name or postcode..." oninput="handleAddressAutocomplete()" autocomplete="off" value="${escapeHtml(p.address || "")}"/>
         <div id="autocomplete-results" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;max-height:200px;overflow-y:auto;z-index:2000;display:none;box-shadow:0 8px 20px var(--shadow);"></div>
       </div>
       <div id="host-map-picker"></div>
-      <div id="host-lat-lon-text" style="font-size:11px;color:var(--text-muted);margin:6px 0 10px;font-weight:600;">Default: Central London — search above or tap map to pin exact location</div>
+      <div id="host-lat-lon-text" style="font-size:11px;color:var(--text-muted);margin:6px 0 10px;font-weight:600;">${p.lat != null ? `Location Pinned: (${Number(p.lat).toFixed(4)}, ${Number(p.lon).toFixed(4)})` : "Default: Central London — search above or tap map to pin exact location"}</div>
       <label class="intro-field-label">Venue name</label>
-      <input id="host-venue" class="gate-input" placeholder="e.g., The Rooftop, Community Hall"/>
+      <input id="host-venue" class="gate-input" placeholder="e.g., The Rooftop, Community Hall" value="${escapeHtml(p.venue || "")}"/>
       <label class="intro-field-label">Area (optional)</label>
-      <input id="host-area" class="gate-input" placeholder="e.g., Shoreditch"/>
+      <input id="host-area" class="gate-input" placeholder="e.g., Shoreditch" value="${escapeHtml(p.area || "")}"/>
     </div>
 
     <div class="host-section">
       <div class="host-section-title">Capacity</div>
       <label class="intro-field-label">Max attendees</label>
-      <input id="host-capacity" type="number" min="1" class="gate-input" placeholder="e.g., 20"/>
+      <input id="host-capacity" type="number" min="1" class="gate-input" placeholder="e.g., 20" value="${p.capacity ?? ""}"/>
     </div>
 
     <div class="host-section">
       <div class="host-section-title">Pricing</div>
       <label class="intro-field-label">Ticket Price (£) — You keep 100%</label>
-      <input id="host-price" type="number" min="0" step="0.01" class="gate-input" placeholder="e.g. 10 (Leave blank for free)"/>
+      <input id="host-price" type="number" min="0" step="0.01" class="gate-input" placeholder="e.g. 10 (Leave blank for free)" value="${p.priceTiers ? "" : p.price || ""}"/>
       <div class="host-notice">We add a flat, transparent platform fee to the buyer at checkout to cover processing. You keep every penny of your ticket price.</div>
       <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;">
-        <input type="checkbox" id="host-tiered-toggle" onchange="document.getElementById('host-tiered-rows').style.display=this.checked?'block':'none'" style="width:16px;height:16px;"/>
+        <input type="checkbox" id="host-tiered-toggle" ${p.priceTiers ? "checked" : ""} onchange="document.getElementById('host-tiered-rows').style.display=this.checked?'block':'none'" style="width:16px;height:16px;"/>
         Use tiered pricing instead (Early Bird → General → Final)
       </label>
-      <div id="host-tiered-rows" style="display:none;margin-top:10px;">
-        <div class="host-notice" style="margin-bottom:10px;">Fill in whichever tiers you want (at least one). Each tier's price applies until its cutoff time passes, then the next one takes over automatically — leave a cutoff blank on your last tier.</div>
+      <div id="host-tiered-rows" style="display:${p.priceTiers ? "block" : "none"};margin-top:10px;">
+        <div class="host-notice" style="margin-bottom:10px;">Fill in whichever tiers you want (at least one). Each tier's price applies until its cutoff time passes, then the next one takes over automatically — leave a cutoff blank on your last tier.${p.priceTiers ? " Prices carried over — cutoffs didn't, since they were tied to the old date." : ""}</div>
         ${["early", "general", "final"]
-          .map(
-            (id, i) => `<div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-end;">
-              <div style="flex:1;"><label class="intro-field-label">${["Early Bird", "General", "Final"][i]} (£)</label><input id="tier-${id}-price" type="number" min="0" step="0.01" class="gate-input" placeholder="£"/></div>
+          .map((id, i) => {
+            const label = ["Early Bird", "General", "Final"][i];
+            const priorTier = (p.priceTiers || []).find((t) => t.label === label);
+            return `<div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-end;">
+              <div style="flex:1;"><label class="intro-field-label">${label} (£)</label><input id="tier-${id}-price" type="number" min="0" step="0.01" class="gate-input" placeholder="£" value="${priorTier ? priorTier.price : ""}"/></div>
               <div style="flex:1.4;"><label class="intro-field-label">Rises after</label><input id="tier-${id}-cutoff" type="datetime-local" class="gate-input"/></div>
-            </div>`,
-          )
+            </div>`;
+          })
           .join("")}
       </div>
     </div>
@@ -262,6 +269,7 @@ function renderHostView() {
     <button id="host-submit-btn" class="btn" style="width:100%;margin-bottom:16px;font-size:15px;" onclick="submitHostEvent()">${state.isAdmin ? "Publish event →" : "Submit for review →"}</button>
     ${renderHostPayoutsPanel()}
     ${renderConnectStatusPanel()}
+    ${renderMyHostedEventsDuplicatePanel()}
     ${renderMyHostedEventsCancelPanel()}`;
 }
 

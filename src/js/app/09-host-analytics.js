@@ -572,6 +572,58 @@ function renderMyHostedEventsCancelPanel() {
   </div>`;
 }
 
+// "Duplicate event" (production-readiness audit's top host-side lever):
+// a venue running a weekly night was re-typing the whole form from a blank
+// slate every week. Lists every non-cancelled event the host has ever
+// created — including past ones, since "copy last week's identical night"
+// is exactly the repeat-host case this exists for — each with a one-tap
+// "Duplicate" that opens the host form pre-filled (see openHost(prefill) /
+// renderHostView()). Dates are deliberately NOT carried over.
+function renderMyHostedEventsDuplicatePanel() {
+  if (!state.userId) return "";
+  const mine = EVENTS.filter(
+    (e) => e.hostId === state.userId && e.status !== "cancelled",
+  ).sort((a, b) => b.startsAt - a.startsAt);
+  if (!mine.length) return "";
+  const rows = mine
+    .map(
+      (ev) => `<div class="hp-tier-row">
+        <span class="hp-tier-label">${escapeHtml(ev.title)} · ${ev.date}</span>
+        <button class="btn btn-outline btn-small" style="min-height:32px;padding:0 12px;" onclick="duplicateEvent('${ev.id}')">Duplicate</button>
+      </div>`,
+    )
+    .join("");
+  return `<div class="hp-panel" style="margin-top:16px;">
+    <div class="hp-title">📋 Duplicate a past event</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">Reuse a listing's details for a new date — running a weekly night shouldn't mean retyping the whole form each time.</div>
+    ${rows}
+  </div>`;
+}
+
+function duplicateEvent(id) {
+  const ev = EVENTS.find((e) => e.id === id);
+  if (!ev) return;
+  if (ev.hostId !== state.userId && !state.isAdmin) return;
+  // Called from within the host form's own "Duplicate a past event" panel
+  // (renderMyHostedEventsDuplicatePanel(), same screen) — openHost() just
+  // re-renders this same view with the new prefill, no navigation involved.
+  openHost({
+    title: ev.title,
+    category: ev.category,
+    desc: ev.desc,
+    venue: ev.venue,
+    area: ev.area,
+    address: ev.address,
+    lat: ev.lat,
+    lon: ev.lon,
+    capacity: ev.capacity,
+    price: ev.price,
+    priceTiers: ev.priceTiers,
+    photoUrl: ev.photoUrl,
+  });
+  showToast("Duplicated — pick a new date and publish", "success");
+}
+
 async function hostCancelEvent(eventId, title) {
   if (
     !confirm(

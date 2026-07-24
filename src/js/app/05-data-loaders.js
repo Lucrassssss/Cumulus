@@ -544,7 +544,12 @@ function isApprovedHost() {
 function isAdminAccount() {
   return !!state.isAdmin;
 }
-function openHost() {
+// prefill: optional {title,category,desc,venue,area,address,lat,lon,
+// capacity,price,priceTiers,photoUrl} from duplicateEvent() — every other
+// entry point (bottom-nav "Host", "Become a host" success) calls this with
+// no argument, which is exactly what clears any stale prefill left over
+// from a duplicate that was opened then abandoned.
+function openHost(prefill) {
   if (!isApprovedHost()) {
     openHostApply();
     return;
@@ -554,6 +559,13 @@ function openHost() {
   // to a completely different submission later — the fresh form has no
   // preview showing anything is still selected.
   _hostFlyerBlob = null;
+  _hostPrefill = prefill || null;
+  _hostDuplicateSourcePhotoUrl = prefill?.photoUrl || null;
+  // Seeds the location map-picker (initHostMap(), 07-discovery-map.js) at
+  // the duplicated event's own venue instead of the default central-London
+  // pin — reset to the default when there's no prefill.
+  newEventLat = prefill?.lat ?? 51.5072;
+  newEventLon = prefill?.lon ?? -0.1276;
   state.view = "host";
   renderNav();
   renderView();

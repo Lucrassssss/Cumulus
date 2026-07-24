@@ -49,6 +49,13 @@ function compressImageFile(file, maxDim = 1600, quality = 0.75, opts = {}) {
 }
 
 let _hostFlyerBlob = null;
+// Set by openHost(prefill) when reached via duplicateEvent() — the host
+// form's fields render from this, and submitHostEvent() falls back to
+// _hostDuplicateSourcePhotoUrl for the photo when the host didn't pick a
+// new flyer (an existing photo_url can be reused directly, no re-upload
+// needed — it's already a real hosted image).
+let _hostPrefill = null;
+let _hostDuplicateSourcePhotoUrl = null;
 async function handleHostFlyerSelect(input) {
   const file = input.files && input.files[0];
   if (!file) return;
@@ -160,8 +167,10 @@ async function submitHostEvent() {
   }
   // Upload before either insert path so both the admin-direct and
   // pending_events rows get the same photo_url — a failed/skipped upload
-  // just leaves it null, and the category stock photo covers the rest.
-  const photoUrl = await uploadHostFlyer();
+  // falls back to the duplicated event's own photo (if this form was opened
+  // via duplicateEvent()), else null, and the category stock photo covers
+  // the rest.
+  const photoUrl = (await uploadHostFlyer()) || _hostDuplicateSourcePhotoUrl;
   if (submitBtn) submitBtn.textContent = submitBtnOrigLabel;
 
   // Every event is public. Admin submissions publish immediately; everyone
@@ -237,6 +246,8 @@ async function submitHostEvent() {
       .catch(() => {});
     state.rsvps[aData.id] = [state.profileName];
     _hostFlyerBlob = null;
+    _hostPrefill = null;
+    _hostDuplicateSourcePhotoUrl = null;
     showToast("Event published live to the map!", "success");
     openEvent(aData.id);
     return;
@@ -298,6 +309,8 @@ async function submitHostEvent() {
   );
   if (saved) {
     _hostFlyerBlob = null;
+    _hostPrefill = null;
+    _hostDuplicateSourcePhotoUrl = null;
     state.view = "browse";
     renderNav();
     renderView();
