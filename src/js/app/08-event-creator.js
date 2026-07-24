@@ -118,6 +118,55 @@ function collectHostPriceTiers() {
   return tiers.length ? tiers : null;
 }
 
+// Recurring events (audit's second host-side lever, alongside duplication):
+// "one form produces many dated instances" — no series/parent concept in
+// the schema, deliberately: each occurrence is just an independent event
+// row with the same details and an offset start/end, exactly like running
+// duplicateEvent() N times in a row but in one submit. Capped at 12
+// occurrences (weekly for ~3 months) to keep a single submit from being
+// able to spam the map/pending queue.
+function collectRecurringOccurrences(stDate, enDate) {
+  const toggle = document.getElementById("host-recurring-toggle");
+  if (!toggle || !toggle.checked) return [{ start: stDate, end: enDate }];
+  const freqDays = parseInt(
+    document.getElementById("host-recurring-freq")?.value || "7",
+    10,
+  );
+  const count = Math.max(
+    2,
+    Math.min(
+      12,
+      parseInt(document.getElementById("host-recurring-count")?.value || "4", 10) || 4,
+    ),
+  );
+  const stepMs = freqDays * 86400000;
+  return Array.from({ length: count }, (_, i) => ({
+    start: new Date(stDate.getTime() + i * stepMs),
+    end: new Date(enDate.getTime() + i * stepMs),
+  }));
+}
+
+function updateRecurringHint() {
+  const hint = document.getElementById("host-recurring-hint");
+  const toggle = document.getElementById("host-recurring-toggle");
+  if (!hint || !toggle) return;
+  if (!toggle.checked) {
+    hint.style.display = "none";
+    return;
+  }
+  const startDate = document.getElementById("host-start-date")?.value;
+  const startTime = document.getElementById("host-start-time")?.value || "00:00";
+  if (!startDate) {
+    hint.style.display = "none";
+    return;
+  }
+  const st = new Date(`${startDate}T${startTime}`);
+  const occurrences = collectRecurringOccurrences(st, st);
+  const fmt = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
+  hint.textContent = `Creates ${occurrences.length} events: ${occurrences.map((o) => fmt.format(o.start)).join(", ")}`;
+  hint.style.display = "block";
+}
+
 async function submitHostEvent() {
   const title = (document.getElementById("host-title")?.value || "").trim();
   const cat = document.getElementById("host-cat")?.value;
@@ -173,6 +222,12 @@ async function submitHostEvent() {
   const photoUrl = (await uploadHostFlyer()) || _hostDuplicateSourcePhotoUrl;
   if (submitBtn) submitBtn.textContent = submitBtnOrigLabel;
 
+  // "Repeat this event" (audit's recurring-events lever): one submit can
+  // produce several independent event rows sharing every field below except
+  // start/end time — see collectRecurringOccurrences()'s header for why
+  // there's no series/parent concept, just N plain rows.
+  const occurrences = collectRecurringOccurrences(stDate, enDate);
+
   // Every event is public. Admin submissions publish immediately; everyone
   // else goes via pending_events for a quick review (see the notify-admin
   // edge function, which emails on every new pending row).
@@ -184,79 +239,90 @@ async function submitHostEvent() {
       abtn.disabled = true;
       abtn.textContent = "Publishing…";
     }
-    const { data: aData, error: aErr } = await sb
+    const rows = occurrences.map((o) => ({
+      title,
+      category: cat,
+      host_id: state.userId,
+      host_name: state.profileName,
+      venue,
+      area: areaName || "London",
+      address: pubAddress,
+      lat: newEventLat,
+      lon: newEventLon,
+      start_time: o.start.toISOString(),
+      end_time: o.end.toISOString(),
+      description: desc,
+      capacity: parseInt(capStr, 10),
+      price: priceVal,
+      price_tiers: priceTiers,
+      photo_url: photoUrl,
+    }));
+    const { data: aDataArr, error: aErr } = await sb
       .from("events")
-      .insert({
-        title,
-        category: cat,
-        host_id: state.userId,
-        host_name: state.profileName,
-        venue,
-        area: areaName || "London",
-        address: pubAddress,
-        lat: newEventLat,
-        lon: newEventLon,
-        start_time: stDate.toISOString(),
-        end_time: enDate.toISOString(),
-        description: desc,
-        capacity: parseInt(capStr, 10),
-        price: priceVal,
-        price_tiers: priceTiers,
-        photo_url: photoUrl,
-      })
-      .select()
-      .single();
+      .insert(rows)
+      .select();
     if (abtn) {
       abtn.disabled = false;
       abtn.textContent = "Publish event →";
     }
-    if (aErr) {
-      showToast("Failed to publish event — " + aErr.message, "error");
+    if (aErr || !aDataArr?.length) {
+      showToast(
+        "Failed to publish event" + (occurrences.length > 1 ? "s" : "") + " — " + (aErr?.message || "unknown error"),
+        "error",
+      );
       return;
     }
     // Inject into local EVENTS array so map updates immediately
-    const aEv = {
-      id: aData.id,
-      title: aData.title,
-      category: aData.category,
-      host: aData.host_name,
-      hostId: aData.host_id,
-      venue: aData.venue,
-      area: aData.area,
-      address: aData.address,
-      lat: aData.lat,
-      lon: aData.lon,
-      startTime: aData.start_time,
-      endTime: aData.end_time,
-      desc: aData.description,
-      capacity: aData.capacity,
-      price: priceVal,
-      priceTiers: aData.price_tiers || priceTiers,
-      photoUrl: aData.photo_url || photoUrl,
-    };
-    computeEventDates(aEv);
-    EVENTS.push(aEv);
-    await sb
-      .from("rsvps")
-      .insert({
-        event_id: aData.id,
-        user_id: state.userId,
-        user_name: state.profileName,
-      })
-      .catch(() => {});
-    state.rsvps[aData.id] = [state.profileName];
+    for (const aData of aDataArr) {
+      const aEv = {
+        id: aData.id,
+        title: aData.title,
+        category: aData.category,
+        host: aData.host_name,
+        hostId: aData.host_id,
+        venue: aData.venue,
+        area: aData.area,
+        address: aData.address,
+        lat: aData.lat,
+        lon: aData.lon,
+        startTime: aData.start_time,
+        endTime: aData.end_time,
+        desc: aData.description,
+        capacity: aData.capacity,
+        price: priceVal,
+        priceTiers: aData.price_tiers || priceTiers,
+        photoUrl: aData.photo_url || photoUrl,
+      };
+      computeEventDates(aEv);
+      EVENTS.push(aEv);
+      await sb
+        .from("rsvps")
+        .insert({
+          event_id: aData.id,
+          user_id: state.userId,
+          user_name: state.profileName,
+        })
+        .catch(() => {});
+      state.rsvps[aData.id] = [state.profileName];
+    }
     _hostFlyerBlob = null;
     _hostPrefill = null;
     _hostDuplicateSourcePhotoUrl = null;
-    showToast("Event published live to the map!", "success");
-    openEvent(aData.id);
+    if (aDataArr.length > 1) {
+      showToast(`${aDataArr.length} events published live to the map!`, "success");
+      navStack = [];
+      openCalendar();
+    } else {
+      showToast("Event published live to the map!", "success");
+      openEvent(aDataArr[0].id);
+    }
     return;
   }
 
   // Non-admin: queue in pending_events for owner approval
   const pubAddress =
     document.getElementById("host-address-search")?.value || "";
-  const pending = {
+  const pendingRows = occurrences.map((o) => ({
     title,
     category: cat,
     host_id: state.userId || null,
@@ -267,8 +333,8 @@ async function submitHostEvent() {
     address: pubAddress,
     lat: newEventLat,
     lon: newEventLon,
-    start_time: stDate.toISOString(),
-    end_time: enDate.toISOString(),
+    start_time: o.start.toISOString(),
+    end_time: o.end.toISOString(),
     description: desc,
     capacity: parseInt(capStr, 10),
     price: priceVal,
@@ -276,7 +342,7 @@ async function submitHostEvent() {
     photo_url: photoUrl,
     status: "pending",
     created_at: new Date().toISOString(),
-  };
+  }));
   const pbtn = document.getElementById("host-submit-btn");
   if (pbtn) {
     pbtn.disabled = true;
@@ -284,7 +350,7 @@ async function submitHostEvent() {
   }
   let saved = false;
   try {
-    const { error } = await sb.from("pending_events").insert(pending);
+    const { error } = await sb.from("pending_events").insert(pendingRows);
     if (!error) saved = true;
   } catch (e) {}
   if (!saved) {
@@ -292,7 +358,9 @@ async function submitHostEvent() {
       const arr = JSON.parse(
         localStorage.getItem("pending_events_local") || "[]",
       );
-      arr.push({ ...pending, id: "local_" + Date.now() });
+      pendingRows.forEach((row, i) =>
+        arr.push({ ...row, id: `local_${Date.now()}_${i}` }),
+      );
       localStorage.setItem("pending_events_local", JSON.stringify(arr));
       saved = true;
     } catch (e) {}
@@ -303,7 +371,9 @@ async function submitHostEvent() {
   }
   showToast(
     saved
-      ? "Submitted for review — we'll approve it shortly."
+      ? occurrences.length > 1
+        ? `${occurrences.length} events submitted for review — we'll approve them shortly.`
+        : "Submitted for review — we'll approve it shortly."
       : "Could not submit — please try again.",
     saved ? "success" : "error",
   );

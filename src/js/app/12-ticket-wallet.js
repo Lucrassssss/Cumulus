@@ -212,13 +212,30 @@ function renderHostView() {
       <div class="host-section-title">Date &amp; time</div>
       ${p.title ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Dates aren't carried over — pick a new one below.</div>` : ""}
       <label class="intro-field-label">Start date</label>
-      <input id="host-start-date" type="date" class="gate-input" onchange="autofillEventEndDate(this.value)"/>
+      <input id="host-start-date" type="date" class="gate-input" onchange="autofillEventEndDate(this.value);updateRecurringHint();"/>
       <label class="intro-field-label">Start time</label>
       <input id="host-start-time" type="time" class="gate-input"/>
       <label class="intro-field-label" style="margin-top:14px;">End date</label>
       <input id="host-end-date" type="date" class="gate-input"/>
       <label class="intro-field-label">End time</label>
       <input id="host-end-time" type="time" class="gate-input"/>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;">
+        <input type="checkbox" id="host-recurring-toggle" onchange="document.getElementById('host-recurring-rows').style.display=this.checked?'flex':'none';updateRecurringHint();" style="width:16px;height:16px;"/>
+        Repeat this event
+      </label>
+      <div id="host-recurring-rows" style="display:none;gap:8px;margin-top:10px;align-items:flex-end;">
+        <div style="flex:1.4;"><label class="intro-field-label">Every</label>
+          <select id="host-recurring-freq" class="gate-input" onchange="updateRecurringHint()">
+            <option value="7">Week</option>
+            <option value="14">2 weeks</option>
+            <option value="30">Month</option>
+          </select>
+        </div>
+        <div style="flex:1;"><label class="intro-field-label">Times</label>
+          <input id="host-recurring-count" type="number" min="2" max="12" value="4" class="gate-input" oninput="updateRecurringHint()"/>
+        </div>
+      </div>
+      <div id="host-recurring-hint" style="font-size:11px;color:var(--text-muted);margin-top:6px;display:none;"></div>
     </div>
 
     <div class="host-section" style="overflow:visible;">
