@@ -262,6 +262,21 @@ async function start() {
   renderGate();
 }
 
+// "Explore the Map →" on the landing hero used to call showLpSignup()
+// directly — a visitor asking to see the map got a sign-up form instead,
+// contradicting the product's own "no invite code, curator gate, or unlock
+// step standing between a user and the map" principle (PRODUCT.md) and
+// worse than every competitor researched (Eventbrite/DICE/Skiddle all allow
+// anonymous browsing, gating only at RSVP/checkout). events_read_anon
+// (migration 20260723050000) now grants the anon role SELECT on non-hidden/
+// non-cancelled events, so enterApp() itself works fine with no session —
+// state.userId simply stays unset, which every write path (openBook(),
+// openAccount(), toggleFollowHost(), event reporting) already checks (or
+// now checks — see those functions) before calling showLpSignup() instead.
+function enterGuestBrowse() {
+  enterApp();
+}
+
 /* ── Landing diorama — layered paper-cut London, theme-lit ──────────────
  * Two inline SVGs (back haze + front landmarks) so CSS [data-theme] drives
  * the lighting: bright flat facades by day, silhouettes with lit windows,
@@ -500,16 +515,22 @@ const DIORAMA_FRONT_SVG = `
   <rect x="0" y="330" width="2400" height="10" fill="var(--dio-front)"/>
 </svg>`;
 
-// The sign-up/log-in modal, extracted out of renderGate()'s template so it
-// can be mounted in two places: inline in the landing page (renderGate()
-// itself, for a first-time visitor) and appended once to document.body by
-// enterGuestApp() (for a guest already browsing the app, so tapping Book/
-// Follow/Account can prompt sign-up without navigating away from the map).
-// The overlay is position:fixed, so where it lives in the DOM tree doesn't
-// matter — only that exactly one copy exists at a time, since every input
-// inside references its ID directly (getElementById, not scoped queries).
+// Standalone sign-up/login overlay — used both as part of renderGate()'s
+// landing-page markup and injected on demand via showLpSignup() once inside
+// the app (see enterGuestBrowse()), where #gate-root has already been
+// cleared and nothing else would otherwise render this modal. Previously
+// inlined only inside renderGate(); pulled out so a guest mid-session (e.g.
+// tapping "Book Now") can still reach it.
+//
+// No longer shows a "Cumulus Pass" card preview here — that member-card/
+// badge system was removed from the product outright (see ARCHITECTURE.md
+// "the gamified card/badge system removal"), but this onboarding teaser
+// kept advertising it ("This is what you'll carry to every event.") with
+// fake interest tags, promising a feature that no longer exists to every
+// single new signup.
 function signupModalHtml(prefillName, prefillEmail) {
-  return `<div class="lp-signup-overlay" id="lp-signup-overlay" onclick="if(event.target===this)closeLpSignup()">
+  return `
+    <div class="lp-signup-overlay" id="lp-signup-overlay" onclick="if(event.target===this)closeLpSignup()">
       <div class="lp-signup-modal">
         <button class="lp-signup-close" onclick="closeLpSignup()" aria-label="Close">✕</button>
 
@@ -586,6 +607,23 @@ function signupModalHtml(prefillName, prefillEmail) {
     </div>`;
 }
 
+// Attaches the Enter-to-advance keydown handlers on the sign-up modal's name/
+// email fields. Called once after the modal's markup lands in the DOM —
+// either as part of renderGate()'s initial render, or lazily the first time
+// showLpSignup() injects it on demand mid-session.
+function attachSignupModalListeners() {
+  const nameEl = document.getElementById("gate-name");
+  const emailEl = document.getElementById("gate-email");
+  if (nameEl)
+    nameEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") emailEl?.focus();
+    });
+  if (emailEl)
+    emailEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") submitGate();
+    });
+}
+
 function renderGate(prefillName, prefillEmail) {
   const loader = document.getElementById("cumulus-loader");
   if (loader) {
@@ -633,7 +671,7 @@ function renderGate(prefillName, prefillEmail) {
         <h1 class="lp-hero-title">Find what's on.<br><span class="lp-hero-gradient">Zero fees for hosts.</span></h1>
         <p class="lp-hero-sub">Cumulus is a live map of grassroots events across London. Every event is public — no invite, no curator code. Hosts keep 100% of their ticket price.</p>
         <div class="lp-hero-actions">
-          <button class="btn lp-hero-btn-primary" onclick="enterApp()">Explore the Map →</button>
+          <button class="btn lp-hero-btn-primary" onclick="enterGuestBrowse()">Explore the Map →</button>
           <button class="btn btn-outline lp-hero-btn-secondary" onclick="document.getElementById('lp-features-anchor').scrollIntoView({behavior:'smooth'})">How it works ↓</button>
         </div>
         <p class="lp-hero-trust-note">${checkIconSvg(12)} Every public host is reviewed before their event goes live</p>
@@ -641,15 +679,15 @@ function renderGate(prefillName, prefillEmail) {
           <div class="lp-hero-pin" style="--c:#8FC63D;">
             <span class="lp-hero-pin-live"><span class="d"></span>Live</span>
             <span class="lp-hero-pin-title">Sunset Yoga</span>
-            <span class="lp-hero-pin-meta">Victoria Park · 18 going</span>
+            <span class="lp-hero-pin-meta">Victoria Park · Now</span>
           </div>
           <div class="lp-hero-pin" style="--c:#F0687E;">
             <span class="lp-hero-pin-title">Vinyl &amp; Wine</span>
-            <span class="lp-hero-pin-meta">Peckham · 32 going</span>
+            <span class="lp-hero-pin-meta">Peckham · Fri, 7pm</span>
           </div>
           <div class="lp-hero-pin" style="--c:#FFCF33;">
             <span class="lp-hero-pin-title">Life Drawing</span>
-            <span class="lp-hero-pin-meta">Hackney · 22 going</span>
+            <span class="lp-hero-pin-meta">Hackney · Sat, 2pm</span>
           </div>
         </div>
       </div>
@@ -658,7 +696,7 @@ function renderGate(prefillName, prefillEmail) {
     <!-- ── FEATURES ── -->
     <section class="lp-features" id="lp-features-anchor">
       <div style="text-align:center;margin-bottom:52px;">
-        <h2 class="lp-section-title">One pass. Your whole city.</h2>
+        <h2 class="lp-section-title">One map. Your whole city.</h2>
       </div>
       <div class="lp-features-grid">
         <div class="lp-feat-card">
@@ -669,9 +707,9 @@ function renderGate(prefillName, prefillEmail) {
         </div>
         <div class="lp-feat-card">
           <div class="lp-feat-photo" style="background-image:url('assets/img/pass.svg')"></div>
-          <div class="lp-feat-card-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="11.5" r="1.8"/><path d="M5.8 16c.5-1.6 1.8-2.4 2.7-2.4s2.2.8 2.7 2.4"/><path d="M14 10h4M14 13h4"/></svg></div>
-          <div class="lp-feat-card-title">Instant checkout</div>
-          <div class="lp-feat-card-desc">Pay by card, Apple Pay or Google Pay right in the app — your ticket's QR code is ready the moment payment clears, no app switching required.</div>
+          <div class="lp-feat-card-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M9 10.5l1.8 1.8L15 8.5"/></svg></div>
+          <div class="lp-feat-card-title">Checkout in seconds</div>
+          <div class="lp-feat-card-desc">Pay by card, Apple Pay or Google Pay right in the app — no redirect, no new tab. Your QR ticket is ready the moment payment clears.</div>
         </div>
         <div class="lp-feat-card">
           <div class="lp-feat-photo" style="background-image:url('assets/img/connect.svg')"></div>
@@ -713,7 +751,8 @@ function renderGate(prefillName, prefillEmail) {
           <h2 class="lp-join-headline">This isn't about events.<br>It's about <em>your people.</em></h2>
           <p class="lp-join-body">Cumulus was built on one belief — the best things happen when people who live near each other actually meet. Not online. In the same room, at the same table, under the same open sky.</p>
           <div class="lp-join-proof" style="margin-top:24px;">
-            <span class="lp-proof-text">Every event is hosted by someone in your city — not a corporation.</span>
+            <span class="lp-join-live"><span class="d"></span>Live</span>
+            <span class="lp-proof-text">New events added by hosts across London every day</span>
           </div>
           <button class="btn lp-hero-btn-primary" style="margin-top:28px;" onclick="showLpSignup()">Join them →</button>
         </div>
@@ -726,7 +765,7 @@ function renderGate(prefillName, prefillEmail) {
             </div>
             <div class="lp-comm-text">
               <div class="lp-comm-title">Jazz in the Park</div>
-              <div class="lp-comm-sub">Herne Hill · 40 going</div>
+              <div class="lp-comm-sub">Herne Hill · Sat, 6pm</div>
             </div>
             <div class="lp-comm-dot"></div>
           </div>
@@ -737,7 +776,7 @@ function renderGate(prefillName, prefillEmail) {
             </div>
             <div class="lp-comm-text">
               <div class="lp-comm-title">Ceramics &amp; Chill</div>
-              <div class="lp-comm-sub">Bermondsey · 25 going</div>
+              <div class="lp-comm-sub">Bermondsey · Sun, 11am</div>
             </div>
             <div class="lp-comm-dot"></div>
           </div>
@@ -750,7 +789,7 @@ function renderGate(prefillName, prefillEmail) {
             </div>
             <div class="lp-comm-text">
               <div class="lp-comm-title">Supper Club — Fulham</div>
-              <div class="lp-comm-sub">Fulham · 26 going</div>
+              <div class="lp-comm-sub">Fulham · Fri, 8pm</div>
             </div>
             <div class="lp-comm-dot"></div>
           </div>
@@ -777,12 +816,7 @@ function renderGate(prefillName, prefillEmail) {
   if (prefillName || prefillEmail) showLpSignup();
   nudgeGateForSquadClaim(); // ?squad= link landing on a signed-out visitor
 
-  document.getElementById("gate-name").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") document.getElementById("gate-email").focus();
-  });
-  document.getElementById("gate-email").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") submitGate();
-  });
+  attachSignupModalListeners();
 
   requestAnimationFrame(() => {
     document.querySelectorAll(".lp-venue-feat").forEach((el, i) => {
@@ -919,11 +953,17 @@ function toggleHostCat(cat) {
 }
 
 function showLpSignup(mode) {
-  const ov = document.getElementById("lp-signup-overlay");
-  if (ov) {
-    ov.classList.add("open");
-    document.body.style.overflow = "hidden";
+  let ov = document.getElementById("lp-signup-overlay");
+  if (!ov) {
+    // Not on the landing page (renderGate() already tore #gate-root down) —
+    // a guest triggered a gated action mid-session (Book Now, Account, Follow
+    // a host…). Inject the same modal fresh rather than silently no-op'ing.
+    document.body.insertAdjacentHTML("beforeend", signupModalHtml());
+    ov = document.getElementById("lp-signup-overlay");
+    attachSignupModalListeners();
   }
+  ov.classList.add("open");
+  document.body.style.overflow = "hidden";
   switchAuthMode(mode === "login" ? "login" : "signup");
 }
 function showLpLogin() {

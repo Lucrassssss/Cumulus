@@ -513,6 +513,7 @@ function openAccount() {
   // tools are all account-scoped — so it's the sign-up prompt itself rather
   // than an empty/broken screen.
   if (!state.userId) {
+    showToast("Sign in to view your account", "info");
     showLpSignup();
     return;
   }

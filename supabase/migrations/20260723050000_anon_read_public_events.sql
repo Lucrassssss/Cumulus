@@ -1,0 +1,31 @@
+-- Production-readiness audit finding: the app has NO anonymous browsing at
+-- all. events_read (20260704010000_auth_hardening.sql) only grants SELECT
+-- to `authenticated`, so start() (src/js/app/03-core-theme.js) always shows
+-- the sign-up gate to a first-time visitor — there is no code path that
+-- renders the map without a session. This directly contradicts the
+-- product's own stated identity ("no invite code, curator gate, or unlock
+-- step standing between a user and the map" — PRODUCT.md; "Event detail is
+-- always fully visible and bookable to everyone" — ARCHITECTURE.md) and is
+-- behind every competitor researched (Eventbrite/DICE/Skiddle/Fatsoma all
+-- allow anonymous browsing, gating only at RSVP/checkout).
+--
+-- This adds a SEPARATE, more conservative anon policy rather than widening
+-- events_read itself: authenticated users still see every row they did
+-- before (qual: true, unchanged), but anon only ever sees non-hidden,
+-- non-cancelled events — a moderated/cancelled event should not leak to a
+-- logged-out visitor even though the authenticated policy doesn't filter
+-- it at the RLS layer (client-side getFilteredEvents() does that
+-- filtering for signed-in users instead). Matches the exact status
+-- exclusion getFilteredEvents() already applies (09-host-analytics.js).
+--
+-- Deliberately NOT extending anon read to `rsvps` in this same pass — that
+-- table's user_name column is real attendee names, and even though
+-- rsvps_read is already `authenticated`+`qual:true` (any signed-in user can
+-- already read any other user's RSVPs), opening that further to fully
+-- anonymous callers is a separate PII-exposure decision this migration
+-- does not make. Guest views simply render with no "who's going" list
+-- (state.rsvps[id] || [] already degrades to empty safely) until that's
+-- decided explicitly.
+CREATE POLICY events_read_anon ON public.events
+  FOR SELECT TO anon
+  USING (status IS DISTINCT FROM 'hidden' AND status IS DISTINCT FROM 'cancelled');

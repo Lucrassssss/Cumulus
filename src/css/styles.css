@@ -2154,6 +2154,27 @@ body.no-scroll {
   border-radius: 14px;
 }
 
+.lp-join-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  font-family: "DM Mono", var(--font-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #cc1e1e;
+}
+
+.lp-join-live .d {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e23b3b;
+  animation: blink 1.3s ease-in-out infinite;
+}
+
 .lp-proof-text {
   font-size: 12px;
   font-weight: 600;

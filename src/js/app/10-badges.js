@@ -590,6 +590,7 @@ function openBook(id) {
   // guest tapping "Book Now" gets the sign-up prompt right here rather than
   // an insert that would silently fail RLS a few steps later.
   if (!state.userId) {
+    showToast("Sign in to book a ticket", "info");
     showLpSignup();
     return;
   }

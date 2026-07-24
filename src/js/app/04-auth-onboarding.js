@@ -81,6 +81,13 @@ async function verifyGateCode() {
   _pendingAuth = null;
   document.body.style.overflow = "";
   document.getElementById("gate-root").innerHTML = "";
+  // closeLpSignup() (not just clearing #gate-root) matters now that
+  // showLpSignup() can lazily inject the modal directly onto <body> for a
+  // guest mid-session (see enterGuestBrowse()/openBook()/openAccount()) —
+  // in that path the modal was never inside #gate-root to begin with, so
+  // clearing #gate-root alone left it stuck open, fixed, and covering the
+  // freshly-entered authenticated app underneath.
+  closeLpSignup();
   enterApp();
 }
 
@@ -290,18 +297,6 @@ function enterApp() {
   document.body.style.overflow = "";
   const app = document.getElementById("app");
   app.style.display = "";
-  // The sign-up/log-in modal lives in the landing page's DOM (renderGate()),
-  // which gate-root.innerHTML="" above just wiped out — including for a
-  // signed-in user, since it's the same call either way. A signed-out guest
-  // (state.userId still null here, reached via the "Explore the Map" button
-  // skipping the gate entirely) still needs it reachable so tapping Book/
-  // Follow/Account can prompt sign-up without leaving the map. Re-mount one
-  // copy on document.body (it's position:fixed, so where it lives in the
-  // tree doesn't matter) rather than only inside gate-root, which no longer
-  // exists once the app is showing.
-  if (!document.getElementById("lp-signup-overlay")) {
-    document.body.insertAdjacentHTML("beforeend", signupModalHtml());
-  }
   // The 5 ambient .bg-blot decorations + grain overlay are landing-page-only
   // texture: position:fixed, 96px blur filter, continuously transform-
   // animating (42s loops) for the life of the tab. They were never scoped to
