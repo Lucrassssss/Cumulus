@@ -1947,6 +1947,67 @@ function renderHostProfile() {
     ${upcomingHtml}`;
 }
 
+// ── Waitlist (sold-out events) ──────────────────────────────────────────
+// state.myWaitlist is loaded once at boot (loadMyWaitlist(), same
+// synchronous-cache pattern as followedHostIds/isFollowingHost) so
+// renderDetail() can read it without an async round-trip mid-render.
+function myWaitlistEntry(eventId) {
+  return (state.myWaitlist || []).find((w) => w.eventId === eventId) || null;
+}
+async function joinWaitlist(eventId) {
+  if (!state.userId) {
+    showLpSignup();
+    return;
+  }
+  const { data, error } = await sb
+    .from("event_waitlist")
+    .insert({ event_id: eventId, user_id: state.userId })
+    .select("id")
+    .single();
+  if (error) {
+    showToast(
+      error.code === "23505"
+        ? "You're already on the waitlist"
+        : "Couldn't join the waitlist — try again",
+      "error",
+    );
+    return;
+  }
+  state.myWaitlist.push({ id: data.id, eventId, status: "waiting", expiresAt: null });
+  showToast("You're on the waitlist — check back here if a spot opens up", "success");
+  renderView();
+}
+async function leaveWaitlist(eventId) {
+  if (!myWaitlistEntry(eventId)) return;
+  await sb
+    .from("event_waitlist")
+    .delete()
+    .eq("event_id", eventId)
+    .eq("user_id", state.userId);
+  state.myWaitlist = state.myWaitlist.filter((w) => w.eventId !== eventId);
+  showToast("Left the waitlist", "success");
+  renderView();
+}
+// Marks the reservation claimed (so the next boot's loadMyWaitlist() doesn't
+// keep surfacing it as "offered") then proceeds into the normal booking
+// flow — claiming a waitlist offer means "you're prioritised to buy now",
+// not an automatic free ticket; payment still happens exactly as usual.
+async function claimWaitlistOffer(eventId) {
+  const entry = myWaitlistEntry(eventId);
+  if (!entry || entry.status !== "offered") return;
+  const { data, error } = await sb.rpc("claim_waitlist_offer", {
+    p_waitlist_id: entry.id,
+  });
+  if (error || !data) {
+    showToast("That reservation has expired", "error");
+    state.myWaitlist = state.myWaitlist.filter((w) => w.eventId !== eventId);
+    renderView();
+    return;
+  }
+  entry.status = "claimed";
+  openBook(eventId);
+}
+
 function renderDetail(id) {
   const ev = EVENTS.find((e) => e.id === id);
   if (!ev) return `<div class="empty-state">Event not found.</div>`;
@@ -1969,6 +2030,20 @@ function renderDetail(id) {
   const priceBadge = price
     ? `<span class="event-badge" style="background:var(--surface-2);color:var(--text) !important;border:1px solid var(--line);margin-left:6px;font-size:10px;">From £${price}</span>`
     : `<span class="event-badge" style="background:#14713622;color:#147136 !important;border:1px solid #14713644;margin-left:6px;font-size:10px;">Free</span>`;
+  // A returned ticket auto-offers the freed spot to the next waitlisted
+  // person (offer_next_waitlist_seat, SQL) with a 30-minute reservation
+  // window. expiresAt is checked client-side too so a stale offer doesn't
+  // show a live countdown/CTA after the window has actually lapsed even
+  // before the next boot re-syncs state.myWaitlist from the server.
+  let waitlistEntry = myWaitlistEntry(id);
+  if (
+    waitlistEntry &&
+    waitlistEntry.status === "offered" &&
+    waitlistEntry.expiresAt &&
+    waitlistEntry.expiresAt < Date.now()
+  ) {
+    waitlistEntry = null;
+  }
   let bookBtn = "";
   if (ev.status === "hidden") {
     // Auto-hidden by the community-report trigger (3+ unique reporters) —
@@ -1984,8 +2059,16 @@ function renderDetail(id) {
     // state. Ticket-holders still get the branch above (their own record
     // stays viewable); everyone else sees this instead of a live Book Now.
     bookBtn = `<div style="background:var(--surface-2);border:1px solid var(--line);color:var(--text-muted);border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;text-align:center;">This event has ended.</div>`;
+  } else if (waitlistEntry && waitlistEntry.status === "offered") {
+    const mins = Math.max(1, Math.round((waitlistEntry.expiresAt - Date.now()) / 60000));
+    bookBtn = `<button class="btn" style="background:#147136;color:#fff;width:100%;font-size:15px;" onclick="claimWaitlistOffer('${id}')">A spot opened up — Book now →</button>
+      <div style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:6px;">Reserved for you for ${mins} more minute${mins !== 1 ? "s" : ""}</div>`;
+  } else if (isFull && waitlistEntry) {
+    bookBtn = `<button class="btn" style="background:var(--surface-2);color:var(--text-muted);cursor:default;width:100%;" disabled>✓ You're on the waitlist</button>
+      <button class="btn-text" style="width:100%;margin-top:6px;font-size:12px;" onclick="leaveWaitlist('${id}')">Leave waitlist</button>`;
   } else if (isFull) {
-    bookBtn = `<button class="btn" style="background:var(--surface-2);color:var(--text-muted);cursor:not-allowed;width:100%;">Sold Out</button>`;
+    bookBtn = `<button class="btn" style="background:${c.color};color:#fff;width:100%;font-size:15px;" onclick="joinWaitlist('${id}')">Join the Waitlist →</button>
+      <div style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:6px;">We'll hold a spot for you if someone can't make it</div>`;
   } else {
     bookBtn = `<button class="btn" style="background:${c.color};color:#fff;width:100%;font-size:15px;" onclick="openBook('${id}')">${price ? `Book Now · From £${price}` : "Register Free"} →</button>`;
   }

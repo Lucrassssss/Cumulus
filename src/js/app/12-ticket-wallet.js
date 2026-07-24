@@ -89,16 +89,38 @@ async function cancelTicket(ticketId) {
     showToast("Cancellations close 24 hours before the event.", "error");
     return;
   }
-  if (!confirm("Cancel this booking? This can't be undone.")) return;
-  myTickets = myTickets.filter((x) => x.ticketId !== ticketId);
-  if (state.userId) {
-    await sb
-      .from("tickets")
-      .delete()
-      .eq("ticket_id", ticketId)
-      .eq("user_id", state.userId);
+  const paid = t.total > 0;
+  if (
+    !confirm(
+      paid
+        ? "Cancel this booking? Your payment will be refunded. This can't be undone."
+        : "Cancel this booking? This can't be undone.",
+    )
+  )
+    return;
+  if (!state.userId) {
+    // No real account behind this ticket (shouldn't happen — booking is
+    // gated behind sign-up — but keep the old local-only fallback rather
+    // than hard-crash on a state this session's guest-browsing work made
+    // theoretically unreachable).
+    myTickets = myTickets.filter((x) => x.ticketId !== ticketId);
+    showToast("Booking cancelled", "success");
+    renderView();
+    return;
   }
-  showToast("Booking cancelled", "success");
+  // Real refund + waitlist hand-off (cancel-ticket-refund) — see that
+  // function's header. Runs before touching local state, so a failed
+  // refund never silently drops the ticket from the wallet.
+  const res = await cancelTicketRefund(ticketId);
+  if (!res || res.ok !== true) {
+    showToast(res?.error || "Couldn't cancel — try again", "error");
+    return;
+  }
+  myTickets = myTickets.filter((x) => x.ticketId !== ticketId);
+  showToast(
+    res.refunded ? "Booking cancelled — refund on its way" : "Booking cancelled",
+    "success",
+  );
   renderView();
 }
 

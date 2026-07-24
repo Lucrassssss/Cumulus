@@ -303,6 +303,7 @@ let state = {
   specialBadges: [],
   hostApplicationStatus: null, // null | "pending" | "approved" | "rejected" — see loadHostApplicationStatus()
   followedHostIds: [], // host_follows rows for the current user — see loadMyFollows()
+  myWaitlist: [], // event_waitlist rows for the current user — see loadMyWaitlist()
   theme: "light",
   rsvps: {},
   attendeeCards: {},

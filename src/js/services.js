@@ -211,6 +211,29 @@ async function loadMyFollows() {
     return [];
   }
 }
+/* Every event_waitlist row for the current user, loaded once (initApp())
+ * for the same synchronous-cache-read reason as loadMyFollows() — the event
+ * detail page's sold-out/waitlist button needs to know the current user's
+ * status without an async round-trip mid-render. */
+async function loadMyWaitlist() {
+  if (!state.userId) return [];
+  try {
+    const { data, error } = await sb
+      .from("event_waitlist")
+      .select("id, event_id, status, expires_at")
+      .eq("user_id", state.userId)
+      .in("status", ["waiting", "offered"]);
+    if (error || !data) return [];
+    return data.map((r) => ({
+      id: r.id,
+      eventId: r.event_id,
+      status: r.status,
+      expiresAt: r.expires_at ? new Date(r.expires_at).getTime() : null,
+    }));
+  } catch (e) {
+    return [];
+  }
+}
 /* Another user's public avatar, banner, and member-since date, for the
  * host profile page (public.public_profiles — never the private users
  * table directly). Null on error/offline/not-found. */
@@ -545,6 +568,22 @@ async function cancelEventRefund(eventId) {
       body: { eventId },
     });
     if (error) return { ok: false, error: error.message || "Could not cancel event" };
+    return data;
+  } catch (e) {
+    return { ok: false, error: "unavailable" };
+  }
+}
+
+/* Self-serve "I can't come anymore" — a ticket-holder returning their own
+ * ticket. Refunds just that ticket's share of its (possibly shared, for a
+ * squad purchase) payment intent, then offers the freed spot to the next
+ * person on that event's waitlist. See cancel-ticket-refund's own header. */
+async function cancelTicketRefund(ticketId) {
+  try {
+    const { data, error } = await sb.functions.invoke("cancel-ticket-refund", {
+      body: { ticketId },
+    });
+    if (error) return { ok: false, error: error.message || "Could not cancel ticket" };
     return data;
   } catch (e) {
     return { ok: false, error: "unavailable" };

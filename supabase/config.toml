@@ -60,3 +60,10 @@ enabled = true
 # past-attendee list (get_past_attendee_emails() RPC enforces that server-side).
 verify_jwt = true
 entrypoint = "./functions/invite-past-attendees/index.ts"
+
+[functions.cancel-ticket-refund]
+enabled = true
+# true: called by a signed-in ticket-holder returning their own ticket
+# (ownership re-checked server-side against the JWT regardless).
+verify_jwt = true
+entrypoint = "./functions/cancel-ticket-refund/index.ts"
