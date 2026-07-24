@@ -182,6 +182,7 @@ function renderHostView() {
         ? "⚡ Admin — event publishes immediately to the live map."
         : "Your event goes live after a quick review, usually within a few hours."
     }</div>
+    ${renderMyHostedEventsDuplicatePanel()}
 
     <div class="host-section">
       <div class="host-section-title">Flyer (optional)</div>
@@ -286,7 +287,6 @@ function renderHostView() {
     <button id="host-submit-btn" class="btn" style="width:100%;margin-bottom:16px;font-size:15px;" onclick="submitHostEvent()">${state.isAdmin ? "Publish event →" : "Submit for review →"}</button>
     ${renderHostPayoutsPanel()}
     ${renderConnectStatusPanel()}
-    ${renderMyHostedEventsDuplicatePanel()}
     ${renderPromoCodesPanel()}
     ${renderMyHostedEventsCancelPanel()}`;
 }

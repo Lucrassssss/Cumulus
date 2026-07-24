@@ -678,27 +678,31 @@ function renderPromoCodesPanel() {
 // a venue running a weekly night was re-typing the whole form from a blank
 // slate every week. Lists every non-cancelled event the host has ever
 // created — including past ones, since "copy last week's identical night"
-// is exactly the repeat-host case this exists for — each with a one-tap
-// "Duplicate" that opens the host form pre-filled (see openHost(prefill) /
-// renderHostView()). Dates are deliberately NOT carried over.
+// is exactly the repeat-host case this exists for. Rendered as a dropdown
+// at the TOP of renderHostView() (not buried below the blank form) so a
+// host lands on it the moment they open the Host tab; picking an option
+// opens the host form pre-filled (see openHost(prefill) / renderHostView()).
+// Dates are deliberately NOT carried over. Re-rendering the whole view via
+// openHost() naturally resets the select back to its placeholder, so no
+// manual reset is needed after a pick.
 function renderMyHostedEventsDuplicatePanel() {
   if (!state.userId) return "";
   const mine = EVENTS.filter(
     (e) => e.hostId === state.userId && e.status !== "cancelled",
   ).sort((a, b) => b.startsAt - a.startsAt);
   if (!mine.length) return "";
-  const rows = mine
+  const options = mine
     .map(
-      (ev) => `<div class="hp-tier-row">
-        <span class="hp-tier-label">${escapeHtml(ev.title)} · ${ev.date}</span>
-        <button class="btn btn-outline btn-small" style="min-height:32px;padding:0 12px;" onclick="duplicateEvent('${ev.id}')">Duplicate</button>
-      </div>`,
+      (ev) => `<option value="${ev.id}">${escapeHtml(ev.title)} · ${ev.date}</option>`,
     )
     .join("");
-  return `<div class="hp-panel" style="margin-top:16px;">
-    <div class="hp-title">📋 Duplicate a past event</div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">Reuse a listing's details for a new date — running a weekly night shouldn't mean retyping the whole form each time.</div>
-    ${rows}
+  return `<div class="host-section">
+    <div class="host-section-title">📋 Duplicate a past event</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;line-height:1.6;">Reuse a listing's details for a new date — running a weekly night shouldn't mean retyping the whole form each time.</div>
+    <select class="gate-input" onchange="if(this.value) duplicateEvent(this.value);">
+      <option value="">Choose an event to duplicate…</option>
+      ${options}
+    </select>
   </div>`;
 }
 
