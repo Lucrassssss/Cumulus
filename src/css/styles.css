@@ -2282,9 +2282,10 @@ body.no-scroll {
   position: fixed;
   inset: 0;
   z-index: 5000;
-  background: rgba(0, 0, 0, 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  /* Cumulus's own theme background (day/night-driven, see [data-theme]),
+     not a black scrim over a blurred backdrop — signing up/in should read
+     as a real themed page, not a modal darkening the app behind it. */
+  background: var(--bg);
   display: flex;
   align-items: center;
   justify-content: center;

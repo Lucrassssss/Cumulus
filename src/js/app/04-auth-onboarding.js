@@ -70,6 +70,7 @@ async function verifyGateCode() {
     await _submitHostApplication({
       name: state.profileName,
       email: p.email,
+      phone: p.phone,
       bizName: p.bizName,
       hostDesc: p.hostDesc,
       whyHost: p.whyHost,
@@ -157,11 +158,12 @@ async function resendGateCode() {
 async function _submitHostApplication({
   name,
   email,
+  phone,
   bizName,
   hostDesc,
   whyHost,
 }) {
-  await _saveHostApplicationRow({ name, email, bizName, hostDesc, whyHost });
+  await _saveHostApplicationRow({ name, email, phone, bizName, hostDesc, whyHost });
   state.hostApplicationStatus = "pending";
 
   // Show success screen inside modal
@@ -181,10 +183,11 @@ async function _submitHostApplication({
 // "Apply to host" flow (submitHostApplyForm) — writes one host_applications
 // row (real auth.uid() session required by RLS in both cases), falling back
 // to localStorage only if the write itself fails (offline/misconfigured).
-async function _saveHostApplicationRow({ name, email, bizName, hostDesc, whyHost }) {
+async function _saveHostApplicationRow({ name, email, phone, bizName, hostDesc, whyHost }) {
   const appPayload = {
     name,
     email,
+    phone,
     user_id: state.userId || null,
     business_name: bizName,
     event_types: _hostCats.join(","),
@@ -258,39 +261,63 @@ function renderHostApplyView() {
   return _hostApplyStep === "form" ? renderHostApplyForm() : renderHostApplyBrochure();
 }
 
-// The pitch: what a host actually gets, before asking them to fill in a
-// single field. Reuses the copy/feature set from the old marketing landing
-// page's "For Venues & Promoters" section — that section is the one part of
-// the old page that was genuinely host-specific rather than generic
-// attendee marketing, so it moved here rather than being deleted outright.
+// The pitch: what a host actually gets — for them and their community —
+// before asking them to fill in a single field. Rebuilt from the old
+// marketing landing page's "For Venues & Promoters" section (the one part
+// of that page that was genuinely host-specific rather than generic
+// attendee marketing) using its own dark venues-pitch panel and stat-row
+// CSS, which had otherwise gone unused once the general landing gate was
+// removed — reused rather than left dead or rewritten from scratch.
 function renderHostApplyBrochure() {
   const features = [
-    ["🗺️", "Map-first discovery", "Your event pinned and filterable across London's live event map."],
-    ["💷", "Zero-fee ticketing", "You keep 100% of your ticket price. Cumulus adds only a flat platform fee to the buyer — no percentage cuts, ever."],
-    ["👥", "Squad ticketing", "Groups buy together and share instant claim links — higher show-up rates, no faff at the door."],
-    ["⭐", "Featured placement", "Major events get priority placement across the Cumulus platform."],
+    [
+      `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg>`,
+      "Map-first discovery",
+      "Your event pinned and filterable across London's live event map.",
+    ],
+    [
+      `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/></svg>`,
+      "Zero-fee ticketing",
+      "You keep 100% of your ticket price. Cumulus adds only a flat platform fee to the buyer — no percentage cuts, ever.",
+    ],
+    [
+      `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H9l-4 4V5Z"/><path d="M8 9h8M8 12h5"/></svg>`,
+      "Squad ticketing",
+      "Groups buy together and share instant claim links — higher show-up rates, no faff at the door.",
+    ],
+    [
+      `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"><path d="M12 3.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6-4.5-4.2 6.1-.7L12 3.5Z"/></svg>`,
+      "Featured placement",
+      "Major events get priority placement across the Cumulus platform.",
+    ],
   ];
   return `
     <button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header" style="padding-top:16px;">
-      <h2>Your event. Your audience.</h2>
-      <p>List your event on Cumulus and reach Londoners already looking for their next night out. We handle discovery, ticketing, and payouts — you focus on the event.</p>
-    </div>
+    <section class="lp-venues-section" style="padding:36px 22px;border-radius:var(--r-lg);margin-top:14px;">
+      <div class="lp-venues-inner" style="grid-template-columns:1fr;gap:28px;">
+        <div class="lp-venues-text">
+          <div class="lp-section-kicker">For Hosts</div>
+          <h2 class="lp-section-title" style="color:#fff;">Your event.<br>Your audience.</h2>
+          <p class="lp-venues-sub">List your event on Cumulus and reach Londoners already looking for their next night out. We handle discovery, ticketing, and payouts — you focus on the event.</p>
+          <div class="lp-venue-features">
+            ${features
+              .map(
+                ([icon, title, desc]) => `<div class="lp-venue-feat"><div class="lp-feat-icon">${icon}</div><div><div class="lp-feat-title">${title}</div><div class="lp-feat-desc">${desc}</div></div></div>`,
+              )
+              .join("")}
+          </div>
+        </div>
+        <div class="lp-venues-stats" style="flex-direction:row;">
+          <div class="lp-vstat" style="flex:1;flex-direction:column;align-items:flex-start;gap:2px;"><div class="lp-vstat-num">0%</div><div class="lp-vstat-label">Host fees</div></div>
+          <div class="lp-vstat" style="flex:1;flex-direction:column;align-items:flex-start;gap:2px;"><div class="lp-vstat-num">9</div><div class="lp-vstat-label">Categories</div></div>
+          <div class="lp-vstat" style="flex:1;flex-direction:column;align-items:flex-start;gap:2px;"><div class="lp-vstat-num">32</div><div class="lp-vstat-label">Boroughs</div></div>
+          <div class="lp-vstat" style="flex:1;flex-direction:column;align-items:flex-start;gap:2px;"><div class="lp-vstat-num">100%</div><div class="lp-vstat-label">Community-led</div></div>
+        </div>
+      </div>
+    </section>
     <div class="host-section">
-      ${features
-        .map(
-          ([icon, title, desc], i) => `<div style="display:flex;gap:12px;align-items:flex-start;${i < features.length - 1 ? "margin-bottom:16px;" : ""}">
-            <span style="font-size:20px;line-height:1;">${icon}</span>
-            <div><div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:2px;">${title}</div><div style="font-size:12px;color:var(--text-muted);line-height:1.6;">${desc}</div></div>
-          </div>`,
-        )
-        .join("")}
-    </div>
-    <div class="host-section" style="display:flex;text-align:center;">
-      <div style="flex:1;"><div style="font-weight:800;font-size:20px;color:var(--text);">0%</div><div style="font-size:11px;color:var(--text-muted);">Host fees</div></div>
-      <div style="flex:1;"><div style="font-weight:800;font-size:20px;color:var(--text);">9</div><div style="font-size:11px;color:var(--text-muted);">Categories</div></div>
-      <div style="flex:1;"><div style="font-weight:800;font-size:20px;color:var(--text);">32</div><div style="font-size:11px;color:var(--text-muted);">Boroughs</div></div>
-      <div style="flex:1;"><div style="font-weight:800;font-size:20px;color:var(--text);">100%</div><div style="font-size:11px;color:var(--text-muted);">Community-led</div></div>
+      <div class="host-section-title">Not just an event — your community, in one room</div>
+      <div style="font-size:13px;color:var(--text-muted);line-height:1.7;">Cumulus was built on one belief: the best things happen when people who live near each other actually meet — not online. Every event you host gives your neighbourhood a real reason to show up for each other, and gives you a direct line to the people who'll keep coming back.</div>
     </div>
     <button class="btn" style="width:100%;margin-bottom:16px;" onclick="hostApplyShowForm()">Apply to host →</button>`;
 }
@@ -302,6 +329,11 @@ function renderHostApplyForm() {
     <div class="host-section">
       <label class="intro-field-label">Venue or business name</label>
       <input id="apply-biz-name" class="gate-input" placeholder="e.g. The Sketch House"/>
+      <label class="intro-field-label" style="margin-top:14px;">Contact email</label>
+      <input id="apply-contact-email" class="gate-input" type="email" placeholder="you@email.com" value="${escapeHtml(state.profileEmail || "")}"/>
+      <label class="intro-field-label" style="margin-top:14px;">Phone number</label>
+      <input id="apply-phone" class="gate-input" type="tel" placeholder="e.g. 07123 456789"/>
+      <div class="host-notice" style="margin-top:10px;">We may call to talk through your event and how we can help — never shared or used for anything else.</div>
       <div class="gate-field-group-label" style="margin-top:14px;">Event types you'd host</div>
       <div class="host-cat-grid" id="apply-host-cat-grid">
         ${["Creative", "Gaming", "Movie Nights", "Board Games", "Meetups", "Food &amp; Drink", "Live Music", "Wellness &amp; Outdoors", "Tech &amp; Talks"].map((c) => `<button class="host-cat-chip" data-hostcat="${escapeHtml(c.replace(/&amp;/g, "&"))}" onclick="toggleHostCat('${escapeHtml(c.replace(/&amp;/g, "&"))}')">${c}</button>`).join("")}
@@ -319,6 +351,8 @@ async function submitHostApplyForm() {
   const errEl = document.getElementById("apply-host-error");
   if (errEl) errEl.classList.remove("show");
   const bizName = (document.getElementById("apply-biz-name")?.value || "").trim();
+  const contactEmail = (document.getElementById("apply-contact-email")?.value || "").trim();
+  const phone = (document.getElementById("apply-phone")?.value || "").trim();
   const hostDesc = (document.getElementById("apply-host-desc")?.value || "").trim();
   const whyHost = (document.getElementById("apply-why-host")?.value || "").trim();
   const err = (msg) => {
@@ -328,6 +362,8 @@ async function submitHostApplyForm() {
     }
   };
   if (!bizName) return err("Please enter your venue or business name.");
+  if (!EMAIL_PATTERN.test(contactEmail)) return err("Please enter a valid contact email.");
+  if (!phone) return err("Please add a phone number so we can reach you.");
   if (_hostCats.length === 0) return err("Please select at least one event type.");
   if (!hostDesc) return err("Please add a brief description of your events.");
 
@@ -338,7 +374,8 @@ async function submitHostApplyForm() {
   }
   const ok = await _saveHostApplicationRow({
     name: state.profileName,
-    email: state.profileEmail,
+    email: contactEmail,
+    phone,
     bizName,
     hostDesc,
     whyHost,

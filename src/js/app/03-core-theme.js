@@ -340,6 +340,10 @@ function signupModalHtml(prefillName, prefillEmail) {
             <label class="gate-label" for="gate-biz-name">Venue or business name</label>
             <input id="gate-biz-name" class="gate-input" placeholder="e.g. The Sketch House" autocomplete="organization"/>
           </div>
+          <div class="gate-field">
+            <label class="gate-label" for="gate-phone">Phone number</label>
+            <input id="gate-phone" class="gate-input" type="tel" placeholder="e.g. 07123 456789" autocomplete="tel"/>
+          </div>
           <div class="gate-field-group-label">Event types you'd host</div>
           <div class="host-cat-grid" id="host-cat-grid">
             ${["Creative", "Gaming", "Movie Nights", "Board Games", "Meetups", "Food &amp; Drink", "Live Music", "Wellness &amp; Outdoors", "Tech &amp; Talks"].map((c) => `<button class="host-cat-chip" data-hostcat="${escapeHtml(c.replace(/&amp;/g, "&"))}" onclick="toggleHostCat('${escapeHtml(c.replace(/&amp;/g, "&"))}')">${c}</button>`).join("")}
@@ -434,10 +438,18 @@ function switchSignupType(type) {
   document
     .getElementById("gt-host")
     .classList.toggle("active", type === "host");
-  document.getElementById("gate-host-preview").style.display =
-    type === "host" ? "" : "none";
-  document.getElementById("gate-host-fields").style.display =
-    type === "host" ? "" : "none";
+  // Both the initial inline style="display:none" baked into signupModalHtml()
+  // AND the .auth-hidden class (applied with !important by switchAuthMode()'s
+  // hide() helper, which wins over a bare inline style) have to be cleared
+  // together — either one left stale hides the element regardless of the
+  // other. Previously only the inline style was touched here, leaving a
+  // stale .auth-hidden in place so "Become a host" changed the copy but
+  // never actually revealed the host-only fields.
+  for (const id of ["gate-host-preview", "gate-host-fields"]) {
+    const el = document.getElementById(id);
+    el.classList.toggle("auth-hidden", type !== "host");
+    el.style.display = type === "host" ? "" : "none";
+  }
   const eyebrow = document.getElementById("gate-form-eyebrow");
   const title = document.getElementById("gate-form-title");
   const sub = document.getElementById("gate-form-sub");
@@ -571,14 +583,20 @@ async function submitGate() {
 
   // Host-specific validation (sign up only)
   let bizName = "",
+    phone = "",
     hostDesc = "",
     whyHost = "";
   if (!isLogin && _signupType === "host") {
     bizName = (document.getElementById("gate-biz-name")?.value || "").trim();
+    phone = (document.getElementById("gate-phone")?.value || "").trim();
     hostDesc = (document.getElementById("gate-host-desc")?.value || "").trim();
     whyHost = (document.getElementById("gate-why-host")?.value || "").trim();
     if (!bizName) {
       gateErr("Please enter your venue or business name.");
+      return;
+    }
+    if (!phone) {
+      gateErr("Please add a phone number so we can reach you.");
       return;
     }
     if (_hostCats.length === 0) {
@@ -620,6 +638,7 @@ async function submitGate() {
     email,
     signupType: _signupType,
     bizName,
+    phone,
     hostDesc,
     whyHost,
     hostCats: [..._hostCats],
