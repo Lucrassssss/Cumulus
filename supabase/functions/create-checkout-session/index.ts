@@ -116,15 +116,22 @@ Deno.serve(async (req: Request) => {
   const eventId = body?.eventId;
   const qty = Math.max(1, Math.min(10, Number(body?.qty) || 1));
   const marketingOptIn = body?.marketingOptIn === true;
+  const promoCodeInput = typeof body?.promoCode === "string" ? body.promoCode.trim() : "";
   if (!eventId) {
     return json({ error: "Missing eventId" }, 400);
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const restHeaders = {
     apikey: anonKey!,
     Authorization: authHeader!,
+    "Content-Type": "application/json",
+  };
+  const svcHeaders = {
+    apikey: serviceKey!,
+    Authorization: `Bearer ${serviceKey}`,
     "Content-Type": "application/json",
   };
 
@@ -145,11 +152,52 @@ Deno.serve(async (req: Request) => {
   if (ev.status !== "active") {
     return json({ error: "This event is no longer available" }, 400);
   }
-  const price = activeTierPrice(ev);
-  if (price <= 0) {
+  const listPrice = activeTierPrice(ev);
+  if (listPrice <= 0) {
     // Free events never touch Stripe — the client calls registerFree()
     // directly. Sending a free event here is a client bug, not a valid call.
     return json({ error: "This event is free — no checkout needed" }, 400);
+  }
+
+  // Promo code: looked up server-side via the service-role key (never the
+  // caller's own JWT — promo_codes has no SELECT policy for a plain buyer,
+  // see the migration's header for why) so a buyer can only ever redeem a
+  // code they were actually given, never enumerate an event's codes. A
+  // discount reduces the effective ticket price itself — the host still
+  // receives 100% of whatever that discounted price is via the existing
+  // payout mechanism; only Cumulus's flat platform fee is recomputed off
+  // the new, lower price.
+  let price = listPrice;
+  let promoCodeId: string | null = null;
+  if (promoCodeInput) {
+    try {
+      const pRes = await fetch(
+        `${supabaseUrl}/rest/v1/promo_codes?event_id=eq.${eventId}&code=eq.${encodeURIComponent(promoCodeInput.toUpperCase())}&active=eq.true&select=id,discount_type,discount_value,max_uses,uses_count`,
+        { headers: svcHeaders },
+      );
+      const pRows = await pRes.json();
+      const promo = pRows?.[0];
+      if (!promo) {
+        return json({ error: "That promo code isn't valid for this event." }, 400);
+      }
+      if (promo.max_uses != null && promo.uses_count >= promo.max_uses) {
+        return json({ error: "That promo code has been fully redeemed." }, 400);
+      }
+      const discounted =
+        promo.discount_type === "percent"
+          ? listPrice * (1 - Number(promo.discount_value) / 100)
+          : listPrice - Number(promo.discount_value);
+      price = Math.max(0, Math.round(discounted * 100) / 100);
+      promoCodeId = promo.id;
+    } catch {
+      return json({ error: "Could not validate promo code — try again" }, 500);
+    }
+  }
+  if (price <= 0) {
+    return json(
+      { error: "This code makes the event free — booking that way isn't supported yet. Contact the host." },
+      400,
+    );
   }
 
   const fee = cumulusFee(price);
@@ -184,6 +232,7 @@ Deno.serve(async (req: Request) => {
     "metadata[marketing_opt_in]": marketingOptIn ? "true" : "false",
     description: ev.title || "Cumulus ticket",
   });
+  if (promoCodeId) params.append("metadata[promo_code_id]", promoCodeId);
   if (receiptEmail) params.append("receipt_email", receiptEmail);
   // Hard allow-list. The Stripe account has ~15 other wallets/redirects
   // toggled on in the Dashboard (Amazon Pay, Revolut Pay, Cartes Bancaires,

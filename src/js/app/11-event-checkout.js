@@ -49,6 +49,15 @@ function renderBook() {
       }
       <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:var(--text);padding-top:10px;border-top:1px solid var(--line);"><span>Total</span><span style="color:${c.color};">${finalTotal ? `£${finalTotal.toFixed(2)}` : "Free"}</span></div>
     </div>
+    ${
+      !isFree
+        ? `<div class="host-section" style="padding:12px 14px;margin-bottom:16px;">
+      <label class="intro-field-label">Promo code (optional)</label>
+      <input id="book-promo-code" class="gate-input" placeholder="e.g. EARLYBIRD10" autocapitalize="characters" style="text-transform:uppercase;"/>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Applied at payment — the exact discount is confirmed on the next screen, since it's checked against the event live.</div>
+    </div>`
+        : ""
+    }
     <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;font-size:12px;color:var(--text-muted);line-height:1.5;cursor:pointer;">
       <input type="checkbox" id="book-marketing-optin" style="margin-top:2px;width:15px;height:15px;flex-shrink:0;accent-color:${c.color};"/>
       <span>Allow ${escapeHtml(ev.host || "the host")} to email me about future local events. Off by default — opting in is entirely your choice.</span>
@@ -113,6 +122,11 @@ function renderCheckout() {
             <div class="checkout-line"><span>${sel.label} × ${qty}</span><span>£${baseTotal.toFixed(2)}</span></div>
             <div class="checkout-line"><span>Booking fee</span><span>£${feeTotal.toFixed(2)}</span></div>
             <div class="checkout-line checkout-line-total"><span>Total</span><span style="color:${c.color};">£${total}</span></div>
+            ${
+              bookingDraft.promoCode
+                ? `<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Promo code "${escapeHtml(bookingDraft.promoCode)}" will be checked now — the payment form below reflects your real total, this estimate doesn't.</div>`
+                : ""
+            }
           </div>
         </div>
         <div class="checkout-trust">${lockIconSvg(14)}<span>Payments are encrypted and processed securely by Stripe<span class="checkout-trust-suffix"> — Cumulus never sees your card details.</span></span></div>

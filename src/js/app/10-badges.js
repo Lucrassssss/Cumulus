@@ -616,6 +616,7 @@ function proceedToCheckout() {
   // Read before the book screen's DOM goes away — startStripeCheckout()
   // (fired from the checkout screen) needs this value later.
   bookingDraft.marketingOptIn = !!document.getElementById("book-marketing-optin")?.checked;
+  bookingDraft.promoCode = (document.getElementById("book-promo-code")?.value || "").trim();
   state.view = "checkout";
   renderNav();
   renderView();
@@ -774,6 +775,7 @@ async function startStripeCheckout() {
       ev.id,
       bookingDraft.qty,
       bookingDraft.marketingOptIn,
+      bookingDraft.promoCode,
     );
     if (!res || res.error || !res.clientSecret) {
       throw new Error(res?.error || "Could not start checkout");

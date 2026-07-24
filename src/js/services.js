@@ -449,13 +449,14 @@ async function getRepeatAttendeeCount(eventId) {
  * client_secret for startStripeCheckout() (10-badges.js) to mount a Payment
  * Element against. Free events never call this — registerFree() (app.js)
  * handles those with no Stripe involvement at all. */
-async function createCheckoutSession(eventId, qty, marketingOptIn) {
+async function createCheckoutSession(eventId, qty, marketingOptIn, promoCode) {
   try {
     const { data, error } = await sb.functions.invoke("create-checkout-session", {
       body: {
         eventId,
         qty,
         marketingOptIn: !!marketingOptIn,
+        promoCode: promoCode || undefined,
       },
     });
     if (error) {

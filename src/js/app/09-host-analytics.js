@@ -572,6 +572,108 @@ function renderMyHostedEventsCancelPanel() {
   </div>`;
 }
 
+// ── Promo/discount codes ────────────────────────────────────────────────
+// "Cumulus has time-based tiers but nothing a host can hand out selectively
+// — guestlist comps, influencer codes, early-supporter discounts" (audit).
+// A code is only ever validated/priced server-side inside create-checkout-
+// session — this panel is pure CRUD against promo_codes' own RLS
+// (host_id = auth.uid()), no pricing logic duplicated here.
+let _promoSelectedEventId = null;
+let _promoCodesCache = [];
+async function loadPromoCodesForEvent(eventId) {
+  _promoSelectedEventId = eventId;
+  _promoCodesCache = [];
+  if (eventId) {
+    const { data } = await sb
+      .from("promo_codes")
+      .select("id, code, discount_type, discount_value, max_uses, uses_count, active")
+      .eq("event_id", eventId)
+      .order("created_at", { ascending: false });
+    _promoCodesCache = data || [];
+  }
+  renderView();
+}
+async function createPromoCode() {
+  const eventId = _promoSelectedEventId;
+  if (!eventId) return;
+  const code = (document.getElementById("promo-code-input")?.value || "")
+    .trim()
+    .toUpperCase();
+  const type = document.getElementById("promo-type-input")?.value;
+  const value = parseFloat(document.getElementById("promo-value-input")?.value);
+  const maxUsesStr = document.getElementById("promo-maxuses-input")?.value;
+  const maxUses = maxUsesStr ? parseInt(maxUsesStr, 10) : null;
+  if (!code || !value || value <= 0) {
+    showToast("Enter a code and a discount amount", "error");
+    return;
+  }
+  const { error } = await sb.from("promo_codes").insert({
+    event_id: eventId,
+    host_id: state.userId,
+    code,
+    discount_type: type,
+    discount_value: value,
+    max_uses: maxUses,
+  });
+  if (error) {
+    showToast(
+      error.code === "23505" ? "That code already exists for this event" : "Couldn't create the code — try again",
+      "error",
+    );
+    return;
+  }
+  showToast("Promo code created", "success");
+  await loadPromoCodesForEvent(eventId);
+}
+async function togglePromoCodeActive(id, nextActive) {
+  await sb.from("promo_codes").update({ active: nextActive }).eq("id", id);
+  await loadPromoCodesForEvent(_promoSelectedEventId);
+}
+function renderPromoCodesPanel() {
+  if (!state.userId) return "";
+  const mine = EVENTS.filter(
+    (e) =>
+      e.hostId === state.userId &&
+      e.status !== "cancelled" &&
+      eventStatus(e) !== "past" &&
+      eventPrice(e) > 0,
+  );
+  if (!mine.length) return "";
+  if (_promoSelectedEventId && !mine.some((e) => e.id === _promoSelectedEventId)) {
+    _promoSelectedEventId = null;
+    _promoCodesCache = [];
+  }
+  const codeRows = _promoCodesCache
+    .map(
+      (p) => `<div class="hp-tier-row">
+        <span class="hp-tier-label">${escapeHtml(p.code)} · ${p.discount_type === "percent" ? `${p.discount_value}% off` : `£${p.discount_value} off`}${p.max_uses ? ` · ${p.uses_count}/${p.max_uses} used` : ` · ${p.uses_count} used`}${p.active ? "" : " · inactive"}</span>
+        <button class="btn btn-outline btn-small" style="min-height:32px;padding:0 12px;" onclick="togglePromoCodeActive('${p.id}',${!p.active})">${p.active ? "Deactivate" : "Reactivate"}</button>
+      </div>`,
+    )
+    .join("");
+  return `<div class="hp-panel" style="margin-top:16px;">
+    <div class="hp-title">🏷️ Promo codes</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">Hand out a code for guestlist comps, influencers, or early supporters — it's checked and priced live at checkout, same as tiered pricing.</div>
+    <label class="intro-field-label">Event</label>
+    <select class="gate-input" style="margin-bottom:10px;" onchange="loadPromoCodesForEvent(this.value||null)">
+      <option value="">Select an event…</option>
+      ${mine.map((e) => `<option value="${e.id}"${_promoSelectedEventId === e.id ? " selected" : ""}>${escapeHtml(e.title)} · ${e.date}</option>`).join("")}
+    </select>
+    ${
+      _promoSelectedEventId
+        ? `${codeRows}
+    <div style="display:flex;gap:8px;margin-top:10px;align-items:flex-end;flex-wrap:wrap;">
+      <div style="flex:1.2;min-width:100px;"><label class="intro-field-label">Code</label><input id="promo-code-input" class="gate-input" placeholder="EARLYBIRD10" style="text-transform:uppercase;"/></div>
+      <div style="flex:1;min-width:90px;"><label class="intro-field-label">Type</label><select id="promo-type-input" class="gate-input"><option value="percent">% off</option><option value="fixed">£ off</option></select></div>
+      <div style="flex:0.8;min-width:70px;"><label class="intro-field-label">Amount</label><input id="promo-value-input" type="number" min="0" step="0.01" class="gate-input" placeholder="10"/></div>
+      <div style="flex:0.8;min-width:70px;"><label class="intro-field-label">Max uses</label><input id="promo-maxuses-input" type="number" min="1" class="gate-input" placeholder="∞"/></div>
+    </div>
+    <button class="btn btn-outline btn-small" style="width:100%;margin-top:10px;" onclick="createPromoCode()">+ Create code</button>`
+        : ""
+    }
+  </div>`;
+}
+
 // "Duplicate event" (production-readiness audit's top host-side lever):
 // a venue running a weekly night was re-typing the whole form from a blank
 // slate every week. Lists every non-cancelled event the host has ever

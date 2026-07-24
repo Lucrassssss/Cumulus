@@ -154,6 +154,7 @@ Deno.serve(async (req: Request) => {
     const pricePerTicket = Number(intent.metadata?.price_per_ticket) || 0;
     const platformFee = Number(intent.metadata?.platform_fee) || 0;
     const marketingOptIn = intent.metadata?.marketing_opt_in === "true";
+    const promoCodeId: string | null = intent.metadata?.promo_code_id || null;
 
     if (!eventId || !userId) {
       return new Response(
@@ -241,6 +242,20 @@ Deno.serve(async (req: Request) => {
     }
     // sync_event_payout_trg (pivot migration) fires automatically on this
     // insert and rolls the sale into event_payouts — nothing else to do here.
+
+    // Credit the promo code's usage count only now that payment has actually
+    // succeeded and tickets exist — not at checkout-session creation time,
+    // where an abandoned/failed attempt would have over-counted a
+    // max_uses-limited code. Best-effort: this already passed the idempotency
+    // check above, so a failure here would only affect the usage cap, never
+    // double-charge or duplicate tickets.
+    if (promoCodeId) {
+      await fetch(`${supabaseUrl}/rest/v1/rpc/increment_promo_code_use`, {
+        method: "POST",
+        headers: svcHeaders,
+        body: JSON.stringify({ p_id: promoCodeId }),
+      }).catch(() => {});
+    }
 
     // Mirrors the old client-side flow's rsvps insert (attendee-list count).
     // Best-effort: a failure here shouldn't fail a webhook whose ticket

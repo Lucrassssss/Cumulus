@@ -287,6 +287,7 @@ function renderHostView() {
     ${renderHostPayoutsPanel()}
     ${renderConnectStatusPanel()}
     ${renderMyHostedEventsDuplicatePanel()}
+    ${renderPromoCodesPanel()}
     ${renderMyHostedEventsCancelPanel()}`;
 }
 
