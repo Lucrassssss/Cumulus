@@ -408,8 +408,10 @@ async function signOut(confirmed) {
   document.getElementById("app").style.display = "none";
   document.getElementById("nav-container").innerHTML = "";
   document.getElementById("view-container").innerHTML = "";
-  document.body.classList.remove("app-active"); // bring landing decor back
-  renderGate();
+  document.body.classList.remove("app-active");
+  // Straight back into guest browsing, same as a fresh visit — no marketing
+  // wall after signing out either.
+  enterGuestBrowse();
 }
 // Back-compat alias — older call sites referenced resetProfile by name.
 function resetProfile(confirmed) {

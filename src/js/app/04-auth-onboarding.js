@@ -213,11 +213,24 @@ async function _saveHostApplicationRow({ name, email, bizName, hostDesc, whyHost
 }
 
 // ── In-app "Become a host" apply flow (already-signed-in eventees) ─────────
+// _hostApplyStep gates the brochure vs. the actual form: every fresh visit
+// to this flow starts on the brochure (former marketing-landing "For
+// Venues" pitch, now scoped to prospective hosts only — see 03-core-theme.js
+// removing the general-visitor marketing gate) so hosting still gets a real
+// sales pitch even though a plain attendee never sees one.
+let _hostApplyStep = "brochure";
 function openHostApply() {
   pushNav();
   _hostCats = [];
+  _hostApplyStep = "brochure";
   state.view = "host-apply";
   renderNav();
+  renderView();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function hostApplyShowForm() {
+  _hostApplyStep = "form";
   renderView();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -231,8 +244,49 @@ function renderHostApplyView() {
     return `<button class="back-btn" onclick="goBack()">←</button>
       <div class="connect-header"><h2>Application pending</h2><p>We're reviewing your host application — usually within 48 hours. You'll get the Host tab as soon as it's approved.</p></div>`;
   }
+  return _hostApplyStep === "form" ? renderHostApplyForm() : renderHostApplyBrochure();
+}
+
+// The pitch: what a host actually gets, before asking them to fill in a
+// single field. Reuses the copy/feature set from the old marketing landing
+// page's "For Venues & Promoters" section — that section is the one part of
+// the old page that was genuinely host-specific rather than generic
+// attendee marketing, so it moved here rather than being deleted outright.
+function renderHostApplyBrochure() {
+  const features = [
+    ["🗺️", "Map-first discovery", "Your event pinned and filterable across London's live event map."],
+    ["💷", "Zero-fee ticketing", "You keep 100% of your ticket price. Cumulus adds only a flat platform fee to the buyer — no percentage cuts, ever."],
+    ["👥", "Squad ticketing", "Groups buy together and share instant claim links — higher show-up rates, no faff at the door."],
+    ["⭐", "Featured placement", "Major events get priority placement across the Cumulus platform."],
+  ];
   return `
     <button class="back-btn" onclick="goBack()">←</button>
+    <div class="connect-header" style="padding-top:16px;">
+      <h2>Your event. Your audience.</h2>
+      <p>List your event on Cumulus and reach Londoners already looking for their next night out. We handle discovery, ticketing, and payouts — you focus on the event.</p>
+    </div>
+    <div class="host-section">
+      ${features
+        .map(
+          ([icon, title, desc], i) => `<div style="display:flex;gap:12px;align-items:flex-start;${i < features.length - 1 ? "margin-bottom:16px;" : ""}">
+            <span style="font-size:20px;line-height:1;">${icon}</span>
+            <div><div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:2px;">${title}</div><div style="font-size:12px;color:var(--text-muted);line-height:1.6;">${desc}</div></div>
+          </div>`,
+        )
+        .join("")}
+    </div>
+    <div class="host-section" style="display:flex;text-align:center;">
+      <div style="flex:1;"><div style="font-weight:800;font-size:20px;color:var(--text);">0%</div><div style="font-size:11px;color:var(--text-muted);">Host fees</div></div>
+      <div style="flex:1;"><div style="font-weight:800;font-size:20px;color:var(--text);">9</div><div style="font-size:11px;color:var(--text-muted);">Categories</div></div>
+      <div style="flex:1;"><div style="font-weight:800;font-size:20px;color:var(--text);">32</div><div style="font-size:11px;color:var(--text-muted);">Boroughs</div></div>
+      <div style="flex:1;"><div style="font-weight:800;font-size:20px;color:var(--text);">100%</div><div style="font-size:11px;color:var(--text-muted);">Community-led</div></div>
+    </div>
+    <button class="btn" style="width:100%;margin-bottom:16px;" onclick="hostApplyShowForm()">Apply to host →</button>`;
+}
+
+function renderHostApplyForm() {
+  return `
+    <button class="back-btn" onclick="_hostApplyStep='brochure';renderView();">←</button>
     <div class="connect-header" style="padding-top:16px;"><h2>Become a host</h2><p>Tell us about your venue or events. Our team reviews every application to keep quality high on Cumulus.</p></div>
     <div class="host-section">
       <label class="intro-field-label">Venue or business name</label>

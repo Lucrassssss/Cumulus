@@ -1900,7 +1900,14 @@ async function checkSquadGroupClaim() {
   const params = new URLSearchParams(location.search);
   const squadId = params.get("squad");
   if (!squadId) return;
-  if (!state.userId) return; // resumed after sign-up — see nudgeGateForSquadClaim()
+  if (!state.userId) {
+    // Guest browsing boots straight into the app now (no marketing gate) —
+    // nudge the sign-up modal open right here instead of leaving the ?squad=
+    // link to silently do nothing. history isn't cleared in this branch, so
+    // initApp() re-runs this same check once signed-up and picks it up.
+    nudgeGateForSquadClaim();
+    return;
+  }
   history.replaceState(null, "", location.pathname);
   const res = await claimGroupTicket(squadId);
   if (res && res.ok) {
@@ -1918,10 +1925,10 @@ async function checkSquadGroupClaim() {
   }
 }
 
-// Called once from renderGate() when a ?squad= link lands on a signed-out
-// visitor — auto-opens the sign-up modal with claim-specific copy so the
-// person doesn't have to figure out on their own that signing up is how
-// they get their ticket.
+// Called from checkSquadGroupClaim() when a ?squad= link lands on a
+// signed-out visitor — auto-opens the sign-up modal with claim-specific
+// copy so the person doesn't have to figure out on their own that signing
+// up is how they get their ticket.
 function nudgeGateForSquadClaim() {
   const params = new URLSearchParams(location.search);
   if (!params.get("squad")) return;

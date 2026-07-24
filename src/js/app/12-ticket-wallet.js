@@ -808,7 +808,7 @@ function exportGuestlistCsv() {
 // Boot. Never let an unexpected rejection leave the user on a blank screen.
 start().catch((e) => {
   try {
-    renderGate();
+    enterGuestBrowse();
   } catch (_) {}
 });
 
@@ -878,29 +878,6 @@ document.addEventListener(
   },
   { passive: true },
 );
-
-// --- Gate card: add stagger to form fields ---
-const _origRenderGate = renderGate;
-renderGate = function () {
-  _origRenderGate.apply(this, arguments);
-  requestAnimationFrame(() => {
-    const fields = document.querySelectorAll(
-      "#gate-root label, #gate-root input, #gate-root button, #gate-root p",
-    );
-    fields.forEach((el, i) => {
-      el.style.opacity = "0";
-      el.style.transform = "translateY(8px)";
-      setTimeout(
-        () => {
-          el.style.transition = "opacity 0.3s ease, transform 0.3s ease";
-          el.style.opacity = "";
-          el.style.transform = "";
-        },
-        220 + i * 60,
-      );
-    });
-  });
-};
 
 // --- Smooth map caption on load ---
 window.addEventListener("load", () => {
