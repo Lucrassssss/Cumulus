@@ -2208,7 +2208,7 @@ function isFollowingHost(hostKey) {
 }
 async function toggleFollowHost(hostKey, hostName) {
   if (!state.userId) {
-    showToast("Sign in to follow hosts", "error");
+    showLpSignup();
     return;
   }
   const list = state.followedHostIds || [];

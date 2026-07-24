@@ -2154,27 +2154,6 @@ body.no-scroll {
   border-radius: 14px;
 }
 
-.lp-join-live {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-  font-family: "DM Mono", var(--font-mono), monospace;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #cc1e1e;
-}
-
-.lp-join-live .d {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #e23b3b;
-  animation: blink 1.3s ease-in-out infinite;
-}
-
 .lp-proof-text {
   font-size: 12px;
   font-weight: 600;
@@ -2186,107 +2165,6 @@ body.no-scroll {
   display: flex;
   flex-direction: column;
   gap: 28px;
-}
-
-.lp-pass-card:hover {
-  transform: perspective(800px) rotateX(-3deg) rotateY(4deg) scale(1.02);
-  box-shadow:
-    0 28px 60px rgba(0, 0, 0, 0.35),
-    0 8px 20px rgba(0, 0, 0, 0.2);
-}
-
-.lp-pass-shine {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.18) 0%,
-    transparent 45%,
-    rgba(0, 0, 0, 0.1) 100%
-  );
-  border-radius: inherit;
-}
-
-.lp-pass-shine::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -60%;
-  width: 40%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.14),
-    transparent
-  );
-  transform: skewX(-18deg);
-  animation: passShimmer 4s ease-in-out infinite;
-}
-
-@keyframes passShimmer {
-  0% {
-    transform: translateX(0) skewX(-18deg);
-  }
-  100% {
-    transform: translateX(260%) skewX(-18deg);
-  }
-}
-
-.lp-pass-watermark {
-  position: absolute;
-  right: -10px;
-  bottom: -22px;
-  font-size: 100px;
-  font-weight: 900;
-  color: rgba(255, 255, 255, 0.07);
-  line-height: 1;
-  pointer-events: none;
-  user-select: none;
-  letter-spacing: -4px;
-}
-
-.lp-pass-label {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.95);
-  margin-bottom: 8px;
-}
-
-.lp-pass-name {
-  font-size: 22px;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: -0.5px;
-  line-height: 1.15;
-  margin-bottom: 4px;
-  transition: all 0.2s ease;
-}
-
-.lp-pass-detail {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.9);
-  margin-bottom: auto;
-}
-
-.lp-pass-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 18px;
-}
-
-.lp-pass-tag {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 999px;
-  padding: 3px 10px;
-  font-size: 10px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
 }
 
 .lp-form-panel {
@@ -7139,20 +7017,6 @@ body.app-active .bg-grain {
   transform: none !important;
 }
 
-.lp-pass-preview {
-  position: relative;
-  margin-bottom: 18px !important;
-}
-
-.lp-pass-caption {
-  text-align: center;
-  font-size: 11px !important;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-top: 9px !important;
-  letter-spacing: 0.2px;
-}
-
 .lp-form-eyebrow {
   font-size: 10px;
   font-weight: 800;
@@ -7668,23 +7532,6 @@ textarea.gate-input {
 .lp-signup-modal,
 .panel {
   border-radius: var(--r-lg) !important;
-}
-
-.lp-pass-card {
-  border-radius: var(--r-md) !important;
-  padding: 20px !important;
-  min-height: 168px !important;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.3),
-    0 4px 12px rgba(0, 0, 0, 0.15);
-  transition:
-    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.35s ease;
-  cursor: default;
 }
 
 .detail-hero {
@@ -8816,23 +8663,6 @@ body,
   background: var(--line-soft) !important;
 }
 
-/* Cumulus Pass preview card: settles in with the rest of the modal
-   content rather than sitting static while everything around it moves. */
-.lp-pass-preview {
-  animation: passPreviewIn 0.5s var(--ease-out) both;
-  animation-delay: 0.05s;
-}
-@keyframes passPreviewIn {
-  0% {
-    opacity: 0;
-    transform: translateY(8px) scale(0.98);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
 /* Modal open: soften the scale-in curve so it settles rather than snaps. */
 .lp-signup-modal {
   transition: transform 0.34s var(--ease-out) !important;
@@ -8840,8 +8670,7 @@ body,
 
 @media (prefers-reduced-motion: reduce) {
   .auth-mode-btn.active::after,
-  .gate-type-btn.active,
-  .lp-pass-preview {
+  .gate-type-btn.active {
     animation: none !important;
   }
 }

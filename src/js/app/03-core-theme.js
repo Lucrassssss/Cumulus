@@ -500,6 +500,92 @@ const DIORAMA_FRONT_SVG = `
   <rect x="0" y="330" width="2400" height="10" fill="var(--dio-front)"/>
 </svg>`;
 
+// The sign-up/log-in modal, extracted out of renderGate()'s template so it
+// can be mounted in two places: inline in the landing page (renderGate()
+// itself, for a first-time visitor) and appended once to document.body by
+// enterGuestApp() (for a guest already browsing the app, so tapping Book/
+// Follow/Account can prompt sign-up without navigating away from the map).
+// The overlay is position:fixed, so where it lives in the DOM tree doesn't
+// matter — only that exactly one copy exists at a time, since every input
+// inside references its ID directly (getElementById, not scoped queries).
+function signupModalHtml(prefillName, prefillEmail) {
+  return `<div class="lp-signup-overlay" id="lp-signup-overlay" onclick="if(event.target===this)closeLpSignup()">
+      <div class="lp-signup-modal">
+        <button class="lp-signup-close" onclick="closeLpSignup()" aria-label="Close">✕</button>
+
+        <!-- Auth mode: Sign up vs Log in -->
+        <div class="auth-mode-sel">
+          <button class="auth-mode-btn active" id="am-signup" onclick="switchAuthMode('signup')">Sign up</button>
+          <button class="auth-mode-btn" id="am-login" onclick="switchAuthMode('login')">Log in</button>
+        </div>
+
+        <!-- Type selector: Attendee vs Host (sign up only) -->
+        <div class="gate-type-sel" id="gate-type-sel">
+          <button class="gate-type-btn active" id="gt-attendee" onclick="switchSignupType('attendee')">
+            Join as attendee
+          </button>
+          <button class="gate-type-btn" id="gt-host" onclick="switchSignupType('host')">
+            Become a host
+          </button>
+        </div>
+
+        <!-- Host teaser (shown when host tab selected) -->
+        <div id="gate-host-preview" style="display:none;margin-bottom:20px;padding:16px;background:color-mix(in srgb,var(--accent) 6%,transparent);border:1px solid color-mix(in srgb,var(--accent) 20%,transparent);border-radius:14px;">
+          <div style="font-size:22px;margin-bottom:8px;">🎪</div>
+          <div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:4px;">Host verified events on Cumulus</div>
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">Tell us about your venue or events. Applications are reviewed by our team — approved hosts can post public events, sell tickets, and access host analytics.</div>
+        </div>
+
+        <div class="lp-form-eyebrow" id="gate-form-eyebrow">Free to join · Takes 20 seconds</div>
+        <h3 class="lp-form-title" id="gate-form-title">Join Cumulus</h3>
+        <p class="lp-form-sub" id="gate-form-sub">Every event on Cumulus is public — join in seconds, no invite needed.</p>
+
+        <div class="gate-field" id="gate-name-field">
+          <label class="gate-label" for="gate-name">Full name</label>
+          <input id="gate-name" class="gate-input" placeholder="e.g. Alex Rivera" value="${escapeHtml(prefillName || "")}" autocomplete="name"/>
+        </div>
+        <div class="gate-field">
+          <label class="gate-label" for="gate-email">Email address</label>
+          <input id="gate-email" class="gate-input" type="email" placeholder="you@email.com" value="${escapeHtml(prefillEmail || "")}" autocomplete="email"/>
+        </div>
+
+        <!-- Host-only extra fields -->
+        <div id="gate-host-fields" style="display:none;" class="gate-host-extra">
+          <div class="gate-field">
+            <label class="gate-label" for="gate-biz-name">Venue or business name</label>
+            <input id="gate-biz-name" class="gate-input" placeholder="e.g. The Sketch House" autocomplete="organization"/>
+          </div>
+          <div class="gate-field-group-label">Event types you'd host</div>
+          <div class="host-cat-grid" id="host-cat-grid">
+            ${["Creative", "Gaming", "Movie Nights", "Board Games", "Meetups", "Food &amp; Drink", "Live Music", "Wellness &amp; Outdoors", "Tech &amp; Talks"].map((c) => `<button class="host-cat-chip" data-hostcat="${escapeHtml(c.replace(/&amp;/g, "&"))}" onclick="toggleHostCat('${escapeHtml(c.replace(/&amp;/g, "&"))}')">${c}</button>`).join("")}
+          </div>
+          <div class="gate-field" style="margin-top:15px;">
+            <label class="gate-label" for="gate-host-desc">About your events</label>
+            <textarea id="gate-host-desc" class="gate-input" placeholder="What kind of events do you run? Describe the vibe, size, and frequency…" rows="3" maxlength="400"></textarea>
+          </div>
+          <div class="gate-field">
+            <label class="gate-label" for="gate-why-host">Why host on Cumulus?</label>
+            <textarea id="gate-why-host" class="gate-input" placeholder="Tell us what you're hoping to achieve…" rows="2" maxlength="300"></textarea>
+          </div>
+        </div>
+
+        <p id="gate-field-error" class="gate-field-error"></p>
+        <button class="lp-claim-btn" onclick="submitGate()">
+          <span class="lp-claim-btn-text" id="gate-claim-label">Join Cumulus →</span>
+          <div class="lp-claim-shimmer"></div>
+        </button>
+
+        <div class="lp-form-trust" id="gate-trust-strip">
+          <span>Everyone welcome</span>
+          <span>·</span>
+          <span>Zero host fees</span>
+          <span>·</span>
+          <span>Leave anytime</span>
+        </div>
+      </div>
+    </div>`;
+}
+
 function renderGate(prefillName, prefillEmail) {
   const loader = document.getElementById("cumulus-loader");
   if (loader) {
@@ -547,7 +633,7 @@ function renderGate(prefillName, prefillEmail) {
         <h1 class="lp-hero-title">Find what's on.<br><span class="lp-hero-gradient">Zero fees for hosts.</span></h1>
         <p class="lp-hero-sub">Cumulus is a live map of grassroots events across London. Every event is public — no invite, no curator code. Hosts keep 100% of their ticket price.</p>
         <div class="lp-hero-actions">
-          <button class="btn lp-hero-btn-primary" onclick="showLpSignup()">Explore the Map →</button>
+          <button class="btn lp-hero-btn-primary" onclick="enterApp()">Explore the Map →</button>
           <button class="btn btn-outline lp-hero-btn-secondary" onclick="document.getElementById('lp-features-anchor').scrollIntoView({behavior:'smooth'})">How it works ↓</button>
         </div>
         <p class="lp-hero-trust-note">${checkIconSvg(12)} Every public host is reviewed before their event goes live</p>
@@ -584,8 +670,8 @@ function renderGate(prefillName, prefillEmail) {
         <div class="lp-feat-card">
           <div class="lp-feat-photo" style="background-image:url('assets/img/pass.svg')"></div>
           <div class="lp-feat-card-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="11.5" r="1.8"/><path d="M5.8 16c.5-1.6 1.8-2.4 2.7-2.4s2.2.8 2.7 2.4"/><path d="M14 10h4M14 13h4"/></svg></div>
-          <div class="lp-feat-card-title">Your digital pass</div>
-          <div class="lp-feat-card-desc">A personalised Cumulus Pass you carry to every event — show your ticket QR at the door and collect a badge each time you turn up.</div>
+          <div class="lp-feat-card-title">Instant checkout</div>
+          <div class="lp-feat-card-desc">Pay by card, Apple Pay or Google Pay right in the app — your ticket's QR code is ready the moment payment clears, no app switching required.</div>
         </div>
         <div class="lp-feat-card">
           <div class="lp-feat-photo" style="background-image:url('assets/img/connect.svg')"></div>
@@ -627,8 +713,7 @@ function renderGate(prefillName, prefillEmail) {
           <h2 class="lp-join-headline">This isn't about events.<br>It's about <em>your people.</em></h2>
           <p class="lp-join-body">Cumulus was built on one belief — the best things happen when people who live near each other actually meet. Not online. In the same room, at the same table, under the same open sky.</p>
           <div class="lp-join-proof" style="margin-top:24px;">
-            <span class="lp-join-live"><span class="d"></span>Live</span>
-            <span class="lp-proof-text">34 events this week · 1,200+ Londoners RSVP'd</span>
+            <span class="lp-proof-text">Every event is hosted by someone in your city — not a corporation.</span>
           </div>
           <button class="btn lp-hero-btn-primary" style="margin-top:28px;" onclick="showLpSignup()">Join them →</button>
         </div>
@@ -684,99 +769,7 @@ function renderGate(prefillName, prefillEmail) {
       </div>
     </footer>
 
-    <!-- ── SIGN-UP MODAL ── -->
-    <div class="lp-signup-overlay" id="lp-signup-overlay" onclick="if(event.target===this)closeLpSignup()">
-      <div class="lp-signup-modal">
-        <button class="lp-signup-close" onclick="closeLpSignup()" aria-label="Close">✕</button>
-
-        <!-- Auth mode: Sign up vs Log in -->
-        <div class="auth-mode-sel">
-          <button class="auth-mode-btn active" id="am-signup" onclick="switchAuthMode('signup')">Sign up</button>
-          <button class="auth-mode-btn" id="am-login" onclick="switchAuthMode('login')">Log in</button>
-        </div>
-
-        <!-- Type selector: Attendee vs Host (sign up only) -->
-        <div class="gate-type-sel" id="gate-type-sel">
-          <button class="gate-type-btn active" id="gt-attendee" onclick="switchSignupType('attendee')">
-            Join as attendee
-          </button>
-          <button class="gate-type-btn" id="gt-host" onclick="switchSignupType('host')">
-            Become a host
-          </button>
-        </div>
-
-        <!-- Attendee pass preview -->
-        <div id="gate-attendee-preview" class="lp-pass-preview" style="margin-bottom:20px;">
-          <div class="lp-pass-card" id="lp-pass-preview-card" style="background:linear-gradient(rgba(0,0,0,0.14),rgba(0,0,0,0.14)),linear-gradient(140deg,var(--accent),var(--accent-deep));">
-            <div class="lp-pass-shine"></div>
-            <div class="lp-pass-label">// Cumulus Pass</div>
-            <div class="lp-pass-name" id="lp-pass-name-preview">Your name here</div>
-            <div class="lp-pass-detail">London Community Member</div>
-            <div class="lp-pass-tags">
-              <span class="lp-pass-tag">Live Music</span>
-              <span class="lp-pass-tag">Food &amp; Drink</span>
-              <span class="lp-pass-tag">Meetups</span>
-            </div>
-            <div class="lp-pass-watermark">CU</div>
-          </div>
-          <div class="lp-pass-caption">This is what you'll carry to every event.</div>
-        </div>
-
-        <!-- Host teaser (shown when host tab selected) -->
-        <div id="gate-host-preview" style="display:none;margin-bottom:20px;padding:16px;background:color-mix(in srgb,var(--accent) 6%,transparent);border:1px solid color-mix(in srgb,var(--accent) 20%,transparent);border-radius:14px;">
-          <div style="font-size:22px;margin-bottom:8px;">🎪</div>
-          <div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:4px;">Host verified events on Cumulus</div>
-          <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">Tell us about your venue or events. Applications are reviewed by our team — approved hosts can post public events, sell tickets, and access host analytics.</div>
-        </div>
-
-        <div class="lp-form-eyebrow" id="gate-form-eyebrow">Free to join · Takes 20 seconds</div>
-        <h3 class="lp-form-title" id="gate-form-title">Join Cumulus</h3>
-        <p class="lp-form-sub" id="gate-form-sub">Every event on Cumulus is public — join in seconds, no invite needed.</p>
-
-        <div class="gate-field" id="gate-name-field">
-          <label class="gate-label" for="gate-name">Full name</label>
-          <input id="gate-name" class="gate-input" placeholder="e.g. Alex Rivera" value="${escapeHtml(prefillName || "")}" autocomplete="name" oninput="lpUpdatePassName(this.value)"/>
-        </div>
-        <div class="gate-field">
-          <label class="gate-label" for="gate-email">Email address</label>
-          <input id="gate-email" class="gate-input" type="email" placeholder="you@email.com" value="${escapeHtml(prefillEmail || "")}" autocomplete="email"/>
-        </div>
-
-        <!-- Host-only extra fields -->
-        <div id="gate-host-fields" style="display:none;" class="gate-host-extra">
-          <div class="gate-field">
-            <label class="gate-label" for="gate-biz-name">Venue or business name</label>
-            <input id="gate-biz-name" class="gate-input" placeholder="e.g. The Sketch House" autocomplete="organization"/>
-          </div>
-          <div class="gate-field-group-label">Event types you'd host</div>
-          <div class="host-cat-grid" id="host-cat-grid">
-            ${["Creative", "Gaming", "Movie Nights", "Board Games", "Meetups", "Food &amp; Drink", "Live Music", "Wellness &amp; Outdoors", "Tech &amp; Talks"].map((c) => `<button class="host-cat-chip" data-hostcat="${escapeHtml(c.replace(/&amp;/g, "&"))}" onclick="toggleHostCat('${escapeHtml(c.replace(/&amp;/g, "&"))}')">${c}</button>`).join("")}
-          </div>
-          <div class="gate-field" style="margin-top:15px;">
-            <label class="gate-label" for="gate-host-desc">About your events</label>
-            <textarea id="gate-host-desc" class="gate-input" placeholder="What kind of events do you run? Describe the vibe, size, and frequency…" rows="3" maxlength="400"></textarea>
-          </div>
-          <div class="gate-field">
-            <label class="gate-label" for="gate-why-host">Why host on Cumulus?</label>
-            <textarea id="gate-why-host" class="gate-input" placeholder="Tell us what you're hoping to achieve…" rows="2" maxlength="300"></textarea>
-          </div>
-        </div>
-
-        <p id="gate-field-error" class="gate-field-error"></p>
-        <button class="lp-claim-btn" onclick="submitGate()">
-          <span class="lp-claim-btn-text" id="gate-claim-label">Join Cumulus →</span>
-          <div class="lp-claim-shimmer"></div>
-        </button>
-
-        <div class="lp-form-trust" id="gate-trust-strip">
-          <span>Everyone welcome</span>
-          <span>·</span>
-          <span>Zero host fees</span>
-          <span>·</span>
-          <span>Leave anytime</span>
-        </div>
-      </div>
-    </div>
+    ${signupModalHtml(prefillName, prefillEmail)}
 
   </div>`;
 
@@ -847,7 +840,6 @@ function switchAuthMode(mode) {
   };
   hide("gate-type-sel", isLogin);
   hide("gate-name-field", isLogin);
-  hide("gate-attendee-preview", isLogin || _signupType === "host");
   hide("gate-host-preview", isLogin || _signupType !== "host");
   hide("gate-host-fields", isLogin || _signupType !== "host");
   const eyebrow = document.getElementById("gate-form-eyebrow");
@@ -879,8 +871,6 @@ function switchSignupType(type) {
   document
     .getElementById("gt-host")
     .classList.toggle("active", type === "host");
-  document.getElementById("gate-attendee-preview").style.display =
-    type === "attendee" ? "" : "none";
   document.getElementById("gate-host-preview").style.display =
     type === "host" ? "" : "none";
   document.getElementById("gate-host-fields").style.display =
@@ -945,10 +935,6 @@ function closeLpSignup() {
     ov.classList.remove("open");
     document.body.style.overflow = "";
   }
-}
-function lpUpdatePassName(val) {
-  const el = document.getElementById("lp-pass-name-preview");
-  if (el) el.textContent = val.trim() || "Your name here";
 }
 function gateErr(msg) {
   const el = document.getElementById("gate-field-error");

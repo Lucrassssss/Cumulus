@@ -185,7 +185,7 @@ function renderHostView() {
     <div class="host-section">
       <div class="host-section-title">Date &amp; time</div>
       <label class="intro-field-label">Start date</label>
-      <input id="host-start-date" type="date" class="gate-input"/>
+      <input id="host-start-date" type="date" class="gate-input" onchange="autofillEventEndDate(this.value)"/>
       <label class="intro-field-label">Start time</label>
       <input id="host-start-time" type="time" class="gate-input"/>
       <label class="intro-field-label" style="margin-top:14px;">End date</label>
@@ -241,6 +241,17 @@ function renderHostView() {
     ${renderHostPayoutsPanel()}
     ${renderConnectStatusPanel()}
     ${renderMyHostedEventsCancelPanel()}`;
+}
+
+// Small convenience toward the "60-second publish" goal: picking a start
+// date fills in the same end date (most events don't span midnight), so a
+// host isn't tapping all four date/time fields for a same-day event. Only
+// fires when the end date is still empty, so it never clobbers a value the
+// host already deliberately set (e.g. a multi-day event).
+function autofillEventEndDate(startDateVal) {
+  const endInput = document.getElementById("host-end-date");
+  if (!startDateVal || !endInput || endInput.value) return;
+  endInput.value = startDateVal;
 }
 
 // ══════════════════════════════════════════════

@@ -509,6 +509,13 @@ function checkEventDeepLink() {
   if (ev) openEvent(ev.id);
 }
 function openAccount() {
+  // The account tab has nothing to show a guest — tickets, settings, host
+  // tools are all account-scoped — so it's the sign-up prompt itself rather
+  // than an empty/broken screen.
+  if (!state.userId) {
+    showLpSignup();
+    return;
+  }
   pushNav();
   state.view = "account";
   renderNav();

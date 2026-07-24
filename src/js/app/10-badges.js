@@ -585,6 +585,14 @@ let bookingDraft = {
 };
 
 function openBook(id) {
+  // Browsing is guest-friendly, but booking needs a real account (tickets
+  // are tied to a user_id, and RLS requires auth.uid() to insert one) — a
+  // guest tapping "Book Now" gets the sign-up prompt right here rather than
+  // an insert that would silently fail RLS a few steps later.
+  if (!state.userId) {
+    showLpSignup();
+    return;
+  }
   pushNav();
   bookingDraft = { eventId: id, qty: 1, confirmedTicket: null };
   const ev = EVENTS.find((e) => e.id === id);
