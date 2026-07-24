@@ -230,6 +230,17 @@ function openHostApply() {
 }
 
 function hostApplyShowForm() {
+  // The brochure itself is fine for a guest to see (that's the point of a
+  // pitch page), but host_applications' INSERT policy is authenticated-only
+  // (user_id = auth.uid()) — a guest who filled in the real form would get
+  // a fake "Application submitted!" toast while _saveHostApplicationRow()
+  // silently fell back to localStorage, never reaching the real review
+  // queue. Gate here, same pattern as openAccount()/openBook().
+  if (!state.userId) {
+    showToast("Sign in to apply — takes 20 seconds", "info");
+    showLpSignup();
+    return;
+  }
   _hostApplyStep = "form";
   renderView();
   window.scrollTo({ top: 0, behavior: "smooth" });
