@@ -469,14 +469,25 @@ function hasCoords(ev) {
 }
 function eventMapLinks(ev) {
   const label = [ev.venue, ev.address || ev.area].filter(Boolean).join(", ") || "London";
+  const named = !!(ev.venue && ev.address);
   if (hasCoords(ev)) {
     const ll = `${ev.lat.toFixed(6)},${ev.lon.toFixed(6)}`;
+    // With a real venue name + street address, search for exactly that so
+    // Google/Apple open the place's own card (name, photos, hours, reviews)
+    // — the full address keeps it from landing on a same-named place
+    // elsewhere. Without them, fall back to the exact coordinates.
+    const placeQ = encodeURIComponent(label);
     return {
-      google: `https://www.google.com/maps/search/?api=1&query=${ll}`,
-      directions: `https://www.google.com/maps/dir/?api=1&destination=${ll}&travelmode=transit`,
-      apple: `https://maps.apple.com/?ll=${ll}&q=${encodeURIComponent(ev.venue || "Event")}&z=17`,
-      appleDirections: `https://maps.apple.com/?daddr=${ll}&dirflg=r`,
+      google: named
+        ? `https://www.google.com/maps/search/?api=1&query=${placeQ}`
+        : `https://www.google.com/maps/search/?api=1&query=${ll}`,
+      directions: named
+        ? `https://www.google.com/maps/dir/?api=1&destination=${placeQ}&travelmode=transit`
+        : `https://www.google.com/maps/dir/?api=1&destination=${ll}&travelmode=transit`,
+      apple: `https://maps.apple.com/?q=${encodeURIComponent(ev.venue || "Event")}${named ? `&address=${encodeURIComponent(ev.address)}` : ""}&ll=${ll}&z=17`,
+      appleDirections: `https://maps.apple.com/?daddr=${named ? placeQ : ll}&dirflg=r`,
       label,
+      named,
     };
   }
   const q = encodeURIComponent(label + (/london/i.test(label) ? "" : ", London"));
@@ -486,6 +497,7 @@ function eventMapLinks(ev) {
     apple: `https://maps.apple.com/?q=${q}`,
     appleDirections: `https://maps.apple.com/?daddr=${q}&dirflg=r`,
     label,
+    named,
   };
 }
 // Mapbox Static Images preview with a Volt pin on the exact coordinates —
@@ -514,7 +526,7 @@ function openLocationSheet(id) {
       <span class="loc-ic">${icon}</span><span class="loc-txt"><b>${title}</b><span>${sub}</span></span><span class="loc-go" aria-hidden="true">↗</span>
     </a>`;
   const opts = [
-    row(L.google, ic('<path d="M12 21s7-7.58 7-12A7 7 0 0 0 5 9c0 4.42 7 12 7 12Z"/><circle cx="12" cy="9" r="2.3"/>'), "Open in Google Maps", "Pinned on the exact spot", true),
+    row(L.google, ic('<path d="M12 21s7-7.58 7-12A7 7 0 0 0 5 9c0 4.42 7 12 7 12Z"/><circle cx="12" cy="9" r="2.3"/>'), "Open in Google Maps", L.named ? `${escapeHtml(ev.venue)} · photos, hours & reviews` : "Pinned on the exact spot", true),
     row(L.directions, ic('<path d="M3 11 21 3l-8 18-2-8-8-2Z"/>'), "Get directions", "Google Maps · public transport", false),
     row(apple ? L.appleDirections : L.apple, ic('<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/>'), "Open in Apple Maps", apple ? "Directions on your iPhone" : "Opens maps.apple.com", false),
   ].join("");

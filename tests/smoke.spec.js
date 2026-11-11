@@ -608,6 +608,28 @@ test.describe("Cumulus smoke", () => {
     expect(bg).toContain("pin-l+d4ff3f(-0.069123,51.473456)");
     await page.keyboard.press("Escape");
     await expect(page.locator("#loc-sheet")).toHaveCount(0);
+
+    // A real venue with a street address opens its own place card by name.
+    await page.evaluate(() => {
+      const now = Date.now();
+      const ev = {
+        id: "loc-real", title: "Jazz", category: "Live Music", host: "H",
+        venue: "Village Underground", address: "54 Holywell Ln, London EC2A 3NT",
+        area: "Shoreditch", lat: 51.523606, lon: -0.078529,
+        startTime: new Date(now + 86400000).toISOString(),
+        endTime: new Date(now + 90000000).toISOString(),
+        desc: "d", capacity: 20, price: 0,
+      };
+      computeEventDates(ev);
+      EVENTS.push(ev);
+      openEvent("loc-real");
+    });
+    await page.click(".ev-loc");
+    const named = await page.locator("#loc-sheet .loc-opt.primary").getAttribute("href");
+    expect(decodeURIComponent(named)).toContain("query=Village Underground, 54 Holywell Ln, London EC2A 3NT");
+    const apple = await page.locator('#loc-sheet a[href*="maps.apple.com"]').getAttribute("href");
+    expect(apple).toContain("q=Village%20Underground");
+    expect(apple).toContain("ll=51.523606,-0.078529");
   });
 
   test("event detail: fully visible and bookable, no gating", async ({
