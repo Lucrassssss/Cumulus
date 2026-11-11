@@ -130,15 +130,18 @@ function goFeed() {
 }
 function setFeedRange(r) {
   state.feedRange = r;
+  state.feedLimit = FEED_PAGE;
   _rerenderFeedResults();
 }
 function setFeedCategory(c) {
   state.selectedCategory = c;
+  state.feedLimit = FEED_PAGE;
   _rerenderFeedResults();
 }
 let _feedSearchT = null;
 function onFeedSearch(v) {
   state.feedQuery = v;
+  state.feedLimit = FEED_PAGE;
   clearTimeout(_feedSearchT);
   _feedSearchT = setTimeout(_rerenderFeedResults, 120);
 }
@@ -216,7 +219,37 @@ function feedResultsHtml() {
       </div>
     </div>`;
   }
-  return `<div class="fr-list">${list.map(feedRowHtml).join("")}</div>`;
+  const limit = state.feedLimit || FEED_PAGE;
+  const shown = list.slice(0, limit);
+  let lastDay = null;
+  const rows = shown
+    .map((ev) => {
+      const day = feedDayHeading(ev);
+      const head = day !== lastDay ? `<div class="fr-day">${escapeHtml(day)}</div>` : "";
+      lastDay = day;
+      return head + feedRowHtml(ev);
+    })
+    .join("");
+  const left = list.length - shown.length;
+  return `<div class="fr-list compact">${rows}</div>${
+    left > 0
+      ? `<button class="v-btn ghost wide feed-more" onclick="state.feedLimit=(state.feedLimit||FEED_PAGE)+FEED_PAGE;_rerenderFeedResults()">Show ${Math.min(left, FEED_PAGE)} more <span>· ${left} left</span></button>`
+      : list.length > FEED_PAGE
+        ? `<div class="feed-end">That's everything coming up · <button class="link-btn" onclick="navStack=[];openCalendar()">See the calendar</button></div>`
+        : ""
+  }`;
+}
+
+const FEED_PAGE = 12;
+// "Live now" / "Tonight" / "Tomorrow" / "Sat 15 Nov" — day group headings.
+function feedDayHeading(ev) {
+  if (eventStatus(ev) === "live") return "Live now";
+  const d = new Date(ev.startsAt);
+  const day0 = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((day0(d) - day0(new Date())) / 86400000);
+  if (diff === 0) return "Today & tonight";
+  if (diff === 1) return "Tomorrow";
+  return d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" });
 }
 
 function feedGreeting() {
@@ -278,7 +311,7 @@ function renderFeed() {
     ...live,
     ...all.filter((ev) => eventStatus(ev) !== "live" && (ev.photoUrl || ev.nightShotUrl)),
     ...all.filter((ev) => eventStatus(ev) !== "live" && !(ev.photoUrl || ev.nightShotUrl)),
-  ].slice(0, 8);
+  ].slice(0, 6);
   const cats = Object.keys(CATS).filter((c) => all.some((ev) => ev.category === c));
   const [hello, kicker] = feedGreeting();
   const range = state.feedRange || "all";
@@ -322,15 +355,31 @@ function renderFeed() {
       <div id="feed-settings" class="feed-settings" role="dialog" aria-label="Settings">${appearanceMenuHtml()}</div>
     </header>
 
+    <div class="feed-layout">
     <div class="feed-hero">
-      <div class="feed-kicker"><span class="pulse"></span>${escapeHtml(kicker)}${live.length ? ` · ${live.length} live now` : ""}</div>
-      <h1 class="feed-h1">${escapeHtml(hello)}</h1>
-      <label class="feed-search">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input type="search" placeholder="Artists, venues, vibes…" value="${escapeHtml(state.feedQuery || "")}" oninput="onFeedSearch(this.value)" aria-label="Search events" autocomplete="off"/>
-      </label>
-    </div>
+        <div class="feed-kicker"><span class="pulse"></span>${escapeHtml(kicker)}${live.length ? ` · ${live.length} live now` : ""}</div>
+        <h1 class="feed-h1">${escapeHtml(hello)}</h1>
+        <label class="feed-search">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="search" placeholder="Artists, venues, vibes…" value="${escapeHtml(state.feedQuery || "")}" oninput="onFeedSearch(this.value)" aria-label="Search events" autocomplete="off"/>
+        </label>
+      </div>
 
+
+      <aside class="feed-aside" aria-label="For organisers">
+        <div class="feed-host-cta" onclick="openHostApply()" role="button" tabindex="0" aria-label="For organisers — host an event on Cumulus">
+          <div class="fhc-stack" aria-hidden="true"><i></i><i></i><i></i></div>
+          <div class="fhc-copy">
+            <div class="fhc-kicker">For organisers</div>
+            <div class="fhc-title">Throw something.</div>
+            <div class="fhc-sub">Keep 100% of the ticket price. Paid out in 24–48h.</div>
+            <span class="fhc-btn">Start hosting →</span>
+          </div>
+          <span class="fhc-go" aria-hidden="true">→</span>
+        </div>
+      </aside>
+
+      <div class="feed-main">
     ${ticker}
 
     ${(() => {
@@ -338,7 +387,7 @@ function renderFeed() {
       if (!fresh.length) return "";
       return `<div class="feed-section feed-followed" id="feed-followed">
         <div class="feed-sec-head"><h2><span class="ff-bell" aria-hidden="true">🔔</span> New from hosts you follow</h2><button class="link-btn" onclick="dismissFollowedNew()">Clear</button></div>
-        <div class="fr-list">${fresh.slice(0, 5).map((ev) => feedRowHtml(ev, "New")).join("")}</div>
+        <div class="fr-list compact">${fresh.slice(0, 3).map((ev) => feedRowHtml(ev, "New")).join("")}</div>
       </div>`;
     })()}
 
@@ -375,16 +424,11 @@ function renderFeed() {
       <div id="feed-results">${feedResultsHtml()}</div>
     </div>
 
-    <div class="feed-host-cta" onclick="openHostApply()" role="button" tabindex="0">
-      <div>
-        <div class="fhc-kicker">For organisers</div>
-        <div class="fhc-title">Throw something.<br/>Keep 100% of the ticket price.</div>
-      </div>
-      <span class="fhc-go" aria-hidden="true">→</span>
-    </div>
     <footer class="feed-foot">
       <a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><span>© Cumulus · London</span>
     </footer>
+      </div>
+    </div>
   </section>`;
 }
 

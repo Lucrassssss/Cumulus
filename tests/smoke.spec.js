@@ -542,6 +542,41 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator("#feed-followed")).toHaveCount(0);
   });
 
+  test("Discover is compact: day groups, 12 at a time, organiser box up front", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      const now = Date.now();
+      for (let i = 0; i < 20; i++) {
+        const ev = {
+          id: "page-" + i, title: "Paged " + i, category: "Creative", host: "H",
+          venue: "V", area: "A", lat: 51.5, lon: -0.1,
+          startTime: new Date(now + (i + 1) * 5 * 3600000).toISOString(),
+          endTime: new Date(now + (i + 1) * 5 * 3600000 + 3600000).toISOString(),
+          desc: "d", capacity: 20, price: 0,
+        };
+        computeEventDates(ev);
+        EVENTS.push(ev);
+      }
+      state.eventsLoaded = true;
+      goFeed();
+    });
+    // Organiser box is up front — above the event list, before any scrolling.
+    const ctaY = await page.locator(".feed-host-cta").evaluate((el) => el.getBoundingClientRect().top);
+    const resultsY = await page.locator("#feed-results").evaluate((el) => el.getBoundingClientRect().top);
+    expect(ctaY).toBeLessThan(resultsY);
+    await expect(page.locator("#feed-results .fr-row")).toHaveCount(12);
+    await expect(page.locator("#feed-results .fr-day").first()).toBeVisible();
+    // No stray index chips ("1", "2"…) on plain rows.
+    await expect(page.locator("#feed-results .fr-chip.tag")).toHaveCount(0);
+    await expect(page.locator(".feed-more")).toContainText("Show 8 more");
+    await page.click(".feed-more");
+    await expect(page.locator("#feed-results .fr-row")).toHaveCount(20);
+    await expect(page.locator(".feed-more")).toHaveCount(0);
+  });
+
   test("event detail: fully visible and bookable, no gating", async ({
     page,
   }) => {
