@@ -69,5 +69,9 @@ function showConfirm(title, body, confirmLabel, dangerFnName) {
 }
 function applyTheme() {
   document.documentElement.setAttribute("data-theme", state.theme);
+  // Browser/PWA chrome colour tracks the in-app theme, not the OS setting.
+  document
+    .querySelectorAll('meta[name="theme-color"]')
+    .forEach((m) => (m.content = state.theme === "dark" ? "#08080A" : "#F3F1EC"));
 }
 

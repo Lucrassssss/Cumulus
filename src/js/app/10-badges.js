@@ -19,6 +19,12 @@ function renderAccount() {
       </button>
     </div>
 
+    <div class="section-title">Appearance</div>
+    <div class="appear-card">
+      ${appearanceControlHtml(false)}
+      <div class="appear-sub" id="appearance-sub">${themePrefDescription(getThemePref())}</div>
+    </div>
+
     <div class="section-title">Settings</div>
     <div class="prof-action-list">
       <button class="prof-action-row" onclick="openAccountDetails()">

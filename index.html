@@ -34,28 +34,37 @@
       media="(prefers-color-scheme: light)"
     />
 
-    <!-- Instant day/night theme by LONDON time (matches app.js themeForNow), set
-     before any CSS paints so there's no flash. -->
+    <!-- Theme before first paint (no flash). Mirrors themeForNow() in
+     03-core-theme.js: saved preference → light/dark/system, else LONDON
+     time (light 06:00–17:59). -->
     <script>
       (function () {
         try {
-          var h;
+          var pref = null;
           try {
-            h = parseInt(
-              new Intl.DateTimeFormat("en-GB", {
-                timeZone: "Europe/London",
-                hour: "numeric",
-                hourCycle: "h23",
-              }).format(new Date()),
-              10,
-            );
-          } catch (e) {
-            h = new Date().getHours();
+            pref = localStorage.getItem("cumulus_theme_pref");
+          } catch (e) {}
+          var t;
+          if (pref === "light" || pref === "dark") t = pref;
+          else if (pref === "system")
+            t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          else {
+            var h;
+            try {
+              h = parseInt(
+                new Intl.DateTimeFormat("en-GB", {
+                  timeZone: "Europe/London",
+                  hour: "numeric",
+                  hourCycle: "h23",
+                }).format(new Date()),
+                10,
+              );
+            } catch (e) {
+              h = new Date().getHours();
+            }
+            t = h >= 6 && h < 18 ? "light" : "dark";
           }
-          document.documentElement.setAttribute(
-            "data-theme",
-            h >= 6 && h < 18 ? "light" : "dark",
-          );
+          document.documentElement.setAttribute("data-theme", t);
         } catch (e) {}
       })();
     </script>

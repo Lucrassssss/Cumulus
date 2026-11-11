@@ -1,9 +1,89 @@
+// ── Appearance ────────────────────────────────────────────────────────────
+// Four options, saved per device (Account → Appearance, or the Discover feed
+// footer for guests):
+//   "auto"   — default: lit by London's actual time of day (light 06:00–17:59)
+//   "system" — follow the device's light/dark setting, live
+//   "light" / "dark" — fixed
+// The inline script in index.html <head> mirrors this before first paint so
+// there's never a flash of the wrong theme — keep the two in sync.
+const THEME_PREF_KEY = "cumulus_theme_pref";
+const THEME_PREFS = ["auto", "system", "light", "dark"];
+function getThemePref() {
+  try {
+    const v = localStorage.getItem(THEME_PREF_KEY);
+    return THEME_PREFS.includes(v) ? v : "auto";
+  } catch (e) {
+    return "auto";
+  }
+}
+function systemTheme() {
+  return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+}
+function setThemePref(pref) {
+  if (!THEME_PREFS.includes(pref)) return;
+  try {
+    localStorage.setItem(THEME_PREF_KEY, pref);
+  } catch (e) {}
+  // Brief cross-fade so the switch feels deliberate, not a hard cut.
+  const root = document.documentElement;
+  root.classList.add("theme-switching");
+  setTimeout(() => root.classList.remove("theme-switching"), 450);
+  applyDayNight();
+  document.querySelectorAll("[data-theme-pref]").forEach((b) => {
+    const on = b.dataset.themePref === pref;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-checked", on ? "true" : "false");
+  });
+  const sub = document.getElementById("appearance-sub");
+  if (sub) sub.textContent = themePrefDescription(pref);
+}
+function themePrefDescription(pref) {
+  return {
+    auto: "Follows London's day & night",
+    system: "Matches your device setting",
+    light: "Always light",
+    dark: "Always dark",
+  }[pref];
+}
+// Follow live OS changes when the preference is "system".
+try {
+  window
+    .matchMedia("(prefers-color-scheme: dark)")
+    .addEventListener("change", () => {
+      if (getThemePref() === "system") applyDayNight();
+    });
+} catch (e) {}
+
+// Segmented Auto / System / Light / Dark control — shared by Account and
+// the Discover footer.
+function appearanceControlHtml(compact) {
+  const pref = getThemePref();
+  const ic = (d) =>
+    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const opts = [
+    ["auto", "Auto", ic('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')],
+    ["system", "System", ic('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>')],
+    ["light", "Light", ic('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>')],
+    ["dark", "Dark", ic('<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z"/>')],
+  ];
+  return `<div class="appear-seg${compact ? " compact" : ""}" role="radiogroup" aria-label="Appearance">${opts
+    .map(
+      ([k, l, svg]) =>
+        `<button type="button" role="radio" class="appear-opt${pref === k ? " on" : ""}" data-theme-pref="${k}" aria-checked="${pref === k}" onclick="setThemePref('${k}')">${svg}<span>${l}</span></button>`,
+    )
+    .join("")}</div>`;
+}
+
 // ── Day/night cycle ───────────────────────────────────────────────────────
-// The whole app — landing diorama + explore/host maps — is lit by London's
-// ACTUAL time of day, not the device's OS dark-mode setting: light 06:00–17:59,
-// dark otherwise. One source of truth, re-checked every minute so the scene
-// transitions live as the hour rolls over (and any open map re-lights with it).
+// With the default "auto" preference the app is lit by London's ACTUAL time
+// of day: light 06:00–17:59, dark otherwise, re-checked every minute so the
+// scene transitions live as the hour rolls over (and any open map re-lights).
 function themeForNow() {
+  const pref = getThemePref();
+  if (pref === "light" || pref === "dark") return pref;
+  if (pref === "system") return systemTheme();
   try {
     const h = parseInt(
       new Intl.DateTimeFormat("en-GB", {

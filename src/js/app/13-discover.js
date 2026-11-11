@@ -334,6 +334,7 @@ function renderFeed() {
       </div>
       <span class="fhc-go" aria-hidden="true">→</span>
     </div>
+    <div class="feed-appear">${appearanceControlHtml(true)}</div>
     <footer class="feed-foot">
       <a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><span>© Cumulus · London</span>
     </footer>

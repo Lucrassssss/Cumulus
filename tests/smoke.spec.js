@@ -544,6 +544,41 @@ test.describe("Cumulus smoke", () => {
     expect(res.isLive).toBeTruthy();
   });
 
+  test("appearance: light / dark / system preference applies, persists and follows the OS", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("/");
+    await enterApp(page);
+    const theme = () => page.evaluate(() => document.documentElement.getAttribute("data-theme"));
+
+    // Feed footer control is available to guests.
+    await expect(page.locator(".feed-appear .appear-opt")).toHaveCount(4);
+
+    await page.evaluate(() => setThemePref("dark"));
+    expect(await theme()).toBe("dark");
+    // Survives a reload and is applied before the app boots (head script).
+    await page.reload();
+    expect(await theme()).toBe("dark");
+
+    await page.evaluate(() => setThemePref("light"));
+    expect(await theme()).toBe("light");
+
+    // System: follows the OS, live.
+    await page.evaluate(() => setThemePref("system"));
+    expect(await theme()).toBe("light");
+    await page.emulateMedia({ colorScheme: "dark" });
+    await expect.poll(theme).toBe("dark");
+
+    // Account page shows the control with the saved choice selected.
+    await page.evaluate(() => {
+      state.userId = "test-user-uuid";
+      state.profileName = "Test User";
+      openAccount();
+    });
+    await expect(page.locator(".appear-card .appear-opt.on")).toHaveText("System");
+  });
+
   test("Admin panel: Reported events entry present", async ({ page }) => {
     await page.goto("/");
     await enterApp(page);
