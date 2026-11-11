@@ -242,7 +242,7 @@ function eventListCardHtml(ev) {
   const img = ev.photoUrl || ev.nightShotUrl || catImg(ev.category);
   const ended = status === "past";
   return `<div class="panel event-list-card${ended ? " event-list-card-ended" : ""}" style="--corner:${c.color};" onclick="openEvent('${ev.id}')" role="button" tabindex="0" aria-label="Open ${escapeHtml(ev.title)}${ended ? ", event ended" : ""}">
-    <div class="elc-img" style="background-image:url('${img}');"></div>
+    <div class="elc-img ${posterClass(ev)}" style="${posterStyle(ev)}">${posterGlyph(ev)}</div>
     <div class="elc-body">
       <div class="elc-top-row">
         <span class="event-badge" style="--cat:${c.color};--cat-text:${c.textColor};margin-bottom:0;">${ev.category}</span>

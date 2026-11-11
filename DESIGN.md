@@ -55,6 +55,16 @@ Everything is a pill or a 26px card — no square buttons.
 
 **Day/night** still follows London time (themes swap tokens only).
 
+**Map:** Mapbox Standard in `monochrome` so the only colour is events. Pins
+are "wheatpaste" posters — the event's poster on a white sticker border,
+tilted ±6°, with a tail on the venue (`06-map-animations.js`). Clustering is
+the GeoJSON source's Supercluster (`clusterRadius 48`, `clusterMaxZoom 14`,
+`clusterProperties` for event + live totals); rendering is DOM markers diffed
+per frame for real CSS motion. Clusters are a fanned stack of their real
+posters + a Volt count; same-venue events merge into one pin with a count and
+open a swipeable card sheet. Zoom LOD: `z-far` dots → `z-mid` tiles →
+`z-near` tiles + time/price label. Live = `--hot` ring + LIVE tag.
+
 
 <!-- ── v1 (superseded) ─────────────────────────────── -->
 

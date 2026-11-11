@@ -2017,10 +2017,10 @@ function openHostProfile(hostKey, hostName) {
 function hostEventBigCardHtml(ev) {
   const c = CATS[ev.category] || { color: "var(--accent)", textColor: "#fff" };
   const price = eventPrice(ev);
-  const img = ev.photoUrl || ev.nightShotUrl || catImg(ev.category);
   return `<button type="button" class="host-event-card" style="--corner:${c.color};" onclick="openEvent('${ev.id}')">
-    <div class="host-event-card-img" style="background-image:url('${img}');">
-      <span class="event-badge" style="--cat:${c.color};--cat-text:${c.textColor};position:absolute;top:10px;left:10px;margin-bottom:0;">${ev.category}</span>
+    <div class="host-event-card-img ${posterClass(ev)}" style="${posterStyle(ev)}">
+      ${posterGlyph(ev)}
+      <span class="fp-date" style="position:absolute;top:10px;left:10px;">${feedDateLabel(ev)}</span>
     </div>
     <div class="host-event-card-body">
       <div class="host-event-card-title">${escapeHtml(ev.title)}</div>

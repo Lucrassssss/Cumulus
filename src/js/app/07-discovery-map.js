@@ -41,7 +41,7 @@ async function fetchVisibleEvents() {
 
   if (!geojson || !Array.isArray(geojson.features)) {
     // RPC unavailable (offline / not deployed yet) — fall back gracefully
-    src.setData(buildEventsGeoJSON());
+    setEventsSourceData(src, buildEventsGeoJSON());
     return;
   }
 
@@ -82,7 +82,7 @@ async function fetchVisibleEvents() {
   // Apply client-side filters (category, live/hot toggles, search) and push
   // the resulting GeoJSON directly to the WebGL source
   const filteredGeo = buildEventsGeoJSON();
-  src.setData(filteredGeo);
+  setEventsSourceData(src, filteredGeo);
   updateMapEmptyState(filteredGeo.features.length);
   updateLivePulse();
   updateMapCaptionBar();
@@ -508,6 +508,9 @@ function initLeaflet() {
     lmap.setConfigProperty("basemap", "show3dObjects", tier !== "low"); // Flat buildings on low tier to save FPS
     lmap.setConfigProperty("basemap", "showPointOfInterestLabels", false);
     lmap.setConfigProperty("basemap", "showTransitLabels", false);
+    try {
+      lmap.setConfigProperty("basemap", "theme", "monochrome");
+    } catch (e) {}
 
     // Fog Occlusion Culling for Low/Mid tiers
     if (tier === "low" || tier === "mid") {
