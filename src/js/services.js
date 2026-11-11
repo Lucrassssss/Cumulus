@@ -166,6 +166,22 @@ async function followHost(hostId) {
     return false;
   }
 }
+/* "Notify me when they post": upserts the follow row with notify on/off.
+ * Turning notify ON also follows (one row, PK follower_id+host_id). */
+async function setHostNotify(hostId, on) {
+  if (!hostId || !state.userId) return false;
+  try {
+    const { error } = await sb
+      .from("host_follows")
+      .upsert(
+        { follower_id: state.userId, host_id: hostId, notify: !!on },
+        { onConflict: "follower_id,host_id" },
+      );
+    return !error;
+  } catch (e) {
+    return false;
+  }
+}
 async function unfollowHost(hostId) {
   if (!hostId || !state.userId) return false;
   try {
@@ -203,9 +219,11 @@ async function loadMyFollows() {
   try {
     const { data, error } = await sb
       .from("host_follows")
-      .select("host_id")
+      .select("host_id, notify")
       .eq("follower_id", state.userId);
     if (error || !data) return [];
+    // Side cache for the "Notify me" bell — same synchronous-read reason.
+    state.notifyHostIds = data.filter((r) => r.notify).map((r) => r.host_id);
     return data.map((r) => r.host_id);
   } catch (e) {
     return [];

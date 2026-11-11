@@ -51,6 +51,7 @@ async function loadRealEvents(attempt = 0) {
       nightShotUrl: ev.night_shot_url || null,
       photoUrl: ev.photo_url || null,
       status: ev.status || "active",
+      createdAt: ev.created_at ? new Date(ev.created_at).getTime() : null,
     };
     computeEventDates(mapped);
     EVENTS.push(mapped);

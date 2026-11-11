@@ -3804,3 +3804,235 @@ html body .host-profile-header .btn-follow-host.following {
   color: var(--text) !important;
   box-shadow: inset 0 0 0 1.5px var(--line) !important;
 }
+
+/* ── Event page: "Hosted by" host card ───────────────────────────────── */
+html body .ev-host-row .host-card,
+html body .host-card {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 8px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  opacity: 1 !important;
+}
+.host-card-main {
+  appearance: none;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px;
+  margin: 0;
+  border: 0;
+  border-radius: 16px;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.host-card-main:hover {
+  background: var(--surface-2);
+}
+.host-card-main:hover .host-card-chev {
+  transform: translateX(3px);
+}
+.host-card-av {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--uv), var(--hot));
+  color: #fff;
+  font: 800 15px var(--font-display);
+}
+.host-card-txt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+.host-card-label {
+  font: 700 10.5px var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+.host-card-name {
+  margin-top: 3px;
+  font: 750 16px var(--font-sans);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.host-card-label .host-reviewed-badge {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 3px;
+  margin-left: 4px;
+  padding: 3px 7px !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--success) 16%, transparent) !important;
+  color: var(--success) !important;
+  font: 700 10px/1 var(--font-sans) !important;
+  letter-spacing: 0 !important;
+  text-transform: none;
+  vertical-align: 1px;
+}
+.host-card-sub {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 650;
+}
+.host-card-chev {
+  display: inline-block;
+  transition: transform 0.25s var(--spring);
+}
+html body .host-card .btn-follow-host {
+  flex-shrink: 0;
+  height: 38px !important;
+  padding: 0 16px !important;
+  border-radius: 999px !important;
+  border: 0 !important;
+  background: var(--text) !important;
+  color: var(--bg) !important;
+  font: 700 13.5px var(--font-sans) !important;
+}
+html body .host-card .btn-follow-host.following {
+  background: transparent !important;
+  color: var(--text) !important;
+  box-shadow: inset 0 0 0 1.5px var(--line) !important;
+}
+html body .ev-host-row {
+  padding: 12px 0 4px !important;
+}
+
+/* ── Host profile: "Get notified when they post" ─────────────────────── */
+.hp-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.hp-notify-row {
+  appearance: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 14px 0 6px;
+  padding: 14px 16px;
+  border-radius: var(--r-lg);
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.25s ease;
+}
+.hp-notify-row:hover {
+  border-color: var(--text-muted);
+}
+.hp-notify-row.on {
+  border-color: color-mix(in srgb, var(--volt) 60%, transparent);
+  background: color-mix(in srgb, var(--volt) 9%, var(--surface));
+}
+.hp-notify-ic {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  color: var(--text);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.hp-notify-row.on .hp-notify-ic {
+  background: var(--cta-bg);
+  color: var(--cta-fg);
+  animation: hp-ring 0.6s ease;
+}
+@keyframes hp-ring {
+  20% {
+    transform: rotate(-14deg);
+  }
+  40% {
+    transform: rotate(12deg);
+  }
+  60% {
+    transform: rotate(-8deg);
+  }
+  80% {
+    transform: rotate(4deg);
+  }
+}
+.hp-notify-txt {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.hp-notify-txt b {
+  font: 750 15.5px var(--font-sans);
+}
+.hp-notify-txt span {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+.hp-notify-switch {
+  width: 46px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--surface-3);
+  position: relative;
+  transition: background 0.25s ease;
+}
+.hp-notify-switch i {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: transform 0.35s var(--spring);
+}
+.hp-notify-row.on .hp-notify-switch {
+  background: var(--volt);
+}
+.hp-notify-row.on .hp-notify-switch i {
+  background: var(--volt-ink);
+}
+.hp-notify-row.on .hp-notify-switch i {
+  transform: translateX(18px);
+}
+
+/* ── Discover: "New from hosts you follow" ──────────────────────────── */
+.feed-followed .feed-sec-head h2 {
+  font-size: 22px !important;
+}
+.ff-bell {
+  display: inline-block;
+  animation: hp-ring 0.8s 0.4s ease;
+}
+.feed-followed.out {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: all 0.25s ease;
+}
+html body .host-card-main,
+html body .host-card-main * {
+  text-decoration: none !important;
+}

@@ -2000,6 +2000,9 @@ function nudgeGateForSquadClaim() {
 // Host credibility + follow, shown inline in the event byline. The events-
 // hosted count is computed from EVENTS actually loaded this session (real
 // data, not a fabricated backend stat) and only shown once it's meaningful.
+// Event page "Hosted by": a quiet, clearly tappable host card — avatar,
+// name and "View profile ›" — rather than an underlined name in a sentence.
+// The Follow button sits on the right and doesn't open the profile.
 function renderHostByline(ev) {
   const hostKey = ev.hostId || ev.host;
   const hostCount = EVENTS.filter((e) => e.host === ev.host).length;
@@ -2010,10 +2013,17 @@ function renderHostByline(ev) {
   // approval flow) — never shown for hostId-less fixture/test data, so this
   // is never a fabricated trust signal.
   const reviewed = ev.hostId != null;
-  return `<span class="detail-host-byline">
-    <span>Hosted by <button type="button" class="host-byline-link" onclick="openHostProfile('${safeKey}','${safeName}')">${escapeHtml(ev.host)}</button>${hostCount >= 2 ? ` · ${hostCount} events hosted` : ""}${reviewed ? ` <span class="host-reviewed-badge" title="Host reviewed by Cumulus">${checkIconSvg(11)} Reviewed</span>` : ""}</span>
-    ${reviewed ? `<button class="btn-follow-host${following ? " following" : ""}" onclick="toggleFollowHost('${safeKey}','${safeName}')">${following ? "Following" : "Follow"}</button>` : ""}
-  </span>`;
+  return `<div class="host-card detail-host-byline">
+    <button type="button" class="host-card-main host-byline-link" onclick="openHostProfile('${safeKey}','${safeName}')" aria-label="View ${escapeHtml(ev.host)}'s profile">
+      <span class="host-card-av" aria-hidden="true">${escapeHtml(hostInitials(ev.host))}</span>
+      <span class="host-card-txt">
+        <span class="host-card-label">Hosted by${reviewed ? ` <span class="host-reviewed-badge" title="Host reviewed by Cumulus">${checkIconSvg(10)} Reviewed</span>` : ""}</span>
+        <span class="host-card-name">${escapeHtml(ev.host)}</span>
+        <span class="host-card-sub">${hostCount >= 2 ? `${hostCount} events · ` : ""}View profile <span class="host-card-chev" aria-hidden="true">›</span></span>
+      </span>
+    </button>
+    ${reviewed ? `<button class="btn-follow-host${following ? " following" : ""}" onclick="event.stopPropagation();toggleFollowHost('${safeKey}','${safeName}')">${following ? "Following" : "Follow"}</button>` : ""}
+  </div>`;
 }
 
 // ── Host Profile ──────────────────────────────────────────────────────────
@@ -2120,6 +2130,7 @@ function renderHostProfile() {
     })
     .sort((a, b) => a.startsAt - b.startsAt);
   const following = isFollowingHost(hostKey);
+  const notifying = isNotifyingHost(hostKey);
   const safeKey = escapeHtml(String(hostKey)).replace(/'/g, "&#39;");
   const safeName = escapeHtml(hostName).replace(/'/g, "&#39;");
   const avatarHtml = state.viewedHostAvatarUrl
@@ -2173,10 +2184,21 @@ function renderHostProfile() {
       </div>
       ${
         reviewed
-          ? `<button class="btn-follow-host${following ? " following" : ""}" onclick="toggleFollowHost('${safeKey}','${safeName}')">${following ? "Following" : "Follow"}</button>`
+          ? `<div class="hp-actions">
+          <button class="btn-follow-host${following ? " following" : ""}" onclick="toggleFollowHost('${safeKey}','${safeName}')">${following ? "Following" : "Follow"}</button>
+        </div>`
           : ""
       }
     </div>
+    ${
+      reviewed
+        ? `<button class="hp-notify-row${notifying ? " on" : ""}" onclick="toggleHostNotify('${safeKey}','${safeName}')" aria-pressed="${notifying}">
+        <span class="hp-notify-ic">${notifying ? `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 20a1.9 1.9 0 0 0 3.4 0" fill="none"/></svg>` : `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 20a1.9 1.9 0 0 0 3.4 0"/></svg>`}</span>
+        <span class="hp-notify-txt"><b>${notifying ? "You'll be notified" : "Get notified when they post"}</b><span>${notifying ? `We'll let you know when ${escapeHtml(hostName)} lists something new.` : `Be first in when ${escapeHtml(hostName)} lists a new event.`}</span></span>
+        <span class="hp-notify-switch" aria-hidden="true"><i></i></span>
+      </button>`
+        : ""
+    }
     ${statsHtml}
     <div class="hp-sec-head"><h3>Upcoming</h3><span>${upcoming.length}</span></div>
     ${upcomingHtml}
@@ -2607,6 +2629,38 @@ async function deleteReportedEvent(id) {
 function isFollowingHost(hostKey) {
   return (state.followedHostIds || []).includes(hostKey);
 }
+function isNotifyingHost(hostKey) {
+  return (state.notifyHostIds || []).includes(hostKey);
+}
+// "Notify me when they post" — turning it on also follows; turning it off
+// keeps the follow. Optimistic, rolled back if the write fails.
+async function toggleHostNotify(hostKey, hostName) {
+  if (!state.userId) {
+    showToast("Sign in to get notified when they post", "info");
+    showLpSignup();
+    return;
+  }
+  const on = !isNotifyingHost(hostKey);
+  const prevNotify = [...(state.notifyHostIds || [])];
+  const prevFollow = [...(state.followedHostIds || [])];
+  state.notifyHostIds = on
+    ? [...prevNotify, hostKey]
+    : prevNotify.filter((id) => id !== hostKey);
+  if (on && !prevFollow.includes(hostKey)) state.followedHostIds = [...prevFollow, hostKey];
+  renderView();
+  const ok = await setHostNotify(hostKey, on);
+  if (!ok) {
+    state.notifyHostIds = prevNotify;
+    state.followedHostIds = prevFollow;
+    renderView();
+    showToast("Couldn't reach the server — try again", "error");
+    return;
+  }
+  showToast(
+    on ? `We'll let you know when ${hostName} posts` : `Notifications off for ${hostName}`,
+    "success",
+  );
+}
 async function toggleFollowHost(hostKey, hostName) {
   if (!state.userId) {
     showLpSignup();
@@ -2616,7 +2670,10 @@ async function toggleFollowHost(hostKey, hostName) {
   const idx = list.indexOf(hostKey);
   const nowFollowing = idx === -1;
   if (nowFollowing) list.push(hostKey);
-  else list.splice(idx, 1);
+  else {
+    list.splice(idx, 1);
+    state.notifyHostIds = (state.notifyHostIds || []).filter((id) => id !== hostKey);
+  }
   state.followedHostIds = list;
   renderView();
   const ok = nowFollowing

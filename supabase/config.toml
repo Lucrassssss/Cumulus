@@ -67,3 +67,11 @@ enabled = true
 # (ownership re-checked server-side against the JWT regardless).
 verify_jwt = true
 entrypoint = "./functions/cancel-ticket-refund/index.ts"
+
+[functions.notify-followers-new-event]
+enabled = true
+# false: called by our own Postgres trigger (trg_notify_followers_new_event)
+# via pg_net, not a signed-in member — trust is the NOTIFY_WEBHOOK_SECRET
+# bearer check inside the function, same as notify-admin-new-event.
+verify_jwt = false
+entrypoint = "./functions/notify-followers-new-event/index.ts"

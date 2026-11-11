@@ -236,6 +236,40 @@ function feedGreeting() {
   return ["Tonight in London", `${day} night, sorted`];
 }
 
+// "New from hosts you follow" — in-app half of "Notify me when they post"
+// (the email half is notify-followers-new-event). Shows upcoming events
+// from hosts with notify on that were created in the last 14 days and that
+// this device hasn't dismissed yet.
+const FOLLOW_SEEN_KEY = "cumulus_follow_seen";
+function _followSeen() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(FOLLOW_SEEN_KEY) || "[]"));
+  } catch (e) {
+    return new Set();
+  }
+}
+function newFromFollowed() {
+  const notify = state.notifyHostIds || [];
+  if (!state.userId || !notify.length) return [];
+  const seen = _followSeen();
+  const since = Date.now() - 14 * 86400000;
+  return feedUpcoming().filter(
+    (ev) => notify.includes(ev.hostId) && (ev.createdAt || 0) >= since && !seen.has(String(ev.id)),
+  );
+}
+function dismissFollowedNew() {
+  const seen = _followSeen();
+  newFromFollowed().forEach((ev) => seen.add(String(ev.id)));
+  try {
+    localStorage.setItem(FOLLOW_SEEN_KEY, JSON.stringify([...seen].slice(-500)));
+  } catch (e) {}
+  const el = document.getElementById("feed-followed");
+  if (el) {
+    el.classList.add("out");
+    setTimeout(() => el.remove(), 250);
+  }
+}
+
 function renderFeed() {
   const all = feedUpcoming();
   const live = all.filter((ev) => eventStatus(ev) === "live");
@@ -298,6 +332,15 @@ function renderFeed() {
     </div>
 
     ${ticker}
+
+    ${(() => {
+      const fresh = newFromFollowed();
+      if (!fresh.length) return "";
+      return `<div class="feed-section feed-followed" id="feed-followed">
+        <div class="feed-sec-head"><h2><span class="ff-bell" aria-hidden="true">🔔</span> New from hosts you follow</h2><button class="link-btn" onclick="dismissFollowedNew()">Clear</button></div>
+        <div class="fr-list">${fresh.slice(0, 5).map((ev) => feedRowHtml(ev, "New")).join("")}</div>
+      </div>`;
+    })()}
 
     ${
       featured.length

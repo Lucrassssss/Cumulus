@@ -496,6 +496,52 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator(".hp-past", { hasText: "Too Old" })).toHaveCount(0);
   });
 
+  test("host card on event page opens the profile; notify toggle + Discover strip", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      const now = Date.now();
+      const ev = {
+        id: "notify-ev", title: "Fresh Gig", category: "Live Music",
+        host: "Bell Host", hostId: "bell-host", venue: "V", area: "A",
+        lat: 51.5, lon: -0.1,
+        startTime: new Date(now + 86400000).toISOString(),
+        endTime: new Date(now + 90000000).toISOString(),
+        desc: "d", capacity: 20, price: 5, createdAt: now - 3600000,
+      };
+      computeEventDates(ev);
+      EVENTS.push(ev);
+      openEvent("notify-ev");
+    });
+    // Hosted-by is a tappable card that says where it goes.
+    const card = page.locator(".host-card-main");
+    await expect(card).toContainText("Hosted by");
+    await expect(card).toContainText("View profile");
+    await card.click();
+    await expect(page.locator(".host-profile-identity h2")).toContainText("Bell Host");
+
+    // Guest: the notify toggle asks to sign in instead of silently failing.
+    await page.locator(".hp-notify-row").click();
+    await expect(page.locator("#lp-signup-overlay")).toBeVisible();
+    await page.evaluate(() => closeLpSignup());
+
+    // Signed in with notify on → Discover shows the new event, Clear dismisses it.
+    await page.evaluate(() => {
+      state.userId = "test-user-uuid";
+      state.profileName = "Test";
+      state.notifyHostIds = ["bell-host"];
+      state.eventsLoaded = true;
+      goFeed();
+    });
+    await expect(page.locator("#feed-followed")).toContainText("Fresh Gig");
+    await page.locator("#feed-followed .link-btn").click();
+    await expect(page.locator("#feed-followed")).toHaveCount(0);
+    await page.evaluate(() => goFeed());
+    await expect(page.locator("#feed-followed")).toHaveCount(0);
+  });
+
   test("event detail: fully visible and bookable, no gating", async ({
     page,
   }) => {
