@@ -4346,3 +4346,24 @@ html body .fhc-go {
     font-size: 20px !important;
   }
 }
+
+/* Discover header: solid (was a gradient fading to transparent, so list
+   content showed through while scrolling), and the sticky filter bar
+   docks flush beneath it with no gap for content to peek through. */
+.feed {
+  --feed-head-h: calc(env(safe-area-inset-top, 0px) + 64px);
+}
+html body .feed-head {
+  background: var(--bg) !important;
+  min-height: var(--feed-head-h);
+  box-sizing: border-box;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
+  padding-bottom: 12px !important;
+}
+html body .feed-sticky-filters {
+  top: calc(var(--feed-head-h) - 1px) !important;
+  background: var(--bg) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 1px 0 var(--line-soft);
+}
