@@ -579,6 +579,31 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator(".appear-card .appear-opt.on")).toHaveText("System");
   });
 
+  test("map lighting follows the Appearance setting; host CTA opens the host info page", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await enterApp(page);
+    const preset = () => page.evaluate(() => mapLightPreset());
+    await page.evaluate(() => setThemePref("dark"));
+    expect(await preset()).toBe("night");
+    await page.evaluate(() => setThemePref("light"));
+    expect(await preset()).toBe("day");
+
+    // Feed's "For organisers" box → host info page, whose CTA leads to the
+    // application (sign-in gated for guests).
+    await page.evaluate(() => goFeed());
+    await page.click(".feed-host-cta");
+    await expect(page.locator(".hx-h1")).toBeVisible();
+    await expect(page.locator(".hx-bar")).toContainText("Apply to host");
+    await page.evaluate(() => {
+      state.userId = "test-user-uuid";
+      state.profileName = "Test User";
+    });
+    await page.locator(".hx-bar .v-btn").click();
+    await expect(page.locator(".host-cat-chip").first()).toBeVisible();
+  });
+
   test("Admin panel: Reported events entry present", async ({ page }) => {
     await page.goto("/");
     await enterApp(page);

@@ -327,7 +327,7 @@ function renderFeed() {
       <div id="feed-results">${feedResultsHtml()}</div>
     </div>
 
-    <div class="feed-host-cta" onclick="openHost()" role="button" tabindex="0">
+    <div class="feed-host-cta" onclick="openHostApply()" role="button" tabindex="0">
       <div>
         <div class="fhc-kicker">For organisers</div>
         <div class="fhc-title">Throw something.<br/>Keep 100% of the ticket price.</div>

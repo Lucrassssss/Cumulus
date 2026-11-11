@@ -250,76 +250,155 @@ function hostApplyShowForm() {
 }
 
 function renderHostApplyView() {
-  if (isApprovedHost()) {
-    return `<button class="back-btn" onclick="goBack()">←</button>
+  if (_hostApplyStep === "form") {
+    if (isApprovedHost()) {
+      return `<button class="back-btn" onclick="goBack()">←</button>
       <div class="connect-header"><h2>You're already a host</h2><p>Head to the Host tab to publish an event.</p></div>`;
-  }
-  if (state.hostApplicationStatus === "pending") {
-    return `<button class="back-btn" onclick="goBack()">←</button>
+    }
+    if (state.hostApplicationStatus === "pending") {
+      return `<button class="back-btn" onclick="goBack()">←</button>
       <div class="connect-header"><h2>Application pending</h2><p>We're reviewing your host application — usually within 48 hours. You'll get the Host tab as soon as it's approved.</p></div>`;
+    }
+    return renderHostApplyForm();
   }
-  return _hostApplyStep === "form" ? renderHostApplyForm() : renderHostApplyBrochure();
+  return renderHostApplyBrochure();
 }
 
-// The pitch: what a host actually gets — for them and their community —
-// before asking them to fill in a single field. Rebuilt from the old
-// marketing landing page's "For Venues & Promoters" section (the one part
-// of that page that was genuinely host-specific rather than generic
-// attendee marketing) using its own dark venues-pitch panel and stat-row
-// CSS, which had otherwise gone unused once the general landing gate was
-// removed — reused rather than left dead or rewritten from scratch.
+// The host info / pitch page — reached from the Discover feed's "For
+// organisers" box and Account → Become a host. Everything on it is real:
+// 0% host fee and the flat buyer fee come from getCumulusFee(), payouts
+// from the 24h/48h trust-tier release schedule, features that exist today.
+// Its one CTA adapts: apply → (approved) create an event → (pending) note.
+function hostInfoCta(big) {
+  const cls = `v-btn${big ? " wide hx-cta-big" : ""}`;
+  if (isApprovedHost())
+    return `<button class="${cls}" onclick="openHost()">Create an event →</button>`;
+  if (state.hostApplicationStatus === "pending")
+    return `<button class="${cls} ghost" disabled>Application pending · ~48h</button>`;
+  return `<button class="${cls}" onclick="hostApplyShowForm()">Apply to host →</button>`;
+}
+
 function renderHostApplyBrochure() {
+  const ic = (d) =>
+    `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
   const features = [
-    [
-      `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg>`,
-      "Map-first discovery",
-      "Your event pinned and filterable across London's live event map.",
-    ],
-    [
-      `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/></svg>`,
-      "Zero-fee ticketing",
-      "You keep 100% of your ticket price. Cumulus adds only a flat platform fee to the buyer — no percentage cuts, ever.",
-    ],
-    [
-      `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H9l-4 4V5Z"/><path d="M8 9h8M8 12h5"/></svg>`,
-      "Squad ticketing",
-      "Groups buy together and share instant claim links — higher show-up rates, no faff at the door.",
-    ],
-    [
-      `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"><path d="M12 3.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6-4.5-4.2 6.1-.7L12 3.5Z"/></svg>`,
-      "Featured placement",
-      "Major events get priority placement across the Cumulus platform.",
-    ],
+    [ic('<path d="M12 21s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/>'), "On the map, instantly", "Your event becomes a poster pin on London's live map and a card in the Discover feed."],
+    [ic('<path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/>'), "Keep 100% of the ticket", "No percentage cut. The buyer pays a small flat platform fee on top — never you."],
+    [ic('<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c.7-3.4 3.2-5 6-5s5.3 1.6 6 5M15 15.2c2.6 0 4.6 1.4 5.2 4.8"/>'), "Squad tickets", "One person buys for the group and shares claim links — friends turn up together."],
+    [ic('<path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2"/><path d="M7 12h10"/>'), "Door scanner", "Check guests in from your phone. Works offline and syncs when you're back on signal."],
+    [ic('<path d="M4 19V5M4 19h16"/><path d="m8 15 3-4 3 2 4-6"/>'), "Live numbers", "See sales, check-ins and repeat attendees as they happen."],
+    [ic('<path d="M4 6h16M4 12h10M4 18h7"/><path d="m16 15 2 2 4-4"/>'), "Waitlists & promo codes", "Sold out? A freed spot goes straight to the next person in line. Run discount codes in a tap."],
   ];
-  return `
-    <button class="back-btn" onclick="goBack()">←</button>
-    <section class="lp-venues-section" style="padding:36px 22px;border-radius:var(--r-lg);margin-top:14px;">
-      <div class="lp-venues-inner" style="grid-template-columns:1fr;gap:28px;">
-        <div class="lp-venues-text">
-          <div class="lp-section-kicker">For Hosts</div>
-          <h2 class="lp-section-title" style="color:#fff;">Your event.<br>Your audience.</h2>
-          <p class="lp-venues-sub">List your event on Cumulus and reach Londoners already looking for their next night out. We handle discovery, ticketing, and payouts — you focus on the event.</p>
-          <div class="lp-venue-features">
-            ${features
-              .map(
-                ([icon, title, desc]) => `<div class="lp-venue-feat"><div class="lp-feat-icon">${icon}</div><div><div class="lp-feat-title">${title}</div><div class="lp-feat-desc">${desc}</div></div></div>`,
-              )
-              .join("")}
-          </div>
-        </div>
-        <div class="lp-venues-stats" style="flex-direction:row;">
-          <div class="lp-vstat" style="flex:1;flex-direction:column;align-items:flex-start;gap:2px;"><div class="lp-vstat-num">0%</div><div class="lp-vstat-label">Host fees</div></div>
-          <div class="lp-vstat" style="flex:1;flex-direction:column;align-items:flex-start;gap:2px;"><div class="lp-vstat-num">9</div><div class="lp-vstat-label">Categories</div></div>
-          <div class="lp-vstat" style="flex:1;flex-direction:column;align-items:flex-start;gap:2px;"><div class="lp-vstat-num">32</div><div class="lp-vstat-label">Boroughs</div></div>
-          <div class="lp-vstat" style="flex:1;flex-direction:column;align-items:flex-start;gap:2px;"><div class="lp-vstat-num">100%</div><div class="lp-vstat-label">Community-led</div></div>
+  const fee = typeof getCumulusFee === "function" ? getCumulusFee(20) : 2.5;
+  // Decorative poster wall — sample categories, not real listings.
+  const wall = [
+    ["Live Music", -9, 6, 0],
+    ["Food & Drink", 7, 62, 1],
+    ["Creative", -4, 30, 2],
+    ["Gaming", 11, 80, 3],
+    ["Movie Nights", -12, 48, 4],
+  ]
+    .map(([cat, rot, left, i]) => {
+      const ev = { id: "hx" + i, category: cat };
+      return `<span class="hx-poster ${posterClass(ev)}" style="${posterStyle(ev)}--r:${rot}deg;left:${left}%;--i:${i};">${posterGlyph(ev)}</span>`;
+    })
+    .join("");
+  const ticker = ["0% host fee", "Paid out in 24–48h", "Squad tickets", "Door scanner", "Waitlists", "Promo codes", "Live map + feed"];
+
+  setTimeout(initHostInfoReveal, 0);
+  return `<div class="hx">
+    <section class="hx-hero">
+      <div class="hx-wall" aria-hidden="true">${wall}</div>
+      <div class="hx-hero-bar">
+        <button class="glass-btn" onclick="goBack()" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      </div>
+      <div class="hx-hero-copy">
+        <div class="hx-kicker">For organisers</div>
+        <h1 class="hx-h1">Throw<br/>something.</h1>
+        <p class="hx-lede">Put your night on London's live map. Sell tickets, keep every penny of the price, and get paid out fast.</p>
+        <div class="hx-hero-ctas">
+          ${hostInfoCta(false)}
+          <button class="v-btn ghost hx-ghost" onclick="document.getElementById('hx-how')?.scrollIntoView({behavior:'smooth'})">How it works ↓</button>
         </div>
       </div>
     </section>
-    <div class="host-section">
-      <div class="host-section-title">Not just an event — your community, in one room</div>
-      <div style="font-size:13px;color:var(--text-muted);line-height:1.7;">Cumulus was built on one belief: the best things happen when people who live near each other actually meet — not online. Every event you host gives your neighbourhood a real reason to show up for each other, and gives you a direct line to the people who'll keep coming back.</div>
+
+    <div class="hx-ticker" aria-hidden="true"><div class="hx-ticker-track">${[...ticker, ...ticker, ...ticker]
+      .map((t) => `<span>${t}</span><i>✦</i>`)
+      .join("")}</div></div>
+
+    <section class="hx-sec">
+      <div class="hx-stats hx-reveal">
+        <div><b>0%</b><span>Host fee</span></div>
+        <div><b>24–48h</b><span>Payouts</span></div>
+        <div><b>${Object.keys(CATS).length}</b><span>Categories</span></div>
+      </div>
+    </section>
+
+    <section class="hx-sec">
+      <h2 class="hx-h2 hx-reveal">Everything you need.<br/><em>Nothing you don't.</em></h2>
+      <div class="hx-grid">${features
+        .map(
+          ([icon, t, d], i) => `<article class="hx-card hx-reveal" style="--d:${i * 70}ms"><div class="hx-ic">${icon}</div><h3>${t}</h3><p>${d}</p></article>`,
+        )
+        .join("")}</div>
+    </section>
+
+    <section class="hx-sec hx-money hx-reveal">
+      <div class="hx-kicker dark">The maths</div>
+      <h2 class="hx-h2">Your £20 ticket<br/>is your £20.</h2>
+      <div class="hx-receipt">
+        <div><span>Ticket price</span><b>£20.00</b></div>
+        <div><span>Cumulus fee to you</span><b>£0.00</b></div>
+        <div class="tot"><span>You receive</span><b>£20.00</b></div>
+        <div class="note"><span>The buyer pays a flat £${fee.toFixed(2)} platform fee on top — no percentage cuts.</span></div>
+      </div>
+    </section>
+
+    <section class="hx-sec" id="hx-how">
+      <h2 class="hx-h2 hx-reveal">Live in three steps</h2>
+      <ol class="hx-steps">
+        <li class="hx-reveal" style="--d:0ms"><span class="hx-num">01</span><div><h3>Apply</h3><p>Tell us who you are and what you run. Takes two minutes; we review within about 48 hours.</p></div></li>
+        <li class="hx-reveal" style="--d:90ms"><span class="hx-num">02</span><div><h3>Build your event</h3><p>Add a flyer, price tiers and a venue. Drop your pin on the map and watch your poster appear.</p></div></li>
+        <li class="hx-reveal" style="--d:180ms"><span class="hx-num">03</span><div><h3>Fill the room</h3><p>Sell tickets, scan people in at the door, and get paid out 24–48h after the event.</p></div></li>
+      </ol>
+    </section>
+
+    <section class="hx-sec hx-reveal">
+      <div class="hx-quote">Built on one belief: the best things happen when people who live near each other actually meet — not online.</div>
+    </section>
+
+    <div class="hx-bar">
+      <div class="hx-bar-copy"><b>Ready?</b><span>${isApprovedHost() ? "You're approved to host" : "Free to apply"}</span></div>
+      ${hostInfoCta(true)}
     </div>
-    <button class="btn" style="width:100%;margin-bottom:16px;" onclick="hostApplyShowForm()">Apply to host →</button>`;
+  </div>`;
+}
+
+// Scroll-reveal for the host page — one observer, disconnected once every
+// element has shown (no leaked observers across re-renders).
+let _hxObserver = null;
+function initHostInfoReveal() {
+  if (_hxObserver) _hxObserver.disconnect();
+  const els = document.querySelectorAll(".hx .hx-reveal:not(.in)");
+  if (!els.length) return;
+  if (!window.IntersectionObserver) {
+    els.forEach((el) => el.classList.add("in"));
+    return;
+  }
+  let left = els.length;
+  _hxObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        e.target.classList.add("in");
+        _hxObserver.unobserve(e.target);
+        if (--left === 0) _hxObserver.disconnect();
+      });
+    },
+    { threshold: 0.15, rootMargin: "0px 0px -40px 0px" },
+  );
+  els.forEach((el) => _hxObserver.observe(el));
 }
 
 function renderHostApplyForm() {

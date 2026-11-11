@@ -270,26 +270,11 @@ async function applyRealWeather(map, force = false) {
     map.setSnow(null);
     map.setFog(null);
 
-    // Calculate precision day/dawn/dusk/night based on real local time
-    const now = new Date();
-    const sunrise = new Date(data.daily.sunrise[0]);
-    const sunset = new Date(data.daily.sunset[0]);
-
-    let light = "day";
-    const msIn45Mins = 45 * 60 * 1000;
-
-    if (now < new Date(sunrise.getTime() - msIn45Mins)) {
-      light = "night";
-    } else if (now < sunrise) {
-      light = "dawn";
-    } else if (now < sunset) {
-      light = "day";
-    } else if (now < new Date(sunset.getTime() + msIn45Mins)) {
-      light = "dusk";
-    } else {
-      light = "night";
-    }
-
+    // Lighting comes from the Appearance setting (mapLightPreset) — weather
+    // only adds rain/snow/fog on top. It used to compute its own
+    // dawn/day/dusk/night from sunrise and re-apply it every 15 minutes,
+    // which overrode the user's Light/Dark choice.
+    const light = mapLightPreset();
     map.setConfigProperty("basemap", "lightPreset", light);
     map.setConfigProperty("basemap", "show3dTrees", false);
 
@@ -304,7 +289,7 @@ async function applyRealWeather(map, force = false) {
         "high-color": light === "day" ? "#b0c4de" : "#222",
         "space-color": "#000",
         "star-intensity":
-          light === "night" || light === "dusk" || light === "dawn" ? 0.8 : 0,
+          light === "night" ? 0.8 : 0,
       });
     }
     // Drizzle / Rain (51-67, 80-82)
@@ -320,7 +305,7 @@ async function applyRealWeather(map, force = false) {
         "high-color": light === "day" ? "#9fb1be" : "#222",
         "space-color": "#000",
         "star-intensity":
-          light === "night" || light === "dusk" || light === "dawn" ? 0.5 : 0,
+          light === "night" ? 0.5 : 0,
       });
     }
     // Snow (71-77, 85-86)
@@ -336,14 +321,13 @@ async function applyRealWeather(map, force = false) {
         "high-color": light === "day" ? "#d9e2e8" : "#112",
         "space-color": "#000",
         "star-intensity":
-          light === "night" || light === "dusk" || light === "dawn" ? 1.0 : 0,
+          light === "night" ? 1.0 : 0,
       });
     }
     // Thunderstorm (95, 96, 99)
     else if (code >= 95) {
       map.setRain({ density: 1, intensity: 1, color: "#556677" });
-      if (light === "day")
-        map.setConfigProperty("basemap", "lightPreset", "dusk"); // Darken for storm
+      // (No forced "dusk" for storms any more — lighting is the user's call.)
     }
 
     // Schedule next poll in 15 minutes to keep it continuously synced
@@ -501,7 +485,7 @@ function initLeaflet() {
     // Default to time-based theme for safety, overridden by real weather shortly
     const isDark =
       document.documentElement.getAttribute("data-theme") === "dark";
-    lmap.setConfigProperty("basemap", "lightPreset", isDark ? "night" : "day");
+    lmap.setConfigProperty("basemap", "lightPreset", mapLightPreset());
 
     // Performance optimizations
     lmap.setConfigProperty("basemap", "show3dTrees", tier === "high");
@@ -576,11 +560,7 @@ function initHostMap() {
   hostMap.on("style.load", () => {
     const isDark =
       document.documentElement.getAttribute("data-theme") === "dark";
-    hostMap.setConfigProperty(
-      "basemap",
-      "lightPreset",
-      isDark ? "night" : "day",
-    );
+    hostMap.setConfigProperty("basemap", "lightPreset", mapLightPreset());
     hostMap.setConfigProperty("basemap", "show3dTrees", false);
     hostMap.setConfigProperty("basemap", "showPointOfInterestLabels", false);
     hostMap.setConfigProperty("basemap", "showTransitLabels", false);
@@ -591,21 +571,57 @@ function initHostMap() {
   hostMap.on("style.load", () => {
     applyMapChrome(hostMap, false);
   });
+  // The location marker is a live preview of the host's own poster pin —
+  // exactly what attendees will see on the map — re-drawn as they change the
+  // title/category/price. Tap the map or drag the pin to place it.
   const hostEl = document.createElement("div");
-  hostEl.className = "evpin-wrap";
-  hostEl.innerHTML = `<div style="width:22px;height:22px;border-radius:50%;background:var(--accent);border:2.5px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.5),0 2px 8px rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;"><span style="width:6px;height:6px;border-radius:50%;background:#fff;display:block;"></span></div>`;
-  hostMarker = new mapboxgl.Marker({ element: hostEl })
+  hostEl.className = "mp-root host-preview-pin";
+  renderHostPreviewPin(hostEl);
+  hostMarker = new mapboxgl.Marker({ element: hostEl, anchor: "bottom", draggable: true })
     .setLngLat([newEventLon, newEventLat])
     .addTo(hostMap);
-  hostMap.on("click", function (e) {
-    newEventLat = e.lngLat.lat;
-    newEventLon = e.lngLat.lng;
-    hostMarker.setLngLat([newEventLon, newEventLat]);
+  const setPinned = (lngLat) => {
+    newEventLat = lngLat.lat;
+    newEventLon = lngLat.lng;
     const el = document.getElementById("host-lat-lon-text");
     if (el)
       el.innerText = `Location Pinned: (${newEventLat.toFixed(4)}, ${newEventLon.toFixed(4)})`;
+    hostEl.classList.remove("dropped");
+    void hostEl.offsetWidth;
+    hostEl.classList.add("dropped");
+  };
+  hostMarker.on("dragstart", () => hostEl.classList.add("dragging"));
+  hostMarker.on("dragend", () => {
+    hostEl.classList.remove("dragging");
+    setPinned(hostMarker.getLngLat());
+  });
+  hostMap.on("click", function (e) {
+    hostMarker.setLngLat([e.lngLat.lng, e.lngLat.lat]);
+    setPinned(e.lngLat);
+  });
+  ["host-title", "host-cat", "host-price"].forEach((id) => {
+    const input = document.getElementById(id);
+    if (input && !input.dataset.pinPreview) {
+      input.dataset.pinPreview = "1";
+      input.addEventListener("input", () => renderHostPreviewPin(hostEl));
+      input.addEventListener("change", () => renderHostPreviewPin(hostEl));
+    }
   });
   setTimeout(() => hostMap.resize(), 50);
+}
+
+// Draws the host form's current values as a poster pin (same markup and
+// styles as 06-map-animations.js _buildPinEl).
+function renderHostPreviewPin(el) {
+  const title = (document.getElementById("host-title")?.value || "").trim() || "Your event";
+  const category = document.getElementById("host-cat")?.value || Object.keys(CATS)[0];
+  const price = parseFloat(document.getElementById("host-price")?.value || "") || 0;
+  const ev = { id: "host-preview-" + category, title, category };
+  el.innerHTML = `<div class="mp" style="--tilt:-3deg;">
+      <span class="mp-tile ${posterClass(ev)}" style="${posterStyle(ev)}"><span class="mp-glyph">${_pinGlyphSvg(category, 18)}</span></span>
+      <span class="mp-label" style="opacity:1;transform:none;"><b>${escapeHtml(title.length > 16 ? title.slice(0, 15) + "…" : title)}</b>${price ? ` · £${price}` : " · Free"}</span>
+      <span class="mp-tail" aria-hidden="true"></span>
+    </div>`;
 }
 
 // ---- ADDRESS SEARCH ----

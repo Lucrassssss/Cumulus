@@ -31,6 +31,7 @@ function setThemePref(pref) {
   root.classList.add("theme-switching");
   setTimeout(() => root.classList.remove("theme-switching"), 450);
   applyDayNight();
+  syncMapsToTheme();
   document.querySelectorAll("[data-theme-pref]").forEach((b) => {
     const on = b.dataset.themePref === pref;
     b.classList.toggle("on", on);
@@ -105,8 +106,7 @@ function applyDayNight() {
   if (t === state.theme) return;
   state.theme = t;
   applyTheme();
-  if (lmap) applyMapChrome(lmap, true);
-  if (hostMap) applyMapChrome(hostMap, false);
+  syncMapsToTheme();
 }
 let _dayNightTimer = null;
 function startDayNightCycle() {
@@ -134,14 +134,21 @@ function mapboxStyleUrl() {
 // decluttered "underground" feel — hide commercial POI + transit labels so
 // the only pins that matter are our events. Safe no-op if the style isn't
 // ready or a property is unsupported.
+// Map lighting follows the app's Appearance setting exactly: whatever
+// theme is showing (Auto → London time, System → device, Light, Dark), the
+// map uses the matching Mapbox Standard preset. Single source of truth —
+// weather effects layer on top but never change the lighting.
+function mapLightPreset() {
+  return state.theme === "dark" ? "night" : "day";
+}
+function syncMapsToTheme() {
+  if (lmap) applyMapChrome(lmap, true);
+  if (hostMap) applyMapChrome(hostMap, false);
+}
 function applyMapChrome(map, declutter) {
   if (!map) return;
   try {
-    map.setConfigProperty(
-      "basemap",
-      "lightPreset",
-      state.theme === "dark" ? "night" : "day",
-    );
+    map.setConfigProperty("basemap", "lightPreset", mapLightPreset());
     map.setConfigProperty("basemap", "show3dTrees", false); // Universally disable trees for performance
     if (declutter) {
       map.setConfigProperty("basemap", "showPointOfInterestLabels", false);
