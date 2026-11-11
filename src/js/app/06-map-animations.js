@@ -71,7 +71,7 @@ function _buildPinEl(props) {
       </span>
       ${count > 1 ? `<span class="mp-count">${count}</span>` : ""}
       ${live ? '<span class="mp-live">LIVE</span>' : ""}
-      <span class="mp-label"><b>${escapeHtml(_pinTimeLabel(lead))}</b>${price ? ` · £${price}` : " · Free"}</span>
+      <span class="mp-label"><b>${escapeHtml(_pinTimeLabel(lead))}</b>${count > 1 ? ` <em>+${count - 1} more</em>` : price ? ` · £${price}` : " · Free"}</span>
       <span class="mp-tail" aria-hidden="true"></span>
     </button>`;
   el.querySelector(".mp").addEventListener("click", (e) => {
@@ -250,6 +250,33 @@ function selectPin(key, evs, coords) {
   }
 }
 
+function _mcardHtml(ev) {
+  const st = eventStatus(ev);
+  return `<article class="mcard" onclick="removeActiveHtmlMarker();openEvent('${ev.id}')" role="button" tabindex="0" aria-label="${escapeHtml(ev.title)}">
+    <div class="mcard-art ${posterClass(ev)}" style="${posterStyle(ev)}">${posterGlyph(ev)}</div>
+    <div class="mcard-body">
+      <div class="fr-date${st === "live" ? " live" : ""}">${st === "live" ? '<span class="pulse"></span>' : ""}${feedDateLabel(ev)} · ${feedTimeLabel(ev)}</div>
+      <h3 class="mcard-title">${escapeHtml(ev.title)}</h3>
+      <div class="fr-venue">${escapeHtml(ev.venue || "")}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""}</div>
+      <div class="mcard-foot"><span class="fr-price${eventPrice(ev) ? "" : " free"}">${feedPriceLabel(ev)}</span><span class="mcard-go">View →</span></div>
+    </div>
+  </article>`;
+}
+
+// Short "when" label for the date tabs: "LIVE", "Tonight 19:00", "Thu 20:00",
+// "Sat 6 Dec" (date only once it's more than a week out).
+function _mcardWhen(ev) {
+  if (eventStatus(ev) === "live") return "Live now";
+  const d = new Date(ev.startsAt);
+  const day0 = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((day0(d) - day0(new Date())) / 86400000);
+  const t = feedTimeLabel(ev);
+  if (diff === 0) return `${d.getHours() >= 17 ? "Tonight" : "Today"} ${t}`;
+  if (diff === 1) return `Tomorrow ${t}`;
+  if (diff < 7) return `${d.toLocaleDateString("en-GB", { weekday: "short" })} ${t}`;
+  return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+}
+
 function showMapCards(evs) {
   const host = document.getElementById("main-map");
   if (!host) return;
@@ -260,24 +287,98 @@ function showMapCards(evs) {
     sheet.className = "map-cards";
     host.appendChild(sheet);
   }
-  sheet.innerHTML = `${evs.length > 1 ? `<div class="mcard-head"><span>${evs.length} events here</span><span>Swipe →</span></div>` : ""}
-    <div class="mcard-rail">${evs
-      .map((ev) => {
-        const st = eventStatus(ev);
-        return `<article class="mcard" onclick="removeActiveHtmlMarker();openEvent('${ev.id}')" role="button" tabindex="0" aria-label="${escapeHtml(ev.title)}">
-          <div class="mcard-art ${posterClass(ev)}" style="${posterStyle(ev)}">${posterGlyph(ev)}</div>
-          <div class="mcard-body">
-            <div class="fr-date${st === "live" ? " live" : ""}">${st === "live" ? '<span class="pulse"></span>' : ""}${feedDateLabel(ev)} · ${feedTimeLabel(ev)}</div>
-            <h3 class="mcard-title">${escapeHtml(ev.title)}</h3>
-            <div class="fr-venue">${escapeHtml(ev.venue || "")}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""}</div>
-            <div class="mcard-foot"><span class="fr-price${eventPrice(ev) ? "" : " free"}">${feedPriceLabel(ev)}</span><span class="mcard-go">View →</span></div>
+  const multi = evs.length > 1;
+  const venue = evs[0] && (evs[0].venue || evs[0].area || "This spot");
+  sheet.classList.toggle("multi", multi);
+  sheet.innerHTML = multi
+    ? `<div class="mcard-panel">
+        <div class="mcard-top">
+          <div class="mcard-where">
+            <b>${escapeHtml(venue)}</b>
+            <span><i class="mcard-count">${evs.length}</i> events at this spot</span>
           </div>
-        </article>`;
-      })
-      .join("")}</div>`;
+          <div class="mcard-nav">
+            <button class="mcard-arrow" data-dir="-1" aria-label="Previous event"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+            <span class="mcard-pos" aria-live="polite">1 / ${evs.length}</span>
+            <button class="mcard-arrow" data-dir="1" aria-label="Next event"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+          </div>
+        </div>
+        <div class="mcard-dates" role="tablist" aria-label="When">${evs
+          .map(
+            (ev, i) =>
+              `<button role="tab" class="mcard-date${i === 0 ? " on" : ""}${eventStatus(ev) === "live" ? " live" : ""}" data-i="${i}" aria-selected="${i === 0}">${eventStatus(ev) === "live" ? '<span class="pulse"></span>' : ""}${escapeHtml(_mcardWhen(ev))}</button>`,
+          )
+          .join("")}</div>
+        <div class="mcard-rail">${evs.map(_mcardHtml).join("")}</div>
+      </div>`
+    : `<div class="mcard-rail">${evs.map(_mcardHtml).join("")}</div>`;
+  if (multi) _wireMapCardPager(sheet, evs.length);
   sheet.classList.remove("out");
   void sheet.offsetWidth;
   sheet.classList.add("in");
+}
+
+// Keeps arrows, "n / N" and the date tabs in sync with the card rail —
+// whether the person swipes, taps an arrow or taps a date.
+function _wireMapCardPager(sheet, count) {
+  const rail = sheet.querySelector(".mcard-rail");
+  const pos = sheet.querySelector(".mcard-pos");
+  const dates = [...sheet.querySelectorAll(".mcard-date")];
+  const [prev, next] = sheet.querySelectorAll(".mcard-arrow");
+  const cards = [...rail.querySelectorAll(".mcard")];
+  let current = 0;
+  const go = (i) => {
+    i = Math.max(0, Math.min(count - 1, i));
+    const c = cards[i];
+    if (c) rail.scrollTo({ left: c.offsetLeft - rail.offsetLeft - (rail.clientWidth - c.offsetWidth) / 2, behavior: "smooth" });
+    mark(i);
+  };
+  const mark = (i) => {
+    if (i === current && pos.textContent.startsWith(`${i + 1} `)) return;
+    current = i;
+    pos.textContent = `${i + 1} / ${count}`;
+    prev.disabled = i === 0;
+    next.disabled = i === count - 1;
+    dates.forEach((d, k) => {
+      d.classList.toggle("on", k === i);
+      d.setAttribute("aria-selected", k === i ? "true" : "false");
+    });
+    const tab = dates[i];
+    if (tab) tab.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    cards.forEach((c, k) => c.classList.toggle("on", k === i));
+  };
+  [prev, next].forEach((b) =>
+    b.addEventListener("click", (e) => {
+      e.stopPropagation();
+      go(current + Number(b.dataset.dir));
+    }),
+  );
+  dates.forEach((d) =>
+    d.addEventListener("click", (e) => {
+      e.stopPropagation();
+      go(Number(d.dataset.i));
+    }),
+  );
+  let raf = null;
+  rail.addEventListener("scroll", () => {
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = null;
+      const mid = rail.scrollLeft + rail.clientWidth / 2;
+      let best = 0,
+        bestD = Infinity;
+      cards.forEach((c, k) => {
+        const d = Math.abs(c.offsetLeft - rail.offsetLeft + c.offsetWidth / 2 - mid);
+        if (d < bestD) {
+          bestD = d;
+          best = k;
+        }
+      });
+      mark(best);
+    });
+  });
+  current = -1;
+  mark(0);
 }
 
 function removeActiveHtmlMarker() {

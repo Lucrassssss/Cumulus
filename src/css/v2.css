@@ -2231,11 +2231,8 @@ html body .section-title::after {
 .selected .mp-tail {
   background: var(--volt);
 }
-.has-selection .mp-root:not(.selected) > .mp,
-.has-selection .mc-root > .mc {
-  opacity: 0.45;
-  filter: saturate(0.3);
-}
+/* (Other pins stay at full strength while one is selected — the selected
+   pin's spring + Volt border is enough to pick it out.) */
 
 /* Cluster: a stack of the real posters inside it + Volt count */
 .mc-stack {
@@ -2366,7 +2363,7 @@ html body .section-title::after {
     transform: translateY(24px);
   }
 }
-.mcard-head {
+.mcard-head-unused {
   display: flex;
   justify-content: space-between;
   margin: 0 auto 8px;
@@ -3543,4 +3540,152 @@ html body .settings-btn:hover svg {
 }
 html body .settings-btn.on svg {
   transform: rotate(120deg);
+}
+
+
+/* ═══ Map card sheet: multi-event venues ════════════════════════════════
+   One solid panel (not floating text over the map): venue + count, arrows
+   with n / N, date tabs showing when each event at this spot happens. */
+.map-cards.multi .mcard-rail {
+  padding: 0 0 2px;
+  margin: 0;
+  max-width: none;
+  scroll-padding: 0;
+}
+.mcard-panel {
+  margin: 0 auto;
+  width: min(584px, calc(100% - 24px));
+  padding: 14px 12px 12px;
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.45);
+}
+.mcard-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 4px 10px;
+}
+.mcard-where {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.mcard-where b {
+  font: 800 18px/1.1 var(--font-display);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mcard-where span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 13px var(--font-sans);
+  color: var(--text-soft);
+}
+.mcard-count {
+  font-style: normal;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--volt);
+  color: var(--volt-ink);
+  font: 800 12px/22px var(--font-sans);
+  text-align: center;
+}
+.mcard-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.mcard-arrow {
+  appearance: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 0;
+  display: grid;
+  place-items: center;
+  background: var(--cta-bg);
+  color: var(--cta-fg);
+  cursor: pointer;
+  transition: transform 0.2s var(--spring), opacity 0.2s ease, background 0.2s ease;
+}
+.mcard-arrow:active {
+  transform: scale(0.9);
+}
+.mcard-arrow[disabled] {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: default;
+}
+.mcard-pos {
+  min-width: 42px;
+  text-align: center;
+  font: 700 13px var(--font-mono);
+  color: var(--text);
+}
+.mcard-dates {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 0 4px 12px;
+  scrollbar-width: none;
+}
+.mcard-dates::-webkit-scrollbar {
+  display: none;
+}
+.mcard-date {
+  appearance: none;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 13px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: transparent;
+  color: var(--text-soft);
+  font: 700 12.5px var(--font-sans);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.mcard-date.on {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+.mcard-date.live:not(.on) {
+  color: var(--hot);
+  border-color: color-mix(in srgb, var(--hot) 45%, transparent);
+}
+.map-cards.multi .mcard {
+  flex: 0 0 100%;
+  max-width: none;
+  background: var(--surface-2);
+  border: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  opacity: 0.55;
+  transform: scale(0.97);
+  transition: opacity 0.3s ease, transform 0.35s var(--spring);
+}
+.map-cards.multi .mcard.on {
+  opacity: 1;
+  transform: none;
+}
+.mp-label em {
+  font-style: normal;
+  font-weight: 800;
+  color: var(--accent);
 }

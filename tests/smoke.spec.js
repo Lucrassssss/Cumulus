@@ -546,6 +546,20 @@ test.describe("Cumulus smoke", () => {
     expect(res.hasTile).toBeTruthy();
     expect(res.count).toBe("2");
     expect(res.isLive).toBeTruthy();
+
+    // Multi-event venue sheet: panel with count, arrows + n/N, date tabs.
+    await page.evaluate(() => {
+      const evs = EVENTS.filter((e) => e.id === "pin-a" || e.id === "pin-b");
+      let host = document.getElementById("main-map");
+      host.style.display = "block";
+      showMapCards(evs);
+    });
+    await expect(page.locator("#map-cards .mcard-count")).toHaveText("2");
+    await expect(page.locator("#map-cards .mcard-pos")).toHaveText("1 / 2");
+    await expect(page.locator("#map-cards .mcard-date")).toHaveCount(2);
+    await page.locator('#map-cards .mcard-arrow[data-dir="1"]').click();
+    await expect(page.locator("#map-cards .mcard-pos")).toHaveText("2 / 2");
+    await expect(page.locator("#map-cards .mcard-date.on")).toHaveAttribute("data-i", "1");
   });
 
   test("appearance: light / dark / system preference applies, persists and follows the OS", async ({
