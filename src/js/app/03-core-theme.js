@@ -37,8 +37,6 @@ function setThemePref(pref) {
     b.classList.toggle("on", on);
     b.setAttribute("aria-checked", on ? "true" : "false");
   });
-  const sub = document.getElementById("appearance-sub");
-  if (sub) sub.textContent = themePrefDescription(pref);
 }
 function themePrefDescription(pref) {
   return {
@@ -57,24 +55,29 @@ try {
     });
 } catch (e) {}
 
-// Segmented Auto / System / Light / Dark control — shared by Account and
-// the Discover footer.
-function appearanceControlHtml(compact) {
+// Appearance options for the Settings dropdown on the Discover header —
+// the only place this lives (same pattern as the map's filter dropdown).
+function appearanceMenuHtml() {
   const pref = getThemePref();
   const ic = (d) =>
-    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+    `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
   const opts = [
     ["auto", "Auto", ic('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')],
     ["system", "System", ic('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>')],
     ["light", "Light", ic('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>')],
     ["dark", "Dark", ic('<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z"/>')],
   ];
-  return `<div class="appear-seg${compact ? " compact" : ""}" role="radiogroup" aria-label="Appearance">${opts
-    .map(
-      ([k, l, svg]) =>
-        `<button type="button" role="radio" class="appear-opt${pref === k ? " on" : ""}" data-theme-pref="${k}" aria-checked="${pref === k}" onclick="setThemePref('${k}')">${svg}<span>${l}</span></button>`,
-    )
-    .join("")}</div>`;
+  return `<div class="set-group-title">Appearance</div>
+    <div class="set-list" role="radiogroup" aria-label="Appearance">${opts
+      .map(
+        ([k, l, svg]) =>
+          `<button type="button" role="radio" class="set-opt${pref === k ? " on" : ""}" data-theme-pref="${k}" aria-checked="${pref === k}" onclick="setThemePref('${k}')">
+            <span class="set-ic">${svg}</span>
+            <span class="set-txt"><b>${l}</b><span>${themePrefDescription(k)}</span></span>
+            <span class="set-check" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></span>
+          </button>`,
+      )
+      .join("")}</div>`;
 }
 
 // ── Day/night cycle ───────────────────────────────────────────────────────

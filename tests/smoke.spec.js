@@ -552,8 +552,16 @@ test.describe("Cumulus smoke", () => {
     await enterApp(page);
     const theme = () => page.evaluate(() => document.documentElement.getAttribute("data-theme"));
 
-    // Feed footer control is available to guests.
-    await expect(page.locator(".feed-appear .appear-opt")).toHaveCount(4);
+    // Settings dropdown on the home header — closed until the button is tapped.
+    await expect(page.locator("#feed-settings")).toBeHidden();
+    await page.click("#feed-settings-btn");
+    await expect(page.locator("#feed-settings")).toBeVisible();
+    await expect(page.locator("#feed-settings .set-opt")).toHaveCount(4);
+    await page.locator('#feed-settings [data-theme-pref="dark"]').click();
+    // Stays open while adjusting; closes on outside tap.
+    await expect(page.locator("#feed-settings")).toBeVisible();
+    await page.mouse.click(4, 700);
+    await expect(page.locator("#feed-settings")).toBeHidden();
 
     await page.evaluate(() => setThemePref("dark"));
     expect(await theme()).toBe("dark");
@@ -570,13 +578,15 @@ test.describe("Cumulus smoke", () => {
     await page.emulateMedia({ colorScheme: "dark" });
     await expect.poll(theme).toBe("dark");
 
-    // Account page shows the control with the saved choice selected.
+    // Only on the home header — not duplicated in Account.
+    await page.evaluate(() => goFeed());
+    await expect(page.locator('#feed-settings .set-opt.on')).toHaveAttribute("data-theme-pref", "system");
     await page.evaluate(() => {
       state.userId = "test-user-uuid";
       state.profileName = "Test User";
       openAccount();
     });
-    await expect(page.locator(".appear-card .appear-opt.on")).toHaveText("System");
+    await expect(page.locator("#view-container [data-theme-pref]")).toHaveCount(0);
   });
 
   test("map lighting follows the Appearance setting; host CTA opens the host info page", async ({

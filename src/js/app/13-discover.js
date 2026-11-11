@@ -280,7 +280,11 @@ function renderFeed() {
             ? `<button class="avatar-pill" onclick="navStack=[];openAccount()" aria-label="Your account">${escapeHtml(initials(state.profileName || "You"))}</button>`
             : `<button class="icon-pill solid" onclick="showLpSignup()">Sign in</button>`
         }
+        <button id="feed-settings-btn" class="settings-btn" onclick="toggleFeedSettings()" aria-label="Settings" aria-expanded="false" aria-controls="feed-settings">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
       </div>
+      <div id="feed-settings" class="feed-settings" role="dialog" aria-label="Settings">${appearanceMenuHtml()}</div>
     </header>
 
     <div class="feed-hero">
@@ -334,11 +338,37 @@ function renderFeed() {
       </div>
       <span class="fhc-go" aria-hidden="true">→</span>
     </div>
-    <div class="feed-appear">${appearanceControlHtml(true)}</div>
     <footer class="feed-foot">
       <a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><span>© Cumulus · London</span>
     </footer>
   </section>`;
+}
+
+// ── Settings dropdown (home header) ───────────────────────────────────────
+// Opens from the three-line button, same behaviour as the map's filter
+// dropdown: stays open while you change things, closes on outside tap / Esc.
+function toggleFeedSettings(force) {
+  const panel = document.getElementById("feed-settings");
+  const btn = document.getElementById("feed-settings-btn");
+  if (!panel || !btn) return;
+  const open = force !== undefined ? force : !panel.classList.contains("open");
+  panel.classList.toggle("open", open);
+  btn.classList.toggle("on", open);
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+  document.removeEventListener("pointerdown", _feedSettingsOutside, true);
+  document.removeEventListener("keydown", _feedSettingsEsc);
+  if (open) {
+    document.addEventListener("pointerdown", _feedSettingsOutside, true);
+    document.addEventListener("keydown", _feedSettingsEsc);
+  }
+}
+function _feedSettingsOutside(e) {
+  const panel = document.getElementById("feed-settings");
+  const btn = document.getElementById("feed-settings-btn");
+  if (!panel || (!panel.contains(e.target) && !(btn && btn.contains(e.target)))) toggleFeedSettings(false);
+}
+function _feedSettingsEsc(e) {
+  if (e.key === "Escape") toggleFeedSettings(false);
 }
 
 function hideBootLoader() {
