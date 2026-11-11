@@ -459,6 +459,133 @@ function _feedSettingsEsc(e) {
   if (e.key === "Escape") toggleFeedSettings(false);
 }
 
+// ── Location: exact-coordinate map links ──────────────────────────────────
+// Every event has real lat/lon (Mapbox Search Box on create, or the host's
+// dropped pin). Hand those coordinates to Google/Apple Maps so the pin lands
+// on the exact spot — a text search for a venue name Google doesn't know
+// (or a typo'd address) used to land somewhere else or nowhere.
+function hasCoords(ev) {
+  return ev && typeof ev.lat === "number" && typeof ev.lon === "number" && isFinite(ev.lat) && isFinite(ev.lon);
+}
+function eventMapLinks(ev) {
+  const label = [ev.venue, ev.address || ev.area].filter(Boolean).join(", ") || "London";
+  if (hasCoords(ev)) {
+    const ll = `${ev.lat.toFixed(6)},${ev.lon.toFixed(6)}`;
+    return {
+      google: `https://www.google.com/maps/search/?api=1&query=${ll}`,
+      directions: `https://www.google.com/maps/dir/?api=1&destination=${ll}&travelmode=transit`,
+      apple: `https://maps.apple.com/?ll=${ll}&q=${encodeURIComponent(ev.venue || "Event")}&z=17`,
+      appleDirections: `https://maps.apple.com/?daddr=${ll}&dirflg=r`,
+      label,
+    };
+  }
+  const q = encodeURIComponent(label + (/london/i.test(label) ? "" : ", London"));
+  return {
+    google: `https://www.google.com/maps/search/?api=1&query=${q}`,
+    directions: `https://www.google.com/maps/dir/?api=1&destination=${q}&travelmode=transit`,
+    apple: `https://maps.apple.com/?q=${q}`,
+    appleDirections: `https://maps.apple.com/?daddr=${q}&dirflg=r`,
+    label,
+  };
+}
+// Mapbox Static Images preview with a Volt pin on the exact coordinates —
+// themed to match the app. Falls back to nothing if there's no token/coords.
+function eventStaticMapUrl(ev, w = 640, h = 240) {
+  if (!hasCoords(ev) || !mapboxConfigured()) return "";
+  const style = state.theme === "dark" ? "dark-v11" : "light-v11";
+  const lon = ev.lon.toFixed(6),
+    lat = ev.lat.toFixed(6);
+  return `https://api.mapbox.com/styles/v1/mapbox/${style}/static/pin-l+d4ff3f(${lon},${lat})/${lon},${lat},15.2,0/${w}x${h}@2x?logo=false&attribution=false&access_token=${MAPBOX_TOKEN}`;
+}
+function isAppleDevice() {
+  return /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) && "ontouchend" in document;
+}
+
+// Location sheet: Open in Google Maps / Directions / Apple Maps / Copy.
+function openLocationSheet(id) {
+  const ev = EVENTS.find((e) => String(e.id) === String(id));
+  if (!ev) return;
+  const L = eventMapLinks(ev);
+  closeLocationSheet(true);
+  const apple = isAppleDevice();
+  const ic = (d) => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const row = (href, icon, title, sub, primary) =>
+    `<a class="loc-opt${primary ? " primary" : ""}" href="${href}" target="_blank" rel="noopener" onclick="setTimeout(closeLocationSheet,150)">
+      <span class="loc-ic">${icon}</span><span class="loc-txt"><b>${title}</b><span>${sub}</span></span><span class="loc-go" aria-hidden="true">↗</span>
+    </a>`;
+  const opts = [
+    row(L.google, ic('<path d="M12 21s7-7.58 7-12A7 7 0 0 0 5 9c0 4.42 7 12 7 12Z"/><circle cx="12" cy="9" r="2.3"/>'), "Open in Google Maps", "Pinned on the exact spot", true),
+    row(L.directions, ic('<path d="M3 11 21 3l-8 18-2-8-8-2Z"/>'), "Get directions", "Google Maps · public transport", false),
+    row(apple ? L.appleDirections : L.apple, ic('<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/>'), "Open in Apple Maps", apple ? "Directions on your iPhone" : "Opens maps.apple.com", false),
+  ].join("");
+  const el = document.createElement("div");
+  el.id = "loc-sheet";
+  el.className = "loc-overlay";
+  el.setAttribute("role", "dialog");
+  el.setAttribute("aria-label", "Open location");
+  el.innerHTML = `<div class="loc-sheet">
+      <div class="loc-head">
+        <div><b>${escapeHtml(ev.venue || "Venue")}</b><span>${escapeHtml([ev.address, ev.area].filter(Boolean).join(" · ") || "London")}</span></div>
+        <button class="loc-x" onclick="closeLocationSheet()" aria-label="Close">✕</button>
+      </div>
+      ${opts}
+      <button class="loc-opt" onclick="copyEventAddress('${ev.id}')">
+        <span class="loc-ic">${ic('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>')}</span><span class="loc-txt"><b>Copy address</b><span>${escapeHtml(L.label)}</span></span>
+      </button>
+    </div>`;
+  el.addEventListener("click", (e) => {
+    if (e.target === el) closeLocationSheet();
+  });
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("in"));
+  document.addEventListener("keydown", _locEsc);
+}
+function _locEsc(e) {
+  if (e.key === "Escape") closeLocationSheet();
+}
+function closeLocationSheet(instant) {
+  const el = document.getElementById("loc-sheet");
+  document.removeEventListener("keydown", _locEsc);
+  if (!el) return;
+  if (instant) return el.remove();
+  el.classList.remove("in");
+  setTimeout(() => el.remove(), 250);
+}
+async function copyEventAddress(id) {
+  const ev = EVENTS.find((e) => String(e.id) === String(id));
+  if (!ev) return;
+  const text = eventMapLinks(ev).label;
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast("Address copied", "success");
+  } catch (e) {
+    showToast(text, "info");
+  }
+  closeLocationSheet();
+}
+
+// Mapbox reverse geocoding (v6): the real street address at a coordinate.
+async function reverseGeocode(lat, lon) {
+  if (!mapboxConfigured()) return null;
+  try {
+    const res = await fetch(
+      `https://api.mapbox.com/search/geocode/v6/reverse?longitude=${lon}&latitude=${lat}&types=address,street&country=gb&language=en&access_token=${MAPBOX_TOKEN}`,
+    );
+    if (!res.ok) return null;
+    const feats = (await res.json()).features || [];
+    const f = feats.find((x) => x.properties?.feature_type === "address") || feats[0];
+    if (!f) return null;
+    const p = f.properties || {};
+    const ctx = p.context || {};
+    return {
+      address: p.full_address || p.place_formatted || p.name || "",
+      area: (ctx.neighborhood && ctx.neighborhood.name) || (ctx.locality && ctx.locality.name) || "",
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
 function hideBootLoader() {
   const loader = document.getElementById("cumulus-loader");
   if (!loader || loader.dataset.hiding) return;

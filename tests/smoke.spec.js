@@ -577,6 +577,39 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator(".feed-more")).toHaveCount(0);
   });
 
+  test("event location opens Google/Apple Maps on the exact coordinates", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      const now = Date.now();
+      const ev = {
+        id: "loc-ev", title: "Loc Test", category: "Creative", host: "H",
+        venue: "A Venue Google Has Never Heard Of", area: "Peckham",
+        lat: 51.473456, lon: -0.069123,
+        startTime: new Date(now + 86400000).toISOString(),
+        endTime: new Date(now + 90000000).toISOString(),
+        desc: "d", capacity: 20, price: 0,
+      };
+      computeEventDates(ev);
+      EVENTS.push(ev);
+      openEvent("loc-ev");
+    });
+    await page.click(".ev-loc");
+    await expect(page.locator("#loc-sheet")).toBeVisible();
+    const google = await page.locator("#loc-sheet .loc-opt.primary").getAttribute("href");
+    expect(google).toBe("https://www.google.com/maps/search/?api=1&query=51.473456,-0.069123");
+    const dirs = await page.locator('#loc-sheet a[href*="/maps/dir/"]').getAttribute("href");
+    expect(dirs).toContain("destination=51.473456,-0.069123");
+    await expect(page.locator('#loc-sheet a[href*="maps.apple.com"]')).toHaveCount(1);
+    // Static preview is pinned on the same coordinates.
+    const bg = await page.locator(".ev-minimap").evaluate((el) => el.style.backgroundImage);
+    expect(bg).toContain("pin-l+d4ff3f(-0.069123,51.473456)");
+    await page.keyboard.press("Escape");
+    await expect(page.locator("#loc-sheet")).toHaveCount(0);
+  });
+
   test("event detail: fully visible and bookable, no gating", async ({
     page,
   }) => {

@@ -450,6 +450,19 @@ function initLeaflet() {
     new mapboxgl.NavigationControl({ showCompass: true, showZoom: true }),
     "top-right",
   );
+  // Google-Maps-style "locate me": blue dot + heading, follows while active.
+  try {
+    lmap.addControl(
+      new mapboxgl.GeolocateControl({
+        positionOptions: { enableHighAccuracy: true },
+        trackUserLocation: true,
+        showUserHeading: true,
+        showAccuracyCircle: true,
+        fitBoundsOptions: { maxZoom: 15 },
+      }),
+      "top-right",
+    );
+  } catch (e) {}
   // Dev-only: manual weather-state cycling button for testing. Real users
   // always get applyRealWeather()'s live London weather; never show the
   // test control off localhost (same gate as loadDevFixtureEvents() above).
@@ -584,8 +597,24 @@ function initHostMap() {
     newEventLat = lngLat.lat;
     newEventLon = lngLat.lng;
     const el = document.getElementById("host-lat-lon-text");
-    if (el)
-      el.innerText = `Location Pinned: (${newEventLat.toFixed(4)}, ${newEventLon.toFixed(4)})`;
+    if (el) el.innerText = "Finding the address at this spot…";
+    // Keep the written address in step with the pin (Mapbox reverse
+    // geocoding) so attendees' map links and the address always agree.
+    const lat = newEventLat,
+      lon = newEventLon;
+    reverseGeocode(lat, lon).then((r) => {
+      if (lat !== newEventLat || lon !== newEventLon) return; // pin moved again
+      const t = document.getElementById("host-lat-lon-text");
+      if (r && r.address) {
+        const addr = document.getElementById("host-address-search");
+        if (addr) addr.value = r.address;
+        const area = document.getElementById("host-area");
+        if (area && !area.value && r.area) area.value = r.area;
+        if (t) t.innerText = `📍 Pinned at ${r.address}`;
+      } else if (t) {
+        t.innerText = `📍 Pinned at ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+      }
+    });
     hostEl.classList.remove("dropped");
     void hostEl.offsetWidth;
     hostEl.classList.add("dropped");

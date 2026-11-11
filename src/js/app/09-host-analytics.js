@@ -2381,7 +2381,7 @@ function renderDetail(id) {
   const dayNum = startD.toLocaleDateString("en-GB", { day: "numeric" });
   const mon = startD.toLocaleDateString("en-GB", { month: "short" }).toUpperCase();
   const longDate = startD.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
-  const mapsQ = encodeURIComponent(ev.address || `${ev.venue || ""} ${ev.area || ""} London`);
+  const staticMap = eventStaticMapUrl(ev);
   const pct = ev.capacity ? Math.min(100, Math.round((attendees.length / ev.capacity) * 100)) : 0;
   return `<div class="ev-page" style="--cat:${c ? c.color : "var(--volt)"};">
     <div class="ev-hero ${posterClass(ev)}" style="${posterStyle(ev)}">
@@ -2409,11 +2409,16 @@ function renderDetail(id) {
           <div class="ev-datebox"><b>${dayNum}</b><span>${mon}</span></div>
           <div><div class="ev-fact-main">${escapeHtml(longDate)}</div><div class="ev-fact-sub">${escapeHtml(ev.time || "")}</div></div>
         </div>
-        <a class="ev-fact" href="https://www.google.com/maps/search/?api=1&query=${mapsQ}" target="_blank" rel="noopener">
+        <button type="button" class="ev-fact ev-loc" onclick="openLocationSheet('${ev.id}')" aria-label="Open ${escapeHtml(ev.venue || "venue")} in maps">
           <div class="ev-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-7.58 7-12A7 7 0 0 0 5 9c0 4.42 7 12 7 12Z"/><circle cx="12" cy="9" r="2.3"/></svg></div>
           <div><div class="ev-fact-main">${escapeHtml(ev.venue || "Venue TBA")}</div><div class="ev-fact-sub">${escapeHtml([ev.area, ev.address].filter(Boolean).join(" · ") || "London")}</div></div>
-          <span class="ev-fact-go">↗</span>
-        </a>
+          <span class="ev-fact-go">Directions ↗</span>
+        </button>
+        ${
+          staticMap
+            ? `<button type="button" class="ev-minimap" onclick="openLocationSheet('${ev.id}')" aria-label="Open map of ${escapeHtml(ev.venue || "the venue")}" style="background-image:url('${staticMap}')"><span class="ev-minimap-cta">Open in Maps</span></button>`
+            : ""
+        }
       </div>
 
       <div class="ev-host-row">${renderHostByline(ev)}</div>
