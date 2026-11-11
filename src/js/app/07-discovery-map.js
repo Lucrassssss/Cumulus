@@ -508,9 +508,6 @@ function initLeaflet() {
     lmap.setConfigProperty("basemap", "show3dObjects", tier !== "low"); // Flat buildings on low tier to save FPS
     lmap.setConfigProperty("basemap", "showPointOfInterestLabels", false);
     lmap.setConfigProperty("basemap", "showTransitLabels", false);
-    try {
-      lmap.setConfigProperty("basemap", "theme", "monochrome");
-    } catch (e) {}
 
     // Fog Occlusion Culling for Low/Mid tiers
     if (tier === "low" || tier === "mid") {

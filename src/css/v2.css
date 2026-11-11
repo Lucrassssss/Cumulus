@@ -2467,7 +2467,7 @@ html body .section-title::after {
   opacity: 0 !important;
   pointer-events: none;
 }
-/* Light theme: dark sticker edge reads better on the pale monochrome map */
+/* Light theme: white sticker edge on the badges reads better on the pale day map */
 html[data-theme="light"] :is(.mp-count, .mp-live, .mc-count, .mc-live) {
   box-shadow: 0 0 0 2.5px #fff;
 }

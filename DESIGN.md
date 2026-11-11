@@ -55,7 +55,8 @@ Everything is a pill or a 26px card — no square buttons.
 
 **Day/night** still follows London time (themes swap tokens only).
 
-**Map:** Mapbox Standard in `monochrome` so the only colour is events. Pins
+**Map:** Mapbox Standard, default (full-colour) theme — the basemap is left
+as-is; don't switch it to `monochrome`/`faded`. Pins
 are "wheatpaste" posters — the event's poster on a white sticker border,
 tilted ±6°, with a tail on the venue (`06-map-animations.js`). Clustering is
 the GeoJSON source's Supercluster (`clusterRadius 48`, `clusterMaxZoom 14`,
