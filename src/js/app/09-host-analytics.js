@@ -1452,7 +1452,11 @@ function renderView() {
   stopLivePulse(); // halt the live-pin rAF while the map isn't on screen
   app.classList.remove("map-home");
   document.body.classList.remove("no-scroll");
-  if (state.view === "detail")
+  // Any non-map view is fully rendered from memory — never keep the boot
+  // loader up waiting on Mapbox tiles that this screen doesn't show.
+  hideBootLoader();
+  if (state.view === "feed") container.innerHTML = renderFeed();
+  else if (state.view === "detail")
     container.innerHTML = renderDetail(state.selectedEventId);
   else if (state.view === "host-profile")
     container.innerHTML = renderHostProfile();
@@ -2176,7 +2180,7 @@ async function claimWaitlistOffer(eventId) {
 function renderDetail(id) {
   const ev = EVENTS.find((e) => e.id === id);
   if (!ev) return `<div class="empty-state">Event not found.</div>`;
-  const c = CATS[ev.category];
+  const c = CATS[ev.category] || { color: "#D4FF3F", textColor: "#4D6B00" };
   const attendees = attendeesFor(id);
   const status = eventStatus(ev);
   const ticket = getTicketForEvent(id);
@@ -2214,68 +2218,114 @@ function renderDetail(id) {
     // Auto-hidden by the community-report trigger (3+ unique reporters) —
     // pending an admin's review, not a host-initiated cancellation, so
     // existing tickets/bookings are left untouched in case it's restored.
-    bookBtn = `<div style="background:#b3261e18;border:1px solid #b3261e55;color:#b3261e;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;text-align:center;">This event has been reported by the community and is under review.</div>`;
+    bookBtn = `<div class="ev-notice danger">Under review after community reports.</div>`;
   } else if (ev.status === "cancelled") {
-    bookBtn = `<div style="background:#b3261e18;border:1px solid #b3261e55;color:#b3261e;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;text-align:center;">This event was cancelled${ticket ? " — your ticket has been refunded." : "."}</div>`;
+    bookBtn = `<div class="ev-notice danger">Cancelled${ticket ? " — you've been refunded" : ""}</div>`;
   } else if (ticket) {
-    bookBtn = `<button class="btn" style="background:transparent;border:2px solid #147136;color:#147136;box-shadow:none;width:100%;" onclick="openViewTicket('${id}')">${checkIconSvg(15)} You have a ticket — View it</button>`;
+    bookBtn = `<button class="v-btn success wide" onclick="openViewTicket('${id}')">${checkIconSvg(15)} View your ticket</button>`;
   } else if (status === "past") {
     // Ended events are locked — never bookable, no matter capacity/tier
     // state. Ticket-holders still get the branch above (their own record
     // stays viewable); everyone else sees this instead of a live Book Now.
-    bookBtn = `<div style="background:var(--surface-2);border:1px solid var(--line);color:var(--text-muted);border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;text-align:center;">This event has ended.</div>`;
+    bookBtn = `<div class="ev-notice">This event has ended</div>`;
   } else if (waitlistEntry && waitlistEntry.status === "offered") {
     const mins = Math.max(1, Math.round((waitlistEntry.expiresAt - Date.now()) / 60000));
-    bookBtn = `<button class="btn" style="background:#147136;color:#fff;width:100%;font-size:15px;" onclick="claimWaitlistOffer('${id}')">A spot opened up — Book now →</button>
-      <div style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:6px;">Reserved for you for ${mins} more minute${mins !== 1 ? "s" : ""}</div>`;
+    bookBtn = `<button class="v-btn wide" onclick="claimWaitlistOffer('${id}')">Spot's yours — book →</button>
+      <div class="ev-buy-hint">Held for ${mins} more min${mins !== 1 ? "s" : ""}</div>`;
   } else if (isFull && waitlistEntry) {
-    bookBtn = `<button class="btn" style="background:var(--surface-2);color:var(--text-muted);cursor:default;width:100%;" disabled>✓ You're on the waitlist</button>
-      <button class="btn-text" style="width:100%;margin-top:6px;font-size:12px;" onclick="leaveWaitlist('${id}')">Leave waitlist</button>`;
+    bookBtn = `<button class="v-btn ghost wide" disabled>✓ On the waitlist</button>
+      <button class="ev-buy-link" onclick="leaveWaitlist('${id}')">Leave waitlist</button>`;
   } else if (isFull) {
-    bookBtn = `<button class="btn" style="background:${c.color};color:#fff;width:100%;font-size:15px;" onclick="joinWaitlist('${id}')">Join the Waitlist →</button>
-      <div style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:6px;">We'll hold a spot for you if someone can't make it</div>`;
+    bookBtn = `<button class="v-btn wide" onclick="joinWaitlist('${id}')">Sold out · Join waitlist</button>
+      <div class="ev-buy-hint">We'll ping you if a spot opens</div>`;
   } else {
-    bookBtn = `<button class="btn" style="background:${c.color};color:#fff;width:100%;font-size:15px;" onclick="openBook('${id}')">${price ? `Book Now · From £${price}` : "Register Free"} →</button>`;
+    bookBtn = `<button class="v-btn wide" onclick="openBook('${id}')">${price ? "Get tickets" : "Get in free"} →</button>`;
   }
   const going = attendees.includes(state.profileName);
-  return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="panel detail-card" style="--corner:${c.color};">
-      <div class="detail-hero" style="background-image:url('${ev.photoUrl || catImg(ev.category)}');">
-        <button class="detail-share-btn detail-report-btn" onclick="openReportEventModal('${ev.id}')" aria-label="Report event"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4a1 1 0 0 1 1-1h11l-1.5 5L18 13H6"/></svg></button>
-        <button class="detail-share-btn" onclick="shareEvent('${ev.id}')" aria-label="Share event"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.7l7.6-4.4M8.2 13.3l7.6 4.4"/></svg></button>
+  const ownerTools =
+    (ev.hostId === state.userId && ev.status !== "hidden"
+      ? `<button class="v-btn ghost wide" onclick="inviteMyPastAttendees('${id}','${escapeHtml(ev.title).replace(/'/g, "&#39;")}')">📣 Invite past attendees</button>`
+      : "") +
+    // Once reported+hidden, only an admin may delete it — a host losing
+    // write access to their own flagged event (see events_modify_own/
+    // events_delete_own) is the whole point of the report system.
+    (state.isAdmin || (ev.hostId === state.userId && ev.status !== "hidden")
+      ? `<button class="v-btn danger wide" onclick="if(confirm('Delete this event permanently?')) deleteEvent('${id}')">Delete event</button>`
+      : "");
+  const startD = new Date(ev.startsAt);
+  const dayNum = startD.toLocaleDateString("en-GB", { day: "numeric" });
+  const mon = startD.toLocaleDateString("en-GB", { month: "short" }).toUpperCase();
+  const longDate = startD.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  const mapsQ = encodeURIComponent(ev.address || `${ev.venue || ""} ${ev.area || ""} London`);
+  const pct = ev.capacity ? Math.min(100, Math.round((attendees.length / ev.capacity) * 100)) : 0;
+  return `<div class="ev-page" style="--cat:${c ? c.color : "var(--volt)"};">
+    <div class="ev-hero ${posterClass(ev)}" style="${posterStyle(ev)}">
+      ${posterGlyph(ev)}
+      <div class="ev-hero-bar">
+        <button class="glass-btn" onclick="goBack()" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <div style="display:flex;gap:8px;">
+          <button class="glass-btn ev-report-btn" onclick="openReportEventModal('${ev.id}')" aria-label="Report event"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4a1 1 0 0 1 1-1h11l-1.5 5L18 13H6"/></svg></button>
+          <button class="glass-btn" onclick="shareEvent('${ev.id}')" aria-label="Share event"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg></button>
+        </div>
       </div>
-      <span class="event-badge" style="--cat:${c.color};--cat-text:${c.textColor};">${ev.category}</span>${statusChip}${capBadge}${priceBadge}
-      <h2 class="detail-title">${ev.title}</h2>
-      <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;flex-wrap:wrap;">
-        <span style="font-size:14px;font-weight:700;color:${c.textColor};">📅 ${ev.date}</span>
-        <span style="font-size:13px;font-weight:600;color:var(--text);">· ${ev.time}</span>
+      <div class="ev-hero-foot">
+        <div class="ev-tags">
+          <span class="ev-tag cat">${escapeHtml(ev.category || "Event")}</span>
+          ${status === "live" ? `<span class="ev-tag live"><span class="pulse"></span>Live now</span>` : status === "past" ? `<span class="ev-tag">Ended</span>` : ""}
+          ${spacesLeft !== null && spacesLeft > 0 && spacesLeft <= 10 ? `<span class="ev-tag hot">Only ${spacesLeft} left</span>` : ""}
+        </div>
+        <h1 class="ev-title">${escapeHtml(ev.title)}</h1>
       </div>
-      <div class="detail-meta-row"><span>${ev.venue}${ev.area ? `, ${ev.area}` : ""}</span>${renderHostByline(ev)}</div>
-      <div class="detail-desc">${ev.desc}</div>
-      ${bookBtn}
-      <div class="attendee-section">
-        <h3>${attendees.length} going${ev.capacity ? ` (Limit ${ev.capacity})` : ""}</h3>
-        <div class="attendee-list">${
+    </div>
+
+    <div class="ev-body">
+      <div class="ev-facts">
+        <div class="ev-fact">
+          <div class="ev-datebox"><b>${dayNum}</b><span>${mon}</span></div>
+          <div><div class="ev-fact-main">${escapeHtml(longDate)}</div><div class="ev-fact-sub">${escapeHtml(ev.time || "")}</div></div>
+        </div>
+        <a class="ev-fact" href="https://www.google.com/maps/search/?api=1&query=${mapsQ}" target="_blank" rel="noopener">
+          <div class="ev-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-7.58 7-12A7 7 0 0 0 5 9c0 4.42 7 12 7 12Z"/><circle cx="12" cy="9" r="2.3"/></svg></div>
+          <div><div class="ev-fact-main">${escapeHtml(ev.venue || "Venue TBA")}</div><div class="ev-fact-sub">${escapeHtml([ev.area, ev.address].filter(Boolean).join(" · ") || "London")}</div></div>
+          <span class="ev-fact-go">↗</span>
+        </a>
+      </div>
+
+      <div class="ev-host-row">${renderHostByline(ev)}</div>
+
+      <section class="ev-block">
+        <h2 class="ev-h2">About</h2>
+        <div class="detail-desc ev-desc">${escapeHtml(ev.desc || "").replace(/\n/g, "<br>")}</div>
+      </section>
+
+      <section class="ev-block" id="going-section">
+        <div class="ev-going-head">
+          <h2 class="ev-h2">${attendees.length ? `${attendees.length} going` : "Be the first in"}</h2>
+          ${ev.capacity ? `<span class="ev-cap">${spacesLeft} of ${ev.capacity} left</span>` : ""}
+        </div>
+        ${ev.capacity ? `<div class="ev-meter"><i style="width:${pct}%"></i></div>` : ""}
+        <div class="ev-faces">${
           attendees.length
             ? attendees
-                .map(
-                  (n) =>
-                    `<div class="attendee-chip"><div class="avatar" style="margin-left:0">${initials(n)}</div><span>${escapeHtml(n)}</span></div>`,
-                )
-                .join("")
-            : `<span style="color:var(--text-muted);font-size:13px;">No bookings yet.</span>`
+                .slice(0, 12)
+                .map((n) => `<span class="ev-face" title="${escapeHtml(n)}">${escapeHtml(initials(n))}</span>`)
+                .join("") + (attendees.length > 12 ? `<span class="ev-face more">+${attendees.length - 12}</span>` : "")
+            : `<span class="ev-muted">No one's booked yet — grab the first spot.</span>`
         }</div>
+        ${going ? `<div class="ev-muted" style="margin-top:8px;">You're on the list ✓</div>` : ""}
+      </section>
+
+      ${ownerTools ? `<section class="ev-block ev-owner">${ownerTools}</section>` : ""}
+    </div>
+
+    <div class="ev-buybar">
+      <div class="ev-buy-price">
+        <span class="ev-buy-label">${price ? "From" : "Entry"}</span>
+        <b>${price ? `£${price}` : "Free"}</b>
       </div>
-      ${ev.hostId === state.userId && ev.status !== "hidden" ? `<div style="margin-top:10px;"><button class="btn btn-outline" style="width:100%;" onclick="inviteMyPastAttendees('${id}','${escapeHtml(ev.title).replace(/'/g, "&#39;")}')">📣 Invite past attendees</button></div>` : ""}
-      ${
-        // Once reported+hidden, only an admin may delete it — a host losing
-        // write access to their own flagged event (see events_modify_own/
-        // events_delete_own) is the whole point of the report system.
-        state.isAdmin || (ev.hostId === state.userId && ev.status !== "hidden")
-          ? `<div style="margin-top:10px;"><button class="btn btn-outline" style="color:#E23B3B;border-color:#E23B3B;width:100%;" onclick="if(confirm('Delete this event permanently?')) deleteEvent('${id}')">Delete Event</button></div>`
-          : ""
-      }
-    </div>`;
+      <div class="ev-buy-cta">${bookBtn}</div>
+    </div>
+  </div>`;
 }
 
 // Blueprint B2B2C flywheel: "One-Click Blast" — invite-past-attendees
@@ -2309,7 +2359,7 @@ async function deleteEvent(id) {
     return;
   }
   showToast("Event deleted", "success");
-  EVENTS = EVENTS.filter((e) => String(e.id) !== String(id));
+  { const _i = EVENTS.findIndex((e) => String(e.id) === String(id)); if (_i !== -1) EVENTS.splice(_i, 1); }
   goBack();
 }
 
@@ -2438,7 +2488,7 @@ async function deleteReportedEvent(id) {
     return;
   }
   showToast("Event deleted", "success");
-  EVENTS = EVENTS.filter((e) => String(e.id) !== String(id));
+  { const _i = EVENTS.findIndex((e) => String(e.id) === String(id)); if (_i !== -1) EVENTS.splice(_i, 1); }
   await loadAndRenderReportedEvents();
 }
 

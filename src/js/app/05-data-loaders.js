@@ -1,11 +1,33 @@
 // ── Supabase data loaders ─────────────────────────────────────────────────
 
-async function loadRealEvents() {
-  const { data } = await sb
-    .from("events")
-    .select("*")
-    .order("start_time", { ascending: true });
-  if (!data) return;
+async function loadRealEvents(attempt = 0) {
+  let data = null,
+    error = null;
+  try {
+    ({ data, error } = await sb
+      .from("events")
+      .select("*")
+      .order("start_time", { ascending: true }));
+  } catch (e) {
+    error = e;
+  }
+  if (error || !data) {
+    // A paused/waking Supabase project or a flaky connection used to fail
+    // silently here and leave the whole city looking empty. Log it, retry
+    // with backoff, and tell the person what's going on.
+    console.warn("[cumulus] events load failed", error);
+    state.eventsLoadError = true;
+    if (attempt < 3) {
+      setTimeout(async () => {
+        await loadRealEvents(attempt + 1);
+        if (!state.eventsLoadError && ["feed", "browse"].includes(state.view)) renderView();
+      }, 1500 * 2 ** attempt);
+    } else {
+      showToast("Couldn't reach Cumulus — check your connection", "error");
+    }
+    return;
+  }
+  state.eventsLoadError = false;
   data.forEach((ev) => {
     // Idempotent: skip any event already loaded (e.g. one just created locally)
     if (EVENTS.find((e) => e.id === ev.id)) return;
@@ -244,11 +266,12 @@ function renderNav() {
           "scan-picker",
           "scan",
           "account-details",
-          "my-tickets",
         ].includes(state.view)
       ? "account"
-      : ["calendar", "calendar-day"].includes(state.view)
-        ? "calendar"
+      : state.view === "my-tickets"
+        ? "tickets"
+      : ["calendar", "calendar-day", "detail", "host-profile"].includes(state.view)
+        ? "feed"
         : state.view;
   const navContainer = document.getElementById("nav-container");
   const hostApproved = isApprovedHost();
@@ -265,55 +288,54 @@ function renderNav() {
   ) {
     navContainer.dataset.hostShown = String(hostApproved);
     navContainer.dataset.adminShown = String(isOwnerAccount);
+    const ic = (d) =>
+      `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
     const icons = {
-      browse: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5 5-2Z"/></svg>`,
-      tickets: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/></svg>`,
-      calendar: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><rect x="3.5" y="5.5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>`,
-      host: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>`,
-      account: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1-4 4-6 7.5-6s6.5 2 7.5 6"/></svg>`,
-      admin: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3.5h6v2H9z"/><path d="M8.5 13l2 2 4-4.5"/></svg>`,
+      feed: ic('<path d="M12 3l2.6 5.6L20.5 9l-4.4 4.1 1.1 6L12 16.3 6.8 19.1l1.1-6L3.5 9l5.9-.4L12 3Z"/>'),
+      browse: ic('<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/>'),
+      tickets: ic('<path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/>'),
+      host: ic('<path d="M12 5v14M5 12h14"/>'),
+      account: ic('<circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1-4 4-6 7.5-6s6.5 2 7.5 6"/>'),
+      admin: ic('<path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/>'),
     };
     const NAV_TABS = [
-      { label: "Explore", v: "browse", action: "goBrowse()" },
+      { label: "Discover", v: "feed", action: "goFeed()" },
+      { label: "Map", v: "browse", action: "goBrowse()" },
       // Only shown once an account is an approved host (verified-host badge,
-      // granted on host_applications approval) or an admin — otherwise any
-      // signed-up user could reach the event-creation form with zero
-      // hosting privileges. Non-hosts apply via Account → "Become a host"
-      // instead (openHostApply()).
+      // granted on host_applications approval) or an admin. Non-hosts apply
+      // via Account → "Become a host" (openHostApply()).
       ...(hostApproved
-        ? [{ label: "Host", v: "host", action: "navStack=[];openHost()" }]
+        ? [{ label: "Host", v: "host", action: "navStack=[];openHost()", cta: true }]
         : []),
       {
-        label: "Calendar",
-        v: "calendar",
-        action: "navStack=[];openCalendar()",
+        label: "Tickets",
+        v: "tickets",
+        action: "navStack=[];openTicketsTab()",
       },
-      { label: "Account", v: "account", action: "navStack=[];openAccount()" },
-      // Owner-only: event approvals, host application review, live
-      // finances — used to be buried inside Profile with no other home;
-      // now its own tab, hidden entirely for every other account.
+      { label: "You", v: "account", action: "navStack=[];openAccount()" },
+      // Owner-only: event approvals, host review, live finances.
       ...(isOwnerAccount
         ? [{ label: "Admin", v: "admin", action: "navStack=[];openAdmin()" }]
         : []),
     ];
     navContainer.innerHTML = `
       <div class="top-bar">
-        <div class="logo-wrap" onclick="goBrowse()" role="button" tabindex="0" aria-label="Cumulus home">${BLOT_SVG}<span class="logo hide-mobile">Cumulus</span></div>
-        <input id="search-input" class="search-input" placeholder="Search events..." oninput="onSearchInput()" autocomplete="off"/>
+        <div class="logo-wrap" onclick="goFeed()" role="button" tabindex="0" aria-label="Cumulus home"><span class="feed-mark" aria-hidden="true"></span><span class="logo">cumulus</span></div>
+        <input id="search-input" class="search-input" placeholder="Search the map…" oninput="onSearchInput()" autocomplete="off"/>
         <button id="filter-toggle-btn" class="filter-toggle-btn" onclick="toggleMapFiltersPanel()" aria-label="Filters" aria-expanded="false" aria-controls="map-filters">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6.5 7.5V19l-3 1.5v-8L4 5Z"/></svg>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
           <span id="filter-count-badge" class="filter-count-badge" style="display:none;"></span>
         </button>
       </div>
-      <div class="bottom-nav">
+      <nav class="bottom-nav" aria-label="Primary">
         ${NAV_TABS.map(
-          ({ label, v, action }) => `
-          <button class="nav-link" data-nav="${v}" onclick="${action}" style="position:relative;">
+          ({ label, v, action, cta }) => `
+          <button class="nav-link${cta ? " nav-cta" : ""}" data-nav="${v}" onclick="${action}" aria-label="${label}">
             ${icons[v] || ""}
             <span>${label}</span>
           </button>`,
         ).join("")}
-      </div>`;
+      </nav>`;
   }
 
   // Every call: patch active state and theme toggle — no DOM destruction
@@ -438,7 +460,7 @@ function goBack() {
       resetEventUrlAndMeta();
     }
   } else {
-    goBrowse();
+    goFeed();
   }
 }
 

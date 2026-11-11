@@ -14,19 +14,30 @@ function openMyTickets() {
 }
 
 function renderMyTickets() {
-  return `<button class="back-btn" onclick="goBack()">←</button>
-  <div class="connect-header" style="padding-top:8px;">
-    <h2>My Tickets</h2>
-    <p>${myTickets.length} ticket${myTickets.length !== 1 ? "s" : ""}</p>
-  </div>
-  ${myTicketsCardsHtml()}`;
+  const upcoming = myTickets.filter((t) => {
+    const ev = EVENTS.find((e) => e.id === t.eventId);
+    return ev && eventStatus(ev) !== "past";
+  }).length;
+  return `<div class="v-page">
+    <header class="v-page-head">
+      <div class="v-kicker">Wallet</div>
+      <h1 class="v-h1">Your tickets</h1>
+      <p class="v-sub">${upcoming ? `${upcoming} coming up` : myTickets.length ? "Nothing coming up" : "Nothing here yet"}</p>
+    </header>
+    ${myTicketsCardsHtml()}
+  </div>`;
 }
 
 // Sorted soonest-event-first (not purchase order) — a ticket wallet reads
 // as "what's coming up", so the next thing you're going to is always on top.
 function myTicketsCardsHtml() {
   if (!myTickets.length)
-    return `<div class="empty-state">No tickets yet — browse events and book your first one.<br><br><button class="btn" onclick="goBrowse()">Browse Events</button></div>`;
+    return `<div class="feed-empty">
+      <div class="feed-empty-art" aria-hidden="true">🎟</div>
+      <h3>No tickets. Yet.</h3>
+      <p>Everything you book lands here — QR, calendar, transfer, all of it.</p>
+      <div class="feed-empty-actions"><button class="v-btn" onclick="goFeed()">Find something on</button></div>
+    </div>`;
   return [...myTickets]
     .sort((a, b) => {
       const evA = EVENTS.find((e) => e.id === a.eventId);
@@ -36,44 +47,38 @@ function myTicketsCardsHtml() {
     .map((t) => {
       const ev = EVENTS.find((e) => e.id === t.eventId);
       if (!ev) return "";
-      const c = CATS[ev.category];
       const status = eventStatus(ev);
-      const d = new Date(t.purchasedAt).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "short",
-      });
-      return `<div class="panel" style="--corner:${c.color};padding:16px 18px;margin-bottom:12px;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px;">
-        <div style="flex:1;min-width:0;">
-          <span class="event-badge" style="--cat:;font-size:10px;">${ev.category}</span>
-          ${status === "live" ? `<span class="live-chip" style="margin-left:6px;"><span class="dot"></span>Live</span>` : ""}
-          <div style="font-size:15px;font-weight:700;margin:6px 0 3px;line-height:1.2;">${escapeHtml(ev.title)}</div>
-          <div style="font-size:12px;color:var(--text-muted);">${ev.date} · ${escapeHtml(ev.venue)}</div>
-          <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">${t.qty} × ${t.typeLabel}</div>
-        </div>
-        <div style="text-align:right;flex-shrink:0;">
-          <div style="font-size:16px;font-weight:800;color:${c.color};">${t.total ? `£${t.total.toFixed(2)}` : "Free"}</div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Booked ${d}</div>
+      const safeTitle = escapeHtml(ev.title).replace(/'/g, "&#39;");
+      return `<article class="tk${status === "past" ? " past" : ""}">
+      <div class="tk-art ${posterClass(ev)}" style="${posterStyle(ev)}" onclick="openViewTicket('${ev.id}')" role="button" tabindex="0" aria-label="Open ticket for ${escapeHtml(ev.title)}">
+        ${posterGlyph(ev)}
+        <div class="tk-art-foot">
+          <span class="fp-date${status === "live" ? " live" : ""}">${status === "live" ? '<span class="pulse"></span>' : ""}${feedDateLabel(ev)} · ${feedTimeLabel(ev)}</span>
+          <h3 class="tk-title">${escapeHtml(ev.title)}</h3>
+          <div class="tk-venue">${escapeHtml(ev.venue || "")}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""}</div>
         </div>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--line);">
-        <div style="font-family:ui-monospace,monospace;font-size:11px;font-weight:700;color:var(--text-muted);">${t.ticketId}</div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-outline btn-small" onclick="downloadICS('${ev.id}')">+ Cal</button>
-          <button class="btn btn-small" style="background:${c.color};" onclick="openViewTicket('${ev.id}')">Ticket</button>
+      <div class="tk-perf" aria-hidden="true"></div>
+      <div class="tk-stub">
+        <div class="tk-row">
+          <div><span class="tk-lbl">Admit</span><b>${t.qty} × ${escapeHtml(t.typeLabel || "General")}</b></div>
+          <div><span class="tk-lbl">Paid</span><b>${t.total ? `£${t.total.toFixed(2)}` : "Free"}</b></div>
+          <div><span class="tk-lbl">Code</span><b class="mono">${escapeHtml(t.ticketId)}</b></div>
         </div>
+        <div class="tk-actions">
+          <button class="v-btn" onclick="openViewTicket('${ev.id}')">Show QR</button>
+          <button class="v-btn ghost" onclick="downloadICS('${ev.id}')">+ Calendar</button>
+        </div>
+        ${
+          status !== "past"
+            ? `<div class="tk-links">
+              <button onclick="transferMyTicket('${t.ticketId}','${safeTitle}')">Transfer</button>
+              ${ev.startsAt - Date.now() >= 24 * 3600000 ? `<button class="danger" onclick="cancelTicket('${t.ticketId}')">Cancel booking</button>` : ""}
+            </div>`
+            : ""
+        }
       </div>
-      ${
-        status !== "past"
-          ? `<button class="btn-text" style="width:100%;margin-top:8px;font-size:12px;" onclick="transferMyTicket('${t.ticketId}','${escapeHtml(ev.title).replace(/'/g, "&#39;")}')">Transfer this ticket →</button>`
-          : ""
-      }
-      ${
-        status !== "past" && ev.startsAt - Date.now() >= 24 * 3600000
-          ? `<button class="btn-text" style="width:100%;margin-top:4px;color:#E23B3B;font-size:12px;" onclick="cancelTicket('${t.ticketId}')">Cancel booking</button>`
-          : ""
-      }
-    </div>`;
+    </article>`;
     })
     .join("");
 }
@@ -805,12 +810,8 @@ function exportGuestlistCsv() {
   showToast(`Exported ${rows.length} guest${rows.length !== 1 ? "s" : ""}`, "success");
 }
 
-// Boot. Never let an unexpected rejection leave the user on a blank screen.
-start().catch((e) => {
-  try {
-    enterGuestBrowse();
-  } catch (_) {}
-});
+// Boot moved to the end of 13-discover.js — the last script — so every
+// render path it touches is defined before start() runs.
 
 // ══════════════════════════════════════════════
 // PROFESSIONAL POLISH — PHASE II JAVASCRIPT

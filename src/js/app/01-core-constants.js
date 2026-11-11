@@ -57,7 +57,7 @@ function generateUniqueId() {
 function codeFor(name, id) {
   const c = name
     .toUpperCase()
-    .replace(/s+/g, "-")
+    .replace(/\s+/g, "-")
     .replace(/[^A-Z0-9-]/g, "");
   return `CUMULUS-FRIEND::${c}-${id}`;
 }

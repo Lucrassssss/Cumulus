@@ -1,63 +1,65 @@
 ---
 name: Cumulus
-description: London community-events PWA — a live map of your city's community
+description: London events app — "Afterglow" system (v2, Nov 2026)
 colors:
-  bg: "#eceae4"
-  bg-2: "#e1ded6"
-  surface: "#f7f6f2"
-  surface-2: "#ebe8e1"
-  text: "#191a1c"
-  text-soft: "#45474c"
-  text-muted: "#6a6862"
-  accent: "#c08a00"
-  accent-deep: "#966a0a"
-  gold: "#c08a00"
-  gold-text: "#7a5900"
-  silver: "#7e848c"
-  silver-deep: "#5e636b"
-  bg-dark: "#0d0e10"
-  bg-2-dark: "#08090a"
-  surface-dark: "#16181b"
-  surface-2-dark: "#1f2226"
-  text-dark: "#ece9e1"
-  text-soft-dark: "#b4b0a7"
-  text-muted-dark: "#88857c"
-  accent-dark: "#ffcf33"
-  accent-deep-dark: "#e0a800"
+  volt: "#d4ff3f"
+  volt-ink: "#0b0d02"
+  uv: "#8b5cff"
+  hot: "#ff3d6e"
+  bg-dark: "#08080a"
+  surface-dark: "#121215"
+  surface-2-dark: "#1c1c21"
+  text-dark: "#f6f5f1"
+  muted-dark: "#8c8a96"
+  bg-light: "#f3f1ec"
+  surface-light: "#ffffff"
+  text-light: "#0b0b0d"
+  accent-text-light: "#4d6b00"
 typography:
-  display:
-    fontFamily: "DM Sans, Inter, -apple-system, BlinkMacSystemFont, sans-serif"
-    fontWeight: 700
-  body:
-    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
-    fontWeight: 400
-  mono:
-    fontFamily: "DM Mono, SFMono-Regular, Consolas, monospace"
+  display: "Bricolage Grotesque 800, wdth 78–82, tracking -0.045em"
+  body: "Inter 400–750"
+  mono: "JetBrains Mono 500–700 (dates, prices, codes, kickers)"
 rounded:
   sm: "12px"
-  md: "16px"
-  lg: "22px"
-  xl: "28px"
-  card: "20px"
+  md: "18px"
+  lg: "26px"
+  xl: "34px"
   pill: "999px"
-spacing:
-  xs: "4px"
-  sm: "8px"
-  md: "16px"
-  lg: "24px"
-  xl: "40px"
-components:
-  button-primary:
-    backgroundColor: "linear-gradient(135deg, {colors.accent} 0%, {colors.accent-deep} 100%)"
-    textColor: "#0a0a0a"
-    rounded: "{rounded.pill}"
-    padding: "11px 24px"
-  event-card:
-    backgroundColor: "{colors.surface}"
-    rounded: "14px"
 ---
 
-# Design System: Cumulus
+# Design System: Cumulus v2 — "Afterglow"
+
+**Source of truth:** `src/css/v2.css` (loaded after `styles.css`; redefines every
+token the legacy cascade reads, then restyles each surface). The v1
+"Parchment & Gold" notes further down are kept for history only.
+
+**North star:** a black-glass night-out app that looks like a wall of gig
+posters. Three moves make it recognisable:
+
+1. **Generated posters.** Every event without a photo gets a deterministic
+   mesh-gradient poster from its category palette (`POSTER_PALETTES` in
+   `13-discover.js`) plus film grain and a giant glyph. No grey placeholders, ever.
+2. **Huge condensed type.** Page titles and event names are Bricolage
+   Grotesque 800 at 44–92px with tight tracking. Labels, dates and prices are
+   JetBrains Mono caps.
+3. **One electric accent — Volt (`#d4ff3f`).** At night it fills CTAs (ink text).
+   By day Volt can't carry text on paper, so CTAs flip to ink fill + volt text
+   (`--cta-bg`/`--cta-fg`) and accent *text* becomes olive `#4d6b00`. `--hot`
+   (`#ff3d6e`) is reserved for LIVE / scarcity; `--uv` only appears inside
+   gradients.
+
+**Layout rules:** Discover feed is home (not the map). Bottom nav is a
+floating glass pill; the active tab is a filled CTA pill. The event page
+hides the dock and owns the bottom edge with a sticky price + CTA bar.
+Everything is a pill or a 26px card — no square buttons.
+
+**Day/night** still follows London time (themes swap tokens only).
+
+
+<!-- ── v1 (superseded) ─────────────────────────────── -->
+
+
+# v1 Design System (superseded): Cumulus
 
 ## 1. Overview
 
