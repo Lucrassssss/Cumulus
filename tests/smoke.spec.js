@@ -460,6 +460,42 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator(".btn-follow-host")).toHaveCount(0);
   });
 
+  test("host profile: upcoming + past-year events as vertical blocks, weekly series tagged", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      const now = Date.now(), D = 86400000;
+      const mk = (id, title, startMs) => {
+        const ev = {
+          id, title, category: "Live Music", host: "Series Host", hostId: "series-host",
+          venue: "V", area: "A", lat: 51.5, lon: -0.1,
+          startTime: new Date(startMs).toISOString(),
+          endTime: new Date(startMs + 2 * 3600000).toISOString(),
+          desc: "d", capacity: 20, price: 5,
+        };
+        computeEventDates(ev);
+        EVENTS.push(ev);
+      };
+      [1, 8, 15].forEach((d, i) => mk("wk-" + i, "Weekly Jazz", now + d * D));
+      mk("one-off", "One Off Gig", now + 3 * D);
+      for (let i = 1; i <= 8; i++) mk("past-" + i, "Old Gig " + i, now - i * 20 * D);
+      mk("ancient", "Too Old", now - 400 * D); // older than 12 months → excluded
+      openHostProfile("series-host", "Series Host");
+    });
+    // Vertical blocks, not a horizontal swipe row.
+    await expect(page.locator(".host-event-row")).toHaveCount(0);
+    await expect(page.locator(".hp-list:not(.hp-past) .fr-row")).toHaveCount(4);
+    await expect(page.locator(".fr-chip.tag", { hasText: "Weekly" })).toHaveCount(3);
+    // Past: 8 within the year (6 shown + "Show all"), the 400-day-old one excluded.
+    await expect(page.locator(".hp-past .fr-row:visible")).toHaveCount(6);
+    await expect(page.locator(".hp-more")).toHaveText("Show all 8 past events");
+    await page.click(".hp-more");
+    await expect(page.locator(".hp-past .fr-row:visible")).toHaveCount(8);
+    await expect(page.locator(".hp-past", { hasText: "Too Old" })).toHaveCount(0);
+  });
+
   test("event detail: fully visible and bookable, no gating", async ({
     page,
   }) => {

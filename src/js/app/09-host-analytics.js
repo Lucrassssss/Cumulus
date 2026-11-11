@@ -2026,6 +2026,7 @@ function renderHostByline(ev) {
 // trust signal.
 function openHostProfile(hostKey, hostName) {
   pushNav();
+  state.hostPastExpanded = false;
   state.selectedHostKey = hostKey;
   state.selectedHostName = hostName;
   state.viewedHostAvatarUrl = null;
@@ -2139,12 +2140,27 @@ function renderHostProfile() {
     <div class="host-stat"><div class="host-stat-num">${followerCount == null ? "–" : followerCount}</div><div class="host-stat-label">Follower${followerCount === 1 ? "" : "s"}</div></div>
   </div>`;
 
+  // Past events from the last 12 months, most recent first.
+  const yearAgo = Date.now() - 365 * 86400000;
+  const past = hostEvents
+    .filter((e) => eventStatus(e) === "past" && e.endsAt >= yearAgo && e.status !== "cancelled")
+    .sort((a, b) => b.startsAt - a.startsAt);
+  const weekly = hostWeeklyTitles(upcoming);
+
   const upcomingHtml = upcoming.length
-    ? `<div class="host-event-row">${upcoming.map(hostEventBigCardHtml).join("")}</div>`
-    : `<div class="map-empty-card" role="status" style="max-width:100%;margin:0 auto;">
-        <div class="me-title">Nothing upcoming right now</div>
-        <div class="me-sub">${escapeHtml(hostName)} doesn't have any upcoming events listed at the moment.</div>
-      </div>`;
+    ? `<div class="fr-list hp-list">${upcoming.map((ev) => feedRowHtml(ev, weekly.has(ev.title) ? "Weekly" : "")).join("")}</div>`
+    : `<div class="feed-empty hp-empty"><h3>Nothing upcoming</h3><p>${escapeHtml(hostName)} hasn't listed anything new yet.${reviewed ? " Follow to hear first when they do." : ""}</p></div>`;
+  const PAST_PREVIEW = 6;
+  const pastHtml = past.length
+    ? `<div class="fr-list hp-list hp-past" id="hp-past-list">${past
+        .map((ev, i) => hostPastRowHtml(ev, i >= PAST_PREVIEW && !state.hostPastExpanded))
+        .join("")}</div>
+      ${
+        past.length > PAST_PREVIEW && !state.hostPastExpanded
+          ? `<button class="v-btn ghost wide hp-more" onclick="state.hostPastExpanded=true;renderView()">Show all ${past.length} past events</button>`
+          : ""
+      }`
+    : `<div class="hp-none">No events in the last 12 months.</div>`;
 
   return `<button class="back-btn host-profile-back" onclick="goBack()">←</button>
     <div class="host-profile-cover"${coverStyle}></div>
@@ -2162,8 +2178,45 @@ function renderHostProfile() {
       }
     </div>
     ${statsHtml}
-    <div class="section-title">Upcoming events</div>
-    ${upcomingHtml}`;
+    <div class="hp-sec-head"><h3>Upcoming</h3><span>${upcoming.length}</span></div>
+    ${upcomingHtml}
+    <div class="hp-sec-head"><h3>Past</h3><span>Last 12 months · ${past.length}</span></div>
+    ${pastHtml}`;
+}
+
+// Titles this host runs on a weekly rhythm (3+ upcoming dates, each ~7 days
+// apart) — tagged "Weekly" in the list so a series reads as one thing.
+function hostWeeklyTitles(upcoming) {
+  const byTitle = {};
+  upcoming.forEach((e) => (byTitle[e.title] = byTitle[e.title] || []).push(e.startsAt));
+  const out = new Set();
+  Object.entries(byTitle).forEach(([t, starts]) => {
+    if (starts.length < 3) return;
+    starts.sort((a, b) => a - b);
+    const ok = starts.slice(1).every((s, i) => Math.abs(s - starts[i] - 7 * 86400000) < 6 * 3600000);
+    if (ok) out.add(t);
+  });
+  return out;
+}
+
+// Past-event block: same shape as the feed row, with the date, an "Ended"
+// tag and how many went instead of price/scarcity.
+function hostPastRowHtml(ev, hidden) {
+  const went = attendeesFor(ev.id).length;
+  const when = new Date(ev.startsAt)
+    .toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: new Date(ev.startsAt).getFullYear() !== new Date().getFullYear() ? "numeric" : undefined })
+    .toUpperCase()
+    .replace(/,/g, "");
+  return `<article class="fr-row past${hidden ? " hp-hidden" : ""}" onclick="openEvent('${ev.id}')" role="button" tabindex="0" aria-label="${escapeHtml(ev.title)}, ended">
+    <div class="fr-thumb ${posterClass(ev)}" style="${posterStyle(ev)}">${posterGlyph(ev)}</div>
+    <div class="fr-body">
+      <div class="fr-date">${when}</div>
+      <h3 class="fr-title">${escapeHtml(ev.title)}</h3>
+      <div class="fr-venue">${escapeHtml(ev.venue || "")}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""}</div>
+      <div class="fr-foot"><span class="fr-chip">Ended</span>${went ? `<span class="fr-chip">${went} went</span>` : ""}</div>
+    </div>
+    <span class="fr-go" aria-hidden="true">→</span>
+  </article>`;
 }
 
 // ── Waitlist (sold-out events) ──────────────────────────────────────────

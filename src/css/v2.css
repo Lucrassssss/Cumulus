@@ -3689,3 +3689,118 @@ html body .settings-btn.on svg {
   font-weight: 800;
   color: var(--accent);
 }
+
+/* ── Host profile: vertical event blocks (upcoming + past year) ─────── */
+.hp-sec-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 30px 2px 10px;
+}
+.hp-sec-head h3 {
+  margin: 0;
+  font: 800 26px/1 var(--font-display) !important;
+  letter-spacing: -0.035em !important;
+}
+.hp-sec-head span {
+  font: 600 12px var(--font-mono);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+html body #view-container .hp-list {
+  padding: 0;
+  margin: 0 -8px;
+}
+.hp-past .fr-row {
+  opacity: 0.78;
+}
+.hp-past .fr-row:hover {
+  opacity: 1;
+}
+.hp-past .fr-thumb {
+  filter: saturate(0.55);
+}
+.hp-past .fr-date {
+  color: var(--text-muted);
+}
+.hp-hidden {
+  display: none !important;
+}
+.hp-more {
+  margin-top: 8px;
+}
+.hp-empty {
+  margin: 0;
+  padding: 28px 20px;
+}
+.hp-empty h3 {
+  font-size: 24px !important;
+}
+.hp-empty p {
+  margin-bottom: 0;
+}
+.hp-none {
+  padding: 18px 4px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.fr-chip.tag {
+  background: color-mix(in srgb, var(--volt) 22%, transparent);
+  color: var(--accent);
+  font-weight: 750;
+}
+html[data-theme="light"] .fr-chip.tag {
+  background: color-mix(in srgb, var(--volt) 55%, transparent);
+  color: var(--volt-ink);
+}
+
+/* Host profile header: small inline Reviewed pill + a proper Follow button */
+html body .host-profile-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between;
+  gap: 14px;
+}
+html body .host-profile-identity h2 {
+  font: 800 clamp(28px, 8vw, 40px) / 1 var(--font-display) !important;
+  letter-spacing: -0.04em !important;
+  margin: 0 0 8px !important;
+}
+html body .host-profile-identity .host-reviewed-badge {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 4px;
+  vertical-align: middle;
+  margin-left: 6px;
+  padding: 4px 9px !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--success) 16%, transparent) !important;
+  color: var(--success) !important;
+  font: 700 11.5px/1 var(--font-sans) !important;
+  letter-spacing: 0 !important;
+}
+html body .host-profile-identity p {
+  margin: 0 !important;
+  color: var(--text-muted) !important;
+  font-size: 14px !important;
+}
+html body .host-profile-header .btn-follow-host {
+  flex-shrink: 0;
+  height: 44px !important;
+  padding: 0 20px !important;
+  border-radius: 999px !important;
+  border: 0 !important;
+  background: var(--cta-bg) !important;
+  color: var(--cta-fg) !important;
+  font: 750 14.5px var(--font-sans) !important;
+  box-shadow: none !important;
+  transition: transform 0.2s var(--spring) !important;
+}
+html body .host-profile-header .btn-follow-host:active {
+  transform: scale(0.95);
+}
+html body .host-profile-header .btn-follow-host.following {
+  background: transparent !important;
+  color: var(--text) !important;
+  box-shadow: inset 0 0 0 1.5px var(--line) !important;
+}

@@ -1,4 +1,4 @@
-const CACHE = "cumulus-v11";
+const CACHE = "cumulus-v12";
 const ASSETS = [
   "./",
   "./index.html",

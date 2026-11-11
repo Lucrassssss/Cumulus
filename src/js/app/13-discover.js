@@ -175,7 +175,7 @@ function feedPosterCardHtml(ev, size) {
   </article>`;
 }
 
-function feedRowHtml(ev) {
+function feedRowHtml(ev, tag) {
   const st = eventStatus(ev);
   const left = feedSpotsLeft(ev);
   const going = attendeesFor(ev.id).length;
@@ -187,6 +187,7 @@ function feedRowHtml(ev) {
       <div class="fr-venue">${escapeHtml(ev.venue || "")}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""}</div>
       <div class="fr-foot">
         <span class="fr-price${eventPrice(ev) ? "" : " free"}">${feedPriceLabel(ev)}</span>
+        ${tag ? `<span class="fr-chip tag">${escapeHtml(tag)}</span>` : ""}
         ${left !== null && left <= 10 && left > 0 ? `<span class="fr-chip warn">Only ${left} left</span>` : ""}
         ${left === 0 ? `<span class="fr-chip">Waitlist</span>` : ""}
         ${going >= 2 ? `<span class="fr-chip">${going} going</span>` : ""}
