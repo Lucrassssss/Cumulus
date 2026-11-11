@@ -1595,6 +1595,38 @@ function toggleStartingSoonOnly() {
 // Eventbrite/Dice/Luma-style filter sheets all separate "what kind of
 // event" from "what's happening right now" from "which date", rather than
 // dumping category + status + date into a single undifferentiated row.
+function activeFilterCount() {
+  return (
+    (state.selectedCategory !== "all" ? 1 : 0) +
+    (state.liveOnly || state.hotOnly || state.startingSoonOnly ? 1 : 0) +
+    (state.dateFilter && state.dateFilter !== "all" ? 1 : 0)
+  );
+}
+// First time someone lands on the map (per device): pulse the Filters pill
+// and show a short hint so it's obviously a filter, then never again.
+let _fltHintShown = false;
+function maybeHintMapFilters() {
+  if (_fltHintShown || state.view !== "browse") return;
+  _fltHintShown = true;
+  try {
+    if (localStorage.getItem("cumulus_filter_hint")) return;
+    localStorage.setItem("cumulus_filter_hint", "1");
+  } catch (e) {}
+  const btn = document.getElementById("filter-toggle-btn");
+  if (!btn) return;
+  setTimeout(() => {
+    btn.classList.add("hint");
+    const tip = document.createElement("div");
+    tip.className = "flt-hint";
+    tip.textContent = "Filter by vibe, time & more";
+    btn.appendChild(tip);
+    setTimeout(() => {
+      btn.classList.remove("hint");
+      tip.classList.add("out");
+      setTimeout(() => tip.remove(), 300);
+    }, 3800);
+  }, 900);
+}
 function refreshFilters() {
   const el = document.getElementById("map-filters");
   if (!el) return;
@@ -1626,20 +1658,34 @@ function refreshFilters() {
     <div class="filter-group">
       <div class="filter-group-title">When</div>
       <div class="filter-chip-row">${whenChips}</div>
+    </div>
+    <div class="flt-foot">
+      <button class="flt-clear" onclick="clearMapFilters()" ${activeFilterCount() ? "" : "disabled"}>Clear all</button>
+      <button class="v-btn flt-show" onclick="closeMapFiltersPanel()">Show ${(() => {
+        const n = getFilteredEvents().length;
+        return `${n} event${n === 1 ? "" : "s"}`;
+      })()}</button>
     </div>`;
+  el.querySelectorAll(".mchip").forEach((c, i) => c.style.setProperty("--i", i));
   // Finances now live in Profile → Admin & Finances (no floating map button)
   const fab = document.getElementById("owner-fin-fab");
   if (fab) fab.innerHTML = "";
 
   const badge = document.getElementById("filter-count-badge");
   if (badge) {
-    const count =
-      (state.selectedCategory !== "all" ? 1 : 0) +
-      (state.liveOnly || state.hotOnly || state.startingSoonOnly ? 1 : 0) +
-      (state.dateFilter && state.dateFilter !== "all" ? 1 : 0);
+    const count = activeFilterCount();
+    const prev = badge.textContent;
     badge.textContent = String(count);
     badge.style.display = count > 0 ? "" : "none";
+    if (count > 0 && prev !== String(count)) {
+      badge.classList.remove("pop");
+      void badge.offsetWidth;
+      badge.classList.add("pop");
+    }
+    const btn = document.getElementById("filter-toggle-btn");
+    if (btn) btn.classList.toggle("has-filters", count > 0);
   }
+  maybeHintMapFilters();
 }
 
 // The filter panel (#map-filters) is a dropdown anchored below the top bar,
@@ -1663,7 +1709,11 @@ function toggleMapFiltersPanel() {
     closeMapFiltersPanel();
     return;
   }
-  panel.classList.add("open");
+  // Opening it is the point of the first-visit hint — dismiss it.
+  btn.classList.remove("hint");
+  btn.querySelectorAll(".flt-hint").forEach((t) => t.remove());
+  panel.classList.add("open", "anim");
+  setTimeout(() => panel.classList.remove("anim"), 700);
   btn.classList.add("active");
   btn.setAttribute("aria-expanded", "true");
   // Deferred so the click that just opened the panel doesn't immediately

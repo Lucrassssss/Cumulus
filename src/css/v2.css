@@ -1722,15 +1722,7 @@ html body #app.map-home .search-input {
   font-size: 15px !important;
   color: var(--text) !important;
 }
-html body #app.map-home .filter-toggle-btn {
-  width: 46px !important;
-  height: 46px !important;
-  border-radius: 50% !important;
-  background: var(--cta-bg) !important;
-  color: var(--cta-fg) !important;
-  border: 0 !important;
-  flex-shrink: 0;
-}
+
 html body .filter-count-badge {
   background: var(--hot) !important;
   color: #fff !important;
@@ -3323,4 +3315,232 @@ html body .host-cat-chip.active {
 }
 html body .host-notice {
   border-radius: var(--r-md) !important;
+}
+
+
+/* ═══ Map Filters pill ══════════════════════════════════════════════════ */
+html body #app.map-home .filter-toggle-btn.flt-btn {
+  position: relative;
+  width: auto !important;
+  height: 46px !important;
+  padding: 0 16px 0 14px !important;
+  gap: 8px;
+  display: inline-flex !important;
+  align-items: center;
+  border-radius: 999px !important;
+  background: var(--cta-bg) !important;
+  color: var(--cta-fg) !important;
+  border: 0 !important;
+  flex-shrink: 0;
+  font: 750 14.5px var(--font-sans) !important;
+  box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--volt) 55%, transparent) !important;
+  transition: transform 0.25s var(--spring), box-shadow 0.25s ease !important;
+}
+html body #app.map-home .flt-btn:hover {
+  transform: translateY(-1px);
+}
+html body #app.map-home .flt-btn:active {
+  transform: scale(0.94);
+}
+/* sliders: knobs glide when the panel opens */
+.flt-ic .k {
+  fill: var(--cta-bg);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.45s var(--spring);
+}
+.flt-btn.active .k1,
+.flt-btn:hover .k1 {
+  transform: translateX(7px);
+}
+.flt-btn.active .k2,
+.flt-btn:hover .k2 {
+  transform: translateX(-7px);
+}
+.flt-btn.active .k3,
+.flt-btn:hover .k3 {
+  transform: translateX(5px);
+}
+.flt-btn.active {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--volt) 30%, transparent) !important;
+}
+/* count badge */
+html body .flt-btn .filter-count-badge {
+  position: static !important;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--hot) !important;
+  color: #fff !important;
+  font: 800 11.5px/20px var(--font-sans) !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  margin: 0 -4px 0 0;
+}
+.filter-count-badge.pop {
+  animation: flt-pop 0.45s var(--spring);
+}
+@keyframes flt-pop {
+  0% {
+    transform: scale(0.4);
+  }
+  60% {
+    transform: scale(1.25);
+  }
+}
+/* first visit: pulse ring + hint bubble */
+.flt-btn.hint {
+  animation: flt-nudge 1.2s ease-in-out 2;
+}
+.flt-btn.hint::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 999px;
+  border: 2px solid var(--volt);
+  animation: flt-ring 1.2s ease-out 3;
+  pointer-events: none;
+}
+@keyframes flt-ring {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.35, 1.6);
+    opacity: 0;
+  }
+}
+@keyframes flt-nudge {
+  0%,
+  100% {
+    transform: none;
+  }
+  20% {
+    transform: rotate(-4deg) scale(1.04);
+  }
+  40% {
+    transform: rotate(4deg) scale(1.04);
+  }
+  60% {
+    transform: rotate(0) scale(1);
+  }
+}
+.flt-hint {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  white-space: nowrap;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--text);
+  color: var(--bg);
+  font: 650 13px var(--font-sans);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  animation: v-rise 0.4s var(--spring) both;
+}
+.flt-hint::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  right: 26px;
+  width: 12px;
+  height: 12px;
+  background: var(--text);
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+.flt-hint.out {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: all 0.3s ease;
+}
+/* narrow phones: keep the label, tighten the search */
+@media (max-width: 380px) {
+  html body #app.map-home .flt-btn {
+    padding: 0 13px 0 12px !important;
+  }
+}
+
+/* Panel: springs down from the pill, chips cascade in */
+html body .map-filters {
+  transform-origin: top right;
+}
+html body .map-filters.open {
+  animation: flt-panel 0.42s var(--spring) both;
+}
+@keyframes flt-panel {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.94);
+  }
+}
+.map-filters.anim .mchip {
+  animation: flt-chip 0.4s calc(var(--i, 0) * 22ms + 80ms) var(--spring) both;
+}
+@keyframes flt-chip {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.9);
+  }
+}
+html body .map-filters .mchip {
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.25s var(--spring) !important;
+}
+html body .map-filters .mchip:active {
+  transform: scale(0.93);
+}
+.flt-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+.flt-clear {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: 700 14px var(--font-sans);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 10px 4px;
+  cursor: pointer;
+}
+.flt-clear[disabled] {
+  color: var(--text-muted);
+  text-decoration: none;
+  cursor: default;
+}
+.flt-show {
+  flex: 1;
+  min-height: 46px;
+}
+
+/* Settings cog (home header): outlined, so it never reads as the lime
+   Filters pill on the map */
+html body .settings-btn {
+  background: var(--glass) !important;
+  color: var(--text) !important;
+  border: 1.5px solid var(--line) !important;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+html body .settings-btn.on {
+  background: var(--text) !important;
+  color: var(--bg) !important;
+  border-color: var(--text) !important;
+}
+html body .settings-btn svg {
+  transition: transform 0.6s var(--spring);
+}
+html body .settings-btn:hover svg {
+  transform: rotate(45deg);
+}
+html body .settings-btn.on svg {
+  transform: rotate(120deg);
 }

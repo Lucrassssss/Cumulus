@@ -272,6 +272,9 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator("#map-filters")).toHaveClass(/open/);
     await expect(page.locator("#map-filters")).toBeVisible();
     await expect(page.locator("#map-filters .mchip").first()).toBeVisible();
+    // Labelled pill + footer make it unmistakably a filter.
+    await expect(page.locator("#filter-toggle-btn")).toContainText("Filters");
+    await expect(page.locator("#map-filters .flt-show")).toContainText(/Show \d+ events?/);
     // Grouped into labelled sections (Category / Happening now / When)
     // rather than one flat cluster of a dozen chips.
     const groupLabels = await page
@@ -286,6 +289,7 @@ test.describe("Cumulus smoke", () => {
     await page.locator("#map-filters .mchip", { hasText: "Creative" }).click();
     const cat = await page.evaluate(() => state.selectedCategory);
     expect(cat).toBe("Creative");
+    await expect(page.locator("#filter-count-badge")).toHaveText("1");
     await expect(page.locator("#map-filters")).toHaveClass(/open/);
 
     // Toggling the button again closes it.
