@@ -63,6 +63,8 @@ function applyMapChrome(map, declutter) {
       state.theme === "dark" ? "night" : "day",
     );
     map.setConfigProperty("basemap", "show3dTrees", false); // Universally disable trees for performance
+    // Greyscale city so the only colour on screen is events.
+    map.setConfigProperty("basemap", "theme", "monochrome");
     if (declutter) {
       map.setConfigProperty("basemap", "showPointOfInterestLabels", false);
       map.setConfigProperty("basemap", "showTransitLabels", false);

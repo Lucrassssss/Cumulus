@@ -642,36 +642,10 @@ function groupEventsByLocation(events) {
   return groups;
 }
 
-// Fans a group out from the shared point itself, like a hand of cards held
-// at one corner — NOT translated sideways into a row. icon-anchor:"bottom"
-// already puts each pin's tip exactly on its coordinate; every event in a
-// group shares that exact coordinate, and rotating each pin around its own
-// (shared) tip by a different angle is what sweeps their heads out into an
-// arc while every tip stays glued to the true epicentre. No icon-offset at
-// all — a translated-row version of this was tried first and was wrong: it
-// moved each pin's own tip away from the real point, so the group no longer
-// visibly "came from" the venue at all. Pure rotation is the fix.
-// Separation between two rotated pins is a chord length, not the angle
-// itself: for a pin whose head sits L px up from its (shared, fixed) tip,
-// two heads at angles a distance step apart land 2*L*sin(step/2) px apart on
-// screen. With this icon's real geometry (head ~32px up the 40px-wide
-// canvas), a 22° step — the first attempt at this — only separates adjacent
-// heads by ~12px, well inside the icon's own width, so one pin fully hid
-// behind its neighbour. ~50° gives ~27px separation, close to the icon's
-// full width and enough for each head to actually stand apart. Capped total
-// spread so large groups compress their step rather than fanning past ~150°
-// (beyond that pins start pointing back toward each other from the other
-// side, which stops reading as a fan at all).
-const PIN_FAN_MAX_SPREAD = 150; // total arc width in degrees
-const PIN_FAN_STEP = 50; // degrees between adjacent pins before the cap kicks in
-function fanAnglesFor(count) {
-  if (count <= 1) return [0];
-  const spread = Math.min(PIN_FAN_MAX_SPREAD, PIN_FAN_STEP * (count - 1));
-  const step = spread / (count - 1);
-  const start = -spread / 2;
-  return Array.from({ length: count }, (_, i) => Math.round(start + step * i));
-}
-
+// One feature per venue (events sharing a coordinate merge into a single
+// poster pin with a count badge — see 06-map-animations.js). count/live feed
+// the source's clusterProperties so clusters know their real event total and
+// how many are live without touching every leaf.
 function buildEventsGeoJSON() {
   const withLocation = getFilteredEvents().filter(
     (ev) =>
@@ -682,22 +656,20 @@ function buildEventsGeoJSON() {
   );
   const groups = groupEventsByLocation(withLocation);
   const features = [];
-  groups.forEach((group) => {
+  groups.forEach((group, key) => {
     const sorted = [...group].sort((a, b) => a.startsAt - b.startsAt);
-    const angles = fanAnglesFor(sorted.length);
-    sorted.forEach((ev, i) => {
-      features.push({
-        type: "Feature",
-        id: ev.id,
-        geometry: { type: "Point", coordinates: [ev.lon, ev.lat] },
-        properties: {
-          id: ev.id,
-          color: CATS[ev.category].color,
-          status: eventStatus(ev),
-          category: ev.category,
-          fan_rotate: angles[i],
-        },
-      });
+    const lead = sorted[0];
+    features.push({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [lead.lon, lead.lat] },
+      properties: {
+        key,
+        ids: JSON.stringify(sorted.map((e) => e.id)),
+        count: sorted.length,
+        live: sorted.filter((e) => eventStatus(e) === "live").length,
+        category: lead.category,
+        status: eventStatus(lead),
+      },
     });
   });
   return { type: "FeatureCollection", features };

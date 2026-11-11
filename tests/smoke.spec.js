@@ -506,6 +506,44 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator(".report-reason-option")).toHaveCount(4);
   });
 
+  test("map pins: same-venue events merge into one poster pin with a count", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await enterApp(page);
+    const res = await page.evaluate(() => {
+      const now = Date.now();
+      const mk = (id, cat, lat, lon, startH) => {
+        const ev = {
+          id, title: "Pin " + id, category: cat, host: "H", venue: "V", area: "A",
+          lat, lon, startTime: new Date(now + startH * 3600000).toISOString(),
+          endTime: new Date(now + (startH + 2) * 3600000).toISOString(),
+          desc: "d", capacity: 10, price: 5,
+        };
+        computeEventDates(ev);
+        EVENTS.push(ev);
+      };
+      mk("pin-a", "Live Music", 51.52, -0.08, -1); // live
+      mk("pin-b", "Creative", 51.52, -0.08, 5); // same venue
+      mk("pin-c", "Gaming", 51.5, -0.12, 3); // elsewhere
+      const geo = buildEventsGeoJSON();
+      const venue = geo.features.find((f) => f.properties.count === 2);
+      const el = _buildPinEl(venue.properties);
+      return {
+        features: geo.features.length,
+        live: venue.properties.live,
+        hasTile: !!el.querySelector(".mp-tile"),
+        count: el.querySelector(".mp-count")?.textContent,
+        isLive: el.querySelector(".mp").classList.contains("is-live"),
+      };
+    });
+    expect(res.features).toBe(2);
+    expect(res.live).toBe(1);
+    expect(res.hasTile).toBeTruthy();
+    expect(res.count).toBe("2");
+    expect(res.isLive).toBeTruthy();
+  });
+
   test("Admin panel: Reported events entry present", async ({ page }) => {
     await page.goto("/");
     await enterApp(page);
