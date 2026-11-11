@@ -406,8 +406,8 @@ function enterApp() {
   // the ENTIRE app for the whole session — a steady background tax on every
   // view, not just the map. Hide them for good once real app UI is showing.
   document.body.classList.add("app-active");
-  // Always boot to the map — never restore a stale tab from memory
-  state.view = "browse";
+  // Always boot to the Discover feed — never restore a stale tab from memory
+  state.view = "feed";
   EVENTS.forEach((ev) => computeEventDates(ev));
   renderNav();
   renderView();
@@ -457,6 +457,11 @@ async function initApp() {
   // seed data, the map/list show empty states until this resolves (or stay empty
   // if there genuinely are no events yet).
   await loadRealEvents();
+  state.eventsLoaded = true;
+  // Paint real cards immediately — the remaining loads below (tickets,
+  // RSVPs, follows…) are each a network round-trip and shouldn't hold the
+  // first screen hostage.
+  if (state.view === "feed" || state.view === "browse") renderView();
 
   await loadGeocodeCache();
   EVENTS.forEach((ev) => {
@@ -480,7 +485,8 @@ async function initApp() {
   if (state.userId) state.followedHostIds = await loadMyFollows();
   if (state.userId) state.myWaitlist = await loadMyWaitlist();
 
-  // Refresh view quietly once real data is in (still on map = update markers)
-  if (state.view === "browse") renderView();
+  // Refresh view quietly once real data is in (map = update markers, feed =
+  // swap the empty state for real cards)
+  if (state.view === "browse" || state.view === "feed") renderView();
 }
 

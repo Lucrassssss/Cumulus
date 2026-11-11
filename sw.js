@@ -1,4 +1,4 @@
-const CACHE = "cumulus-v4";
+const CACHE = "cumulus-v5";
 const ASSETS = [
   "./",
   "./index.html",
@@ -17,6 +17,8 @@ const ASSETS = [
   "./src/js/app/10-badges.js",
   "./src/js/app/11-event-checkout.js",
   "./src/js/app/12-ticket-wallet.js",
+  "./src/js/app/13-discover.js",
+  "./src/css/v2.css",
   "./manifest.json",
   "./assets/icons/icon.svg",
   "./assets/icons/favicon-32.png",
@@ -54,5 +56,25 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
-  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+  // Only the app shell is ours to cache. Supabase REST/auth, Mapbox tiles and
+  // Stripe must go straight to the network — intercepting them added a hop
+  // and, offline, resolved to `undefined` (a hard fetch failure).
+  const url = new URL(e.request.url);
+  if (url.origin !== self.location.origin) return;
+  e.respondWith(
+    fetch(e.request)
+      .then((res) => {
+        if (res.ok && res.type === "basic") {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(e.request, copy));
+        }
+        return res;
+      })
+      .catch(() =>
+        caches
+          .match(e.request)
+          .then((hit) => hit || caches.match("./index.html"))
+          .then((hit) => hit || Response.error()),
+      ),
+  );
 });

@@ -13,11 +13,10 @@ function renderBook() {
   const typeCards = types
     .map(
       (t) => `
-    <div onclick="setBookingType('${t.id}')" style="border:2px solid ${bookingDraft.type === t.id ? c.color : "var(--line)"};border-radius:14px;padding:14px 16px;cursor:pointer;background:${bookingDraft.type === t.id ? hexToRgba(c.color, 0.07) : "var(--surface-2)"};transition:all .15s;margin-bottom:10px;" role="radio" tabindex="0" aria-checked="${bookingDraft.type === t.id ? "true" : "false"}" aria-label="${escapeHtml(t.label)}, ${t.price ? `£${t.price.toFixed(2)}` : "Free"}">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-        <div><div style="font-weight:700;font-size:14px;color:var(--text);">${t.label}</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${t.desc}</div></div>
-        <div style="font-size:18px;font-weight:800;color:${bookingDraft.type === t.id ? c.color : "var(--text)"};">${t.price ? `£${t.price.toFixed(2)}` : "Free"}</div>
-      </div>
+    <div class="tt-card${bookingDraft.type === t.id ? " on" : ""}" onclick="setBookingType('${t.id}')" role="radio" tabindex="0" aria-checked="${bookingDraft.type === t.id ? "true" : "false"}" aria-label="${escapeHtml(t.label)}, ${t.price ? `£${t.price.toFixed(2)}` : "Free"}">
+      <span class="tt-radio" aria-hidden="true"></span>
+      <div class="tt-body"><div class="tt-name">${escapeHtml(t.label)}</div><div class="tt-desc">${escapeHtml(t.desc || "")}</div></div>
+      <div class="tt-price">${t.price ? `£${t.price.toFixed(2)}` : "Free"}</div>
     </div>`,
     )
     .join("");
@@ -30,9 +29,9 @@ function renderBook() {
         ? `
     <div class="section-title">Quantity</div>
     <div class="panel" style="--corner:var(--accent);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <button class="btn btn-outline" style="width:44px;height:44px;padding:0;font-size:22px;border-radius:50%;flex-shrink:0;" onclick="setBookingQty(${qty - 1})">−</button>
+      <button class="qty-btn" onclick="setBookingQty(${qty - 1})" aria-label="One fewer">−</button>
       <div style="text-align:center;"><div style="font-size:30px;font-weight:800;color:var(--text);">${qty}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">ticket${qty !== 1 ? "s" : ""}</div></div>
-      <button class="btn btn-outline" style="width:44px;height:44px;padding:0;font-size:22px;border-radius:50%;flex-shrink:0;" onclick="setBookingQty(${qty + 1})">+</button>
+      <button class="qty-btn" onclick="setBookingQty(${qty + 1})" aria-label="One more">+</button>
     </div>`
         : ""
     }

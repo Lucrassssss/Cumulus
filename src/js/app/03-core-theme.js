@@ -96,13 +96,15 @@ function needsGeocode(ev) {
 }
 async function geocodeAddress(address) {
   if (geocodeCache[address]) return geocodeCache[address];
-  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${MAPBOX_TOKEN}&country=gb&limit=1&proximity=-0.1276,51.5072`;
+  // Geocoding v6 (v5 mapbox.places is the legacy endpoint Mapbox is retiring).
+  const url = `https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(address)}&access_token=${MAPBOX_TOKEN}&country=gb&limit=1&proximity=-0.1276,51.5072`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`geocode ${res.status}`);
   const data = await res.json();
   const f = data.features && data.features[0];
-  if (!f) throw new Error(`no match: ${address}`);
-  const coords = { lat: f.center[1], lon: f.center[0] };
+  const c = f && f.geometry && f.geometry.coordinates;
+  if (!c) throw new Error(`no match: ${address}`);
+  const coords = { lat: c[1], lon: c[0] };
   geocodeCache[address] = coords;
   return coords;
 }

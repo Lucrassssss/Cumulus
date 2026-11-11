@@ -68,24 +68,17 @@ async function seedFixtureEvent(page) {
 }
 
 test.describe("Cumulus smoke", () => {
-  test("landing renders with hero + separate nav auth (Log in / Join Cumulus)", async ({
+  test("boots straight into the Discover feed with a sign-in entry point", async ({
     page,
   }) => {
     await page.goto("/");
-    await expect(page.locator(".lp-hero-title")).toContainText(
-      "Find what's on",
-    );
-    const nav = page.locator(".lp-nav");
+    await expect(page.locator(".feed-h1")).toBeVisible();
+    await expect(page.locator(".feed-search input")).toBeVisible();
     await expect(
-      nav.getByRole("button", { name: "Log in", exact: true }),
+      page.locator(".feed-head").getByRole("button", { name: "Sign in" }),
     ).toBeVisible();
-    await expect(
-      nav.getByRole("button", { name: "Join Cumulus", exact: true }),
-    ).toBeVisible();
-    await expect(page.locator(".lp-nav-auth button")).toHaveCount(2);
-    await expect(
-      page.locator(".lp-hero-actions .lp-hero-btn-primary"),
-    ).toBeVisible();
+    // The map is one tap away, not the front door.
+    await expect(page.locator("#main-map")).toBeHidden();
   });
 
   test("local assets load (css / js / cloud) with no failures", async ({
@@ -119,7 +112,8 @@ test.describe("Cumulus smoke", () => {
   }) => {
     await page.goto("/");
     const types = await page.evaluate(() => [
-      typeof renderGate,
+      typeof renderFeed,
+      typeof goFeed,
       typeof enterApp,
       typeof showLpSignup,
       typeof renderView,
@@ -161,7 +155,7 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator("#gate-field-error")).toBeVisible();
   });
 
-  test("enter app → 3-tab bottom nav (Host/Admin hidden until earned)", async ({
+  test("enter app → Discover/Map/Tickets/You nav (Host/Admin hidden until earned)", async ({
     page,
   }) => {
     await page.goto("/");
@@ -169,7 +163,7 @@ test.describe("Cumulus smoke", () => {
     const labels = (
       await page.locator(".bottom-nav .nav-link").allInnerTexts()
     ).map((s) => s.trim().toUpperCase());
-    for (const tab of ["EXPLORE", "CALENDAR", "ACCOUNT"]) {
+    for (const tab of ["DISCOVER", "MAP", "TICKETS", "YOU"]) {
       expect(
         labels.some((l) => l.includes(tab)),
         `${tab} tab present`,
@@ -268,8 +262,9 @@ test.describe("Cumulus smoke", () => {
   }) => {
     await page.goto("/");
     await enterApp(page);
-    // browse/map is the default view after enterApp() — filters should not
-    // float open on their own; only #filter-toggle-btn opens them.
+    await page.evaluate(() => goBrowse());
+    // Filters should not float open on their own on the map; only
+    // #filter-toggle-btn opens them.
     await expect(page.locator("#map-filters")).not.toHaveClass(/open/);
     await expect(page.locator("#map-filters")).toBeHidden();
 
@@ -309,7 +304,10 @@ test.describe("Cumulus smoke", () => {
   }) => {
     await page.goto("/");
     await enterApp(page);
-    await page.evaluate(() => updateMapCaptionBar());
+    await page.evaluate(() => {
+      goBrowse();
+      updateMapCaptionBar();
+    });
     await expect(page.locator("#map-caption-copy")).toHaveText(
       "Nothing live right now",
     );
@@ -472,10 +470,10 @@ test.describe("Cumulus smoke", () => {
     }, evId);
     // Every event is public — content is never hidden behind a gate, and
     // booking is a single, ungated action (no curator code, no perk unlock).
-    await expect(page.locator(".detail-title")).toBeVisible();
-    await expect(page.locator(".attendee-section")).toBeVisible();
+    await expect(page.locator(".ev-title")).toHaveText("Fixture Test Event");
+    await expect(page.locator("#going-section")).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /Register Free|Book Now/i }),
+      page.locator(".ev-buybar").getByRole("button", { name: /Get in free|Get tickets/i }),
     ).toBeVisible();
   });
 
@@ -491,19 +489,19 @@ test.describe("Cumulus smoke", () => {
       renderNav();
       renderView();
     }, evId);
-    await expect(page.locator(".detail-report-btn")).toBeVisible();
+    await expect(page.locator(".ev-report-btn")).toBeVisible();
     // Signed out: no report — window.prompt()-free feedback, just a toast.
     await page.evaluate(() => {
       state.userId = null;
     });
-    await page.click(".detail-report-btn");
+    await page.click(".ev-report-btn");
     await expect(page.locator("#report-event-overlay")).toHaveCount(0);
     // Signed in: opens the reason-picker modal (not window.prompt(), which
     // gets silently dismissed on a tab switch — see the modal's own comment).
     await page.evaluate(() => {
       state.userId = "test-user-uuid";
     });
-    await page.click(".detail-report-btn");
+    await page.click(".ev-report-btn");
     await expect(page.locator("#report-event-overlay")).toBeVisible();
     await expect(page.locator(".report-reason-option")).toHaveCount(4);
   });
