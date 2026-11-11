@@ -13,10 +13,10 @@ function renderBook() {
   const typeCards = types
     .map(
       (t) => `
-    <div class="tt-card${bookingDraft.type === t.id ? " on" : ""}" onclick="setBookingType('${t.id}')" role="radio" tabindex="0" aria-checked="${bookingDraft.type === t.id ? "true" : "false"}" aria-label="${escapeHtml(t.label)}, ${t.price ? `£${t.price.toFixed(2)}` : "Free"}">
+    <div class="tt-card${bookingDraft.type === t.id ? " on" : ""}" onclick="setBookingType('${t.id}')" role="radio" tabindex="0" aria-checked="${bookingDraft.type === t.id ? "true" : "false"}" aria-label="${escapeHtml(t.label)}, ${t.price ? `£${(t.price + (t.platformFee || 0)).toFixed(2)} including booking fee` : "Free"}">
       <span class="tt-radio" aria-hidden="true"></span>
       <div class="tt-body"><div class="tt-name">${escapeHtml(t.label)}</div><div class="tt-desc">${escapeHtml(t.desc || "")}</div></div>
-      <div class="tt-price">${t.price ? `£${t.price.toFixed(2)}` : "Free"}</div>
+      <div class="tt-price">${t.price ? `£${(t.price + (t.platformFee || 0)).toFixed(2)}<span class="tt-incl">£${t.price.toFixed(2)} + £${(t.platformFee || 0).toFixed(2)} fee</span>` : "Free"}</div>
     </div>`,
     )
     .join("");

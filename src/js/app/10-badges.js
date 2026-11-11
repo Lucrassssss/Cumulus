@@ -255,7 +255,7 @@ function eventListCardHtml(ev) {
       <div class="elc-meta">${escapeHtml(ev.date)} · ${escapeHtml(ev.time)}</div>
       <div class="elc-foot">
         ${ev.host ? `<span class="elc-host">Hosted by ${escapeHtml(ev.host)}</span>` : `<span></span>`}
-        <span class="elc-price">${price ? `From £${price}` : "Free"}</span>
+        <span class="elc-price">${price ? feedPriceLabel(ev) : "Free"}</span>
       </div>
     </div>
   </div>`;
@@ -457,6 +457,17 @@ function getCumulusFee(ticketPrice) {
   if (ticketPrice <= 40) return 2.5;
   if (ticketPrice <= 71) return 3.5;
   return 4.5;
+}
+// All-in price: ticket + the mandatory Cumulus booking fee. UK law (DMCC
+// Act 2024, drip-pricing ban, in force Apr 2025) requires compulsory fees
+// in the headline price — and it's what Dice does: one price, no surprises
+// at checkout. Use this anywhere a price is shown before checkout.
+function eventAllInPrice(ev) {
+  const p = Number(eventPrice(ev)) || 0;
+  return p ? p + getCumulusFee(p) : 0;
+}
+function fmtGBP(n) {
+  return `£${Number(n) % 1 ? Number(n).toFixed(2) : Number(n)}`;
 }
 function ticketTypes(ev) {
   const tier = activeTicketTier(ev);

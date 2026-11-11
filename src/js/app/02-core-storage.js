@@ -47,6 +47,8 @@ function showToast(msg, type = "info") {
     wrap = document.createElement("div");
     wrap.id = "cu-toast-wrap";
     wrap.className = "cu-toast-wrap";
+    wrap.setAttribute("role", "status");
+    wrap.setAttribute("aria-live", "polite");
     document.body.appendChild(wrap);
   }
   const t = document.createElement("div");

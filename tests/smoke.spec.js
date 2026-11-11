@@ -632,6 +632,53 @@ test.describe("Cumulus smoke", () => {
     expect(apple).toContain("ll=51.523606,-0.078529");
   });
 
+  test("UX pass: all-in prices, ♥ save + Saved list, keyboard cards, more-like-this", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      const now = Date.now();
+      const mk = (id, title, cat, price, h) => {
+        const ev = {
+          id, title, category: cat, host: "UX Host", venue: "V", area: "A",
+          address: "1 Test St, London", lat: 51.5 + h / 1000, lon: -0.1,
+          startTime: new Date(now + h * 3600000).toISOString(),
+          endTime: new Date(now + (h + 2) * 3600000).toISOString(),
+          desc: "d", capacity: 50, price,
+        };
+        computeEventDates(ev);
+        EVENTS.push(ev);
+      };
+      mk("ux-1", "Paid Gig", "Live Music", 12, 3);
+      mk("ux-2", "Second Gig", "Live Music", 0, 5);
+      mk("ux-3", "Third Gig", "Live Music", 30, 7);
+      state.eventsLoaded = true;
+      goFeed();
+    });
+    // All-in: £12 ticket + £1.50 booking fee shown as £13.50 before checkout.
+    const row = page.locator("#feed-results .fr-row", { hasText: "Paid Gig" });
+    await expect(row.locator(".fr-price")).toHaveText("£13.50");
+
+    // ♥ save from the feed → Saved chip appears with a count.
+    await row.locator(".save-btn").click();
+    await expect(row.locator(".save-btn")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator('[data-range="saved"] b')).toHaveText("1");
+    // Persists, and guests can open Tickets to see their Saved list.
+    await page.evaluate(() => openTicketsTab());
+    await expect(page.locator(".hp-list .fr-row", { hasText: "Paid Gig" })).toBeVisible();
+
+    // Keyboard: Enter on a focused card opens it.
+    await page.evaluate(() => goFeed());
+    await page.locator("#feed-results .fr-row", { hasText: "Third Gig" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator(".ev-title")).toHaveText("Third Gig");
+    // Event page: all-in price + "incl. booking fee", and never a dead end.
+    await expect(page.locator(".ev-buy-price b")).toHaveText("£32.50");
+    await expect(page.locator(".ev-buy-incl")).toContainText("incl. booking fee");
+    await expect(page.locator(".ev-more").first()).toContainText("More from UX Host");
+  });
+
   test("event detail: fully visible and bookable, no gating", async ({
     page,
   }) => {

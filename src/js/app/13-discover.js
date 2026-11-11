@@ -75,8 +75,8 @@ function feedTimeLabel(ev) {
   return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 function feedPriceLabel(ev) {
-  const p = eventPrice(ev);
-  return p ? `£${Number(p) % 1 ? Number(p).toFixed(2) : p}` : "Free";
+  const p = eventAllInPrice(ev);
+  return p ? fmtGBP(p) : "Free";
 }
 function feedSpotsLeft(ev) {
   if (!ev.capacity) return null;
@@ -98,6 +98,7 @@ function feedFiltered() {
   const range = state.feedRange || "all";
   return feedUpcoming().filter((ev) => {
     if (cat !== "all" && ev.category !== cat) return false;
+    if (range === "saved" && !isSaved(ev.id)) return false;
     if (range === "free" && eventPrice(ev)) return false;
     if (range === "today" && !eventInDateRange(ev, "today") && eventStatus(ev) !== "live") return false;
     if (range === "weekend" && !eventInDateRange(ev, "weekend")) return false;
@@ -152,6 +153,12 @@ function _rerenderFeedResults() {
   document.querySelectorAll("[data-range]").forEach((b) =>
     b.classList.toggle("on", b.dataset.range === (state.feedRange || "all")),
   );
+  const near = document.querySelector('[data-near="1"]');
+  if (near) {
+    near.classList.remove("loading");
+    near.classList.toggle("on", !!state.nearMe);
+    near.setAttribute("aria-pressed", state.nearMe ? "true" : "false");
+  }
   document.querySelectorAll("[data-fcat]").forEach((b) =>
     b.classList.toggle("on", b.dataset.fcat === (state.selectedCategory || "all")),
   );
@@ -167,7 +174,10 @@ function feedPosterCardHtml(ev, size) {
       ${posterGlyph(ev)}
       <div class="fp-top">
         <span class="fp-date${st === "live" ? " live" : ""}">${st === "live" ? '<span class="pulse"></span>' : ""}${feedDateLabel(ev)}</span>
-        ${scarce ? `<span class="fp-hot">${left} left</span>` : isHotEvent(ev) && st !== "live" ? `<span class="fp-hot">🔥 Hot</span>` : ""}
+        <span class="fp-top-r">
+          ${scarce ? `<span class="fp-hot">${left} left</span>` : isHotEvent(ev) && st !== "live" ? `<span class="fp-hot">🔥 Hot</span>` : ""}
+          ${saveBtnHtml(ev, "on-poster")}
+        </span>
       </div>
       <div class="fp-bottom">
         <div class="fp-cat">${escapeHtml(ev.category || "Event")}</div>
@@ -185,7 +195,7 @@ function feedRowHtml(ev, tag) {
   return `<article class="fr-row" onclick="openEvent('${ev.id}')" role="button" tabindex="0" aria-label="${escapeHtml(ev.title)}">
     <div class="fr-thumb ${posterClass(ev)}" style="${posterStyle(ev)}">${posterGlyph(ev)}</div>
     <div class="fr-body">
-      <div class="fr-date${st === "live" ? " live" : ""}">${st === "live" ? '<span class="pulse"></span>' : ""}${feedDateLabel(ev)} · ${feedTimeLabel(ev)}</div>
+      <div class="fr-date${st === "live" ? " live" : ""}">${st === "live" ? '<span class="pulse"></span>' : ""}${feedDateLabel(ev)} · ${feedTimeLabel(ev)}${ev._dist != null ? ` <span class="fr-dist">· ${fmtDistance(ev._dist)}</span>` : ""}</div>
       <h3 class="fr-title">${escapeHtml(ev.title)}</h3>
       <div class="fr-venue">${escapeHtml(ev.venue || "")}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""}</div>
       <div class="fr-foot">
@@ -196,8 +206,106 @@ function feedRowHtml(ev, tag) {
         ${going >= 2 ? `<span class="fr-chip">${going} going</span>` : ""}
       </div>
     </div>
-    <span class="fr-go" aria-hidden="true">→</span>
+    ${saveBtnHtml(ev, "in-row")}
   </article>`;
+}
+
+// ── Saved events (♥) ──────────────────────────────────────────────────────
+// Eventbrite's heart / Dice's "interested": the cheapest retention loop
+// there is. Per device (localStorage), works for guests too; the Tickets tab
+// lists them and Discover gets a "♥ Saved" chip once there are any.
+const SAVED_KEY = "cumulus_saved";
+function getSavedIds() {
+  try {
+    return JSON.parse(localStorage.getItem(SAVED_KEY) || "[]").map(String);
+  } catch (e) {
+    return [];
+  }
+}
+function isSaved(id) {
+  return getSavedIds().includes(String(id));
+}
+function savedUpcoming() {
+  const ids = getSavedIds();
+  return feedUpcoming().filter((ev) => ids.includes(String(ev.id)));
+}
+function saveBtnHtml(ev, variant) {
+  const on = isSaved(ev.id);
+  return `<button type="button" class="save-btn ${variant || ""}${on ? " on" : ""}" data-save-id="${escapeHtml(String(ev.id))}" onclick="event.stopPropagation();toggleSave('${ev.id}')" aria-pressed="${on}" aria-label="${on ? "Remove from saved" : "Save"}: ${escapeHtml(ev.title)}">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.4-9.3C1.4 8.2 3.4 4.5 7 4.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.6 0 5.6 3.7 4.4 6.7-1.9 4.7-9.4 9.3-9.4 9.3Z"/></svg>
+  </button>`;
+}
+function toggleSave(id) {
+  id = String(id);
+  const ids = getSavedIds();
+  const on = !ids.includes(id);
+  const next = on ? [...ids, id] : ids.filter((x) => x !== id);
+  try {
+    localStorage.setItem(SAVED_KEY, JSON.stringify(next.slice(-300)));
+  } catch (e) {}
+  document.querySelectorAll(`[data-save-id="${CSS.escape(id)}"]`).forEach((b) => {
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+    const ev = EVENTS.find((e) => String(e.id) === id);
+    if (ev) b.setAttribute("aria-label", `${on ? "Remove from saved" : "Save"}: ${ev.title}`);
+    if (on) {
+      b.classList.remove("pop");
+      void b.offsetWidth;
+      b.classList.add("pop");
+    }
+  });
+  showToast(on ? "Saved — find it under Tickets" : "Removed from saved", on ? "success" : "info");
+  if (state.view === "feed") {
+    if (state.feedRange === "saved" && !next.length) state.feedRange = "all";
+    _rerenderFeedResults();
+    _refreshSavedChip();
+  } else if (state.view === "my-tickets") renderView();
+}
+function _refreshSavedChip() {
+  const n = savedUpcoming().length;
+  const chip = document.querySelector('[data-range="saved"]');
+  if (chip) {
+    chip.style.display = n ? "" : "none";
+    const c = chip.querySelector("b");
+    if (c) c.textContent = n;
+  }
+}
+
+// ── Near me ───────────────────────────────────────────────────────────────
+// Fever / Eventbrite "near you": one tap sorts by distance and labels each
+// row "1.2 km". Asks for location only when the chip is tapped.
+function fmtDistance(m) {
+  return m < 950 ? `${Math.max(50, Math.round(m / 50) * 50)} m` : `${(m / 1000).toFixed(m < 9950 ? 1 : 0)} km`;
+}
+function _metresBetween(a, b, c, d) {
+  const R = 6371000,
+    r = Math.PI / 180;
+  const x = Math.sin(((c - a) * r) / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin(((d - b) * r) / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+function toggleNearMe() {
+  if (state.nearMe) {
+    state.nearMe = false;
+    EVENTS.forEach((e) => delete e._dist);
+    state.feedLimit = FEED_PAGE;
+    return _rerenderFeedResults();
+  }
+  if (!navigator.geolocation) return showToast("Location isn't available on this device", "error");
+  const chip = document.querySelector('[data-near="1"]');
+  if (chip) chip.classList.add("loading");
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      state.userLoc = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+      state.nearMe = true;
+      state.feedLimit = FEED_PAGE;
+      _rerenderFeedResults();
+    },
+    () => {
+      if (chip) chip.classList.remove("loading");
+      showToast("Allow location to sort events near you", "info");
+    },
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
+  );
 }
 
 function feedResultsHtml() {
@@ -206,7 +314,13 @@ function feedResultsHtml() {
       .map(() => `<div class="fr-row skel"><div class="fr-thumb"></div><div class="fr-body"><i></i><i></i><i></i></div></div>`)
       .join("")}</div>`;
   }
-  const list = feedFiltered();
+  let list = feedFiltered();
+  if (state.nearMe && state.userLoc) {
+    list.forEach((ev) => {
+      ev._dist = hasCoords(ev) ? _metresBetween(state.userLoc.lat, state.userLoc.lon, ev.lat, ev.lon) : null;
+    });
+    list = [...list].sort((a, b) => (a._dist ?? 1e12) - (b._dist ?? 1e12));
+  }
   if (!list.length) {
     const anything = feedUpcoming().length > 0;
     return `<div class="feed-empty">
@@ -224,7 +338,7 @@ function feedResultsHtml() {
   let lastDay = null;
   const rows = shown
     .map((ev) => {
-      const day = feedDayHeading(ev);
+      const day = state.nearMe ? "Nearest first" : feedDayHeading(ev);
       const head = day !== lastDay ? `<div class="fr-day">${escapeHtml(day)}</div>` : "";
       lastDay = day;
       return head + feedRowHtml(ev);
@@ -401,7 +515,10 @@ function renderFeed() {
     }
 
     <div class="feed-section feed-sticky-filters">
-      <div class="chip-rail">${ranges
+      <div class="chip-rail">
+        <button class="v-chip near${state.nearMe ? " on" : ""}" data-near="1" onclick="toggleNearMe()" aria-pressed="${!!state.nearMe}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 21 3l-8 18-2-8-8-2Z"/></svg>Near me</button>
+        <button class="v-chip saved${range === "saved" ? " on" : ""}" data-range="saved" onclick="setFeedRange('saved')" style="${savedUpcoming().length ? "" : "display:none"}"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M12 20.5s-7.5-4.6-9.4-9.3C1.4 8.2 3.4 4.5 7 4.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.6 0 5.6 3.7 4.4 6.7-1.9 4.7-9.4 9.3-9.4 9.3Z"/></svg>Saved <b>${savedUpcoming().length}</b></button>
+        ${ranges
         .map(([k, l]) => `<button class="v-chip${range === k ? " on" : ""}" data-range="${k}" onclick="setFeedRange('${k}')">${l}</button>`)
         .join("")}</div>
       ${
@@ -607,13 +724,29 @@ function hideBootLoader() {
 }
 
 function openTicketsTab() {
-  if (!state.userId) {
+  // Guests can still reach their ♥ Saved list here; tickets themselves
+  // need an account (the page shows a sign-in prompt in their place).
+  if (!state.userId && !savedUpcoming().length) {
     showToast("Sign in to see your tickets", "info");
     showLpSignup();
     return;
   }
   openMyTickets();
 }
+
+// ── Accessibility helpers ─────────────────────────────────────────────────
+// Cards are <article role="button" tabindex="0" onclick=…>: make Enter and
+// Space activate them like real buttons (they only responded to clicks).
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const el = e.target;
+  if (!el || !el.getAttribute) return;
+  const role = el.getAttribute("role");
+  if (!["button", "radio", "tab", "link"].includes(role)) return;
+  if (/^(BUTTON|A|INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
+  e.preventDefault();
+  el.click();
+});
 
 // ── Boot ──────────────────────────────────────────────────────────────────
 // Lives in the LAST app script so every function start() can reach is

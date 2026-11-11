@@ -24,7 +24,17 @@ function renderMyTickets() {
       <h1 class="v-h1">Your tickets</h1>
       <p class="v-sub">${upcoming ? `${upcoming} coming up` : myTickets.length ? "Nothing coming up" : "Nothing here yet"}</p>
     </header>
-    ${myTicketsCardsHtml()}
+    ${
+      state.userId
+        ? myTicketsCardsHtml()
+        : `<div class="feed-empty"><div class="feed-empty-art" aria-hidden="true">🎟</div><h3>Your tickets live here</h3><p>Sign in to book — QR, calendar and transfers all land on this page.</p><div class="feed-empty-actions"><button class="v-btn" onclick="showLpSignup()">Sign in</button></div></div>`
+    }
+    ${(() => {
+      const saved = savedUpcoming();
+      if (!saved.length) return "";
+      return `<div class="hp-sec-head"><h3>Saved</h3><span>${saved.length} coming up</span></div>
+        <div class="fr-list compact hp-list">${saved.map((ev) => feedRowHtml(ev)).join("")}</div>`;
+    })()}
   </div>`;
 }
 
@@ -269,7 +279,8 @@ function renderHostView() {
       <div class="host-section-title">Pricing</div>
       <label class="intro-field-label">Ticket Price (£) — You keep 100%</label>
       <input id="host-price" type="number" min="0" step="0.01" class="gate-input" placeholder="e.g. 10 (Leave blank for free)" value="${p.priceTiers ? "" : p.price || ""}"/>
-      <div class="host-notice">We add a flat, transparent platform fee to the buyer at checkout to cover processing. You keep every penny of your ticket price.</div>
+      <div class="host-price-preview" id="host-price-preview" aria-live="polite"></div>
+      <div class="host-notice">Attendees see one all-in price that includes a small flat booking fee. You keep every penny of your ticket price.</div>
       <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;">
         <input type="checkbox" id="host-tiered-toggle" ${p.priceTiers ? "checked" : ""} onchange="document.getElementById('host-tiered-rows').style.display=this.checked?'block':'none'" style="width:16px;height:16px;"/>
         Use tiered pricing instead (Early Bird → General → Final)

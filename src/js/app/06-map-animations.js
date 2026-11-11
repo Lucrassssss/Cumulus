@@ -71,7 +71,7 @@ function _buildPinEl(props) {
       </span>
       ${count > 1 ? `<span class="mp-count">${count}</span>` : ""}
       ${live ? '<span class="mp-live">LIVE</span>' : ""}
-      <span class="mp-label"><b>${escapeHtml(_pinTimeLabel(lead))}</b>${count > 1 ? ` <em>+${count - 1} more</em>` : price ? ` · £${price}` : " · Free"}</span>
+      <span class="mp-label"><b>${escapeHtml(_pinTimeLabel(lead))}</b>${count > 1 ? ` <em>+${count - 1} more</em>` : ` · ${feedPriceLabel(lead)}`}</span>
       <span class="mp-tail" aria-hidden="true"></span>
     </button>`;
   el.querySelector(".mp").addEventListener("click", (e) => {
@@ -258,7 +258,7 @@ function _mcardHtml(ev) {
       <div class="fr-date${st === "live" ? " live" : ""}">${st === "live" ? '<span class="pulse"></span>' : ""}${feedDateLabel(ev)} · ${feedTimeLabel(ev)}</div>
       <h3 class="mcard-title">${escapeHtml(ev.title)}</h3>
       <div class="fr-venue">${escapeHtml(ev.venue || "")}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""}</div>
-      <div class="mcard-foot"><span class="fr-price${eventPrice(ev) ? "" : " free"}">${feedPriceLabel(ev)}</span><span class="mcard-go">View →</span></div>
+      <div class="mcard-foot"><span class="fr-price${eventPrice(ev) ? "" : " free"}">${feedPriceLabel(ev)}</span><span class="mcard-acts">${saveBtnHtml(ev, "in-row")}<span class="mcard-go">View →</span></span></div>
     </div>
   </article>`;
 }

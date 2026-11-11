@@ -648,10 +648,23 @@ function renderHostPreviewPin(el) {
   const ev = { id: "host-preview-" + category, title, category };
   el.innerHTML = `<div class="mp" style="--tilt:-3deg;">
       <span class="mp-tile ${posterClass(ev)}" style="${posterStyle(ev)}"><span class="mp-glyph">${_pinGlyphSvg(category, 18)}</span></span>
-      <span class="mp-label" style="opacity:1;transform:none;"><b>${escapeHtml(title.length > 16 ? title.slice(0, 15) + "…" : title)}</b>${price ? ` · £${price}` : " · Free"}</span>
+      <span class="mp-label" style="opacity:1;transform:none;"><b>${escapeHtml(title.length > 16 ? title.slice(0, 15) + "…" : title)}</b>${price ? ` · ${fmtGBP(price + getCumulusFee(price))}` : " · Free"}</span>
       <span class="mp-tail" aria-hidden="true"></span>
     </div>`;
 }
+
+// Host form: show the all-in price attendees will see, live.
+function updateHostPricePreview() {
+  const el = document.getElementById("host-price-preview");
+  if (!el) return;
+  const p = parseFloat(document.getElementById("host-price")?.value || "") || 0;
+  el.innerHTML = p
+    ? `Attendees see <b>${fmtGBP(p + getCumulusFee(p))}</b> · you get <b>${fmtGBP(p)}</b> · booking fee ${fmtGBP(getCumulusFee(p))}`
+    : `Free to attend — no fees for anyone.`;
+}
+document.addEventListener("input", (e) => {
+  if (e.target && e.target.id === "host-price") updateHostPricePreview();
+});
 
 // ---- ADDRESS SEARCH ----
 function generateSessionToken() {

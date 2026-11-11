@@ -4559,3 +4559,168 @@ html body .mapboxgl-user-location-dot::before {
 html body .mapboxgl-ctrl-geolocate-active .mapboxgl-ctrl-icon {
   filter: none;
 }
+
+/* ═══ UX pass ══════════════════════════════════════════════════════════ */
+
+/* ♥ Save */
+.save-btn {
+  appearance: none;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: transform 0.25s var(--spring), color 0.2s ease, background 0.2s ease;
+}
+.save-btn svg path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  transition: fill 0.2s ease;
+}
+.save-btn:hover {
+  color: var(--text);
+}
+.save-btn:active {
+  transform: scale(0.85);
+}
+.save-btn.on {
+  color: var(--hot);
+}
+.save-btn.on svg path {
+  fill: var(--hot);
+}
+.save-btn.pop {
+  animation: save-pop 0.5s var(--spring);
+}
+@keyframes save-pop {
+  30% {
+    transform: scale(1.35);
+  }
+  60% {
+    transform: scale(0.92);
+  }
+}
+.save-btn.on-poster {
+  width: 34px;
+  height: 34px;
+  background: rgba(0, 0, 0, 0.42);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #fff;
+}
+.save-btn.on-poster.on {
+  color: #fff;
+  background: var(--hot);
+}
+.save-btn.on-poster.on svg path {
+  fill: #fff;
+}
+.save-btn.glass-btn.on {
+  background: var(--hot);
+  border-color: transparent;
+  color: #fff;
+}
+.save-btn.glass-btn.on svg path {
+  fill: #fff;
+}
+.fp-top-r {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.mcard-acts {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* All-in prices */
+.ev-buy-incl {
+  margin-top: 3px;
+  font: 600 10.5px var(--font-sans);
+  color: var(--text-muted);
+}
+.tt-price {
+  text-align: right;
+}
+.tt-incl {
+  display: block;
+  margin-top: 3px;
+  font: 600 11px var(--font-sans);
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+.host-event-card-price .incl {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.host-price-preview {
+  margin: 8px 0 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--volt) 12%, var(--surface-2));
+  font-size: 13.5px;
+  color: var(--text-soft);
+}
+.host-price-preview b {
+  color: var(--text);
+}
+
+/* Near me + Saved chips */
+.v-chip svg {
+  flex-shrink: 0;
+}
+.v-chip.near.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+.v-chip.near.loading svg {
+  animation: v-spin 1s linear infinite;
+}
+.v-chip.saved b {
+  font: 800 12px var(--font-sans);
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  background: var(--hot);
+  color: #fff;
+}
+.v-chip.saved svg {
+  color: var(--hot);
+}
+.v-chip.saved.on svg {
+  color: var(--hot);
+}
+.fr-dist {
+  color: var(--text-muted);
+}
+
+/* Event page: keep browsing */
+.ev-more .fr-list {
+  margin: 0 -8px;
+  padding: 0;
+}
+/* Row heart replaces the decorative arrow */
+.fr-row .save-btn.in-row {
+  margin-right: -6px;
+}
+/* Poster rail: lock card width (long words used to widen some cards, which
+   made their 4:5 posters taller and left a gap under the others). */
+.fp-card {
+  min-width: 0;
+}
+.fp-card .fp-title {
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}

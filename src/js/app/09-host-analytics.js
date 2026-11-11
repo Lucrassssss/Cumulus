@@ -1469,6 +1469,7 @@ function renderView() {
   else if (state.view === "calendar") container.innerHTML = renderCalendar();
   else if (state.view === "host") {
     container.innerHTML = renderHostView();
+    updateHostPricePreview();
     if (mapboxConfigured()) setTimeout(initHostMap, 0);
   } else if (state.view === "book") container.innerHTML = renderBook();
   else if (state.view === "checkout") {
@@ -2086,7 +2087,7 @@ function hostEventBigCardHtml(ev) {
     <div class="host-event-card-body">
       <div class="host-event-card-title">${escapeHtml(ev.title)}</div>
       <div class="host-event-card-meta">${escapeHtml(ev.date)} · ${escapeHtml(ev.time)}</div>
-      <div class="host-event-card-price">${price ? `From £${price}` : "Free"}</div>
+      <div class="host-event-card-price">${price ? `${feedPriceLabel(ev)} <span class="incl">incl. fees</span>` : "Free"}</div>
     </div>
   </button>`;
 }
@@ -2389,6 +2390,7 @@ function renderDetail(id) {
       <div class="ev-hero-bar">
         <button class="glass-btn" onclick="goBack()" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
         <div style="display:flex;gap:8px;">
+          ${saveBtnHtml(ev, "glass-btn")}
           <button class="glass-btn ev-report-btn" onclick="openReportEventModal('${ev.id}')" aria-label="Report event"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4a1 1 0 0 1 1-1h11l-1.5 5L18 13H6"/></svg></button>
           <button class="glass-btn" onclick="shareEvent('${ev.id}')" aria-label="Share event"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg></button>
         </div>
@@ -2446,12 +2448,31 @@ function renderDetail(id) {
       </section>
 
       ${ownerTools ? `<section class="ev-block ev-owner">${ownerTools}</section>` : ""}
+      ${(() => {
+        // Eventbrite/Fever: never a dead end — keep people browsing.
+        const up = feedUpcoming().filter((e) => String(e.id) !== String(ev.id));
+        const fromHost = up.filter((e) => e.host && e.host === ev.host).slice(0, 3);
+        const hostIds = new Set(fromHost.map((e) => e.id));
+        const similar = up
+          .filter((e) => e.category === ev.category && !hostIds.has(e.id))
+          .sort((a, b) =>
+            hasCoords(ev) && hasCoords(a) && hasCoords(b)
+              ? _metresBetween(ev.lat, ev.lon, a.lat, a.lon) - _metresBetween(ev.lat, ev.lon, b.lat, b.lon)
+              : a.startsAt - b.startsAt,
+          )
+          .slice(0, 4);
+        const sec = (title, list) =>
+          list.length
+            ? `<section class="ev-block ev-more"><h2 class="ev-h2">${title}</h2><div class="fr-list compact">${list.map((e) => feedRowHtml(e)).join("")}</div></section>`
+            : "";
+        return sec(`More from ${escapeHtml(ev.host || "this host")}`, fromHost) + sec(`More ${escapeHtml(ev.category || "")} nearby`, similar);
+      })()}
     </div>
 
     <div class="ev-buybar">
       <div class="ev-buy-price">
         <span class="ev-buy-label">${price ? "From" : "Entry"}</span>
-        <b>${price ? `£${price}` : "Free"}</b>
+        <b>${price ? feedPriceLabel(ev) : "Free"}</b>${price ? `<span class="ev-buy-incl">incl. booking fee</span>` : ""}
       </div>
       <div class="ev-buy-cta">${bookBtn}</div>
     </div>
