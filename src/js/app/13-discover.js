@@ -44,7 +44,16 @@ function posterStyle(ev) {
   const x = 15 + (seed % 70);
   const y = 10 + ((seed >> 3) % 60);
   const vars = `--p-a:${a};--p-b:${b};--p-x:${x}%;--p-y:${y}%;`;
-  if (img) return `${vars}background-image:url('${String(img).replace(/'/g, "%27")}');`;
+  if (img) {
+    // Absolute, because a relative url() inside a custom property resolves
+    // against the stylesheet that uses it, not this page.
+    let abs = String(img);
+    try {
+      abs = new URL(abs, document.baseURI).href;
+    } catch (e) {}
+    const u = `url('${abs.replace(/'/g, "%27")}')`;
+    return `${vars}--p-img:${u};background-image:${u};`;
+  }
   return vars;
 }
 function posterClass(ev) {

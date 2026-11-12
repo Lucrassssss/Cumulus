@@ -5324,3 +5324,18 @@ html body .feed-empty-art{color:var(--text-muted);}
 html body .me-emoji{color:var(--text-muted);display:grid;place-items:center;}
 html body .gate-host-success-icon{color:var(--accent);}
 html body .fp-hot,html body .fp-date{white-space:nowrap;}html body .fp-top-r{flex-shrink:0;}
+
+/* Event page with a flyer/photo: show the whole artwork (not a zoomed
+   crop) over a darkened fill of itself — the way Dice presents posters. */
+html body .ev-hero.has-photo{background:
+  var(--p-img) center top / 100% auto no-repeat,
+  linear-gradient(rgba(8,8,10,.8),rgba(8,8,10,.8)),
+  var(--p-img) center / cover no-repeat !important;background-color:#0a0a0c !important;}
+html body .ev-hero.has-photo::after{background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,transparent 16%,transparent 52%,rgba(0,0,0,.9) 100%);}
+@media (min-width:761px){
+  html body .ev-hero.has-photo{background:
+    var(--p-img) right 28px top 76px / auto calc(100% - 104px) no-repeat,
+    linear-gradient(rgba(8,8,10,.78),rgba(8,8,10,.78)),
+    var(--p-img) center / cover no-repeat !important;}
+  html body .ev-hero.has-photo::after{background:linear-gradient(90deg,rgba(0,0,0,.55) 0%,transparent 60%),linear-gradient(180deg,transparent 55%,rgba(0,0,0,.5) 100%);}
+}
