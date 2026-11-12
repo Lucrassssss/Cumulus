@@ -1489,6 +1489,14 @@ function renderViewQuiet() {
     });
   } catch (e) {}
 }
+function _settleEntrances(root) {
+  try {
+    (root && root.getAnimations ? root.getAnimations({ subtree: true }) : []).forEach((a) => {
+      const t = a.effect && a.effect.getComputedTiming ? a.effect.getComputedTiming() : null;
+      if (t && t.iterations !== Infinity && a.playState !== "finished") a.finish();
+    });
+  } catch (e) {}
+}
 function renderView() {
   const app = document.getElementById("app");
   const container = document.getElementById("view-container");
@@ -1499,6 +1507,9 @@ function renderView() {
   // Same-page redraws (quantity +/−, filters, toggles) must not replay the
   // page's entrance — only a real page change fades in.
   app.classList.toggle("same-view", app.dataset.view === state.view);
+  // A redraw of the page you're already on (filters, toggles, live data)
+  // shows the new content settled — rows and chips don't re-enter.
+  if (app.dataset.view === state.view) requestAnimationFrame(() => _settleEntrances(container));
   // Remember where Home was scrolled to, so coming back lands in place.
   if (app.dataset.view === "feed" && state.view !== "feed") state._feedY = window.scrollY;
   app.dataset.view = state.view;

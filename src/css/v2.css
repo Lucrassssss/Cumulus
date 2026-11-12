@@ -22,7 +22,9 @@ html[data-theme] {
   --r-lg: 26px;
   --r-xl: 34px;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* settles with a whisper of overshoot — no visible bounce-back */
+  --spring: cubic-bezier(0.22, 1.08, 0.36, 1);
+  --pop: cubic-bezier(0.34, 1.56, 0.64, 1); /* only for deliberate taps (save heart) */
   --top-h: calc(64px + env(safe-area-inset-top, 0px));
   --bot-h: calc(84px + env(safe-area-inset-bottom, 0px));
 }
@@ -2022,7 +2024,7 @@ html body .section-title::after {
   flex-direction: column;
   align-items: center;
   -webkit-tap-highlight-color: transparent;
-  animation: mp-in 0.55s var(--delay, 0ms) var(--spring) both;
+  animation: mp-in 0.38s var(--delay, 0ms) cubic-bezier(.2,.8,.2,1) both;
   transition:
     transform 0.35s var(--spring),
     opacity 0.3s ease,
@@ -2031,7 +2033,7 @@ html body .section-title::after {
 @keyframes mp-in {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.3);
+    transform: translateY(8px) scale(0.6);
   }
 }
 .leaving > .mp,
@@ -4597,7 +4599,7 @@ html body .mapboxgl-ctrl-geolocate-active .mapboxgl-ctrl-icon {
   fill: var(--hot);
 }
 .save-btn.pop {
-  animation: save-pop 0.5s var(--spring);
+  animation: save-pop 0.45s var(--pop);
 }
 @keyframes save-pop {
   30% {
@@ -4747,7 +4749,7 @@ html body .set-switch.on .set-toggle{background:var(--cta-bg);border-color:trans
 html body .set-switch.on .set-toggle i{transform:translateX(16px);background:var(--cta-fg);}
 
 /* ── Up next (your next ticket) ──────────────────────────────────────── */
-html body .up-next{display:flex;gap:14px;align-items:stretch;padding:12px;margin:6px 18px 18px;border-radius:22px;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 30px -18px rgba(0,0,0,.35);animation:un-in .5s var(--spring) both;}
+html body .up-next{display:flex;gap:14px;align-items:stretch;padding:12px;margin:6px 18px 18px;border-radius:22px;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 30px -18px rgba(0,0,0,.35);animation:un-in .34s cubic-bezier(.2,.8,.2,1) backwards;}
 @keyframes un-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 html body .up-next .un-art{width:84px;min-height:96px;border-radius:15px;flex-shrink:0;position:relative;overflow:hidden;}
 html body .up-next .un-body{flex:1;min-width:0;display:flex;flex-direction:column;}
@@ -5422,7 +5424,12 @@ html body .tk-live-dot{width:7px;height:7px;border-radius:50%;background:#fff;fl
    new page (no slide, so nothing jumps), no bouncing bars, and nothing
    replays when the same page redraws. */
 @keyframes v-rise{from{opacity:0}}
-html body :is(.feed,.v-page,.ev-page,.bk-page,.tv-page,.ac-page,.hx){animation-duration:.22s !important;animation-timing-function:cubic-bezier(.2,0,0,1) !important;animation-delay:0s !important;}
+@keyframes v-glide{from{opacity:0;transform:translate3d(0,10px,0)}}
+/* Pages with no pinned bars glide up a touch as they fade in; pages that
+   pin a bar to the screen (event buy bar, Pay, host bar) only fade, since a
+   moving parent would drag the bar with it for the first few frames. */
+html body :is(.feed,.v-page,.tv-page,.ac-page){animation:v-glide .34s cubic-bezier(.2,.8,.2,1) backwards !important;}
+html body :is(.ev-page,.bk-page,.hx){animation:v-rise .24s cubic-bezier(.2,0,0,1) backwards !important;}
 html body .bk-cta,html body .ev-buybar{animation:none !important;}
 #app.same-view :is(.feed,.v-page,.ev-page,.bk-page,.tv-page,.ac-page,.hx,.up-next,.tv-r-body,.hx-hero-copy,.ev-buybar,.bk-cta){animation:none !important;}
 
@@ -5451,3 +5458,11 @@ html body .tv-page.just .tv-ticket{animation-delay:calc(1.85s + var(--i,0) * .08
 html body .bk-chips{display:flex !important;flex-wrap:wrap !important;justify-content:center !important;gap:6px 16px !important;margin:14px 0 0 !important;padding:0 !important;}
 html body .bk-chips li{background:none !important;border:0 !important;padding:0 !important;font-size:12px !important;font-weight:600 !important;color:var(--text-muted) !important;display:inline-flex !important;align-items:center !important;gap:5px !important;}
 html body .bk-chips li svg{color:var(--accent);}
+
+/* ══ Touch feel ═══════════════════════════════════════════════════════════
+   One quick, consistent press response on everything tappable that didn't
+   have one — a soft dip on touch, released smoothly, no overshoot. */
+html body :is(.nav-link,.fr-row,.v-chip,.fr-chip,.ac-row,.tk-art){-webkit-tap-highlight-color:transparent;transition:transform .18s cubic-bezier(.2,.8,.2,1),background-color .2s ease,color .2s ease,opacity .2s ease,box-shadow .2s ease;}
+html body :is(.nav-link,.v-chip,.fr-chip,.ac-row):active{transform:scale(.96);}
+html body :is(.fr-row,.tk-art):active{transform:scale(.985);}
+@media (prefers-reduced-motion:reduce){html body :is(.nav-link,.fr-row,.v-chip,.fr-chip,.ac-row,.tk-art):active{transform:none;}}
