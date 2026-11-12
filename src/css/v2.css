@@ -5361,3 +5361,13 @@ html body .yi-title span{transform:translateY(.35em);filter:blur(6px);}
 html body .yi-overlay.won .yi-title span{animation:yi-letter2 .55s calc(.6s + var(--i) * .03s) cubic-bezier(.22,1,.36,1) forwards;}
 @keyframes yi-letter2{to{opacity:1;transform:none;filter:blur(0)}}
 html body .yi-overlay.out .yi-stage{transition:transform .55s cubic-bezier(.65,0,.35,1),opacity .4s ease .1s;transform:translateY(28vh) scale(.5);}
+
+/* Host "Your payouts explained": label/value rows that never collide —
+   value takes the space it needs, wraps under the label on narrow screens,
+   in the UI font rather than wide mono. */
+html body .hp-tier-row{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;padding:12px 14px;border-radius:10px;}
+html body .hp-tier-label{flex:1 1 auto;min-width:0;font:600 13.5px var(--font-sans);color:var(--text-soft);}
+html body .hp-tier-fee{flex:0 1 auto;max-width:100%;text-align:right;font:700 13.5px/1.35 var(--font-sans) !important;letter-spacing:0 !important;color:var(--text);}
+html body .hp-tier-fee.keep{color:var(--accent);}
+html body .hp-tier-fee.muted{color:var(--text-muted);font-weight:600 !important;}
+@media (max-width:420px){html body .hp-tier-fee.muted{flex-basis:100%;text-align:left;}}

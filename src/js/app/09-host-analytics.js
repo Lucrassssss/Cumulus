@@ -460,11 +460,11 @@ function renderHostPayoutsPanel() {
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">You set the ticket price and <strong style="color:var(--text);">keep 100% of it</strong> — always. Buyers pay a small platform fee at checkout that covers card processing and running Cumulus. It's added on top of your price, so it never comes out of your earnings.</div>
     <div class="hp-tier-row">
       <span class="hp-tier-label">Your ticket price</span>
-      <span class="hp-tier-fee" style="color:#147136">You keep 100%</span>
+      <span class="hp-tier-fee keep">You keep 100%</span>
     </div>
     <div class="hp-tier-row">
       <span class="hp-tier-label">Platform fee</span>
-      <span class="hp-tier-fee" style="color:var(--text-muted)">Added at checkout · paid by the buyer</span>
+      <span class="hp-tier-fee muted">Added at checkout, paid by the buyer</span>
     </div>
     <div style="margin-top:12px;padding:10px 12px;background:var(--surface-2);border-radius:10px;font-size:11px;color:var(--text-muted);line-height:1.6;">
       <strong style="color:var(--text);">Payout timeline:</strong> Funds release 24 hours after your event ends once you've hosted 3+ dispute-free events — 48 hours before that, as a fraud-protection buffer.
