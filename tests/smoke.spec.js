@@ -612,7 +612,7 @@ test.describe("Cumulus smoke", () => {
       goFeed();
     });
     // Organiser box is up front — above the event list, before any scrolling.
-    const ctaY = await page.locator(".feed-host-cta").evaluate((el) => el.getBoundingClientRect().top);
+    const ctaY = await page.locator(".org-panel").evaluate((el) => el.getBoundingClientRect().top);
     const resultsY = await page.locator("#feed-results").evaluate((el) => el.getBoundingClientRect().top);
     expect(ctaY).toBeLessThan(resultsY);
     await expect(page.locator("#feed-results .fr-row")).toHaveCount(12);
@@ -899,7 +899,7 @@ test.describe("Cumulus smoke", () => {
     // Feed's "For organisers" box → host info page, whose CTA leads to the
     // application (sign-in gated for guests).
     await page.evaluate(() => goFeed());
-    await page.click(".feed-host-cta");
+    await page.click(".org-panel .org-cta");
     await expect(page.locator(".hx-h1")).toBeVisible();
     await expect(page.locator(".hx-bar")).toContainText("Apply to host");
     await page.evaluate(() => {

@@ -2535,6 +2535,10 @@ function renderDetail(id) {
     </div>
 
     <div class="ev-buybar">
+      <div class="ev-buy-meta">
+        <div><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span><b>${escapeHtml(longDate)}</b>${escapeHtml(ev.time || "")}</span></div>
+        <div><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-7.6 7-12A7 7 0 0 0 5 9c0 4.4 7 12 7 12Z"/><circle cx="12" cy="9" r="2.3"/></svg><span><b>${escapeHtml(ev.venue || "Venue")}</b>${escapeHtml(ev.area || "")}</span></div>
+      </div>
       <div class="ev-buy-price">
         <span class="ev-buy-label">${price ? "From" : "Entry"}</span>
         <b>${price ? feedPriceLabel(ev) : "Free"}</b>${price ? `<span class="ev-buy-incl">incl. booking fee</span>` : ""}
