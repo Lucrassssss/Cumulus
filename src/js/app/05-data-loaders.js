@@ -487,7 +487,7 @@ function goBack() {
     renderNav();
     renderView();
     if (state.view !== "browse")
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo(0, 0);
     if (state.view === "detail") {
       const ev = EVENTS.find((e) => e.id === state.selectedEventId);
       if (ev) updateEventUrlAndMeta(ev);
@@ -554,7 +554,7 @@ function openEvent(id) {
   state.selectedEventId = id;
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
   const ev = EVENTS.find((e) => e.id === id);
   if (ev) updateEventUrlAndMeta(ev);
   // Fresh tickets-sold number for this event; repaint in place if it moved.
@@ -588,14 +588,14 @@ function openAccount() {
   state.view = "account";
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 function openCalendar() {
   pushNav();
   state.view = "calendar";
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 // True once an account has been accepted onto the host onboarding system
 // (the verified-host badge, granted server-side in reviewHost() on
@@ -636,7 +636,7 @@ function openHost(prefill) {
   state.view = "host";
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 // No-op if the overlay was never created (peekAttendee, its only creator,
 // was removed with the per-event Connect/chat feature) — kept only because

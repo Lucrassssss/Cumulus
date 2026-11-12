@@ -229,7 +229,7 @@ function openHostApply() {
   state.view = "host-apply";
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 
 function hostApplyShowForm() {
@@ -246,7 +246,7 @@ function hostApplyShowForm() {
   }
   _hostApplyStep = "form";
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 
 function renderHostApplyView() {

@@ -10,7 +10,7 @@ function openMyTickets() {
   state.view = "my-tickets";
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 
 function renderMyTickets() {
@@ -263,7 +263,7 @@ function openCalendarDay(day) {
   state.view = "calendar-day";
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 
 function renderCalendarDay() {
@@ -526,7 +526,7 @@ function openScannerPicker() {
   state.view = "scan-picker";
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 
 function renderScannerPicker() {

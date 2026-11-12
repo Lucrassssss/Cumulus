@@ -765,7 +765,7 @@ function openAdmin() {
   state.view = "admin";
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 
 // Stress-test cleanup: only the seeded test hosts and their tagged events
@@ -861,7 +861,7 @@ function openOwnerDash() {
   state.view = "owner-dash";
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 
 /* ══════════════════════════════════════════════════
@@ -872,7 +872,7 @@ function openReview() {
   state.view = "review";
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 
 function renderReview() {
@@ -1027,7 +1027,7 @@ function openEventApprovals() {
   state.view = "event-approvals";
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 
 // Admin sign-in via Supabase Auth OTP — reuses the same 6-digit email code
@@ -1496,6 +1496,9 @@ function renderView() {
   // without touching the render functions themselves. Lives on #app, not
   // #view-container: the container's will-change:transform makes it a
   // fixed-position containing block, which would clip a viewport layer.
+  // Same-page redraws (quantity +/−, filters, toggles) must not replay the
+  // page's entrance — only a real page change fades in.
+  app.classList.toggle("same-view", app.dataset.view === state.view);
   app.dataset.view = state.view;
   if (state.view !== "host") destroyHostMap();
 
@@ -2122,7 +2125,7 @@ function openHostProfile(hostKey, hostName) {
   state.view = "host-profile";
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
   // hostKey is only a real users.id (so these lookups are possible) for
   // reviewed hosts — legacy events store a bare name string in e.host with
   // no linked account. Both fetched in the background so nav never blocks
@@ -2610,7 +2613,7 @@ function openReportedEvents() {
   state.view = "reported-events";
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 
 function renderReportedEvents() {

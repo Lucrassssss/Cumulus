@@ -5403,3 +5403,43 @@ html body .nav-badge{position:absolute;top:8px;left:calc(50% + 8px);width:9px;he
 html body .tk.is-live{border-color:color-mix(in srgb,var(--hot) 55%,var(--line)) !important;}
 html body .tk-live{appearance:none;border:0;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;background:var(--hot);color:#fff;font:700 13px var(--font-sans);cursor:pointer;}
 html body .tk-live .pulse{background:#fff;}
+
+/* ══ Smooth page changes ══════════════════════════════════════════════════
+   One calm, consistent transition everywhere: a short opacity fade on the
+   new page (no slide, so nothing jumps), no bouncing bars, and nothing
+   replays when the same page redraws. */
+@keyframes v-rise{from{opacity:0}}
+html body :is(.feed,.v-page,.ev-page,.bk-page,.tv-page,.ac-page,.hx){animation-duration:.22s !important;animation-timing-function:cubic-bezier(.2,0,0,1) !important;animation-delay:0s !important;}
+html body .bk-cta,html body .ev-buybar{animation:none !important;}
+#app.same-view :is(.feed,.v-page,.ev-page,.bk-page,.tv-page,.ac-page,.hx,.up-next,.tv-r-body,.hx-hero-copy,.ev-buybar,.bk-cta){animation:none !important;}
+
+/* ══ You're in — scissors cut ═════════════════════════════════════════════
+   Real scissors: steel blades on a pivot, red handle loops, held at a
+   slight cutting angle. They travel along the perforation and the blades
+   open and close ON the line — each close lands where the cut appears. */
+html body .tg .tg-scissors{opacity:0;transform:translate(-30px,112px);}
+html body .tg .tg-sc-tilt{transform:rotate(-7deg);transform-box:view-box;transform-origin:0 0;}
+html body .tg .tg-sc-shadow{fill:rgba(0,0,0,.35);filter:blur(2px);}
+html body .tg .tg-sc-steel{stroke:rgba(0,0,0,.35);stroke-width:.5;}
+html body .tg .tg-sc-arm{fill:none;stroke:var(--hot);stroke-width:4;stroke-linecap:round;}
+html body .tg .tg-sc-ring{fill:none;stroke:var(--hot);stroke-width:3.4;}
+html body .tg .tg-pivot{fill:#c5cad1;stroke:#5c6470;stroke-width:.8;}
+html body .tg .tg-pivot-dot{fill:#3a4048;}
+html body .tg .tg-blade{transform-box:view-box;transform-origin:0 0;}
+html body .tg .tg-blade.up{transform:rotate(-18deg);}
+html body .tg .tg-blade.down{transform:rotate(18deg);}
+html body .tg .tg-cutline{stroke:var(--volt);stroke-width:2;stroke-linecap:round;stroke-dasharray:112;stroke-dashoffset:112;opacity:0;}
+html body .tg.win .tg-scissors{animation:tg-sc-run .9s 1s cubic-bezier(.45,0,.3,1) forwards;}
+html body .tg.win .tg-blade.up{animation:tg-snip-up .15s 1s cubic-bezier(.5,0,.5,1) 6 alternate;}
+html body .tg.win .tg-blade.down{animation:tg-snip-down .15s 1s cubic-bezier(.5,0,.5,1) 6 alternate;}
+html body .tg.win .tg-cutline{animation:tg-cut .9s 1s cubic-bezier(.45,0,.3,1) forwards;}
+html body .tg.win .tg-perf{animation:tg-perf .9s 1s linear forwards;}
+@keyframes tg-sc-run{0%{opacity:0;transform:translate(-30px,112px)}10%{opacity:1}86%{opacity:1}100%{opacity:0;transform:translate(118px,112px)}}
+@keyframes tg-snip-up{from{transform:rotate(-18deg)}to{transform:rotate(-1deg)}}
+@keyframes tg-snip-down{from{transform:rotate(18deg)}to{transform:rotate(1deg)}}
+@keyframes tg-cut{0%{opacity:1;stroke-dashoffset:112}88%{opacity:1;stroke-dashoffset:0}100%{opacity:0;stroke-dashoffset:0}}
+/* re-time the rest around the cut */
+html body .tg.win .tg-stub{animation:tg-glide .8s 1.92s cubic-bezier(.22,1,.36,1) forwards !important;}
+html body .yi-overlay.won .yi-ring{animation-delay:1.92s !important;}
+html body .yi-overlay.won .yi-ring.r2{animation-delay:2.06s !important;}
+html body .tv-page.just .tv-ticket{animation-delay:calc(2.9s + var(--i,0) * .12s) !important;}

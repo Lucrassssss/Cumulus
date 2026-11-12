@@ -877,7 +877,7 @@ function openBook(id) {
   state.view = "book";
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 function setBookingType(type) {
   bookingDraft.type = type;
@@ -898,7 +898,7 @@ function proceedToCheckout() {
   state.view = "checkout";
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 function openViewTicket(evId) {
   pushNav();
@@ -912,7 +912,7 @@ function openViewTicket(evId) {
   state.view = "confirmed";
   renderNav();
   renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 async function registerFree(evId) {
   const ev = EVENTS.find((e) => e.id === evId);

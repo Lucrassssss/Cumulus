@@ -169,6 +169,11 @@ function _ticketGlyph(mode) {
   return `<svg class="tg ${mode || ""}" viewBox="0 0 120 168" aria-hidden="true">
     <defs>
       <clipPath id="${id}c"><path d="${TG_TOP}"/></clipPath>
+      <linearGradient id="${id}m" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffffff"/>
+        <stop offset=".45" stop-color="#d9dde3"/>
+        <stop offset="1" stop-color="#8d96a3"/>
+      </linearGradient>
       <linearGradient id="${id}s" x1="0" y1="0" x2="1" y2="0">
         <stop offset="0" stop-color="#fff" stop-opacity="0"/>
         <stop offset=".5" stop-color="#fff" stop-opacity=".65"/>
@@ -191,7 +196,25 @@ function _ticketGlyph(mode) {
       <g clip-path="url(#${id}c)"><rect class="tg-sheen" x="-80" y="-20" width="46" height="200" fill="url(#${id}s)" transform="rotate(18 60 60)"/></g>
     </g>
     <line class="tg-perf" x1="20" y1="112" x2="100" y2="112"/>
+    <line class="tg-cutline" x1="4" y1="112" x2="116" y2="112"/>
     <g class="tg-stub"><path class="tg-shape" d="${TG_STUB}"/><g class="tg-bars">${bars}</g></g>
+    <g class="tg-scissors" aria-hidden="true">
+      <g class="tg-sc-tilt">
+        <ellipse class="tg-sc-shadow" cx="6" cy="9" rx="34" ry="5"/>
+        <g class="tg-blade down">
+          <path class="tg-sc-steel" fill="url(#${id}m)" d="M-3 1.5 L36 2.2 Q40 1 37 -0.4 L4 -2.2 Z"/>
+          <path class="tg-sc-arm" d="M-2 1 Q-9 4 -13 9"/>
+          <ellipse class="tg-sc-ring" cx="-18" cy="12" rx="7.5" ry="5.5" transform="rotate(25 -18 12)"/>
+        </g>
+        <g class="tg-blade up">
+          <path class="tg-sc-steel" fill="url(#${id}m)" d="M-3 -1.5 L36 -2.2 Q40 -1 37 0.4 L4 2.2 Z"/>
+          <path class="tg-sc-arm" d="M-2 -1 Q-9 -4 -13 -9"/>
+          <ellipse class="tg-sc-ring" cx="-18" cy="-12" rx="7.5" ry="5.5" transform="rotate(-25 -18 -12)"/>
+        </g>
+        <circle class="tg-pivot" cx="0" cy="0" r="2.6"/>
+        <circle class="tg-pivot-dot" cx="0" cy="0" r="0.9"/>
+      </g>
+    </g>
   </svg>`;
 }
 function _buzz(pattern) {
@@ -330,7 +353,7 @@ function playPurchaseCelebration(ev, n, free, fromPay) {
       reduce ? 0 : fromPay ? 220 : 380,
     );
   });
-  setTimeout(close, reduce ? 1300 : 2700);
+  setTimeout(close, reduce ? 1300 : 3100);
 }
 
 // ─── Your ticket (confirmation + wallet view) ─────────────────────────────
