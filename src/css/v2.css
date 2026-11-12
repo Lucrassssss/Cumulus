@@ -5372,3 +5372,4 @@ html body .hp-tier-fee.keep{color:var(--accent);}
 html body .hp-tier-fee.muted{color:var(--text-muted);font-weight:600 !important;}
 @media (max-width:420px){html body .hp-tier-fee.muted{flex-basis:100%;text-align:left;}}
 html body .bk-fit #payment-element{margin-bottom:0 !important;}html body .bk-fit .checkout-status{margin:0 !important;}
+html body .bk-hint-pay{margin:8px 6px 0;font-size:12px;color:var(--text-muted);}

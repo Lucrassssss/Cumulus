@@ -136,6 +136,7 @@ function renderCheckout() {
       </div>
       <div id="payment-element"></div>
     </div>
+    <p class="bk-hint-pay">Choose how to pay — your card details open when you tap Card.</p>
     <p class="bk-secure">${_bkIc(BK_LOCK, 13)}<span>Encrypted by Stripe — we never see your card. By paying you agree to the <a href="terms.html" target="_blank">Terms</a>.</span></p>
     <div class="checkout-cta-bar bk-cta" id="checkout-cta-bar">
       <div class="bk-cta-total"><span>Total</span><b>£${total}</b>${feeTotal ? `<em>incl. £${feeTotal.toFixed(2)} fee</em>` : ""}</div>

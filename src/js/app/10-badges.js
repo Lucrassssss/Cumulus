@@ -1113,7 +1113,12 @@ async function startStripeCheckout() {
     // no longer triggers Link's own one-tap recognition, only the plain
     // autofill.
     const paymentElement = stripeElementsGroup.create("payment", {
-      layout: { type: "tabs", defaultCollapsed: false },
+      // Accordion, collapsed: the screen opens as compact "Card" / "PayPal"
+      // rows and the card fields — with Stripe's optional "save my info"
+      // section — only open when tapped. Keeps Pay and the order on one
+      // screen. (That save section lives inside Stripe's iframe, so this is
+      // the only way to fold it away without switching Link off.)
+      layout: { type: "accordion", defaultCollapsed: true, radios: true, spacedAccordionItems: false },
       // Apple/Google Pay get their own one-tap buttons above (Express
       // Checkout) — don't repeat them inside the card form.
       wallets: { applePay: "never", googlePay: "never" },
