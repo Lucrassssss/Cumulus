@@ -456,7 +456,7 @@ function renderHostPayoutsPanel() {
   // so this tracks WHEN/WHOM a payout would go to, but never moves real money.
   return `
   <div class="hp-panel">
-    <div class="hp-title">💸 Your payouts explained</div>
+    <div class="hp-title">Your payouts explained</div>
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">You set the ticket price and <strong style="color:var(--text);">keep 100% of it</strong> — always. Buyers pay a small platform fee at checkout that covers card processing and running Cumulus. It's added on top of your price, so it never comes out of your earnings.</div>
     <div class="hp-tier-row">
       <span class="hp-tier-label">Your ticket price</span>
@@ -494,14 +494,14 @@ function renderConnectStatusPanel() {
   const s = state.myConnectStatus;
   if (s === null) {
     return `<div class="hp-panel" style="margin-top:16px;">
-      <div class="hp-title">🏦 Payout account</div>
+      <div class="hp-title">Payout account</div>
       <div style="font-size:12px;color:var(--text-muted);">Loading…</div>
     </div>`;
   }
   const connected = !!s.stripe_connect_payouts_enabled;
   const pending = !!s.stripe_connect_account_id && !connected;
   return `<div class="hp-panel" style="margin-top:16px;">
-    <div class="hp-title">🏦 Payout account</div>
+    <div class="hp-title">Payout account</div>
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">${
       connected
         ? "Your bank account is connected — payouts release automatically on the schedule above."
@@ -566,7 +566,7 @@ function renderMyHostedEventsCancelPanel() {
     )
     .join("");
   return `<div class="hp-panel" style="margin-top:16px;">
-    <div class="hp-title">⚠️ Cancel an event</div>
+    <div class="hp-title">Cancel an event</div>
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">Cancelling refunds every ticket automatically and takes the event off the map. This can't be undone.</div>
     ${rows}
   </div>`;
@@ -652,7 +652,7 @@ function renderPromoCodesPanel() {
     )
     .join("");
   return `<div class="hp-panel" style="margin-top:16px;">
-    <div class="hp-title">🏷️ Promo codes</div>
+    <div class="hp-title">Promo codes</div>
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">Hand out a code for guestlist comps, influencers, or early supporters — it's checked and priced live at checkout, same as tiered pricing.</div>
     <label class="intro-field-label">Event</label>
     <select class="gate-input" style="margin-bottom:10px;" onchange="loadPromoCodesForEvent(this.value||null)">
@@ -697,7 +697,7 @@ function renderMyHostedEventsDuplicatePanel() {
     )
     .join("");
   return `<div class="host-section">
-    <div class="host-section-title">📋 Duplicate a past event</div>
+    <div class="host-section-title">Duplicate a past event</div>
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;line-height:1.6;">Reuse a listing's details for a new date — running a weekly night shouldn't mean retyping the whole form each time.</div>
     <select class="gate-input" onchange="if(this.value) duplicateEvent(this.value);">
       <option value="">Choose an event to duplicate…</option>
@@ -777,6 +777,16 @@ async function refreshStressTestCounts() {
     if (el && data) el.textContent = data.events || data.hosts ? `${data.events} events · ${data.hosts} test hosts — tap to remove` : "Nothing to wipe";
   } catch (e) {}
 }
+async function seedStressTest() {
+  showToast("Loading test data…", "info");
+  const { data, error } = await sb.rpc("admin_seed_stress_test");
+  if (error) return showToast(error.message === "forbidden" ? "Admins only" : "Couldn't load — try again", "error");
+  if (data && data.skipped) return showToast("Already loaded — wipe it first to reload", "info");
+  await loadRealEvents();
+  await loadTicketCounts();
+  showToast(`Loaded ${data.events} events from ${data.hosts} test hosts`, "success");
+  renderView();
+}
 async function wipeStressTest() {
   let counts = null;
   try {
@@ -824,6 +834,10 @@ function renderAdmin() {
       </button>
       <button class="prof-action-row" onclick="openReportedEvents()">
         <span class="prof-action-label">Reported events<span class="prof-action-sub">Auto-hidden after 3+ community reports</span></span>
+        <span class="prof-action-right">›</span>
+      </button>
+      <button class="prof-action-row" onclick="seedStressTest()">
+        <span class="prof-action-label">Load stress test<span class="prof-action-sub">100 test hosts + ~216 events at real London venues</span></span>
         <span class="prof-action-right">›</span>
       </button>
       <button class="prof-action-row prof-action-danger" onclick="wipeStressTest()">
@@ -2432,7 +2446,7 @@ function renderDetail(id) {
   const going = attendees.includes(state.profileName);
   const ownerTools =
     (ev.hostId === state.userId && ev.status !== "hidden"
-      ? `<button class="v-btn ghost wide" onclick="inviteMyPastAttendees('${id}','${escapeHtml(ev.title).replace(/'/g, "&#39;")}')">📣 Invite past attendees</button>`
+      ? `<button class="v-btn ghost wide" onclick="inviteMyPastAttendees('${id}','${escapeHtml(ev.title).replace(/'/g, "&#39;")}')">Invite past attendees</button>`
       : "") +
     // Once reported+hidden, only an admin may delete it — a host losing
     // write access to their own flagged event (see events_modify_own/
@@ -2509,7 +2523,7 @@ function renderDetail(id) {
               ? `<span class="ev-muted">${goingN} ${goingN === 1 ? "person has" : "people have"} tickets${ticket ? " — including you" : ""}.</span>`
               : `<span class="ev-muted">No one's booked yet — grab the first spot.</span>`
         }</div>
-        ${going || ticket ? `<div class="ev-muted" style="margin-top:8px;">You're on the list ✓</div>` : ""}
+        ${going || ticket ? `<div class="ev-muted" style="margin-top:8px;">You're on the list</div>` : ""}
       </section>
 
       ${ownerTools ? `<section class="ev-block ev-owner">${ownerTools}</section>` : ""}

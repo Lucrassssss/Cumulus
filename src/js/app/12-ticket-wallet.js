@@ -39,7 +39,7 @@ function renderMyTickets() {
 function myTicketsCardsHtml() {
   if (!myTickets.length)
     return `<div class="feed-empty">
-      <div class="feed-empty-art" aria-hidden="true">🎟</div>
+      <div class="feed-empty-art" aria-hidden="true"><svg class="ui-ic" viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/></svg></div>
       <h3>No tickets. Yet.</h3>
       <p>Everything you book lands here — QR, calendar, transfer, all of it.</p>
       <div class="feed-empty-actions"><button class="v-btn" onclick="goFeed()">Find something on</button></div>
@@ -188,7 +188,7 @@ function showClaimedSheet(eventId) {
   el.setAttribute("aria-label", "Ticket received");
   el.innerHTML = `<div class="loc-sheet">
       <div class="loc-head">
-        <div><b>You've got a ticket 🎟</b><span>${ev ? `${escapeHtml(ev.title)} · ${feedDateLabel(ev)}` : "It's in your Tickets"}</span></div>
+        <div><b>You've got a ticket</b><span>${ev ? `${escapeHtml(ev.title)} · ${feedDateLabel(ev)}` : "It's in your Tickets"}</span></div>
         <button class="loc-x" onclick="closeLocationSheet()" aria-label="Close">✕</button>
       </div>
       <p class="tf-p">It's in your wallet with its own QR code — you're all set for the door.</p>
@@ -852,13 +852,13 @@ function renderScanner() {
     <span id="scanner-pending-badge" style="display:none;font-size:11px;font-weight:700;color:var(--accent);"></span>
     ${
       lastMinutePct !== null
-        ? `<div class="hp-panel" style="margin-bottom:14px;"><div class="hp-title">📊 Your sales timing</div><div style="font-size:12px;color:var(--text-muted);line-height:1.6;"><strong style="color:var(--text);">${lastMinutePct}%</strong> of tickets for this event sold in the final 48 hours before start. ${lastMinutePct >= 60 ? "Your audience buys late — lean into last-minute pushes." : "Your audience plans ahead — early promotion is working for you."}</div></div>`
+        ? `<div class="hp-panel" style="margin-bottom:14px;"><div class="hp-title">Your sales timing</div><div style="font-size:12px;color:var(--text-muted);line-height:1.6;"><strong style="color:var(--text);">${lastMinutePct}%</strong> of tickets for this event sold in the final 48 hours before start. ${lastMinutePct >= 60 ? "Your audience buys late — lean into last-minute pushes." : "Your audience plans ahead — early promotion is working for you."}</div></div>`
         : ""
     }
     ${
       spontaneity !== null
         ? `<div class="hp-panel" style="margin-bottom:14px;">
-            <div class="hp-title">⚡ Spontaneous vs planned</div>
+            <div class="hp-title">Spontaneous vs planned</div>
             <div style="display:flex;height:8px;border-radius:99px;overflow:hidden;margin:8px 0;">
               <div style="width:${spontaneity.spontaneousPct}%;background:#8B5CF6;"></div>
               <div style="width:${spontaneity.preplannedPct}%;background:var(--surface-2);"></div>
@@ -868,13 +868,13 @@ function renderScanner() {
         : ""
     }
     <div class="hp-panel" style="margin-bottom:14px;display:${scannerState.repeatStat && scannerState.repeatStat.total ? "block" : "none"};">
-      <div class="hp-title">🔁 Repeat attendees</div>
+      <div class="hp-title">Repeat attendees</div>
       <div id="repeat-attendee-stat" style="font-size:12px;color:var(--text-muted);line-height:1.6;"></div>
     </div>
     ${
       dropOff !== null
         ? `<div class="hp-panel" style="margin-bottom:14px;">
-            <div class="hp-title">🚪 Drop-off rate</div>
+            <div class="hp-title">Drop-off rate</div>
             <div style="font-size:12px;color:var(--text-muted);line-height:1.6;"><strong style="color:var(--text);">${dropOff.scanned} of ${dropOff.sold}</strong> tickets sold were actually scanned at the door (${dropOff.pct}%).${dropOff.pct < 70 ? " Worth checking whether capacity planning should account for no-shows." : ""}</div>
           </div>`
         : ""

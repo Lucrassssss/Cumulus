@@ -405,7 +405,7 @@ function signupModalHtml(prefillName, prefillEmail) {
 
         <!-- Host teaser (shown when host tab selected) -->
         <div id="gate-host-preview" style="display:none;margin-bottom:20px;padding:16px;background:color-mix(in srgb,var(--accent) 6%,transparent);border:1px solid color-mix(in srgb,var(--accent) 20%,transparent);border-radius:14px;">
-          <div style="font-size:22px;margin-bottom:8px;">🎪</div>
+          <div style="margin-bottom:8px;color:var(--accent);"><svg class="ui-ic" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11v2a2 2 0 0 0 2 2h2l6 4V5L7 9H5a2 2 0 0 0-2 2Z"/><path d="M17 9a4 4 0 0 1 0 6M19.5 6.5a8 8 0 0 1 0 11"/></svg></div>
           <div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:4px;">Host verified events on Cumulus</div>
           <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">Tell us about your venue or events. Applications are reviewed by our team — approved hosts can post public events, sell tickets, and access host analytics.</div>
         </div>
@@ -456,7 +456,7 @@ function signupModalHtml(prefillName, prefillEmail) {
         <div class="lp-form-trust" id="gate-trust-strip">
           <span>Everyone welcome</span>
           <span>·</span>
-          <span>Zero host fees</span>
+          <span>No hidden fees</span>
           <span>·</span>
           <span>Leave anytime</span>
         </div>
@@ -563,7 +563,7 @@ function switchSignupType(type) {
     if (label) label.textContent = "Join Cumulus →";
     if (trust)
       trust.innerHTML =
-        "<span>Everyone welcome</span><span>·</span><span>Zero host fees</span><span>·</span><span>Leave anytime</span>";
+        "<span>Everyone welcome</span><span>·</span><span>No hidden fees</span><span>·</span><span>Leave anytime</span>";
   }
   // Reset chip selections
   document

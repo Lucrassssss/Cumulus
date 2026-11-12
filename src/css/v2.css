@@ -5257,3 +5257,70 @@ html body .ev-buy-meta{display:none;flex-direction:column;gap:8px;padding-bottom
 html body .ev-buy-meta div{display:flex;gap:10px;align-items:flex-start;}
 html body .ev-buy-meta svg{color:var(--accent);flex-shrink:0;margin-top:2px;}
 html body .ev-buy-meta b{color:var(--text);display:block;font-weight:700;}
+
+/* ══ Polish pass: sharper, flatter, more editorial ════════════════════════
+   Same layout. Tighter geometry (squarer corners in place of bubbles),
+   hairlines instead of glows, flat surfaces instead of glass, tabular
+   figures for prices and times, line icons instead of emoji. */
+html[data-theme]{--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:22px;}
+html body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-feature-settings:"ss01","cv11";}
+html body ::selection{background:var(--volt);color:var(--volt-ink);}
+html body :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+html body .ui-ic{vertical-align:-0.15em;flex-shrink:0;}
+
+/* Brand mark + glows: calm down */
+html body .feed-mark{box-shadow:none !important;}
+html body .org-dot,html body .pulse{box-shadow:none;}
+
+/* Geometry: cards, posters, thumbs, sheets */
+html body .fp-card .poster{border-radius:14px !important;}
+html body .fr-thumb{border-radius:10px !important;}
+html body .fr-row{border-radius:12px;}
+html body .bk-event,html body .bk-order,html body .bk-summary,html body .bk-extras,html body .bk-qty-row,html body .ac-card,html body .tv-receipt,html body .up-next,html body .ev-facts,html body .host-card,html body .promise-strip li{border-radius:14px !important;}
+html body .bk-page .tt-card{border-radius:14px;}
+html body .tv-ticket{border-radius:20px;}
+html body .bk-art,html body .un-art,html body .ac-past-art{border-radius:10px !important;}
+html body .loc-sheet{border-radius:22px 22px 0 0;}
+html body .po-card{border-radius:20px;}
+html body .feed-host-cta{border-radius:16px !important;}
+html body .ev-page > .ev-buybar{border-radius:18px;}
+html body .set-opt,html body .ac-row,html body .ac-field,html body .loc-opt{border-radius:10px;}
+html body .set-ic,html body .tv-r-ic,html body .loc-ic{border-radius:8px;}
+
+/* Chips: tidy tags rather than bubbles */
+html body .v-chip{border-radius:10px;border-width:1px;font-weight:600;letter-spacing:-.005em;}
+html body .v-chip.on{border-color:transparent;}
+html body .fr-chip,html body .tv-meta span,html body .bk-chips li,html body .crew-chip{border-radius:6px;}
+html body .fp-date,html body .fp-hot,html body .fp-price,html body .tv-seat,html body .ev-tag{border-radius:6px !important;}
+
+/* Surfaces: flat + hairline (no glass blur on content cards) */
+html body .ac-card,html body .bk-summary,html body .bk-event,html body .bk-order,html body .up-next{box-shadow:none;border-color:var(--line);}
+html body .fp-card:hover{transform:none;}
+html body .fp-wheel .fp-card.on:hover .poster{transform:translateY(-2px);}
+html body .fr-row:hover{background:var(--surface);}
+
+/* Type: tighter display, quieter labels, tabular figures */
+html body .feed-sec-head h2,html body .ev-h2,html body .bk-h,html body .ac-card-head h2{letter-spacing:-.02em !important;}
+html body .fr-title{letter-spacing:-.015em;}
+html body .fr-date,html body .fp-date,html body .bk-ev-when,html body .un-kicker,html body .v-kicker,html body .feed-kicker,html body .feed-count{letter-spacing:.06em;font-weight:600;}
+html body .fr-price,html body .fp-price,html body .bk-line,html body .bk-cta-total b,html body .ev-buy-price b,html body .tt-price,html body .tv-r-amt,html body .ac-stat b,html body .tv-code,html body .bk-order-amt b{font-variant-numeric:tabular-nums;}
+html body .fp-hot{font-weight:700;letter-spacing:.02em;text-transform:uppercase;font-size:10.5px;}
+
+/* Buttons: confident, not bouncy */
+html body .v-btn{letter-spacing:-.01em;font-weight:700;}
+html body .v-btn:hover{transform:none;filter:brightness(1.04);}
+html body .v-btn.ghost{box-shadow:inset 0 0 0 1px var(--line);}
+
+/* Bottom dock: solid bar with a hairline, not frosted glass */
+html body .bottom-nav{background:color-mix(in srgb,var(--surface) 96%,transparent) !important;box-shadow:0 8px 28px rgba(0,0,0,.28) !important;border-radius:20px !important;}
+html body .nav-link{border-radius:14px !important;}
+html body .ev-buybar,html body .bk-cta{border-radius:18px;}
+html body .ev-buybar .v-btn,html body .bk-cta .v-btn{border-radius:12px;}
+
+/* Icons that replaced emoji */
+html body .ff-bell{display:inline-flex;color:var(--accent);margin-right:2px;}
+html body .ac-host-bell{display:inline-flex;color:var(--accent);}
+html body .feed-empty-art{color:var(--text-muted);}
+html body .me-emoji{color:var(--text-muted);display:grid;place-items:center;}
+html body .gate-host-success-icon{color:var(--accent);}
+html body .fp-hot,html body .fp-date{white-space:nowrap;}html body .fp-top-r{flex-shrink:0;}

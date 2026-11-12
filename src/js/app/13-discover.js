@@ -407,7 +407,7 @@ function feedPosterCardHtml(ev, size) {
       <div class="fp-top">
         <span class="fp-date${st === "live" ? " live" : ""}">${st === "live" ? '<span class="pulse"></span>' : ""}${feedDateLabel(ev)}</span>
         <span class="fp-top-r">
-          ${scarce ? `<span class="fp-hot">${left} left</span>` : isHotEvent(ev) && st !== "live" ? `<span class="fp-hot">🔥 Hot</span>` : ""}
+          ${scarce ? `<span class="fp-hot">${left} left</span>` : isHotEvent(ev) && st !== "live" ? `<span class="fp-hot">Selling fast</span>` : ""}
           ${saveBtnHtml(ev, "on-poster")}
         </span>
       </div>
@@ -489,7 +489,7 @@ function toggleSave(id) {
     }
   });
   showToast(
-    on ? (state.userId ? "Saved — it's in your Tickets" : "Saved — find it under ♥ Saved on Discover") : "Removed from saved",
+    on ? (state.userId ? "Saved — it's in your Tickets" : "Saved — find it under Saved on Discover") : "Removed from saved",
     on ? "success" : "info",
   );
   if (state.view === "feed") {
@@ -745,9 +745,9 @@ function renderFeed() {
           <div class="fhc-stack" aria-hidden="true"><i></i><i></i><i></i></div>
           <div class="fhc-copy">
             <div class="fhc-kicker">For organisers</div>
-            <div class="fhc-title">Throw something.</div>
-            <div class="fhc-sub">Keep 100% of the ticket price. Paid out in 24–48h.</div>
-            <span class="fhc-btn">Start hosting →</span>
+            <div class="fhc-title">Host your own events.</div>
+            <div class="fhc-sub">Interested in hosting for your community? See how it works.</div>
+            <span class="fhc-btn">Find out more →</span>
           </div>
           <span class="fhc-go" aria-hidden="true">→</span>
         </div>
@@ -770,7 +770,7 @@ function renderFeed() {
       const fresh = newFromFollowed();
       if (!fresh.length) return "";
       return `<div class="feed-section feed-followed" id="feed-followed">
-        <div class="feed-sec-head"><h2><span class="ff-bell" aria-hidden="true">🔔</span> New from hosts you follow</h2><button class="link-btn" onclick="dismissFollowedNew()">Clear</button></div>
+        <div class="feed-sec-head"><h2><span class="ff-bell" aria-hidden="true"><svg class="ui-ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></span> New from hosts you follow</h2><button class="link-btn" onclick="dismissFollowedNew()">Clear</button></div>
         <div class="fr-list compact">${fresh.slice(0, 3).map((ev) => feedRowHtml(ev, "New")).join("")}</div>
       </div>`;
     })()}
@@ -871,7 +871,7 @@ function accountMenuHtml() {
     ? item("navStack=[];openHost()", ic('<path d="M12 5v14M5 12h14"/>'), "Host an event", "Create and manage your events")
     : state.hostApplicationStatus === "pending"
       ? ""
-      : item("openHostApply()", ic('<path d="M12 5v14M5 12h14"/>'), "Become a host", "Keep 100% of the ticket price");
+      : item("openHostApply()", ic('<path d="M12 5v14M5 12h14"/>'), "Become a host", "Run events for your community");
   return `<div class="acct-head">
       <span class="acct-av" aria-hidden="true">${escapeHtml(initials(state.profileName || "You"))}</span>
       <span class="set-txt"><b>${escapeHtml(state.profileName || "Your account")}</b><span>${escapeHtml(state.profileEmail || "")}</span></span>

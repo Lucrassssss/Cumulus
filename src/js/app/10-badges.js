@@ -47,7 +47,7 @@ function renderAccount() {
       ([id, n]) => `<button type="button" class="ac-host" onclick="openHostProfile('${q(id)}','${q(n)}')">
         <span class="ac-host-av" aria-hidden="true">${escapeHtml(initials(n))}</span>
         <span class="ac-host-name">${escapeHtml(n)}</span>
-        ${(state.notifyHostIds || []).includes(id) ? '<span class="ac-host-bell" title="Notifications on" aria-label="Notifications on">🔔</span>' : ""}
+        ${(state.notifyHostIds || []).includes(id) ? '<span class="ac-host-bell" title="Notifications on" aria-label="Notifications on"><svg class="ui-ic" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></span>' : ""}
       </button>`,
     )
     .join("");
@@ -121,7 +121,7 @@ function renderAccount() {
       <div class="ac-card-head"><h2 id="ac-mail-h">Emails</h2></div>
       <div class="set-list">
         ${sw("email_reminders", "emailReminders", "Reminder the day before", "Time, venue and your ticket, 24 hours out")}
-        ${sw("email_followed", "emailFollowed", "New events from hosts I follow", "Only hosts where you've turned the 🔔 on")}
+        ${sw("email_followed", "emailFollowed", "New events from hosts I follow", "Only hosts where you've turned notifications on")}
       </div>
     </section>
 
@@ -338,11 +338,11 @@ function openAccountDetails() {
 function accountCoverHtml() {
   if (state.profileCoverUrl) {
     return `<div class="account-cover-edit-zone" onclick="document.getElementById('account-cover-input').click()" role="button" tabindex="0" aria-label="Change host banner" style="background-image:url('${state.profileCoverUrl}');">
-      <span class="account-avatar-edit-badge account-cover-edit-badge" aria-hidden="true">📷</span>
+      <span class="account-avatar-edit-badge account-cover-edit-badge" aria-hidden="true"><svg class="ui-ic" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
     </div>`;
   }
   return `<div class="account-cover-edit-zone account-cover-edit-empty" onclick="document.getElementById('account-cover-input').click()" role="button" tabindex="0" aria-label="Add a host banner">
-    <span class="account-avatar-edit-badge account-cover-edit-badge" aria-hidden="true">📷</span>
+    <span class="account-avatar-edit-badge account-cover-edit-badge" aria-hidden="true"><svg class="ui-ic" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
   </div>`;
 }
 
@@ -364,7 +364,7 @@ function renderAccountDetails() {
       <input id="account-avatar-input" type="file" accept="image/*" style="display:none;" onchange="handleAccountAvatarChange(this)"/>
       <div class="account-avatar-edit-zone" onclick="document.getElementById('account-avatar-input').click()" role="button" tabindex="0" aria-label="Change profile photo">
         ${accountAvatarHtml(84)}
-        <span class="account-avatar-edit-badge" aria-hidden="true">📷</span>
+        <span class="account-avatar-edit-badge" aria-hidden="true"><svg class="ui-ic" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
       </div>
       <button class="btn-text" style="font-size:12.5px;" onclick="document.getElementById('account-avatar-input').click()">${state.profileAvatarUrl ? "Change photo" : "Add a photo"}</button>
     </div>

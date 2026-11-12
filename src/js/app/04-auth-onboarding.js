@@ -171,7 +171,7 @@ async function _submitHostApplication({
   if (modal) {
     modal.innerHTML = `
       <div class="gate-host-success">
-        <div class="gate-host-success-icon">🎉</div>
+        <div class="gate-host-success-icon"><svg class="ui-ic" viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 3 3 5-6"/></svg></div>
         <div class="gate-host-success-title">Application submitted!</div>
         <div class="gate-host-success-sub">Thanks ${escapeHtml(name)} — we'll review your application and get back to you within 48 hours. In the meantime, you can explore Cumulus as an attendee.</div>
         <button class="btn" style="width:100%;margin-top:24px;" onclick="document.body.style.overflow='';document.getElementById('gate-root').innerHTML='';enterApp();">Explore Cumulus →</button>

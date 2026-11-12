@@ -125,13 +125,13 @@ function updateMapEmptyState(count) {
     !!(document.getElementById("search-input")?.value || "").trim();
   el.innerHTML = filtered
     ? `<div class="map-empty-card" role="status">
-         <div class="me-emoji" aria-hidden="true">🔍</div>
+         <div class="me-emoji" aria-hidden="true"><svg class="ui-ic" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
          <div class="me-title">No events match</div>
          <div class="me-sub">Nothing fits those filters right now. Try clearing them.</div>
          <button class="btn" onclick="clearMapFilters()">Clear filters</button>
        </div>`
     : `<div class="map-empty-card" role="status">
-         <div class="me-emoji" aria-hidden="true">🗺️</div>
+         <div class="me-emoji" aria-hidden="true"><svg class="ui-ic" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg></div>
          <div class="me-title">No events on the map yet</div>
          <div class="me-sub">Cumulus is just getting started in London. Be the first to put something on.</div>
          <button class="btn" onclick="openHost()">Host an event</button>
