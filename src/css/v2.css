@@ -5395,3 +5395,11 @@ html body .lp-signup-overlay,html body .loc-overlay{top:var(--vvtop,0px) !import
 html body .lp-signup-modal,html body .loc-sheet{max-height:calc(var(--vvh,100dvh) - 8px) !important;overflow-y:auto !important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
 html.kb-open body .lp-signup-modal{padding-bottom:20px !important;}
 html.kb-open body .lp-signup-modal::before{font-size:32px;margin-bottom:8px;}
+
+/* Live-ticket notification: red dot on the Tickets tab + a strip on the card */
+html body .nav-link{position:relative;}
+html body .nav-badge{position:absolute;top:8px;left:calc(50% + 8px);width:9px;height:9px;border-radius:50%;background:var(--hot);box-shadow:0 0 0 2px var(--surface);animation:nav-badge-in .4s cubic-bezier(.22,1,.36,1) both;}
+@keyframes nav-badge-in{from{transform:scale(0)}to{transform:none}}
+html body .tk.is-live{border-color:color-mix(in srgb,var(--hot) 55%,var(--line)) !important;}
+html body .tk-live{appearance:none;border:0;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;background:var(--hot);color:#fff;font:700 13px var(--font-sans);cursor:pointer;}
+html body .tk-live .pulse{background:#fff;}

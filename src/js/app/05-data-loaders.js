@@ -260,18 +260,11 @@ function renderNav() {
     state.view,
   )
     ? "admin"
-    : [
-          "book",
-          "checkout",
-          "confirmed",
-          "scan-picker",
-          "scan",
-          "account-details",
-        ].includes(state.view)
+    : ["scan-picker", "scan", "account-details"].includes(state.view)
       ? "account"
-      : state.view === "my-tickets"
+      : ["my-tickets", "confirmed"].includes(state.view)
         ? "tickets"
-      : ["calendar", "calendar-day", "detail", "host-profile", "plans"].includes(state.view)
+      : ["calendar", "calendar-day", "detail", "host-profile", "plans", "book", "checkout"].includes(state.view)
         ? "feed"
         : state.view;
   const navContainer = document.getElementById("nav-container");
@@ -346,8 +339,31 @@ function renderNav() {
   navContainer.querySelectorAll(".nav-link").forEach((btn) => {
     btn.classList.toggle("active-cloud-tab", btn.dataset.nav === activeTab);
   });
+  updateLiveTicketBadge();
 
 }
+
+// Red dot on the Tickets tab while one of your events is happening right
+// now — your QR is one tap away. Re-checked every minute and on every nav
+// render, so it appears when doors open and clears when the event ends.
+function liveTicketCount() {
+  if (!state.userId || typeof myTickets === "undefined") return 0;
+  const ids = new Set(myTickets.map((t) => t.eventId));
+  return EVENTS.filter((ev) => ids.has(ev.id) && eventStatus(ev) === "live").length;
+}
+function updateLiveTicketBadge() {
+  const btn = document.querySelector('.bottom-nav [data-nav="tickets"]');
+  if (!btn) return;
+  const n = liveTicketCount();
+  let dot = btn.querySelector(".nav-badge");
+  if (n && !dot) {
+    dot = document.createElement("span");
+    dot.className = "nav-badge";
+    btn.appendChild(dot);
+  } else if (!n && dot) dot.remove();
+  btn.setAttribute("aria-label", n ? `Tickets — ${n} event${n > 1 ? "s" : ""} on now` : "Tickets");
+}
+setInterval(updateLiveTicketBadge, 60000);
 
 function onSearchInput() {
   if (state.view !== "browse") {

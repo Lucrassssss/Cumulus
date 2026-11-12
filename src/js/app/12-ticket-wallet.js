@@ -55,7 +55,8 @@ function myTicketsCardsHtml() {
       if (!ev) return "";
       const status = eventStatus(ev);
       const safeTitle = escapeHtml(ev.title).replace(/'/g, "&#39;");
-      return `<article class="tk${status === "past" ? " past" : ""}">
+      return `<article class="tk${status === "past" ? " past" : ""}${status === "live" ? " is-live" : ""}">
+      ${status === "live" ? `<button type="button" class="tk-live" onclick="openViewTicket('${ev.id}')"><span class="pulse"></span>Happening now — tap to show your QR</button>` : ""}
       <div class="tk-art ${posterClass(ev)}" style="${posterStyle(ev)}" onclick="openViewTicket('${ev.id}')" role="button" tabindex="0" aria-label="Open ticket for ${escapeHtml(ev.title)}">
         ${posterGlyph(ev)}
         <div class="tk-art-foot">

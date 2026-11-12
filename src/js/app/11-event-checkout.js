@@ -462,7 +462,7 @@ function renderConfirmed() {
     <div class="bk-top">
       ${
         just
-          ? `<button class="bk-done" onclick="navStack=[];goFeed()">Done</button>`
+          ? `<button class="bk-done" onclick="bookingDraft.justPurchased=false;navStack=[];openTicketsTab()">Done</button>`
           : `<button class="bk-back" onclick="goBack()" aria-label="Back">${_bkIc('<path d="M15 5l-7 7 7 7"/>', 20)}</button>`
       }
       ${just ? _bkSteps(3) : `<span class="tv-top-lbl">Your ticket${tickets.length > 1 ? "s" : ""}</span>`}

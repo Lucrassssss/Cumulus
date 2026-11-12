@@ -1259,4 +1259,32 @@ test.describe("Cumulus smoke", () => {
     expect(bar.y + bar.height).toBeLessThanOrEqual(568);
     expect(bar.y).toBeGreaterThan(400);
   });
+
+  test("live ticket shows a red dot on Tickets; after buying, the ticket sits under Tickets and Done goes there", async ({ page }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      const now = Date.now();
+      const ev = { id: "lv-1", title: "On Now", category: "Live Music", host: "H", hostId: "h", venue: "V", area: "Soho",
+        startTime: new Date(now - 30 * 60000).toISOString(), endTime: new Date(now + 2 * 3600000).toISOString(), desc: "", capacity: 50, price: 10 };
+      computeEventDates(ev);
+      EVENTS.push(ev);
+      state.userId = "00000000-0000-0000-0000-00000000000c";
+      myTickets.push({ ticketId: "TK-LV", bookingId: "TK-LV", eventId: "lv-1", typeLabel: "GA", pricePerTicket: 10, total: 11.5, purchasedAt: now });
+      renderNav();
+    });
+    await expect(page.locator('.bottom-nav [data-nav="tickets"] .nav-badge')).toHaveCount(1);
+    await page.evaluate(() => openTicketsTab());
+    await expect(page.locator(".tk.is-live .tk-live")).toContainText("Happening now");
+    // Purchase confirmation lives under the Tickets tab, and Done opens Tickets.
+    await page.evaluate(() => {
+      bookingDraft.confirmedTickets = [myTickets[0]];
+      showConfirmedAfterPurchase();
+    });
+    await expect(page.locator('.bottom-nav [data-nav="tickets"]')).toHaveClass(/active-cloud-tab/);
+    await page.locator(".yi-overlay").click({ force: true }).catch(() => {});
+    await page.waitForTimeout(600);
+    await page.locator(".bk-done").click();
+    expect(await page.evaluate(() => state.view)).toBe("my-tickets");
+  });
 });
