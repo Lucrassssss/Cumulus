@@ -1,22 +1,13 @@
 // Account — replaces the old gamified Profile (ID card, levels/badges,
 // achievements page, about-me/interests, memories, recent-events recap).
-// Tickets are the actual reason this app exists, so they're the headline
-// content here rather than a link buried under a stats row; everything else
-// is a lean, purely functional settings list. No admin tools here at all —
+// Tickets have their own tab in the bottom nav (shown once signed in), so
+// Account is a lean, purely functional settings list. No admin tools here at all —
 // those moved to their own owner-only nav tab (renderAdmin()).
 function renderAccount() {
   return `
     <div class="connect-header connect-header-avatar">
       ${accountAvatarHtml(56)}
       <div><h2>Account</h2><p>${escapeHtml(state.profileName)}</p></div>
-    </div>
-
-    <div class="section-title">Tickets</div>
-    <div class="prof-action-list">
-      <button class="prof-action-row" onclick="openMyTickets()">
-        <span class="prof-action-label">My Tickets<span class="prof-action-sub">${myTickets.length ? `${myTickets.length} ticket${myTickets.length !== 1 ? "s" : ""}` : "No tickets yet"}</span></span>
-        <span class="prof-action-right">›</span>
-      </button>
     </div>
 
     <div class="section-title">Settings</div>

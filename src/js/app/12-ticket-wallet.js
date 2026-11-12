@@ -24,11 +24,7 @@ function renderMyTickets() {
       <h1 class="v-h1">Your tickets</h1>
       <p class="v-sub">${upcoming ? `${upcoming} coming up` : myTickets.length ? "Nothing coming up" : "Nothing here yet"}</p>
     </header>
-    ${
-      state.userId
-        ? myTicketsCardsHtml()
-        : `<div class="feed-empty"><div class="feed-empty-art" aria-hidden="true">🎟</div><h3>Your tickets live here</h3><p>Sign in to book — QR, calendar and transfers all land on this page.</p><div class="feed-empty-actions"><button class="v-btn" onclick="showLpSignup()">Sign in</button></div></div>`
-    }
+    ${myTicketsCardsHtml()}
     ${(() => {
       const saved = savedUpcoming();
       if (!saved.length) return "";

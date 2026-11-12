@@ -285,8 +285,10 @@ function renderNav() {
   if (
     !navContainer.querySelector(".bottom-nav") ||
     navContainer.dataset.hostShown !== String(hostApproved) ||
-    navContainer.dataset.adminShown !== String(isOwnerAccount)
+    navContainer.dataset.adminShown !== String(isOwnerAccount) ||
+    navContainer.dataset.signedIn !== String(!!state.userId)
   ) {
+    navContainer.dataset.signedIn = String(!!state.userId);
     navContainer.dataset.hostShown = String(hostApproved);
     navContainer.dataset.adminShown = String(isOwnerAccount);
     const ic = (d) =>
@@ -308,11 +310,11 @@ function renderNav() {
       ...(hostApproved
         ? [{ label: "Host", v: "host", action: "navStack=[];openHost()", cta: true }]
         : []),
-      {
-        label: "Tickets",
-        v: "tickets",
-        action: "navStack=[];openTicketsTab()",
-      },
+      // Tickets only exist once you've signed in with your email — guests
+      // keep their ♥ saves via the Saved chip on Discover instead.
+      ...(state.userId
+        ? [{ label: "Tickets", v: "tickets", action: "navStack=[];openTicketsTab()" }]
+        : []),
       { label: "You", v: "account", action: "navStack=[];openAccount()" },
       // Owner-only: event approvals, host review, live finances.
       ...(isOwnerAccount

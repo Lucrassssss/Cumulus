@@ -357,7 +357,10 @@ function toggleSave(id) {
       b.classList.add("pop");
     }
   });
-  showToast(on ? "Saved — find it under Tickets" : "Removed from saved", on ? "success" : "info");
+  showToast(
+    on ? (state.userId ? "Saved — it's in your Tickets" : "Saved — find it under ♥ Saved on Discover") : "Removed from saved",
+    on ? "success" : "info",
+  );
   if (state.view === "feed") {
     if (state.feedRange === "saved" && !next.length) state.feedRange = "all";
     _rerenderFeedResults();
@@ -859,10 +862,9 @@ function hideBootLoader() {
 }
 
 function openTicketsTab() {
-  // Guests can still reach their ♥ Saved list here; tickets themselves
-  // need an account (the page shows a sign-in prompt in their place).
-  if (!state.userId && !savedUpcoming().length) {
-    showToast("Sign in to see your tickets", "info");
+  // The tab only shows once signed in; this guards deep links / stale tabs.
+  if (!state.userId) {
+    showToast("Sign in with your email to see your tickets", "info");
     showLpSignup();
     return;
   }

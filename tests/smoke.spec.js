@@ -155,14 +155,20 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator("#gate-field-error")).toBeVisible();
   });
 
-  test("enter app → Discover/Map/Tickets/You nav (Host/Admin hidden until earned)", async ({
+  test("enter app → Discover/Map/Tickets/You nav (Tickets after sign-in, Host/Admin until earned)", async ({
     page,
   }) => {
     await page.goto("/");
     await enterApp(page);
-    const labels = (
-      await page.locator(".bottom-nav .nav-link").allInnerTexts()
-    ).map((s) => s.trim().toUpperCase());
+    const navLabels = async () =>
+      (await page.locator(".bottom-nav .nav-link").allInnerTexts()).map((s) => s.trim().toUpperCase());
+    // Guests: no Tickets tab until they sign in with their email.
+    expect((await navLabels()).some((l) => l.includes("TICKETS")), "Tickets hidden for guests").toBeFalsy();
+    await page.evaluate(() => {
+      state.userId = "00000000-0000-0000-0000-000000000005";
+      renderNav();
+    });
+    const labels = await navLabels();
     for (const tab of ["DISCOVER", "MAP", "TICKETS", "YOU"]) {
       expect(
         labels.some((l) => l.includes(tab)),
@@ -664,7 +670,18 @@ test.describe("Cumulus smoke", () => {
     await row.locator(".save-btn").click();
     await expect(row.locator(".save-btn")).toHaveAttribute("aria-pressed", "true");
     await expect(page.locator('[data-range="saved"] b')).toHaveText("1");
-    // Persists, and guests can open Tickets to see their Saved list.
+    // Guests have no Tickets tab — their saves live behind the Saved chip.
+    await expect(page.locator('.bottom-nav [data-nav="tickets"]')).toHaveCount(0);
+    await page.locator('[data-range="saved"]').click();
+    await expect(page.locator("#feed-results .fr-row")).toHaveCount(1);
+    // Signing in reveals the Tickets tab, with the Saved list inside it.
+    await page.evaluate(() => {
+      state.userId = "00000000-0000-0000-0000-000000000007";
+      state.profileName = "Ux User";
+      renderNav();
+      setFeedRange("all");
+    });
+    await expect(page.locator('.bottom-nav [data-nav="tickets"]')).toHaveCount(1);
     await page.evaluate(() => openTicketsTab());
     await expect(page.locator(".hp-list .fr-row", { hasText: "Paid Gig" })).toBeVisible();
 
