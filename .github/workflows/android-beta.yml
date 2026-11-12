@@ -1,0 +1,48 @@
+# Android beta. Every push that touches native/ (or a manual run) builds:
+#   * cumulus-beta.apk — debug-signed, installs straight onto any Android
+#     phone (download from the run's Artifacts, allow "install unknown apps")
+#   * cumulus-release.aab — signed for Google Play internal testing, only
+#     when the ANDROID_KEYSTORE_* secrets are set (see native/README.md)
+# The app loads the live site, so web changes reach testers without a rebuild.
+name: Android beta
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["native/**", ".github/workflows/android-beta.yml"]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: native } }
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: native/package-lock.json }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21, cache: gradle }
+      - run: npm ci
+      - run: npx cap sync android
+      - name: Debug APK (sideload)
+        working-directory: native/android
+        run: ./gradlew --no-daemon assembleDebug && cp app/build/outputs/apk/debug/app-debug.apk $GITHUB_WORKSPACE/cumulus-beta.apk
+      - name: Signed release bundle (Play internal testing)
+        if: ${{ env.HAS_KEYSTORE == 'true' }}
+        working-directory: native/android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > $RUNNER_TEMP/release.jks
+          ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.jks ./gradlew --no-daemon bundleRelease
+          cp app/build/outputs/bundle/release/app-release.aab $GITHUB_WORKSPACE/cumulus-release.aab
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cumulus-android-${{ github.run_number }}
+          path: |
+            cumulus-beta.apk
+            cumulus-release.aab
+          if-no-files-found: warn

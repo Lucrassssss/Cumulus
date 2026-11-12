@@ -1,0 +1,46 @@
+# iOS beta → TestFlight. Run it from GitHub: Actions → "iOS TestFlight" →
+# Run workflow. Xcode signs with an App Store Connect API key (cloud-managed
+# certificates, no Mac needed on your side) and uploads the build straight
+# to TestFlight. Needs these repository secrets (see native/README.md):
+#   APPSTORE_KEY_ID, APPSTORE_ISSUER_ID, APPSTORE_API_PRIVATE_KEY, APPLE_TEAM_ID
+name: iOS TestFlight
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-15
+    defaults: { run: { working-directory: native } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: native/package-lock.json }
+      - run: npm ci
+      - run: npx cap sync ios
+      - name: API key
+        run: |
+          mkdir -p $RUNNER_TEMP/keys
+          printf '%s' "${{ secrets.APPSTORE_API_PRIVATE_KEY }}" > $RUNNER_TEMP/keys/AuthKey.p8
+      - name: Archive
+        working-directory: native/ios/App
+        run: |
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath $RUNNER_TEMP/Cumulus.xcarchive \
+            DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} CODE_SIGN_STYLE=Automatic \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} MARKETING_VERSION=0.1.0 \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath $RUNNER_TEMP/keys/AuthKey.p8 \
+            -authenticationKeyID ${{ secrets.APPSTORE_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.APPSTORE_ISSUER_ID }} \
+            archive
+      - name: Upload to TestFlight
+        working-directory: native/ios/App
+        run: |
+          printf '%s' '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>method</key><string>app-store-connect</string><key>destination</key><string>upload</string><key>teamID</key><string>${{ secrets.APPLE_TEAM_ID }}</string><key>signingStyle</key><string>automatic</string><key>manageAppVersionAndBuildNumber</key><false/></dict></plist>' > $RUNNER_TEMP/ExportOptions.plist
+          xcodebuild -exportArchive -archivePath $RUNNER_TEMP/Cumulus.xcarchive \
+            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist -exportPath $RUNNER_TEMP/export \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath $RUNNER_TEMP/keys/AuthKey.p8 \
+            -authenticationKeyID ${{ secrets.APPSTORE_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.APPSTORE_ISSUER_ID }}
+      - if: always()
+        run: rm -rf $RUNNER_TEMP/keys

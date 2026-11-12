@@ -1,0 +1,28 @@
+{
+  "appId": "co.cumulusapp.app",
+  "appName": "Cumulus",
+  "webDir": "www",
+  "server": {
+    "url": "https://cumulusapp.co",
+    "cleartext": false,
+    "errorPath": "index.html",
+    "allowNavigation": [
+      "cumulusapp.co",
+      "*.cumulusapp.co",
+      "*.stripe.com",
+      "*.stripe.network",
+      "*.paypal.com",
+      "*.supabase.co",
+      "*.mapbox.com"
+    ]
+  },
+  "backgroundColor": "#0D0E10",
+  "ios": {
+    "contentInset": "never",
+    "scheme": "Cumulus",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
