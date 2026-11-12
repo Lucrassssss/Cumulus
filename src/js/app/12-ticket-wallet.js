@@ -56,7 +56,6 @@ function myTicketsCardsHtml() {
       const status = eventStatus(ev);
       const safeTitle = escapeHtml(ev.title).replace(/'/g, "&#39;");
       return `<article class="tk${status === "past" ? " past" : ""}${status === "live" ? " is-live" : ""}">
-      ${status === "live" ? `<button type="button" class="tk-live" onclick="openViewTicket('${ev.id}')"><span class="pulse"></span>Happening now — tap to show your QR</button>` : ""}
       <div class="tk-art ${posterClass(ev)}" style="${posterStyle(ev)}" onclick="openViewTicket('${ev.id}')" role="button" tabindex="0" aria-label="Open ticket for ${escapeHtml(ev.title)}">
         ${posterGlyph(ev)}
         <div class="tk-art-foot">
@@ -73,7 +72,7 @@ function myTicketsCardsHtml() {
           <div><span class="tk-lbl">Code</span><b class="mono">${escapeHtml(t.ticketId)}</b></div>
         </div>
         <div class="tk-actions">
-          <button class="v-btn" onclick="openViewTicket('${ev.id}')">Show QR</button>
+          <button class="v-btn${status === "live" ? " tk-qr-live" : ""}" onclick="openViewTicket('${ev.id}')">${status === "live" ? '<span class="tk-live-dot" aria-hidden="true"></span>Show QR' : "Show QR"}</button>
           <button class="v-btn ghost" onclick="openCalendarSheet('${ev.id}')">+ Calendar</button>
         </div>
         ${
@@ -109,7 +108,7 @@ function openCantGoSheet(ticketId) {
   el.setAttribute("aria-label", "Can't make it?");
   el.innerHTML = `<div class="loc-sheet">
       <div class="loc-head">
-        <div><b>Can't make it?</b><span>${escapeHtml(ev.title)} · ${feedDateLabel(ev)}</span></div>
+        <div><b>Can't make it?</b><span>${escapeHtml(ev.title)} · ${dateLabel(ev)}</span></div>
         <button class="loc-x" onclick="closeLocationSheet()" aria-label="Close">✕</button>
       </div>
       <button class="loc-opt primary" onclick="openTransferSheet('${escapeHtml(t.ticketId)}')">
@@ -158,7 +157,7 @@ function openTransferSheet(ticketId) {
   el.setAttribute("aria-label", "Send your ticket to a friend");
   el.innerHTML = `<div class="loc-sheet">
       <div class="loc-head">
-        <div><b>Send to a friend</b><span>${escapeHtml(ev.title)} · ${feedDateLabel(ev)}</span></div>
+        <div><b>Send to a friend</b><span>${escapeHtml(ev.title)} · ${dateLabel(ev)}</span></div>
         <button class="loc-x" onclick="closeLocationSheet()" aria-label="Close">✕</button>
       </div>
       <ul class="tf-list">
@@ -189,7 +188,7 @@ function showClaimedSheet(eventId) {
   el.setAttribute("aria-label", "Ticket received");
   el.innerHTML = `<div class="loc-sheet">
       <div class="loc-head">
-        <div><b>You've got a ticket</b><span>${ev ? `${escapeHtml(ev.title)} · ${feedDateLabel(ev)}` : "It's in your Tickets"}</span></div>
+        <div><b>You've got a ticket</b><span>${ev ? `${escapeHtml(ev.title)} · ${dateLabel(ev)}` : "It's in your Tickets"}</span></div>
         <button class="loc-x" onclick="closeLocationSheet()" aria-label="Close">✕</button>
       </div>
       <p class="tf-p">It's in your wallet with its own QR code — you're all set for the door.</p>

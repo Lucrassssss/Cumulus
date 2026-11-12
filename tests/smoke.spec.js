@@ -1275,7 +1275,8 @@ test.describe("Cumulus smoke", () => {
     });
     await expect(page.locator('.bottom-nav [data-nav="tickets"] .nav-badge')).toHaveCount(1);
     await page.evaluate(() => openTicketsTab());
-    await expect(page.locator(".tk.is-live .tk-live")).toContainText("Happening now");
+    await expect(page.locator(".tk.is-live .tk-qr-live")).toContainText("Show QR");
+    await expect(page.locator(".bottom-nav .nav-badge")).toHaveText("1");
     // Purchase confirmation lives under the Tickets tab, and Done opens Tickets.
     await page.evaluate(() => {
       bookingDraft.confirmedTickets = [myTickets[0]];

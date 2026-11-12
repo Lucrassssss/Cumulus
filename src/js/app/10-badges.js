@@ -1470,7 +1470,7 @@ function openCalendarSheet(evId) {
   el.setAttribute("aria-label", "Add to calendar");
   el.innerHTML = `<div class="loc-sheet">
       <div class="loc-head">
-        <div><b>Add to calendar</b><span>${escapeHtml(ev.title)} · ${feedDateLabel(ev)} ${feedTimeLabel(ev)}</span></div>
+        <div><b>Add to calendar</b><span>${escapeHtml(ev.title)} · ${dateLabel(ev)}, ${feedTimeLabel(ev)}</span></div>
         <button class="loc-x" onclick="closeLocationSheet()" aria-label="Close">✕</button>
       </div>
       ${opts}

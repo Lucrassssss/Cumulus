@@ -4754,7 +4754,9 @@ html body .up-next .un-body{flex:1;min-width:0;display:flex;flex-direction:colum
 html body .up-next .un-kicker{font:700 11px var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:6px;}
 html body .up-next .un-title{font:800 19px/1.1 var(--font-display,var(--font-sans));letter-spacing:-.02em;margin:5px 0 3px;cursor:pointer;overflow-wrap:anywhere;}
 html body .up-next .un-venue{font-size:13px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-html body .up-next .un-acts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+html body .up-next .un-acts{display:flex;gap:6px;margin-top:10px;flex-wrap:nowrap;}
+html body .up-next .un-acts .v-btn{flex:0 1 auto;min-width:0;padding-inline:11px !important;font-size:13px !important;white-space:nowrap;}
+@media (max-width:380px){html body .up-next .un-acts .v-btn{padding-inline:10px !important;font-size:12.5px !important;}}
 html body .v-btn.sm{min-height:36px;padding:0 14px;font-size:13.5px;}
 @media (min-width:1024px){html body .feed-main .up-next{margin:6px 24px 18px 0;}}
 /* "Show more" sat 2px past the right edge on phones (content-box width). */
@@ -5069,15 +5071,11 @@ html body .tg.win .tg-fill{animation:tg-fill .5s cubic-bezier(.3,.7,.2,1) forwar
 html body .tg.win .tg-beam{opacity:0;transition:opacity .15s ease;}
 html body .tg.win .tg-lines rect{fill:var(--volt-ink,#0b0b0d);opacity:.22;transition-delay:.25s;}
 html body .tg.win .tg-tick{animation:tg-tick .42s .45s cubic-bezier(.6,0,.3,1) forwards;}
-html body .tg.win .tg-top{animation:tg-thump .5s .82s var(--spring) both;}
 html body .tg.win .tg-perf{animation:tg-perf .3s .95s ease forwards;}
-html body .tg.win .tg-stub{animation:tg-tear .75s .98s cubic-bezier(.3,1.4,.5,1) forwards;}
 html body .tg.win .tg-stub .tg-shape{fill:var(--surface-2);}
 @keyframes tg-fill{to{transform:scaleY(1)}}
 @keyframes tg-tick{to{stroke-dashoffset:0}}
-@keyframes tg-thump{0%{transform:scale(1)}35%{transform:scale(1.06) rotate(-1.5deg)}100%{transform:none}}
 @keyframes tg-perf{to{opacity:0}}
-@keyframes tg-tear{0%{transform:none}40%{transform:translate(2px,3px) rotate(2deg)}100%{transform:translate(10px,20px) rotate(9deg)}}
 /* fail: a small no */
 html body .tg.fail{animation:tg-shake .42s cubic-bezier(.36,.07,.19,.97) both;}
 html body .tg.fail .tg-shape{stroke:var(--hot);}
@@ -5097,12 +5095,6 @@ html body .yi-stage{position:relative;width:132px;margin-bottom:22px;}
 html body .yi-overlay:not(.cont) .yi-stage{animation:yi-drop .55s var(--spring) both;}
 @keyframes yi-drop{from{transform:translateY(-40px) rotate(-8deg) scale(.85);opacity:0}to{transform:none;opacity:1}}
 html body .yi-burst{position:absolute;left:50%;top:66%;width:0;height:0;}
-html body .yi-puff{position:absolute;left:-13px;top:-9px;width:26px;height:18px;border-radius:50%;background:#fff;opacity:0;color:#fff;box-shadow:11px 3px 0 -2px currentColor,-10px 4px 0 -3px currentColor,2px -6px 0 -2px currentColor;}
-html body .yi-overlay.won .yi-puff{animation:yi-puff 1.15s calc(1s + var(--d)) cubic-bezier(.2,.8,.3,1) forwards;}
-@keyframes yi-puff{0%{opacity:0;transform:translate(0,0) scale(.2)}20%{opacity:.95}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(var(--s))}}
-html body .yi-spark{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;background:var(--volt);opacity:0;box-shadow:0 0 10px var(--volt);}
-html body .yi-overlay.won .yi-spark{animation:yi-spark .8s calc(1s + var(--d)) cubic-bezier(.1,.7,.3,1) forwards;}
-@keyframes yi-spark{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.3)}}
 html body .yi-title{font:800 clamp(44px,12vw,72px)/.95 var(--font-display,var(--font-sans));letter-spacing:-.045em;display:flex;justify-content:center;}
 html body .yi-title span{display:inline-block;opacity:0;transform:translateY(.5em) rotate(6deg);}
 html body .yi-overlay.won .yi-title span{animation:yi-letter .5s calc(.62s + var(--i) * .035s) var(--spring) forwards;}
@@ -5344,7 +5336,6 @@ html body .ev-hero.has-photo::after{background:linear-gradient(180deg,rgba(0,0,0
    One continuous motion: fill → tick → a light sweep across the ticket →
    the stub glides away (no overshoot) as a single hairline ring ripples
    out from the tear. */
-html body .yi-puff,html body .yi-spark{display:none !important;}
 html body .tg .tg-sheen{opacity:0;}
 html body .tg.win .tg-sheen{animation:tg-sheen .7s .78s cubic-bezier(.4,0,.2,1) forwards;}
 @keyframes tg-sheen{0%{opacity:0;transform:rotate(18deg) translateX(0)}15%{opacity:1}100%{opacity:0;transform:rotate(18deg) translateX(240px)}}
@@ -5410,11 +5401,21 @@ html.kb-open body .lp-signup-modal .auth-mode-sel{width:calc(100% - 46px) !impor
 
 /* Live-ticket notification: red dot on the Tickets tab + a strip on the card */
 html body .nav-link{position:relative;}
-html body .nav-badge{position:absolute;top:8px;left:calc(50% + 8px);width:9px;height:9px;border-radius:50%;background:var(--hot);box-shadow:0 0 0 2px var(--surface);animation:nav-badge-in .4s cubic-bezier(.22,1,.36,1) both;}
-@keyframes nav-badge-in{from{transform:scale(0)}to{transform:none}}
-html body .tk.is-live{border-color:color-mix(in srgb,var(--hot) 55%,var(--line)) !important;}
-html body .tk-live{appearance:none;border:0;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;background:var(--hot);color:#fff;font:700 13px var(--font-sans);cursor:pointer;}
-html body .tk-live .pulse{background:#fff;}
+/* Live-ticket notification — a crisp count badge pinned to the Tickets
+   icon (ringed in the dock colour so it reads as cut out of it), a quiet
+   halo while the event is on, and an accented Show QR on the live ticket. */
+html body .bottom-nav .nav-link{position:relative;}
+html body .nav-badge{position:absolute;top:4px;left:calc(50% + 6px);min-width:15px;height:15px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:var(--hot);color:#fff;font:800 9.5px/15px var(--font-sans);font-variant-numeric:tabular-nums;text-align:center;letter-spacing:0;box-shadow:0 0 0 2.5px var(--surface);pointer-events:none;animation:nav-badge-in .32s cubic-bezier(.2,1.4,.4,1) backwards;}
+html body .nav-badge::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:0 0 0 0 color-mix(in srgb,var(--hot) 55%,transparent);animation:nav-badge-halo 2.4s 1s ease-out infinite;}
+html body .nav-link.active-cloud-tab .nav-badge{box-shadow:0 0 0 2.5px var(--volt);}
+@keyframes nav-badge-in{from{transform:scale(.3);opacity:0}}
+@keyframes nav-badge-halo{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--hot) 50%,transparent)}70%,100%{box-shadow:0 0 0 7px transparent}}
+body.map-moving .nav-badge::after{animation:none;}
+@media (prefers-reduced-motion:reduce){html body .nav-badge,html body .nav-badge::after{animation:none;}}
+html body .tk.is-live{border-color:color-mix(in srgb,var(--hot) 32%,var(--line)) !important;box-shadow:0 0 0 1px color-mix(in srgb,var(--hot) 14%,transparent),0 16px 36px -28px color-mix(in srgb,var(--hot) 55%,transparent) !important;}
+html body .v-btn.tk-qr-live{background:var(--hot) !important;color:#fff !important;display:inline-flex;align-items:center;justify-content:center;gap:8px;}
+html body .tk-live-dot{width:7px;height:7px;border-radius:50%;background:#fff;flex:none;animation:tk-live-dot 1.6s ease-in-out infinite;}
+@keyframes tk-live-dot{0%,100%{opacity:1}50%{opacity:.35}}
 
 /* ══ Smooth page changes ══════════════════════════════════════════════════
    One calm, consistent transition everywhere: a short opacity fade on the
@@ -5425,42 +5426,28 @@ html body :is(.feed,.v-page,.ev-page,.bk-page,.tv-page,.ac-page,.hx){animation-d
 html body .bk-cta,html body .ev-buybar{animation:none !important;}
 #app.same-view :is(.feed,.v-page,.ev-page,.bk-page,.tv-page,.ac-page,.hx,.up-next,.tv-r-body,.hx-hero-copy,.ev-buybar,.bk-cta){animation:none !important;}
 
-/* ══ You're in — scissors cut (side-on, like cutting paper) ════════════════
-   The ticket tips back like a sheet on a table; upright scissors travel
-   along the perforation — top half above the paper, bottom half beneath
-   it (hidden by the ticket) — blades opening and closing up/down; then
-   the ticket settles flat and the stub drops away. */
-html body .yi-stage{perspective:640px;}
-html body .yi-glyph{position:relative;z-index:2;transform-origin:50% 50%;}
-html body .yi-overlay.won .yi-glyph{animation:yi-tilt 1.75s .88s cubic-bezier(.4,0,.2,1) both;}
-@keyframes yi-tilt{0%{transform:none}14%{transform:rotateX(50deg)}84%{transform:rotateX(50deg)}100%{transform:none}}
-html body .yi-sc{position:absolute;left:0;top:118px;width:96px;height:60px;margin:-30px 0 0 -96px;opacity:0;pointer-events:none;}
-html body .yi-sc-under{z-index:1;}
-html body .yi-sc-over{z-index:3;filter:drop-shadow(0 6px 6px rgba(0,0,0,.35));}
-html body .yi-sc-svg{width:96px;height:60px;overflow:visible;transform:scale(1.3);transform-origin:96% 50%;}
-html body .yi-sc-steel{stroke:rgba(0,0,0,.4);stroke-width:.6;}
-html body .yi-sc-piece.top .yi-sc-steel{fill:url(#yiSteelT);}
-html body .yi-sc-piece.bot .yi-sc-steel{fill:url(#yiSteelB);}
-html body .yi-sc-arm{fill:none;stroke:var(--hot);stroke-width:4.6;stroke-linecap:round;}
-html body .yi-sc-ring{fill:none;stroke:var(--hot);stroke-width:3.8;}
-html body .yi-sc-piece.bot .yi-sc-arm,html body .yi-sc-piece.bot .yi-sc-ring{stroke:color-mix(in srgb,var(--hot) 75%,#000);}
-html body .yi-sc-pivot{fill:#c9ced5;stroke:#59616c;stroke-width:.8;}
-html body .yi-sc-pivot-dot{fill:#363c44;}
-html body .yi-sc-piece{transform-box:view-box;transform-origin:0 0;}
-html body .yi-sc-piece.top{transform:rotate(-16deg);}
-html body .yi-sc-piece.bot{transform:rotate(16deg);}
-html body .yi-overlay.won .yi-sc{animation:yi-sc-run .95s 1.12s cubic-bezier(.45,0,.3,1) forwards;}
-html body .yi-overlay.won .yi-sc-piece.top{animation:yi-snip-top .16s 1.12s cubic-bezier(.5,0,.5,1) 6 alternate;}
-html body .yi-overlay.won .yi-sc-piece.bot{animation:yi-snip-bot .16s 1.12s cubic-bezier(.5,0,.5,1) 6 alternate;}
-@keyframes yi-sc-run{0%{opacity:0;transform:translateX(10px)}10%{opacity:1}88%{opacity:1}100%{opacity:0;transform:translateX(200px)}}
-@keyframes yi-snip-top{from{transform:rotate(-16deg)}to{transform:rotate(-1deg)}}
-@keyframes yi-snip-bot{from{transform:rotate(16deg)}to{transform:rotate(1deg)}}
+/* ══ You're in — snappy cut ════════════════════════════════════════════════
+   ~1.3s end to end: fill → tick → one clean slice along the perforation →
+   the stub snaps away with a single ring. Everything overrides the older,
+   slower timings above. */
+html body .yi-overlay:not(.cont) .yi-stage{animation-duration:.4s !important;}
+html body .tg.win .tg-fill{animation:tg-fill .3s cubic-bezier(.3,.7,.2,1) forwards !important;}
+html body .tg.win .tg-tick{animation:tg-tick .28s .14s cubic-bezier(.6,0,.3,1) forwards !important;}
+html body .tg.win .tg-sheen{animation:tg-sheen .45s .28s cubic-bezier(.4,0,.2,1) forwards !important;}
+html body .tg.win .tg-top{animation:tg-settle .35s .44s cubic-bezier(.22,1,.36,1) both !important;}
 html body .tg .tg-cutline{stroke:var(--volt);stroke-width:2;stroke-linecap:round;stroke-dasharray:112;stroke-dashoffset:112;opacity:0;}
-html body .tg.win .tg-cutline{animation:tg-cut .95s 1.12s cubic-bezier(.45,0,.3,1) forwards;}
-html body .tg.win .tg-perf{animation:tg-perf .95s 1.12s linear forwards;}
-@keyframes tg-cut{0%{opacity:1;stroke-dashoffset:112}88%{opacity:1;stroke-dashoffset:0}100%{opacity:0;stroke-dashoffset:0}}
-/* re-time the rest around the cut */
-html body .tg.win .tg-stub{animation:tg-glide .8s 2.68s cubic-bezier(.22,1,.36,1) forwards !important;}
-html body .yi-overlay.won .yi-ring{animation-delay:2.68s !important;}
-html body .yi-overlay.won .yi-ring.r2{animation-delay:2.82s !important;}
-html body .tv-page.just .tv-ticket{animation-delay:calc(3.3s + var(--i,0) * .12s) !important;}
+html body .tg.win .tg-cutline{animation:tg-cut .2s .42s cubic-bezier(.7,0,.3,1) forwards !important;}
+html body .tg.win .tg-perf{animation:tg-perf .12s .42s linear forwards !important;}
+@keyframes tg-cut{0%{opacity:1;stroke-dashoffset:112}80%{opacity:1;stroke-dashoffset:0}100%{opacity:0;stroke-dashoffset:0}}
+html body .tg.win .tg-stub{animation:tg-snap .42s .6s cubic-bezier(.2,.9,.2,1) forwards !important;}
+@keyframes tg-snap{0%{transform:none;opacity:1}100%{transform:translate(5px,22px) rotate(7deg);opacity:.5}}
+html body .yi-overlay.won .yi-ring{animation:yi-ring .7s .6s cubic-bezier(.22,1,.36,1) forwards !important;}
+html body .yi-overlay.won .yi-ring.r2{animation-delay:.68s !important;}
+html body .yi-overlay.won .yi-title span{animation:yi-letter2 .38s calc(.08s + var(--i) * .02s) cubic-bezier(.22,1,.36,1) forwards !important;}
+html body .yi-overlay.won .yi-sub{animation:yi-sub .3s .32s ease forwards !important;}
+html body .tv-page.just .tv-ticket{animation-delay:calc(1.85s + var(--i,0) * .08s) !important;}
+
+/* Booking reassurance: a quiet line of facts, not three boxed chips. */
+html body .bk-chips{display:flex !important;flex-wrap:wrap !important;justify-content:center !important;gap:6px 16px !important;margin:14px 0 0 !important;padding:0 !important;}
+html body .bk-chips li{background:none !important;border:0 !important;padding:0 !important;font-size:12px !important;font-weight:600 !important;color:var(--text-muted) !important;display:inline-flex !important;align-items:center !important;gap:5px !important;}
+html body .bk-chips li svg{color:var(--accent);}

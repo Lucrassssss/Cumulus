@@ -285,13 +285,10 @@ function computeEventDates(ev) {
     day: "numeric",
     month: "short",
   });
-  const tf = new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+  // 24-hour, like every other time in the app (and how London reads gigs)
+  const tf = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit" });
   ev.date = df.format(st);
-  ev.time = `${tf.format(st)} - ${tf.format(et)}`;
+  ev.time = `${tf.format(st)} – ${tf.format(et)}`;
 }
 
 async function start() {

@@ -1536,10 +1536,13 @@ function renderView() {
     // The page itself keeps its short cross-fade.
     if (window._feedSeen) {
       try {
-        container.querySelectorAll(".feed *").forEach((el) => el.getAnimations().forEach((a) => {
+        // one subtree query instead of walking every node
+        const page = container.querySelector(".feed");
+        container.getAnimations({ subtree: true }).forEach((a) => {
+          if (a.effect && a.effect.target === page) return;
           const it = a.effect && a.effect.getComputedTiming ? a.effect.getComputedTiming().iterations : 1;
           if (it !== Infinity) a.finish();
-        }));
+        });
       } catch (e) {}
     }
     if (state.eventsLoaded) window._feedSeen = true;

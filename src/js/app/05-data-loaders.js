@@ -359,8 +359,10 @@ function updateLiveTicketBadge() {
   if (n && !dot) {
     dot = document.createElement("span");
     dot.className = "nav-badge";
+    dot.setAttribute("aria-hidden", "true");
     btn.appendChild(dot);
   } else if (!n && dot) dot.remove();
+  if (dot && n && dot.textContent !== String(n)) dot.textContent = n > 9 ? "9+" : String(n);
   btn.setAttribute("aria-label", n ? `Tickets — ${n} event${n > 1 ? "s" : ""} on now` : "Tickets");
 }
 setInterval(updateLiveTicketBadge, 60000);

@@ -65,6 +65,12 @@ function posterGlyph(ev) {
 }
 
 // "FRI 14 NOV" / "TONIGHT" / "TOMORROW" / "LIVE NOW"
+// Sentence-case version for running text (sheet subtitles, summaries):
+// "Tomorrow", "Sun 15 Nov", "Live now" — the caps label is for mono kickers.
+function dateLabel(ev) {
+  const s = feedDateLabel(ev).toLowerCase();
+  return s.replace(/(^|\s)([a-z])/g, (m, a, b, i) => (i === 0 || /^(mon|tue|wed|thu|fri|sat|sun|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/.test(s.slice(i + a.length)) ? a + b.toUpperCase() : m));
+}
 function feedDateLabel(ev) {
   const st = eventStatus(ev);
   if (st === "live") return "LIVE NOW";
