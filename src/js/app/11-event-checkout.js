@@ -168,6 +168,11 @@ function _ticketGlyph(mode) {
   return `<svg class="tg ${mode || ""}" viewBox="0 0 120 168" aria-hidden="true">
     <defs>
       <clipPath id="${id}c"><path d="${TG_TOP}"/></clipPath>
+      <linearGradient id="${id}s" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+        <stop offset=".5" stop-color="#fff" stop-opacity=".65"/>
+        <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </linearGradient>
       <linearGradient id="${id}b" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="var(--volt)" stop-opacity="0"/>
         <stop offset=".85" stop-color="var(--volt)" stop-opacity=".55"/>
@@ -182,6 +187,7 @@ function _ticketGlyph(mode) {
       </g>
       <g class="tg-lines"><rect x="22" y="22" width="34" height="6" rx="3"/><rect x="22" y="34" width="62" height="9" rx="4.5"/><rect x="22" y="49" width="48" height="6" rx="3"/></g>
       <path class="tg-tick" d="M37 74l14 14 31-33"/>
+      <g clip-path="url(#${id}c)"><rect class="tg-sheen" x="-80" y="-20" width="46" height="200" fill="url(#${id}s)" transform="rotate(18 60 60)"/></g>
     </g>
     <line class="tg-perf" x1="20" y1="112" x2="100" y2="112"/>
     <g class="tg-stub"><path class="tg-shape" d="${TG_STUB}"/><g class="tg-bars">${bars}</g></g>
@@ -289,26 +295,16 @@ function playPurchaseCelebration(ev, n, free, fromPay) {
   el.setAttribute("role", "status");
   el.setAttribute("aria-live", "assertive");
   el.setAttribute("aria-label", `You're in. ${n > 1 ? `${n} tickets` : "Your ticket"} for ${ev.title}.`);
-  // Cumulus clouds billowing out of the tear, plus a few Volt sparks.
-  const puffs = reduce
-    ? ""
-    : [
-        [-86, -8, 1.1, 0], [-58, 26, 0.8, 0.05], [-30, -30, 0.7, 0.1], [0, 34, 1, 0.02],
-        [32, -26, 0.75, 0.08], [60, 22, 0.9, 0.04], [88, -6, 1.05, 0.12], [-8, -44, 0.55, 0.14],
-      ]
-        .map(([dx, dy, sc, d]) => `<i class="yi-puff" style="--dx:${dx}px;--dy:${dy}px;--s:${sc};--d:${d}s"></i>`)
-        .join("") +
-      Array.from({ length: 10 }, (_, i) => {
-        const a = (i / 10) * Math.PI * 2;
-        return `<i class="yi-spark" style="--dx:${Math.round(Math.cos(a) * 120)}px;--dy:${Math.round(Math.sin(a) * 90)}px;--d:${(i % 3) * 0.04}s"></i>`;
-      }).join("");
+  // The stub releases with a single clean shockwave and a light sweep
+  // across the ticket — fluid, quiet, no confetti.
+  const burst = reduce ? "" : `<i class="yi-ring"></i><i class="yi-ring r2"></i>`;
   const title = "You're in!"
     .split("")
     .map((ch, i) => `<span style="--i:${i}">${ch === " " ? "&nbsp;" : escapeHtml(ch)}</span>`)
     .join("");
   el.innerHTML = `<div class="yi-stage">
       <div class="yi-glyph">${_ticketGlyph("scan")}</div>
-      <div class="yi-burst" aria-hidden="true">${puffs}</div>
+      <div class="yi-burst" aria-hidden="true">${burst}</div>
     </div>
     <div class="yi-title" aria-hidden="true">${title}</div>
     <div class="yi-sub">${n > 1 ? `${n} tickets` : "Your ticket"} for ${escapeHtml(ev.title)}</div>`;

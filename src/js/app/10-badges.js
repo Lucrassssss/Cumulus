@@ -1117,6 +1117,9 @@ async function startStripeCheckout() {
       // Apple/Google Pay get their own one-tap buttons above (Express
       // Checkout) — don't repeat them inside the card form.
       wallets: { applePay: "never", googlePay: "never" },
+      // Stripe's card-mandate paragraph — our own "By paying you agree to
+      // the Terms" line under the form covers it, and it costs a screenful.
+      terms: { card: "never" },
       defaultValues: state.profileEmail
         ? { billingDetails: { email: state.profileEmail } }
         : undefined,

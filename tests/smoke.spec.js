@@ -1235,4 +1235,28 @@ test.describe("Cumulus smoke", () => {
     });
     await expect(page.locator(".btn-follow-host")).toHaveText("Follow");
   });
+
+  test("pinned bars stay on screen: Pay bar is fixed to the viewport on a small phone", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      const now = Date.now();
+      const ev = { id: "pin-1", title: "Pin Test", category: "Live Music", host: "H", hostId: "h", venue: "V", area: "Soho",
+        startTime: new Date(now + 50 * 3600000).toISOString(), endTime: new Date(now + 53 * 3600000).toISOString(), desc: "", capacity: 100, price: 12 };
+      computeEventDates(ev);
+      EVENTS.push(ev);
+      state.userId = "00000000-0000-0000-0000-00000000000b";
+      openBook("pin-1");
+      state.view = "checkout";
+      renderView();
+      document.getElementById("checkout-status").style.display = "none";
+      document.getElementById("payment-element").innerHTML = '<div style="height:520px"></div>';
+      document.getElementById("checkout-cta-bar").style.display = "flex";
+    });
+    await page.waitForTimeout(900); // let entrance animations finish
+    const bar = await page.locator("#checkout-cta-bar").boundingBox();
+    expect(bar.y + bar.height).toBeLessThanOrEqual(568);
+    expect(bar.y).toBeGreaterThan(400);
+  });
 });
