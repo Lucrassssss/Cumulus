@@ -1111,4 +1111,33 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator(".up-next")).toBeVisible();
     expect(await page.evaluate(() => window.scrollY)).toBe(y0);
   });
+
+  test("Don't miss wheel: equal cards, arrows step and wrap round", async ({ page }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      const now = Date.now();
+      EVENTS.length = 0;
+      for (let i = 0; i < 4; i++) {
+        const ev = { id: "wh-" + i, title: "Wheel " + i, category: "Live Music", host: "H", hostId: "h", venue: "V", area: "Soho",
+          startTime: new Date(now + (i + 2) * 3600000).toISOString(), endTime: new Date(now + (i + 4) * 3600000).toISOString(), desc: "", capacity: 50, price: 0 };
+        computeEventDates(ev);
+        EVENTS.push(ev);
+      }
+      state.eventsLoaded = true;
+      goFeed();
+    });
+    const widths = await page.$$eval("#fp-rail .fp-card", (els) => els.map((e) => Math.round(e.getBoundingClientRect().width)));
+    expect(new Set(widths).size).toBe(1);
+    const active = () => page.$$eval("#fp-rail .fp-card", (els) => els.findIndex((e) => e.classList.contains("on")));
+    expect(await active()).toBe(0);
+    await page.locator(".fw-arrow.next").click();
+    await expect.poll(active).toBe(1);
+    await page.evaluate(() => wheelGo(3));
+    await expect.poll(active).toBe(3);
+    await page.locator(".fw-arrow.next").click();
+    await expect.poll(active).toBe(0);
+    await page.locator(".fw-arrow.prev").click();
+    await expect.poll(active).toBe(3);
+  });
 });

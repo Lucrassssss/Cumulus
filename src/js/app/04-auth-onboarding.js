@@ -529,15 +529,18 @@ async function initApp() {
   // a real account in public.admins had no way to ever reach it after a
   // normal sign-in. Admin status should just be on by default for an actual
   // admin account, not gated behind a second manual re-verification step.
-  if (state.userId) {
-    try {
-      if (await isAdminSession()) {
-        state.isAdmin = true;
-        state._verifiedAdmin = true;
-        renderNav();
-      }
-    } catch (e) {}
-  }
+  // Admin check runs alongside the events load rather than in front of it.
+  const adminCheck = state.userId
+    ? isAdminSession()
+        .then((ok) => {
+          if (ok) {
+            state.isAdmin = true;
+            state._verifiedAdmin = true;
+            renderNav();
+          }
+        })
+        .catch(() => {})
+    : Promise.resolve();
 
   // Background data load — enterApp() rendered the shell already; this fills it
   // with real events from Supabase without blocking the cloud animation. With no
@@ -550,6 +553,8 @@ async function initApp() {
   // first screen hostage.
   if (state.view === "feed") renderViewQuiet();
   else if (state.view === "browse") renderView();
+  hideBootLoader(); // real content is on screen now — hand over in one go
+  await adminCheck;
 
   await loadGeocodeCache();
   EVENTS.forEach((ev) => {

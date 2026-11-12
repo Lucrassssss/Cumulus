@@ -334,17 +334,8 @@ async function start() {
       await localSet("cumulus_email", state.profileEmail);
       _cacheSession();
 
-      // Show a minimal loading screen while the app boots (no gate flash)
-      const gateRoot = document.getElementById("gate-root");
-      if (gateRoot) {
-        gateRoot.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;
-          background:var(--bg,#0d0e1a);flex-direction:column;gap:16px">
-          <div style="width:36px;height:36px;border:3px solid rgba(255,207,51,0.25);
-            border-top-color:#FFCF33;border-radius:50%;animation:spin 0.8s linear infinite"></div>
-          <span style="color:rgba(255,255,255,0.5);font-size:13px;font-family:sans-serif">Resuming session…</span>
-        </div>`;
-      }
-
+      // No second "Resuming session…" screen — the boot loader is already
+      // up and stays until the feed has real content (see renderView()).
       enterApp();
       return; // Done — no gate needed
     }

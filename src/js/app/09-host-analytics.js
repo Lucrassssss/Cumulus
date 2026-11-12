@@ -1468,8 +1468,11 @@ function renderView() {
   app.classList.remove("map-home");
   document.body.classList.remove("no-scroll");
   // Any non-map view is fully rendered from memory — never keep the boot
-  // loader up waiting on Mapbox tiles that this screen doesn't show.
-  hideBootLoader();
+  // loader up waiting on Mapbox tiles that this screen doesn't show. The
+  // one exception: Discover before its events arrive. Revealing placeholder
+  // rows and then filling them in reads as the page loading twice, so the
+  // loader holds until initApp() has real events (8s safety in enterApp()).
+  if (!(state.view === "feed" && !state.eventsLoaded)) hideBootLoader();
   if (state.view === "feed") container.innerHTML = window._lastFeedHtml = renderFeed();
   else if (state.view === "detail")
     container.innerHTML = renderDetail(state.selectedEventId);
