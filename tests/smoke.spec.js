@@ -1213,4 +1213,26 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator("#going-section .ev-h2")).toHaveText("5 going");
     await expect(page.locator("#going-section .ev-cap")).toHaveText("25 of 30 left");
   });
+
+  test("Admin tab has a stress-test wipe; events with a real host show Follow", async ({ page }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      state.isAdmin = true;
+      state.userId = "00000000-0000-0000-0000-00000000000a";
+      state.view = "admin";
+      renderNav();
+      renderView();
+    });
+    await expect(page.locator(".prof-action-row", { hasText: "Wipe stress test" })).toBeVisible();
+    await page.evaluate(() => {
+      const now = Date.now();
+      const ev = { id: "fh-1", title: "Follow Me", category: "Live Music", host: "Velvet Rooms", hostId: "11111111-1111-1111-1111-111111111111",
+        venue: "V", area: "Soho", startTime: new Date(now + 24 * 3600000).toISOString(), endTime: new Date(now + 27 * 3600000).toISOString(), desc: "", capacity: 50, price: 0 };
+      computeEventDates(ev);
+      EVENTS.push(ev);
+      openEvent("fh-1");
+    });
+    await expect(page.locator(".btn-follow-host")).toHaveText("Follow");
+  });
 });

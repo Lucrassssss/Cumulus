@@ -768,7 +768,31 @@ function openAdmin() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+// Stress-test cleanup: only the seeded test hosts and their tagged events
+// (admin_wipe_stress_test(), admin-only server-side). Shows live counts.
+async function refreshStressTestCounts() {
+  try {
+    const { data } = await sb.rpc("admin_stress_test_counts");
+    const el = document.getElementById("stress-test-sub");
+    if (el && data) el.textContent = data.events || data.hosts ? `${data.events} events · ${data.hosts} test hosts — tap to remove` : "Nothing to wipe";
+  } catch (e) {}
+}
+async function wipeStressTest() {
+  let counts = null;
+  try {
+    counts = (await sb.rpc("admin_stress_test_counts")).data;
+  } catch (e) {}
+  if (counts && !counts.events && !counts.hosts) return showToast("No stress-test data left", "info");
+  if (!confirm(`Remove ${counts ? `${counts.events} stress-test events and ${counts.hosts} test host accounts` : "all stress-test data"}? Real events and accounts are untouched. This can't be undone.`))
+    return;
+  const { data, error } = await sb.rpc("admin_wipe_stress_test");
+  if (error) return showToast(error.message === "forbidden" ? "Admins only" : "Couldn't wipe — try again", "error");
+  for (let i = EVENTS.length - 1; i >= 0; i--) if (/#cumulus-stress-test/.test(EVENTS[i].desc || "")) EVENTS.splice(i, 1);
+  showToast(`Removed ${data.events} events and ${data.hosts} test hosts`, "success");
+  renderView();
+}
 function renderAdmin() {
+  setTimeout(refreshStressTestCounts, 0);
   return `
     <div class="connect-header"><h2>Admin</h2><p>Approvals, hosts &amp; finances</p></div>
     <div class="prof-action-list">
@@ -800,6 +824,10 @@ function renderAdmin() {
       </button>
       <button class="prof-action-row" onclick="openReportedEvents()">
         <span class="prof-action-label">Reported events<span class="prof-action-sub">Auto-hidden after 3+ community reports</span></span>
+        <span class="prof-action-right">›</span>
+      </button>
+      <button class="prof-action-row prof-action-danger" onclick="wipeStressTest()">
+        <span class="prof-action-label">Wipe stress test<span class="prof-action-sub" id="stress-test-sub">Test hosts + #cumulus-stress-test events only</span></span>
         <span class="prof-action-right">›</span>
       </button>
       <button class="prof-action-row prof-action-danger" onclick="clearAllUsers()">

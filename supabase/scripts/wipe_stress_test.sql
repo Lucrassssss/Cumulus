@@ -1,10 +1,11 @@
--- Removes the 100 map stress-test events (inserted 2026-11-11).
--- Every one carries the marker "#cumulus-stress-test" in its description;
--- nothing else does. Any tickets / RSVPs / waitlist / squads / reports /
--- promo codes / payouts on them go too (all FKs are ON DELETE CASCADE).
+-- Removes ALL stress-test data (v1: 100 events; v2 2026-11-12: +100 test
+-- host accounts, +108 events, follows). Same as Admin tab → "Wipe stress
+-- test" (public.admin_wipe_stress_test()).
 --
--- Preview first (should say 100):
+-- Preview:
 --   select count(*) from public.events where description like '%#cumulus-stress-test%';
+--   select count(*) from public.users  where email like 'stress-host-%@cumulus-test.invalid';
 
-delete from public.events
-where description like '%#cumulus-stress-test%';
+delete from public.events where description like '%#cumulus-stress-test%';
+delete from public.users  where email like 'stress-host-%@cumulus-test.invalid';
+delete from auth.users    where email like 'stress-host-%@cumulus-test.invalid';
