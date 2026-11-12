@@ -5203,57 +5203,36 @@ html body .bk-fit .bk-secure{padding:10px 6px 0;font-size:12px;}
 html body .bk-fit .bk-secure a{color:var(--text-soft);}
 html body .bk-fit .checkout-payment-panel{min-height:0 !important;padding:10px !important;}html body .bk-fit{padding-bottom:96px;}html body .bk-fit .bk-order{margin-bottom:10px;}html body .bk-fit .bk-express{margin-bottom:10px;}html body .bk-fit .bk-or{margin-top:10px;}
 
-/* ══ For organisers panel ═════════════════════════════════════════════════ */
-html body .org-panel{position:relative;overflow:hidden;border-radius:24px;padding:18px 18px 16px;background:
-  radial-gradient(120% 90% at 100% 0%, color-mix(in srgb,var(--volt) 14%,transparent), transparent 55%),
-  radial-gradient(90% 70% at 0% 100%, color-mix(in srgb,var(--uv,#7c5cff) 16%,transparent), transparent 60%),
-  var(--surface);border:1px solid color-mix(in srgb,var(--volt) 26%,var(--line));box-shadow:0 18px 50px -30px rgba(0,0,0,.6);}
-html body .org-panel::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--volt),color-mix(in srgb,var(--volt) 10%,transparent));}
-html body .org-kicker{display:flex;align-items:center;gap:8px;font:700 11.5px var(--font-mono);text-transform:uppercase;letter-spacing:.09em;color:var(--accent);}
-html body .org-dot{width:7px;height:7px;border-radius:50%;background:var(--volt);box-shadow:0 0 0 4px color-mix(in srgb,var(--volt) 22%,transparent);}
-html body .org-title{margin:10px 0 6px;font:800 24px/1.05 var(--font-display,var(--font-sans));letter-spacing:-.03em;color:var(--text);}
-html body .org-sub{margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--text-soft);}
-html body .org-points{list-style:none;margin:0 0 14px;padding:0;display:none;flex-direction:column;gap:10px;}
-html body .org-points li{display:grid;grid-template-columns:86px 1fr;gap:10px;align-items:baseline;padding-top:10px;border-top:1px solid var(--line-soft);}
-html body .org-points b{white-space:nowrap;font:800 20px var(--font-display,var(--font-sans));letter-spacing:-.02em;color:var(--text);}
-html body .org-points span{font-size:13px;line-height:1.4;color:var(--text-soft);}
-html body .org-mini{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;}
-html body .org-mini span{font:600 12px var(--font-sans);color:var(--text-soft);padding:6px 10px;border-radius:999px;background:var(--surface-2);}
-html body .org-mini b{color:var(--text);}
-html body .org-acts{display:flex;gap:8px;}
-html body .org-acts .v-btn{min-height:46px;flex:1;font-size:14.5px;gap:6px;}
-html body .org-acts .org-more{flex:0 0 auto;padding:0 16px;}
-html body .org-proof{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line-soft);font-size:12.5px;color:var(--text-muted);}
-html body .org-proof svg{color:var(--accent);flex-shrink:0;}
-html body .org-proof b{color:var(--text);}
-@media (max-width:1023px){
-  html body .feed-aside{padding:0 18px;margin:6px 0 4px;}
-  html body .org-sub{display:none;}
-  html body .org-title{font-size:20px;margin-top:8px;}
-}
-
-/* ══ Desktop: scaled for a real screen, not a stretched phone ════════════ */
+/* ══ Desktop: more room, same app ════════════════════════════════════════
+   Bottom dock stays (no side rail). Wider pages with generous outer
+   margins so nothing feels boxed in; the organiser card becomes a wide
+   banner across the top of Discover. */
 @media (min-width:1100px){
-  /* Navigation rail on the left instead of the phone's floating dock. */
-  html body #app:not(.map-home){padding-left:112px !important;padding-bottom:0 !important;}
-  html body .bottom-nav{left:20px !important;top:50% !important;bottom:auto !important;transform:translateY(-50%) !important;width:76px !important;flex-direction:column !important;padding:8px !important;gap:6px !important;border-radius:28px !important;}
-  html body .bottom-nav .nav-link{min-height:62px !important;width:100% !important;border-radius:20px !important;font-size:11px !important;}
-  html body #app[data-view="detail"] .bottom-nav{display:flex !important;}
+  /* General pages: wider than the phone column, with real side margins. */
+  html body #view-container{max-width:1040px !important;padding-left:48px !important;padding-right:48px !important;}
 
-  /* Discover: wider, roomier, organiser panel gets a proper column. */
-  html body #app[data-view="feed"] #view-container{max-width:1320px !important;}
-  html body .feed-layout{grid-template-columns:320px minmax(0,1fr) !important;column-gap:32px !important;padding-left:32px !important;}
-  html body .feed-layout > .feed-aside{top:88px !important;padding-top:18px !important;}
-  html body .org-panel{padding:24px 22px 20px;}
-  html body .org-title{font-size:30px;}
-  html body .org-points{display:flex;}
-  html body .org-mini{display:none;}
+  /* Discover: one wide column, organiser banner up front. */
+  html body #app[data-view="feed"] #view-container{max-width:1440px !important;padding:0 64px !important;}
+  html body .feed-layout{display:block !important;padding-left:0 !important;}
+  html body .feed-layout > .feed-aside{position:static !important;padding:6px 0 0 !important;}
+  html body .feed-layout > .feed-hero{padding-left:0 !important;padding-right:0 !important;}
+  html body .feed-head{padding-left:0 !important;padding-right:0 !important;}
+  html body .feed-main .feed-more,html body .feed-main .feed-end{width:100% !important;}
+  html body .feed-main .feed-sec-head,html body .feed-main .chip-rail,html body .feed-main .fp-rail{padding-left:0;}
+  html body .feed-host-cta{flex-direction:row !important;align-items:center !important;gap:24px !important;padding:20px 26px !important;border-radius:var(--r-xl) !important;}
+  html body .fhc-stack{width:58px !important;height:58px !important;margin:0 6px 0 4px !important;}
+  html body .fhc-copy{display:flex;align-items:center;gap:28px;flex-wrap:wrap;}
+  html body .fhc-kicker{flex-basis:100%;margin:0 0 -18px !important;}
+  html body .fhc-title{display:block !important;font:800 34px/1 var(--font-display) !important;letter-spacing:-.04em !important;margin:0 !important;}
+  html body .fhc-sub{font:600 16px/1.35 var(--font-sans) !important;opacity:.85;flex:1;min-width:220px;}
+  html body .fhc-btn{display:inline-flex !important;margin:0 !important;padding:14px 22px !important;font-size:15px !important;flex-shrink:0;}
+  html body .fhc-go{display:none !important;}
   html body .fp-wheel{--fw-card:260px;}
   html body .feed-h1{font-size:clamp(56px,5vw,84px) !important;}
 
-  /* Event page: Eventbrite-style two columns with a sticky booking card. */
-  html body #app[data-view="detail"] #view-container{max-width:1240px !important;padding:0 32px !important;}
-  html body .ev-page{display:grid;grid-template-columns:minmax(0,1fr) 360px;column-gap:32px;align-items:start;padding-top:20px;padding-bottom:60px;}
+  /* Event page: two columns with the sticky booking card. */
+  html body #app[data-view="detail"] #view-container{max-width:1320px !important;padding:0 64px !important;}
+  html body .ev-page{display:grid;grid-template-columns:minmax(0,1fr) 360px;column-gap:36px;align-items:start;padding-top:20px;padding-bottom:60px;}
   html body .ev-page > .ev-hero{grid-column:1 / -1;min-height:440px;}
   html body .ev-page > .ev-body{grid-column:1;padding:8px 0 0;}
   html body .ev-page > .ev-buybar{grid-column:2;grid-row:2;position:sticky;top:24px;left:auto;transform:none;bottom:auto;width:auto;margin-top:24px;
@@ -5263,8 +5242,8 @@ html body .org-proof b{color:var(--text);}
   html body .ev-page > .ev-buybar .ev-buy-cta .v-btn{width:100%;min-height:56px;font-size:16.5px;}
   html body .ev-buy-meta{display:flex !important;}
 
-  /* Hosting info: posters on the right, copy on the left — no overlap. */
-  html body #app:has(.hx) #view-container{max-width:1240px !important;padding:0 32px !important;}
+  /* Hosting info: posters right, copy left — no overlap. */
+  html body #app:has(.hx) #view-container{max-width:1320px !important;padding:0 64px !important;}
   html body .hx-hero{min-height:560px;}
   html body .hx-wall{left:46%;}
   html body .hx-hero::after{background:linear-gradient(90deg,var(--volt) 40%,transparent 75%);}

@@ -396,44 +396,6 @@ function _wheelRecentre() {
   );
 }
 
-// ── For organisers ────────────────────────────────────────────────────────
-// The host pitch, given the room it deserves: a calm, considered panel (not
-// a shouty block) — what Cumulus is for, the three numbers hosts care
-// about, two clear next steps and a live proof line. Full panel in the
-// desktop side column; a compact version heads the phone feed.
-function organiserPanelHtml(upcoming) {
-  const ic = (d) => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
-  const weekAhead = (upcoming || []).filter((ev) => ev.startsAt - Date.now() < 7 * 864e5).length;
-  const hostsLive = new Set((upcoming || []).map((ev) => ev.hostId || ev.host)).size;
-  if (isApprovedHost()) {
-    const mine = (upcoming || []).filter((ev) => ev.hostId && ev.hostId === state.userId).length;
-    return `<section class="org-panel host" aria-label="Your hosting">
-      <div class="org-kicker"><span class="org-dot"></span>Your hosting</div>
-      <h3 class="org-title">${mine ? `${mine} event${mine !== 1 ? "s" : ""} live` : "Ready for your next night?"}</h3>
-      <p class="org-sub">${mine ? "Track sales, scan tickets at the door and message past guests from your dashboard." : "Create an event in a couple of minutes — it goes live on the map once reviewed."}</p>
-      <div class="org-acts">
-        <button class="v-btn org-cta" onclick="navStack=[];openHost()">${ic('<path d="M12 5v14M5 12h14"/>')}Create an event</button>
-      </div>
-    </section>`;
-  }
-  return `<section class="org-panel" aria-label="For organisers">
-    <div class="org-kicker"><span class="org-dot"></span>For organisers</div>
-    <h3 class="org-title">Put your night on London's map.</h3>
-    <p class="org-sub">Cumulus is where Londoners find what's on tonight. List an event in minutes and sell tickets the fair way.</p>
-    <ul class="org-points">
-      <li><b>100%</b><span>of your ticket price is yours — buyers cover the booking fee</span></li>
-      <li><b>24–48h</b><span>payouts after your event, straight to your bank</span></li>
-      <li><b>£0</b><span>to list. Door scanner, waitlists, group tickets &amp; promo codes included</span></li>
-    </ul>
-    <div class="org-mini" aria-hidden="true"><span><b>100%</b> yours</span><span><b>24–48h</b> payouts</span><span><b>£0</b> to list</span></div>
-    <div class="org-acts">
-      <button class="v-btn org-cta" onclick="openHostApply()">Start hosting</button>
-      <button class="v-btn ghost org-more" onclick="openHostApply();setTimeout(()=>document.getElementById('hx-how')?.scrollIntoView({behavior:'smooth'}),450)">How it works</button>
-    </div>
-    ${weekAhead ? `<div class="org-proof">${ic('<path d="M3 12h4l3-8 4 16 3-8h4"/>')}<span><b>${weekAhead}</b> event${weekAhead !== 1 ? "s" : ""} from <b>${hostsLive}</b> host${hostsLive !== 1 ? "s" : ""} in the next 7 days</span></div>` : ""}
-  </section>`;
-}
-
 // ── Building blocks ───────────────────────────────────────────────────────
 function feedPosterCardHtml(ev, size) {
   const st = eventStatus(ev);
@@ -779,7 +741,16 @@ function renderFeed() {
 
 
       <aside class="feed-aside" aria-label="For organisers">
-        ${organiserPanelHtml(all)}
+        <div class="feed-host-cta" onclick="openHostApply()" role="button" tabindex="0" aria-label="For organisers — host an event on Cumulus">
+          <div class="fhc-stack" aria-hidden="true"><i></i><i></i><i></i></div>
+          <div class="fhc-copy">
+            <div class="fhc-kicker">For organisers</div>
+            <div class="fhc-title">Throw something.</div>
+            <div class="fhc-sub">Keep 100% of the ticket price. Paid out in 24–48h.</div>
+            <span class="fhc-btn">Start hosting →</span>
+          </div>
+          <span class="fhc-go" aria-hidden="true">→</span>
+        </div>
       </aside>
 
       <div class="feed-main">
