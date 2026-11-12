@@ -1034,6 +1034,46 @@ function toggleCheckoutSummary() {
 // that happens inline (most cards — no redirect at all) or after the
 // browser comes back from a redirect-based method (some banks/wallets),
 // via checkStripeCheckoutReturn() at boot.
+// Apple Pay / Google Pay as one-tap buttons at the top of the pay screen —
+// the fastest way through (Dice's default). Only shown when the device has
+// one set up; confirms the same PaymentIntent, same outcomes as the card form.
+function _mountExpressCheckout() {
+  const wrap = document.getElementById("express-wrap");
+  if (!wrap || !stripeElementsGroup) return;
+  let ece;
+  try {
+    ece = stripeElementsGroup.create("expressCheckout", {
+      buttonHeight: 50,
+      buttonType: { applePay: "buy", googlePay: "buy" },
+      buttonTheme: { applePay: document.documentElement.dataset.theme === "dark" ? "white" : "black", googlePay: document.documentElement.dataset.theme === "dark" ? "white" : "black" },
+      paymentMethods: { applePay: "auto", googlePay: "auto", link: "never", paypal: "never", amazonPay: "never", klarna: "never" },
+      layout: { maxColumns: 2, maxRows: 1, overflow: "never" },
+    });
+  } catch (e) {
+    return;
+  }
+  ece.on("ready", ({ availablePaymentMethods }) => {
+    if (availablePaymentMethods && Object.values(availablePaymentMethods).some(Boolean)) wrap.hidden = false;
+  });
+  ece.on("confirm", async () => {
+    try {
+      sessionStorage.setItem(
+        PENDING_PAY_KEY,
+        JSON.stringify({ eventId: bookingDraft.eventId, type: bookingDraft.type, qty: bookingDraft.qty, promoCode: bookingDraft.promoCode || "" }),
+      );
+    } catch (e) {}
+    showPayOverlay("Talking to your bank…");
+    const { error, paymentIntent } = await window.stripeInstance.confirmPayment({
+      elements: stripeElementsGroup,
+      confirmParams: { return_url: `${location.origin}${location.pathname}?checkout=return` },
+      redirect: "if_required",
+    });
+    await _handlePayOutcome(error, paymentIntent, () => {});
+  });
+  try {
+    ece.mount("#express-checkout");
+  } catch (e) {}
+}
 async function startStripeCheckout() {
   const ev = EVENTS.find((e) => e.id === bookingDraft.eventId);
   if (!ev) return;
@@ -1073,10 +1113,15 @@ async function startStripeCheckout() {
     // no longer triggers Link's own one-tap recognition, only the plain
     // autofill.
     const paymentElement = stripeElementsGroup.create("payment", {
+      layout: { type: "tabs", defaultCollapsed: false },
+      // Apple/Google Pay get their own one-tap buttons above (Express
+      // Checkout) — don't repeat them inside the card form.
+      wallets: { applePay: "never", googlePay: "never" },
       defaultValues: state.profileEmail
         ? { billingDetails: { email: state.profileEmail } }
         : undefined,
     });
+    _mountExpressCheckout();
     paymentElement.mount("#payment-element");
     paymentElement.on("ready", () => {
       if (status) status.style.display = "none";
@@ -1147,7 +1192,11 @@ async function submitStripePayment() {
       btn.innerHTML = btn.dataset.label || "Pay";
     }
   };
-
+  await _handlePayOutcome(error, paymentIntent, resetBtn);
+}
+// One set of on-screen outcomes for every way of paying (card form, Apple
+// Pay, Google Pay, redirect methods).
+async function _handlePayOutcome(error, paymentIntent, resetBtn) {
   if (error) {
     resetBtn();
     // Card declined / validation: say it plainly, right here, and let them
@@ -1159,9 +1208,6 @@ async function submitStripePayment() {
     });
     return;
   }
-
-  // No redirect happened (the common case for cards) — Stripe already
-  // confirmed the PaymentIntent, so finalize right here.
   if (paymentIntent?.status === "succeeded") {
     await finalizeStripePayment(paymentIntent.id);
   } else if (paymentIntent?.status === "processing") {

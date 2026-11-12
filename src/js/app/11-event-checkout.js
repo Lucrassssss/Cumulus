@@ -28,6 +28,9 @@ function _bkEventHead(ev) {
 }
 
 // ─── Step 1: choose tickets ───────────────────────────────────────────────
+// Fits one phone screen (Dice / Eventbrite): quantity lives inside the
+// selected ticket, the breakdown lives in the pinned bar, reassurance is a
+// single row — nothing to scroll past before "Continue".
 function renderBook() {
   const ev = EVENTS.find((e) => e.id === bookingDraft.eventId);
   if (!ev) return '<div class="empty-state">Event not found.</div>';
@@ -35,83 +38,68 @@ function renderBook() {
   const sel = types.find((t) => t.id === bookingDraft.type) || types[0];
   const isFree = !eventPrice(ev);
   const qty = bookingDraft.qty;
-  const each = sel.price + (sel.platformFee || 0);
   const baseTotal = sel.price * qty;
   const feeTotal = (sel.platformFee || 0) * qty;
   const finalTotal = baseTotal + feeTotal;
+  const stepper = `<div class="bk-stepper sm" role="group" aria-label="Number of tickets" onclick="event.stopPropagation()">
+      <button onclick="setBookingQty(${qty - 1})" aria-label="One fewer" ${qty <= 1 ? "disabled" : ""}>−</button>
+      <output aria-live="polite">${qty}</output>
+      <button onclick="setBookingQty(${qty + 1})" aria-label="One more" ${qty >= 10 ? "disabled" : ""}>+</button>
+    </div>`;
   const typeCards = types
-    .map(
-      (t) => `
-    <div class="tt-card${bookingDraft.type === t.id ? " on" : ""}" onclick="setBookingType('${t.id}')" role="radio" tabindex="0" aria-checked="${bookingDraft.type === t.id ? "true" : "false"}" aria-label="${escapeHtml(t.label)}, ${t.price ? `£${(t.price + (t.platformFee || 0)).toFixed(2)} including booking fee` : "Free"}">
+    .map((t) => {
+      const on = bookingDraft.type === t.id;
+      const all = t.price + (t.platformFee || 0);
+      return `
+    <div class="tt-card${on ? " on" : ""}" onclick="setBookingType('${t.id}')" role="radio" tabindex="0" aria-checked="${on ? "true" : "false"}" aria-label="${escapeHtml(t.label)}, ${t.price ? `£${all.toFixed(2)} including booking fee` : "Free"}">
       <span class="tt-radio" aria-hidden="true"></span>
-      <div class="tt-body"><div class="tt-name">${escapeHtml(t.label)}</div>${t.desc ? `<div class="tt-desc">${escapeHtml(t.desc)}</div>` : ""}</div>
-      <div class="tt-price">${t.price ? `£${(t.price + (t.platformFee || 0)).toFixed(2)}<span class="tt-incl">£${t.price.toFixed(2)} + £${(t.platformFee || 0).toFixed(2)} fee</span>` : "Free"}</div>
-    </div>`,
-    )
+      <div class="tt-body"><div class="tt-name">${escapeHtml(t.label)}</div><div class="tt-desc">${t.price ? `£${all.toFixed(2)} · incl. £${(t.platformFee || 0).toFixed(2)} fee` : "Free"}${t.desc ? ` · ${escapeHtml(t.desc)}` : ""}</div></div>
+      ${on ? stepper : `<div class="tt-price">${t.price ? `£${all.toFixed(2)}` : "Free"}</div>`}
+    </div>`;
+    })
     .join("");
   const cta = isFree
-    ? `<button class="v-btn bk-cta-btn" onclick="registerFree('${ev.id}')">${_bkIc(BK_CHECK)}Get ${qty > 1 ? `${qty} free tickets` : "free ticket"}</button>`
-    : `<button class="v-btn bk-cta-btn" onclick="proceedToCheckout()">Continue · £${finalTotal.toFixed(2)}</button>`;
+    ? `<button class="v-btn bk-cta-btn" onclick="registerFree('${ev.id}')">${_bkIc(BK_CHECK)}Get ${qty > 1 ? `${qty} tickets` : "ticket"}</button>`
+    : `<button class="v-btn bk-cta-btn" onclick="proceedToCheckout()">Continue to pay</button>`;
 
-  return `<div class="bk-page">
+  return `<div class="bk-page bk-fit">
     <div class="bk-top"><button class="bk-back" onclick="goBack()" aria-label="Back">${_bkIc('<path d="M15 5l-7 7 7 7"/>', 20)}</button>${_bkSteps(1)}</div>
     ${_bkEventHead(ev)}
-
-    <section class="bk-sec">
-      <h2 class="bk-h">Choose your ticket</h2>
-      <div class="bk-types" role="radiogroup" aria-label="Ticket type">${typeCards}</div>
-    </section>
-
-    <section class="bk-sec bk-qty-row">
-      <div><h2 class="bk-h">How many?</h2><span class="bk-sub">${qty > 1 ? "You'll get one link to share seats with your group" : "Up to 10 per order"}</span></div>
-      <div class="bk-stepper" role="group" aria-label="Number of tickets">
-        <button onclick="setBookingQty(${qty - 1})" aria-label="One fewer" ${qty <= 1 ? "disabled" : ""}>−</button>
-        <output aria-live="polite">${qty}</output>
-        <button onclick="setBookingQty(${qty + 1})" aria-label="One more" ${qty >= 10 ? "disabled" : ""}>+</button>
-      </div>
-    </section>
-
-    <section class="bk-sec bk-summary" aria-label="Order summary">
-      <div class="bk-line"><span>${escapeHtml(sel.label)} × ${qty}</span><span>${sel.price ? `£${baseTotal.toFixed(2)}` : "Free"}</span></div>
-      ${!isFree ? `<div class="bk-line"><span>Booking fee <em>(the host keeps 100% of their price)</em></span><span>£${feeTotal.toFixed(2)}</span></div>` : ""}
-      <div class="bk-line total"><span>Total</span><span>${finalTotal ? `£${finalTotal.toFixed(2)}` : "Free"}</span></div>
-      ${!isFree && qty > 1 ? `<div class="bk-each">£${each.toFixed(2)} each, everything included</div>` : ""}
-    </section>
-
-    ${
-      !isFree
-        ? `<details class="bk-promo"${bookingDraft.promoCode ? " open" : ""}>
-      <summary>Have a promo code?</summary>
-      <input id="book-promo-code" class="gate-input" placeholder="e.g. EARLYBIRD10" autocapitalize="characters" value="${escapeHtml(bookingDraft.promoCode || "")}" oninput="bookingDraft.promoCode=this.value.trim()"/>
-      <p>Checked live on the next screen — your real total shows before you pay.</p>
-    </details>`
-        : ""
-    }
-
-    <label class="bk-optin">
-      <input type="checkbox" id="book-marketing-optin" ${bookingDraft.marketingOptIn ? "checked" : ""} onchange="bookingDraft.marketingOptIn=this.checked"/>
-      <span>Let ${escapeHtml(ev.host || "the host")} email me about their future events <em>(optional)</em></span>
-    </label>
-
-    <ul class="bk-trust">
-      <li>${_bkIc(BK_CHECK)}<span><b>The price is the price</b> — no fees added later</span></li>
-      ${!isFree ? `<li>${_bkIc(BK_LOCK)}<span><b>Secure payment</b> by Stripe — we never see your card</span></li>` : ""}
-      <li>${_bkIc(BK_RETURN)}<span><b>Can't make it?</b> Free cancellation up to 24h before · <a href="terms.html" target="_blank">policy</a></span></li>
+    <h2 class="bk-h">Tickets</h2>
+    <div class="bk-types" role="radiogroup" aria-label="Ticket type">${typeCards}</div>
+    ${qty > 1 ? `<p class="bk-note">${_bkIc('<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c.7-3.4 3.2-5 6-5s5.3 1.6 6 5"/>', 14)} You'll get one link to share the other ${qty - 1} seat${qty > 2 ? "s" : ""}</p>` : ""}
+    <div class="bk-extras">
+      ${
+        !isFree
+          ? `<details class="bk-promo"${bookingDraft.promoCode ? " open" : ""}>
+        <summary>Promo code</summary>
+        <input id="book-promo-code" class="gate-input" placeholder="e.g. EARLYBIRD10" autocapitalize="characters" value="${escapeHtml(bookingDraft.promoCode || "")}" oninput="bookingDraft.promoCode=this.value.trim()"/>
+      </details>`
+          : ""
+      }
+      <label class="bk-optin">
+        <input type="checkbox" id="book-marketing-optin" ${bookingDraft.marketingOptIn ? "checked" : ""} onchange="bookingDraft.marketingOptIn=this.checked"/>
+        <span>Hear about ${escapeHtml(ev.host || "the host")}'s future events</span>
+      </label>
+    </div>
+    <ul class="bk-chips" aria-label="Good to know">
+      <li>${_bkIc(BK_CHECK, 13)}No hidden fees</li>
+      ${!isFree ? `<li>${_bkIc(BK_LOCK, 13)}Secure by Stripe</li>` : ""}
+      <li>${_bkIc(BK_RETURN, 13)}Refundable to 24h before</li>
     </ul>
-
     <div class="bk-cta">
-      <div class="bk-cta-total"><span>${qty} ticket${qty !== 1 ? "s" : ""}</span><b>${finalTotal ? `£${finalTotal.toFixed(2)}` : "Free"}</b></div>
+      <div class="bk-cta-total"><span>${qty} ticket${qty !== 1 ? "s" : ""}</span><b>${finalTotal ? `£${finalTotal.toFixed(2)}` : "Free"}</b>${feeTotal ? `<em>incl. £${feeTotal.toFixed(2)} fee</em>` : ""}</div>
       ${cta}
     </div>
   </div>`;
 }
 
 // ─── Step 2: pay ──────────────────────────────────────────────────────────
-// Real Stripe payment via a PaymentIntent + Payment Element (create-
-// checkout-session computes the authoritative price server-side; the
-// numbers here are display only). Elements (not Checkout) so the form can
-// be themed — see stripeAppearanceForCurrentTheme(). The element starts
-// loading the moment this screen mounts (afterRenderCheckout()).
+// One screen: the order as a single line (tap Edit to change it), Apple /
+// Google Pay one-tap buttons first where the device has them, the card form
+// underneath, and Pay pinned in the thumb zone. Real Stripe PaymentIntent +
+// Elements (create-checkout-session prices it server-side; numbers here are
+// display only) — starts loading the moment this screen mounts.
 function renderCheckout() {
   const ev = EVENTS.find((e) => e.id === bookingDraft.eventId);
   if (!ev) return "";
@@ -122,39 +110,36 @@ function renderCheckout() {
   const feeTotal = (sel.platformFee || 0) * qty;
   const total = (baseTotal + feeTotal).toFixed(2);
 
-  return `<div class="bk-page bk-pay">
+  return `<div class="bk-page bk-fit bk-pay">
     <div class="bk-top"><button class="bk-back" onclick="goBack()" aria-label="Back">${_bkIc('<path d="M15 5l-7 7 7 7"/>', 20)}</button>${_bkSteps(2)}</div>
-    <div class="checkout-layout">
-      <div class="checkout-summary-col">
-        ${_bkEventHead(ev)}
-        <section class="bk-sec bk-summary" id="checkout-summary" aria-label="Order summary">
-          <div class="bk-line"><span>${escapeHtml(sel.label)} × ${qty}</span><span>£${baseTotal.toFixed(2)}</span></div>
-          <div class="bk-line"><span>Booking fee</span><span>£${feeTotal.toFixed(2)}</span></div>
-          <div class="bk-line total"><span>Total</span><span>£${total}</span></div>
-          ${bookingDraft.promoCode ? `<div class="bk-each">Promo "${escapeHtml(bookingDraft.promoCode)}" is checked now — the pay button shows your real total.</div>` : ""}
-        </section>
-        <div class="bk-secure">${_bkIc(BK_LOCK, 15)}<span><b>Encrypted &amp; processed by Stripe.</b> Cumulus never sees or stores your card.</span></div>
+    <div class="bk-order" id="checkout-summary">
+      <div class="bk-art ${posterClass(ev)}" style="${posterStyle(ev)}" aria-hidden="true">${posterGlyph(ev)}</div>
+      <div class="bk-order-txt">
+        <b>${escapeHtml(ev.title)}</b>
+        <span>${qty} × ${escapeHtml(sel.label)} · ${feedDateLabel(ev)} ${feedTimeLabel(ev)}</span>
       </div>
-      <div class="checkout-main-col">
-        <h2 class="bk-h">Pay securely</h2>
-        <div class="bk-sec checkout-payment-panel">
-          <div id="checkout-status" class="checkout-status" role="status" aria-busy="true" aria-live="polite">
-            <span class="sr-only">Loading payment form…</span>
-            <div class="checkout-skeleton" aria-hidden="true">
-              <div class="checkout-skeleton-row" style="width:55%;"></div>
-              <div class="checkout-skeleton-row" style="height:46px;"></div>
-              <div class="checkout-skeleton-row" style="height:46px;"></div>
-              <div class="checkout-skeleton-row" style="width:35%;"></div>
-            </div>
-          </div>
-          <div id="payment-element"></div>
-        </div>
-        <p class="checkout-footer-note">By paying you agree to the <a href="terms.html" target="_blank">Terms</a> · <a href="privacy.html" target="_blank">Privacy</a></p>
-        <div class="checkout-cta-bar bk-cta" id="checkout-cta-bar">
-          <div class="bk-cta-total"><span>Total</span><b>£${total}</b></div>
-          <button id="pay-btn" class="v-btn bk-cta-btn checkout-pay-btn" data-label="${_bkIc(BK_LOCK).replace(/"/g, "&quot;")}Pay £${total}" onclick="submitStripePayment()">${_bkIc(BK_LOCK)}Pay £${total}</button>
+      <div class="bk-order-amt"><b>£${total}</b><button type="button" onclick="goBack()">Edit</button></div>
+    </div>
+    ${bookingDraft.promoCode ? `<p class="bk-note">Promo "${escapeHtml(bookingDraft.promoCode)}" is being applied — the Pay button shows your real total.</p>` : ""}
+    <div class="bk-express" id="express-wrap" hidden>
+      <div id="express-checkout"></div>
+      <div class="bk-or"><span>or pay by card</span></div>
+    </div>
+    <div class="checkout-payment-panel">
+      <div id="checkout-status" class="checkout-status" role="status" aria-busy="true" aria-live="polite">
+        <span class="sr-only">Loading payment form…</span>
+        <div class="checkout-skeleton" aria-hidden="true">
+          <div class="checkout-skeleton-row" style="width:40%;"></div>
+          <div class="checkout-skeleton-row" style="height:46px;"></div>
+          <div class="checkout-skeleton-row" style="height:46px;"></div>
         </div>
       </div>
+      <div id="payment-element"></div>
+    </div>
+    <p class="bk-secure">${_bkIc(BK_LOCK, 13)}<span>Encrypted by Stripe — we never see your card. By paying you agree to the <a href="terms.html" target="_blank">Terms</a>.</span></p>
+    <div class="checkout-cta-bar bk-cta" id="checkout-cta-bar">
+      <div class="bk-cta-total"><span>Total</span><b>£${total}</b>${feeTotal ? `<em>incl. £${feeTotal.toFixed(2)} fee</em>` : ""}</div>
+      <button id="pay-btn" class="v-btn bk-cta-btn checkout-pay-btn" data-label="${_bkIc(BK_LOCK).replace(/"/g, "&quot;")}Pay £${total}" onclick="submitStripePayment()">${_bkIc(BK_LOCK)}Pay £${total}</button>
     </div>
   </div>`;
 }

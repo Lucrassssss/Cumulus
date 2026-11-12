@@ -1025,7 +1025,15 @@ test.describe("Cumulus smoke", () => {
     });
     await expect(page.locator(".bk-steps li.on")).toContainText("Tickets");
     await expect(page.locator(".bk-cta-total b")).toHaveText("£27.00");
-    await expect(page.locator(".bk-cta-btn")).toContainText("Continue · £27.00");
+    await expect(page.locator(".bk-cta-btn")).toContainText("Continue to pay");
+    await expect(page.locator(".bk-cta-total em")).toHaveText("incl. £3.00 fee");
+    // Quantity lives inside the selected ticket; step 1 fits a phone screen.
+    await expect(page.locator(".tt-card.on .bk-stepper output")).toHaveText("2");
+    const vp = page.viewportSize();
+    if (vp && vp.width < 500) {
+      const overflow = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+      expect(overflow).toBeLessThanOrEqual(0);
+    }
     // Tab bar hidden while buying.
     await expect(page.locator(".bottom-nav")).toBeHidden();
     // A failed payment is shown on screen, not as a toast, and is dismissable.

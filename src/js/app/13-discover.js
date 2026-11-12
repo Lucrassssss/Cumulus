@@ -356,22 +356,44 @@ function wheelSync() {
       _wheelRaf = 0;
       _wheelMark(_wheelIndex());
     });
-  // Once the spin stops, hop out of a copy into the real set — same card,
-  // same spot on screen, so it's invisible.
+  // Once the spin has fully stopped, hop out of a copy into the real set.
+  // Native `scrollend` where the browser has it (fires after momentum and
+  // snapping finish), a quiet-period timer elsewhere.
+  const rail = document.getElementById("fp-rail");
+  if (rail && "onscrollend" in rail) {
+    if (!rail._wheelEnd) {
+      rail._wheelEnd = true;
+      rail.addEventListener("scrollend", _wheelRecentre);
+    }
+    return;
+  }
   clearTimeout(_wheelSettle);
-  _wheelSettle = setTimeout(() => {
-    const [rail, cards] = _wheelCards();
-    const n = _wheelN();
-    if (!rail || cards.length !== n * 3) return;
-    const k = _wheelIndex();
-    if (k >= n && k < 2 * n) return;
-    const target = k < n ? k + n : k - n;
-    const shift = cards[target].offsetLeft - cards[k].offsetLeft;
-    rail.style.scrollBehavior = "auto";
-    rail.scrollLeft += shift;
-    rail.style.scrollBehavior = "";
-    _wheelMark(target);
-  }, 140);
+  _wheelSettle = setTimeout(_wheelRecentre, 220);
+}
+// Same card, same pixel position — and with every transition switched off
+// for that frame, so the swap is invisible (no scale/fade replay, which is
+// what made a full lap look like the rail refreshing).
+function _wheelRecentre() {
+  const [rail, cards] = _wheelCards();
+  const n = _wheelN();
+  if (!rail || cards.length !== n * 3) return;
+  const k = _wheelIndex();
+  if (k >= n && k < 2 * n) return;
+  const target = k < n ? k + n : k - n;
+  const shift = cards[target].offsetLeft - cards[k].offsetLeft;
+  rail.classList.add("fw-jump");
+  rail.style.scrollSnapType = "none";
+  rail.style.scrollBehavior = "auto";
+  rail.scrollLeft += shift;
+  _wheelMark(target);
+  void rail.offsetWidth; // commit the jump with transitions off
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
+      rail.style.scrollSnapType = "";
+      rail.style.scrollBehavior = "";
+      rail.classList.remove("fw-jump");
+    }),
+  );
 }
 
 // ── Building blocks ───────────────────────────────────────────────────────

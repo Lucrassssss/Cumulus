@@ -5157,3 +5157,48 @@ html body .fw-dots button.on{width:22px;background:var(--accent);}
   html body .fw-arrow.next{right:24px;}
 }
 @media (prefers-reduced-motion:reduce){html body .fp-wheel .fp-card .poster{transition:none;}}
+html body .fp-rail.fw-jump .fp-card,html body .fp-rail.fw-jump .fp-card .poster{transition:none !important;}
+
+/* ══ One-screen purchase (bk-fit) ═════════════════════════════════════════ */
+html body .bk-fit{padding-bottom:120px;}
+html body .bk-pay{max-width:560px;}
+html body .bk-fit .bk-top{margin-bottom:12px;}
+html body .bk-fit .bk-event{padding:10px;margin-bottom:14px;}
+html body .bk-fit .bk-art{width:52px;height:60px;border-radius:12px;}
+html body .bk-fit .bk-ev-title{font-size:17px;}
+html body .bk-fit .bk-h{font-size:16px;margin:0 2px 8px;}
+html body .bk-fit .tt-card{padding:12px 12px 12px 14px;}
+html body .bk-fit .tt-desc{font-size:12.5px;}
+html body .bk-stepper.sm{padding:3px;gap:2px;}
+html body .bk-stepper.sm button{width:34px;height:34px;font-size:18px;}
+html body .bk-stepper.sm output{min-width:24px;font-size:16px;}
+html body .bk-note{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-muted);margin:8px 4px 0;}
+html body .bk-note svg{color:var(--accent);flex-shrink:0;}
+html body .bk-extras{display:flex;flex-direction:column;gap:2px;margin:12px 0 10px;padding:4px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--line-soft);}
+html body .bk-fit .bk-promo{margin:0;padding:0;}
+html body .bk-fit .bk-promo summary{padding:10px 0;font-size:13.5px;}
+html body .bk-fit .bk-promo input{margin-bottom:10px;}
+html body .bk-fit .bk-optin{padding:10px 0;font-size:13.5px;border-top:1px solid var(--line-soft);align-items:center;}
+html body .bk-fit .bk-promo + .bk-optin{border-top:1px solid var(--line-soft);}
+html body .bk-fit .bk-extras > .bk-optin:first-child{border-top:0;}
+html body .bk-chips{list-style:none;margin:0;padding:0 2px;display:flex;flex-wrap:wrap;gap:6px;}
+html body .bk-chips li{display:inline-flex;align-items:center;gap:5px;font:650 12px var(--font-sans);color:var(--text-soft);padding:6px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line-soft);}
+html body .bk-chips svg{color:var(--accent);}
+html body .bk-cta-total em{font-style:normal;font:600 11px var(--font-sans);color:var(--text-muted);margin-top:1px;}
+
+html body .bk-order{display:flex;align-items:center;gap:12px;padding:10px 12px 10px 10px;border-radius:18px;background:var(--surface);border:1px solid var(--line-soft);margin-bottom:12px;}
+html body .bk-order .bk-art{width:44px;height:52px;border-radius:11px;}
+html body .bk-order-txt{flex:1;min-width:0;display:flex;flex-direction:column;}
+html body .bk-order-txt b{font:800 15px var(--font-sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+html body .bk-order-txt span{font-size:12.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+html body .bk-order-amt{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;}
+html body .bk-order-amt b{font:800 16px var(--font-sans);}
+html body .bk-order-amt button{appearance:none;border:0;background:none;padding:0;color:var(--accent);font:700 12.5px var(--font-sans);cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+html body .bk-express{margin:0 0 12px;}
+html body .bk-express[hidden]{display:none;}
+html body .bk-or{display:flex;align-items:center;gap:10px;margin:12px 2px 0;font:600 12px var(--font-sans);color:var(--text-muted);}
+html body .bk-or::before,html body .bk-or::after{content:"";flex:1;height:1px;background:var(--line);}
+html body .bk-fit .checkout-payment-panel{padding:12px;border-radius:18px;background:var(--surface);border:1px solid var(--line-soft);min-height:110px;}
+html body .bk-fit .bk-secure{padding:10px 6px 0;font-size:12px;}
+html body .bk-fit .bk-secure a{color:var(--text-soft);}
+html body .bk-fit .checkout-payment-panel{min-height:0 !important;padding:10px !important;}html body .bk-fit{padding-bottom:96px;}html body .bk-fit .bk-order{margin-bottom:10px;}html body .bk-fit .bk-express{margin-bottom:10px;}html body .bk-fit .bk-or{margin-top:10px;}
