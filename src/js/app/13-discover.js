@@ -130,13 +130,17 @@ function feedFiltered() {
 
 // ── Navigation ────────────────────────────────────────────────────────────
 function goFeed() {
+  // Tapping Home while already on Home scrolls to the top; coming back from
+  // another tab returns to where you were.
+  const already = state.view === "feed";
   navStack = [];
   state.view = "feed";
   state.selectedEventId = null;
   renderNav();
   renderView();
   resetEventUrlAndMeta();
-  window.scrollTo({ top: 0 });
+  if (already) window.scrollTo({ top: 0, behavior: "smooth" });
+  else window.scrollTo(0, state._feedY || 0);
 }
 function setFeedRange(r) {
   state.feedRange = r;

@@ -5413,33 +5413,42 @@ html body :is(.feed,.v-page,.ev-page,.bk-page,.tv-page,.ac-page,.hx){animation-d
 html body .bk-cta,html body .ev-buybar{animation:none !important;}
 #app.same-view :is(.feed,.v-page,.ev-page,.bk-page,.tv-page,.ac-page,.hx,.up-next,.tv-r-body,.hx-hero-copy,.ev-buybar,.bk-cta){animation:none !important;}
 
-/* ══ You're in — scissors cut ═════════════════════════════════════════════
-   Real scissors: steel blades on a pivot, red handle loops, held at a
-   slight cutting angle. They travel along the perforation and the blades
-   open and close ON the line — each close lands where the cut appears. */
-html body .tg .tg-scissors{opacity:0;transform:translate(-30px,112px);}
-html body .tg .tg-sc-tilt{transform:rotate(-7deg);transform-box:view-box;transform-origin:0 0;}
-html body .tg .tg-sc-shadow{fill:rgba(0,0,0,.35);filter:blur(2px);}
-html body .tg .tg-sc-steel{stroke:rgba(0,0,0,.35);stroke-width:.5;}
-html body .tg .tg-sc-arm{fill:none;stroke:var(--hot);stroke-width:4;stroke-linecap:round;}
-html body .tg .tg-sc-ring{fill:none;stroke:var(--hot);stroke-width:3.4;}
-html body .tg .tg-pivot{fill:#c5cad1;stroke:#5c6470;stroke-width:.8;}
-html body .tg .tg-pivot-dot{fill:#3a4048;}
-html body .tg .tg-blade{transform-box:view-box;transform-origin:0 0;}
-html body .tg .tg-blade.up{transform:rotate(-18deg);}
-html body .tg .tg-blade.down{transform:rotate(18deg);}
+/* ══ You're in — scissors cut (side-on, like cutting paper) ════════════════
+   The ticket tips back like a sheet on a table; upright scissors travel
+   along the perforation — top half above the paper, bottom half beneath
+   it (hidden by the ticket) — blades opening and closing up/down; then
+   the ticket settles flat and the stub drops away. */
+html body .yi-stage{perspective:640px;}
+html body .yi-glyph{position:relative;z-index:2;transform-origin:50% 50%;}
+html body .yi-overlay.won .yi-glyph{animation:yi-tilt 1.75s .88s cubic-bezier(.4,0,.2,1) both;}
+@keyframes yi-tilt{0%{transform:none}14%{transform:rotateX(50deg)}84%{transform:rotateX(50deg)}100%{transform:none}}
+html body .yi-sc{position:absolute;left:0;top:118px;width:96px;height:60px;margin:-30px 0 0 -96px;opacity:0;pointer-events:none;}
+html body .yi-sc-under{z-index:1;}
+html body .yi-sc-over{z-index:3;filter:drop-shadow(0 6px 6px rgba(0,0,0,.35));}
+html body .yi-sc-svg{width:96px;height:60px;overflow:visible;transform:scale(1.3);transform-origin:96% 50%;}
+html body .yi-sc-steel{stroke:rgba(0,0,0,.4);stroke-width:.6;}
+html body .yi-sc-piece.top .yi-sc-steel{fill:url(#yiSteelT);}
+html body .yi-sc-piece.bot .yi-sc-steel{fill:url(#yiSteelB);}
+html body .yi-sc-arm{fill:none;stroke:var(--hot);stroke-width:4.6;stroke-linecap:round;}
+html body .yi-sc-ring{fill:none;stroke:var(--hot);stroke-width:3.8;}
+html body .yi-sc-piece.bot .yi-sc-arm,html body .yi-sc-piece.bot .yi-sc-ring{stroke:color-mix(in srgb,var(--hot) 75%,#000);}
+html body .yi-sc-pivot{fill:#c9ced5;stroke:#59616c;stroke-width:.8;}
+html body .yi-sc-pivot-dot{fill:#363c44;}
+html body .yi-sc-piece{transform-box:view-box;transform-origin:0 0;}
+html body .yi-sc-piece.top{transform:rotate(-16deg);}
+html body .yi-sc-piece.bot{transform:rotate(16deg);}
+html body .yi-overlay.won .yi-sc{animation:yi-sc-run .95s 1.12s cubic-bezier(.45,0,.3,1) forwards;}
+html body .yi-overlay.won .yi-sc-piece.top{animation:yi-snip-top .16s 1.12s cubic-bezier(.5,0,.5,1) 6 alternate;}
+html body .yi-overlay.won .yi-sc-piece.bot{animation:yi-snip-bot .16s 1.12s cubic-bezier(.5,0,.5,1) 6 alternate;}
+@keyframes yi-sc-run{0%{opacity:0;transform:translateX(10px)}10%{opacity:1}88%{opacity:1}100%{opacity:0;transform:translateX(200px)}}
+@keyframes yi-snip-top{from{transform:rotate(-16deg)}to{transform:rotate(-1deg)}}
+@keyframes yi-snip-bot{from{transform:rotate(16deg)}to{transform:rotate(1deg)}}
 html body .tg .tg-cutline{stroke:var(--volt);stroke-width:2;stroke-linecap:round;stroke-dasharray:112;stroke-dashoffset:112;opacity:0;}
-html body .tg.win .tg-scissors{animation:tg-sc-run .9s 1s cubic-bezier(.45,0,.3,1) forwards;}
-html body .tg.win .tg-blade.up{animation:tg-snip-up .15s 1s cubic-bezier(.5,0,.5,1) 6 alternate;}
-html body .tg.win .tg-blade.down{animation:tg-snip-down .15s 1s cubic-bezier(.5,0,.5,1) 6 alternate;}
-html body .tg.win .tg-cutline{animation:tg-cut .9s 1s cubic-bezier(.45,0,.3,1) forwards;}
-html body .tg.win .tg-perf{animation:tg-perf .9s 1s linear forwards;}
-@keyframes tg-sc-run{0%{opacity:0;transform:translate(-30px,112px)}10%{opacity:1}86%{opacity:1}100%{opacity:0;transform:translate(118px,112px)}}
-@keyframes tg-snip-up{from{transform:rotate(-18deg)}to{transform:rotate(-1deg)}}
-@keyframes tg-snip-down{from{transform:rotate(18deg)}to{transform:rotate(1deg)}}
+html body .tg.win .tg-cutline{animation:tg-cut .95s 1.12s cubic-bezier(.45,0,.3,1) forwards;}
+html body .tg.win .tg-perf{animation:tg-perf .95s 1.12s linear forwards;}
 @keyframes tg-cut{0%{opacity:1;stroke-dashoffset:112}88%{opacity:1;stroke-dashoffset:0}100%{opacity:0;stroke-dashoffset:0}}
 /* re-time the rest around the cut */
-html body .tg.win .tg-stub{animation:tg-glide .8s 1.92s cubic-bezier(.22,1,.36,1) forwards !important;}
-html body .yi-overlay.won .yi-ring{animation-delay:1.92s !important;}
-html body .yi-overlay.won .yi-ring.r2{animation-delay:2.06s !important;}
-html body .tv-page.just .tv-ticket{animation-delay:calc(2.9s + var(--i,0) * .12s) !important;}
+html body .tg.win .tg-stub{animation:tg-glide .8s 2.68s cubic-bezier(.22,1,.36,1) forwards !important;}
+html body .yi-overlay.won .yi-ring{animation-delay:2.68s !important;}
+html body .yi-overlay.won .yi-ring.r2{animation-delay:2.82s !important;}
+html body .tv-page.just .tv-ticket{animation-delay:calc(3.3s + var(--i,0) * .12s) !important;}

@@ -486,7 +486,8 @@ function goBack() {
     state.selectedEventId = p.selectedEventId;
     renderNav();
     renderView();
-    if (state.view !== "browse")
+    if (state.view === "feed") window.scrollTo(0, state._feedY || 0);
+    else if (state.view !== "browse")
       window.scrollTo(0, 0);
     if (state.view === "detail") {
       const ev = EVENTS.find((e) => e.id === state.selectedEventId);

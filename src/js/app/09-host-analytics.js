@@ -1499,6 +1499,8 @@ function renderView() {
   // Same-page redraws (quantity +/−, filters, toggles) must not replay the
   // page's entrance — only a real page change fades in.
   app.classList.toggle("same-view", app.dataset.view === state.view);
+  // Remember where Home was scrolled to, so coming back lands in place.
+  if (app.dataset.view === "feed" && state.view !== "feed") state._feedY = window.scrollY;
   app.dataset.view = state.view;
   if (state.view !== "host") destroyHostMap();
 
@@ -1529,6 +1531,18 @@ function renderView() {
   if (state.view === "feed") {
     container.innerHTML = window._lastFeedHtml = renderFeed();
     wheelInit();
+    // Home's sections (Up next, Happening now, rails…) animate in once per
+    // visit to the app — coming back via a tab or Back shows them loaded.
+    // The page itself keeps its short cross-fade.
+    if (window._feedSeen) {
+      try {
+        container.querySelectorAll(".feed *").forEach((el) => el.getAnimations().forEach((a) => {
+          const it = a.effect && a.effect.getComputedTiming ? a.effect.getComputedTiming().iterations : 1;
+          if (it !== Infinity) a.finish();
+        }));
+      } catch (e) {}
+    }
+    if (state.eventsLoaded) window._feedSeen = true;
   }
   else if (state.view === "detail")
     container.innerHTML = renderDetail(state.selectedEventId);
