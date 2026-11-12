@@ -5373,3 +5373,25 @@ html body .hp-tier-fee.muted{color:var(--text-muted);font-weight:600 !important;
 @media (max-width:420px){html body .hp-tier-fee.muted{flex-basis:100%;text-align:left;}}
 html body .bk-fit #payment-element{margin-bottom:0 !important;}html body .bk-fit .checkout-status{margin:0 !important;}
 html body .bk-hint-pay{margin:8px 6px 0;font-size:12px;color:var(--text-muted);}
+
+/* ══ Map performance on phones ════════════════════════════════════════════
+   200+ HTML pins: drop the per-pin effects that force the phone to redo
+   work on every frame of a drag. Visually near-identical. */
+html body .mp-label{-webkit-backdrop-filter:none !important;backdrop-filter:none !important;background:color-mix(in srgb,var(--surface) 94%,transparent) !important;}
+/* Film grain + scrim pseudo-layers (mix-blend-mode) off on map tiles. */
+html body .mp-tile.poster::before,html body .mp-tile.poster::after,
+html body .mc-card.poster::before,html body .mc-card.poster::after{display:none !important;}
+/* Isolate each pin so its repaints never spill into the map layer. */
+html body .mp-root,html body .mc-root{contain:layout style;}
+/* Pulses and blinks pause while the map is being dragged or zoomed. */
+html body.map-moving .mp-ring,html body.map-moving .mc-live i,html body.map-moving .mp-live,html body.map-moving .pulse{animation-play-state:paused !important;}
+html body.map-moving .mp-tile{transition:none !important;}
+
+/* ══ Keyboard-aware sheets (see keyboardAware() in 13-discover.js) ═══════
+   Overlays follow the visible area above the keyboard; the sheet inside
+   scrolls if it's taller than that, so the field you're typing in stays
+   on screen. */
+html body .lp-signup-overlay,html body .loc-overlay{top:var(--vvtop,0px) !important;bottom:auto !important;height:var(--vvh,100%) !important;}
+html body .lp-signup-modal,html body .loc-sheet{max-height:calc(var(--vvh,100dvh) - 8px) !important;overflow-y:auto !important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+html.kb-open body .lp-signup-modal{padding-bottom:20px !important;}
+html.kb-open body .lp-signup-modal::before{font-size:32px;margin-bottom:8px;}

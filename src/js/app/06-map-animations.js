@@ -432,8 +432,26 @@ function attachMapLayers() {
   lmap.on("sourcedata", (e) => {
     if (e.sourceId === "events-source" && e.isSourceLoaded) schedulePinSync();
   });
-  lmap.on("move", schedulePinSync);
-  lmap.on("moveend", schedulePinSync);
+  // Pins ride the map natively while it moves, so re-reading the clusters
+  // every frame is wasted work on a phone. While moving, only re-sync when
+  // the zoom has changed enough to re-cluster, or a few times a second to
+  // bring in pins at the edges; always once more when the camera settles.
+  let _syncZoom = null;
+  let _syncAt = 0;
+  lmap.on("move", () => {
+    const z = lmap.getZoom();
+    const now = performance.now();
+    if (_syncZoom === null || Math.abs(z - _syncZoom) > 0.35 || now - _syncAt > 220) {
+      _syncZoom = z;
+      _syncAt = now;
+      schedulePinSync();
+    }
+  });
+  lmap.on("moveend", () => {
+    _syncZoom = lmap.getZoom();
+    _syncAt = performance.now();
+    schedulePinSync();
+  });
   lmap.on("zoom", updatePinLOD);
   updatePinLOD();
 

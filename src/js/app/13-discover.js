@@ -1111,6 +1111,34 @@ function renderSharedPlans() {
   </div>`;
 }
 
+// ── On-screen keyboard awareness ──────────────────────────────────────────
+// iOS Safari slides the keyboard OVER the page without shrinking it, so a
+// sheet pinned to the bottom (sign-in, codes, delete account…) ends up with
+// its text box hidden behind the keys. Track the visible area (the "visual
+// viewport") as CSS variables the sheets size themselves to, and bring the
+// focused box into view.
+(function keyboardAware() {
+  const vv = window.visualViewport;
+  const root = document.documentElement;
+  if (vv) {
+    const set = () => {
+      root.style.setProperty("--vvh", `${Math.round(vv.height)}px`);
+      root.style.setProperty("--vvtop", `${Math.round(vv.offsetTop)}px`);
+      root.classList.toggle("kb-open", window.innerHeight - vv.height > 120);
+    };
+    vv.addEventListener("resize", set);
+    vv.addEventListener("scroll", set);
+    set();
+  }
+  document.addEventListener("focusin", (e) => {
+    const el = e.target;
+    if (!el || !el.matches || !el.matches("input, textarea, select")) return;
+    if (!el.closest(".lp-signup-overlay, .loc-overlay, .admin-auth-modal, .card-xl-overlay, .report-modal, .gate-wrap")) return;
+    // after the keyboard has finished animating in
+    setTimeout(() => el.scrollIntoView({ block: "center", behavior: "smooth" }), 320);
+  });
+})();
+
 // ── Accessibility helpers ─────────────────────────────────────────────────
 // Cards are <article role="button" tabindex="0" onclick=…>: make Enter and
 // Space activate them like real buttons (they only responded to clicks).
