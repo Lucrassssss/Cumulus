@@ -1122,25 +1122,55 @@ function renderSharedPlans() {
 // viewport") as CSS variables the sheets size themselves to, and bring the
 // focused box into view.
 (function keyboardAware() {
+  // iOS doesn't resize the page for the keyboard, it overlays it and pans
+  // the visual viewport — and fires resize/scroll many times while doing
+  // so. Updating layout on every one of those made the sign-in sheet jump.
+  // Instead: wait for the keyboard to settle, then set the variables once
+  // (the sheet's CSS transition does the smooth move), and keep the focused
+  // field visible by scrolling inside the sheet rather than the page.
   const vv = window.visualViewport;
   const root = document.documentElement;
+  const SHEETS = ".lp-signup-modal, .loc-sheet, .admin-auth-modal, .report-modal, .gate-wrap";
+  let raf = 0, settle = 0, lastKb = -1, lastH = -1;
+  const reveal = () => {
+    const el = document.activeElement;
+    if (!el || !el.matches || !el.matches("input, textarea, select")) return;
+    const sheet = el.closest(SHEETS);
+    if (!sheet || sheet.scrollHeight <= sheet.clientHeight) return;
+    const r = el.getBoundingClientRect(), sr = sheet.getBoundingClientRect();
+    const field = el.closest(".gate-field") || el;
+    const fr = field.getBoundingClientRect();
+    if (fr.top < sr.top + 12 || r.bottom > sr.bottom - 64)
+      sheet.scrollTo({ top: sheet.scrollTop + fr.top - sr.top - 56, behavior: "smooth" });
+  };
+  const apply = () => {
+    raf = 0;
+    if (!vv) return;
+    const kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+    const h = Math.round(vv.height);
+    if (kb !== lastKb) { root.style.setProperty("--kb", `${kb}px`); lastKb = kb; }
+    if (h !== lastH) { root.style.setProperty("--vvh", `${h}px`); lastH = h; }
+    root.classList.toggle("kb-open", window.innerHeight - vv.height > 120);
+    setTimeout(reveal, 320); // after the sheet's own glide
+  };
+  const schedule = () => {
+    clearTimeout(settle);
+    // one update after the keyboard animation stops moving the viewport
+    settle = setTimeout(() => { if (!raf) raf = requestAnimationFrame(apply); }, 90);
+  };
   if (vv) {
-    const set = () => {
-      root.style.setProperty("--vvh", `${Math.round(vv.height)}px`);
-      root.style.setProperty("--vvtop", `${Math.round(vv.offsetTop)}px`);
-      root.classList.toggle("kb-open", window.innerHeight - vv.height > 120);
-    };
-    vv.addEventListener("resize", set);
-    vv.addEventListener("scroll", set);
-    set();
+    vv.addEventListener("resize", schedule);
+    vv.addEventListener("scroll", schedule);
+    apply();
   }
   document.addEventListener("focusin", (e) => {
     const el = e.target;
-    if (!el || !el.matches || !el.matches("input, textarea, select")) return;
-    if (!el.closest(".lp-signup-overlay, .loc-overlay, .admin-auth-modal, .card-xl-overlay, .report-modal, .gate-wrap")) return;
-    // after the keyboard has finished animating in
-    setTimeout(() => el.scrollIntoView({ block: "center", behavior: "smooth" }), 320);
+    if (!el || !el.matches || !el.matches("input, textarea, select") || !el.closest(SHEETS)) return;
+    // Moving between fields with the keyboard already up: no viewport
+    // change will fire, so bring the field into view directly.
+    if (root.classList.contains("kb-open")) setTimeout(reveal, 60);
   });
+  document.addEventListener("focusout", () => setTimeout(() => { if (!document.activeElement || !document.activeElement.matches("input, textarea, select")) schedule(); }, 50));
 })();
 
 // ── Accessibility helpers ─────────────────────────────────────────────────

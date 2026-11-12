@@ -5391,10 +5391,22 @@ html body.map-moving .mp-tile{transition:none !important;}
    Overlays follow the visible area above the keyboard; the sheet inside
    scrolls if it's taller than that, so the field you're typing in stays
    on screen. */
-html body .lp-signup-overlay,html body .loc-overlay{top:var(--vvtop,0px) !important;bottom:auto !important;height:var(--vvh,100%) !important;}
-html body .lp-signup-modal,html body .loc-sheet{max-height:calc(var(--vvh,100dvh) - 8px) !important;overflow-y:auto !important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
-html.kb-open body .lp-signup-modal{padding-bottom:20px !important;}
-html.kb-open body .lp-signup-modal::before{font-size:32px;margin-bottom:8px;}
+/* Keyboard-aware sheets. The overlay stays put; the sheet glides up by the
+   keyboard's height (--kb, set once the keyboard has settled) using the
+   separate `translate` property, so it never fights the entrance animation.
+   While typing the sheet compacts — headline/intro copy fold away — so the
+   fields and the button fit in the space above the keyboard. */
+html body .lp-signup-overlay,html body .loc-overlay{overscroll-behavior:contain;}
+html body .lp-signup-modal,html body .loc-sheet{translate:0 calc(-1 * var(--kb,0px));transition:translate .3s cubic-bezier(.2,.8,.2,1),max-height .3s cubic-bezier(.2,.8,.2,1),padding .3s ease !important;max-height:calc(var(--vvh,100dvh) - 12px) !important;overflow-y:auto !important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+html body .lp-signup-modal{animation-fill-mode:backwards !important;}
+html.kb-open body .lp-signup-modal{padding-top:16px !important;padding-bottom:16px !important;border-radius:var(--r-xl) !important;}
+html.kb-open body .lp-signup-modal::before,html.kb-open body .lp-signup-modal :is(.lp-form-eyebrow,.lp-form-sub,.lp-trust,.lp-form-trust){display:none !important;}
+html.kb-open body .lp-signup-modal :is(.auth-mode-sel,.gate-type-sel){margin-bottom:10px !important;}
+html.kb-open body .lp-signup-modal .lp-form-title{font-size:20px !important;margin:4px 0 10px !important;}
+html.kb-open body .lp-signup-modal .gate-field{margin-bottom:10px !important;}
+html.kb-open body .lp-signup-close{top:18px !important;}
+html.kb-open body .lp-signup-modal .auth-mode-sel{width:calc(100% - 46px) !important;max-width:calc(100% - 46px) !important;margin-right:46px !important;}
+@media (prefers-reduced-motion:reduce){html body .lp-signup-modal,html body .loc-sheet{transition:none !important;}}
 
 /* Live-ticket notification: red dot on the Tickets tab + a strip on the card */
 html body .nav-link{position:relative;}
