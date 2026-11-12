@@ -798,6 +798,8 @@ async function loadMyTickets() {
       purchasedAt: new Date(t.purchased_at).getTime(),
       squadId: t.squad_id,
       claimCode: t.claim_code,
+      platformFee: Number(t.platform_fee || 0),
+      receiptSentAt: t.receipt_sent_at || null,
     }));
 }
 async function _insertTickets(tickets) {
@@ -882,8 +884,10 @@ function proceedToCheckout() {
   pushNav();
   // Read before the book screen's DOM goes away — startStripeCheckout()
   // (fired from the checkout screen) needs this value later.
-  bookingDraft.marketingOptIn = !!document.getElementById("book-marketing-optin")?.checked;
-  bookingDraft.promoCode = (document.getElementById("book-promo-code")?.value || "").trim();
+  const optEl = document.getElementById("book-marketing-optin");
+  if (optEl) bookingDraft.marketingOptIn = !!optEl.checked;
+  const promoEl = document.getElementById("book-promo-code");
+  if (promoEl) bookingDraft.promoCode = (promoEl.value || "").trim();
   state.view = "checkout";
   renderNav();
   renderView();
@@ -897,6 +901,7 @@ function openViewTicket(evId) {
     return;
   }
   bookingDraft.confirmedTickets = eventTickets;
+  bookingDraft.justPurchased = false;
   state.view = "confirmed";
   renderNav();
   renderView();
@@ -938,11 +943,7 @@ async function registerFree(evId) {
     state.rsvps[ev.id] = [...list, state.profileName];
   }
   bookingDraft.confirmedTickets = freeTickets;
-  navStack = [];
-  state.view = "confirmed";
-  renderNav();
-  renderView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  showConfirmedAfterPurchase();
 }
 
 // Maps Cumulus's current light/dark palette onto Stripe's Elements
@@ -1079,20 +1080,29 @@ async function startStripeCheckout() {
       if (ctaBar) ctaBar.style.display = "flex";
     });
   } catch (err) {
+    const raw = String(err && err.message ? err.message : "");
+    // Sold out / promo / capacity messages from the server are useful as-is;
+    // network-ish failures get plain words instead of "unavailable".
+    const msg = /unavailable|fetch|network|load|stripe is not defined|failed to/i.test(raw) || !raw
+      ? "We couldn't load the secure payment form. Check your connection and try again — you haven't been charged."
+      : raw;
     setStatus(
-      `<div style="text-align:center;width:100%;">
-        <div style="color:var(--danger);font-size:13px;margin-bottom:10px;">${escapeHtml(err.message || "Could not start checkout")}</div>
-        <button class="btn btn-outline" onclick="startStripeCheckout()">Try again</button>
+      `<div class="bk-load-err" role="alert">
+        <b>Payment form didn't load</b>
+        <span>${escapeHtml(msg)}</span>
+        <button class="v-btn sm" onclick="startStripeCheckout()">Try again</button>
       </div>`,
     );
   }
 }
 
-// Fired by the "Pay £X" button rendered in renderCheckout(). Most card
-// payments never leave the page at all — redirect:"if_required" only
-// navigates away for payment methods that genuinely need it (some bank
-// redirects/wallets), in which case checkStripeCheckoutReturn() (boot)
-// picks it back up from the return_url's query params.
+// Fired by the "Pay £X" button. The whole payment plays out on this
+// screen in the pay overlay (processing → You're in / didn't go through /
+// still confirming) — never a toast, never a jump to another page. Most
+// cards never leave the page (redirect:"if_required"); PayPal and some
+// banks do, and checkStripeCheckoutReturn() brings them back into the same
+// overlay with the same outcomes.
+const PENDING_PAY_KEY = "cumulus_pending_pay";
 async function submitStripePayment() {
   if (!stripeElementsGroup || !window.stripeInstance) return;
   const btn = document.getElementById("pay-btn");
@@ -1105,59 +1115,75 @@ async function submitStripePayment() {
     status.style.display = "none";
     status.innerHTML = "";
   }
+  showPayOverlay("Talking to your bank…");
+  // Remember what was being bought, in case the payment method redirects.
+  try {
+    sessionStorage.setItem(
+      PENDING_PAY_KEY,
+      JSON.stringify({ eventId: bookingDraft.eventId, type: bookingDraft.type, qty: bookingDraft.qty, promoCode: bookingDraft.promoCode || "" }),
+    );
+  } catch (e) {}
 
   const { error, paymentIntent } = await window.stripeInstance.confirmPayment({
     elements: stripeElementsGroup,
     confirmParams: {
-      return_url: `${location.origin}/?checkout=return`,
+      return_url: `${location.origin}${location.pathname}?checkout=return`,
     },
     redirect: "if_required",
   });
-
-  if (error) {
-    if (status) {
-      status.style.display = "flex";
-      status.innerHTML = `<div style="text-align:center;width:100%;"><div style="color:var(--danger);font-size:13px;">${escapeHtml(error.message || "Payment failed — try again")}</div></div>`;
-      // #checkout-status sits above the Payment Element, at the top of the
-      // scrollable checkout column — a buyer who scrolled down to reach a
-      // tall Payment Element (card + wallets + Link) can tap the fixed Pay
-      // bar without this ever entering view. Scroll it into view so the
-      // reason for the failure isn't silently missed above the fold.
-      status.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+  const resetBtn = () => {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = btn.dataset.label || "Pay →";
+      btn.innerHTML = btn.dataset.label || "Pay";
     }
+  };
+
+  if (error) {
+    resetBtn();
+    // Card declined / validation: say it plainly, right here, and let them
+    // fix the card details underneath.
+    showPayResult("failed", {
+      title: "Payment didn't go through",
+      body: `${escapeHtml(error.message || "Your bank declined the payment.")} You haven't been charged.`,
+      primary: { label: "Try again", onclick: "hidePayOverlay()" },
+    });
     return;
   }
 
   // No redirect happened (the common case for cards) — Stripe already
-  // confirmed the PaymentIntent synchronously, so finalize right here
-  // instead of waiting on a return_url that's never coming.
+  // confirmed the PaymentIntent, so finalize right here.
   if (paymentIntent?.status === "succeeded") {
     await finalizeStripePayment(paymentIntent.id);
+  } else if (paymentIntent?.status === "processing") {
+    resetBtn();
+    showPayResult("pending", {
+      title: "Your bank is still confirming",
+      body: "This can take a minute for some banks. Your tickets land in Tickets the moment it clears — we'll email your receipt too.",
+      primary: { label: "Go to my tickets", onclick: "hidePayOverlay();clearPendingPay();navStack=[];openTicketsTab()" },
+    });
   } else {
-    // "processing" (rare — some bank debits settle asynchronously) or an
-    // unexpected status. stripe-webhook will create the ticket once Stripe
-    // actually confirms it; tell the buyer rather than leave them staring
-    // at a disabled button.
-    showToast(
-      "Payment is processing — your ticket will appear in My Tickets shortly.",
-      "info",
-    );
+    resetBtn();
+    showPayResult("failed", {
+      title: "Payment wasn't completed",
+      body: "Nothing was taken from your account. You can try again with the same or a different card.",
+      primary: { label: "Try again", onclick: "hidePayOverlay()" },
+    });
   }
 }
+function clearPendingPay() {
+  try {
+    sessionStorage.removeItem(PENDING_PAY_KEY);
+  } catch (e) {}
+}
 
-// Shared by submitStripePayment() (inline, no-redirect completion) and
-// checkStripeCheckoutReturn() (redirect-based completion) — polls for the
-// ticket rows stripe-webhook creates asynchronously once it receives
-// payment_intent.succeeded, then shows the confirmation screen.
+// Polls for the ticket rows stripe-webhook writes once Stripe confirms the
+// payment (usually a second or two), then plays You're in.
 async function finalizeStripePayment(paymentIntentId) {
-  showToast("Confirming your payment…", "info");
-  for (let attempt = 0; attempt < 6; attempt++) {
+  showPayOverlay("Payment approved — securing your tickets…");
+  for (let attempt = 0; attempt < 14; attempt++) {
     const rows = await fetchTicketsByPaymentIntent(paymentIntentId);
     if (rows && rows.length > 0) {
+      clearPendingPay();
       await loadMyTickets();
       bookingDraft.confirmedTickets = rows.map((t) => ({
         ticketId: t.ticket_id,
@@ -1173,47 +1199,67 @@ async function finalizeStripePayment(paymentIntentId) {
         purchasedAt: new Date(t.purchased_at).getTime(),
         squadId: t.squad_id,
         claimCode: t.claim_code,
+        platformFee: Number(t.platform_fee || 0),
+        receiptSentAt: t.receipt_sent_at || null,
       }));
-      navStack = [];
-      state.view = "confirmed";
-      renderNav();
-      renderView();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      showConfirmedAfterPurchase();
       return;
     }
+    if (attempt === 4) showPayOverlay("Payment approved — writing your tickets…");
     await new Promise((r) => setTimeout(r, 1500));
   }
-  showToast(
-    "Payment confirmed — your ticket is finishing up. Check My Tickets in a moment.",
-    "info",
-  );
+  // Paid, but the ticket rows are slower than usual. Be explicit: the money
+  // went through and the ticket is coming — keep a way to check.
+  clearPendingPay();
+  showPayResult("pending", {
+    title: "Payment received",
+    body: "Your tickets are taking a little longer than usual to appear. They'll be in Tickets within a minute, and your receipt will be emailed.",
+    primary: { label: "Check again", onclick: `finalizeStripePayment('${String(paymentIntentId).replace(/[^a-zA-Z0-9_]/g, "")}')` },
+    secondary: { label: "Go to my tickets", onclick: "hidePayOverlay();navStack=[];openTicketsTab()" },
+  });
 }
 
-// Boot-time handler for the browser coming back from a redirect-based
-// payment method (some bank debits/wallets — most cards never leave the
-// page, see submitStripePayment()). Stripe appends its own query params to
-// the return_url passed to confirmPayment(): payment_intent,
-// payment_intent_client_secret, redirect_status. Mirrors
-// checkSquadClaim()'s URL-param pattern (read, strip, act).
+// The browser coming back from a redirect-based payment method (PayPal,
+// some bank flows). Re-open the purchase, then show the same on-screen
+// outcome as an inline card payment — never the home page plus a toast.
 async function checkStripeCheckoutReturn() {
   const params = new URLSearchParams(location.search);
   const paymentIntentId = params.get("payment_intent");
   const redirectStatus = params.get("redirect_status");
   if (!paymentIntentId || !redirectStatus) return;
   history.replaceState(null, "", location.pathname);
+  let pending = null;
+  try {
+    pending = JSON.parse(sessionStorage.getItem(PENDING_PAY_KEY) || "null");
+  } catch (e) {}
+  const ev = pending && EVENTS.find((e) => e.id === pending.eventId);
+  if (ev && state.userId) {
+    bookingDraft = { eventId: ev.id, type: pending.type, qty: pending.qty || 1, promoCode: pending.promoCode || "", confirmedTicket: null };
+    navStack = [];
+    state.view = "book";
+    renderNav();
+    renderView();
+  }
 
-  if (redirectStatus !== "succeeded") {
-    showToast(
-      redirectStatus === "processing"
-        ? "Payment is processing — your ticket will appear in My Tickets shortly."
-        : "Payment was not completed — no charge was made.",
-      "info",
-    );
+  if (redirectStatus === "succeeded" && state.userId) {
+    await finalizeStripePayment(paymentIntentId);
     return;
   }
-  if (!state.userId) return; // returning signed-out isn't wired up — keep simple for now
-
-  await finalizeStripePayment(paymentIntentId);
+  if (redirectStatus === "processing") {
+    showPayResult("pending", {
+      title: "Your bank is still confirming",
+      body: "Your tickets land in Tickets the moment it clears — we'll email your receipt too.",
+      primary: { label: "Go to my tickets", onclick: "hidePayOverlay();clearPendingPay();navStack=[];openTicketsTab()" },
+    });
+    return;
+  }
+  showPayResult("failed", {
+    title: "Payment wasn't completed",
+    body: "Nothing was taken from your account.",
+    primary: ev
+      ? { label: "Try again", onclick: "hidePayOverlay();proceedToCheckout()" }
+      : { label: "Back to Discover", onclick: "hidePayOverlay();goFeed()" },
+  });
 }
 
 function afterRenderConfirmed() {
@@ -1226,8 +1272,8 @@ function afterRenderConfirmed() {
     try {
       new QRCode(masterEl, {
         text: `SQUAD:${t0.squadId}`,
-        width: 134,
-        height: 134,
+        width: 176,
+        height: 176,
         colorDark: "#000",
         colorLight: "#fff",
         correctLevel: QRCode.CorrectLevel.M,
@@ -1243,8 +1289,8 @@ function afterRenderConfirmed() {
     try {
       new QRCode(el, {
         text: t.ticketId,
-        width: 120,
-        height: 120,
+        width: 176,
+        height: 176,
         colorDark: "#000",
         colorLight: "#fff",
         correctLevel: QRCode.CorrectLevel.M,

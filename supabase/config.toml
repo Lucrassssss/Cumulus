@@ -89,3 +89,10 @@ enabled = true
 # their session token, never the request body.
 verify_jwt = true
 entrypoint = "./functions/delete-account/index.ts"
+
+[functions.send-receipt]
+enabled = true
+# true: a signed-in member emails THEIR OWN receipt; identity and recipient
+# come from the session, never the request body.
+verify_jwt = true
+entrypoint = "./functions/send-receipt/index.ts"

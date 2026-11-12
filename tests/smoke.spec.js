@@ -1007,4 +1007,47 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator(".feed-head .icon-pill.solid")).toHaveText("Sign in");
     expect(await page.evaluate(() => [state.view, state.userId])).toEqual(["feed", null]);
   });
+
+  test("purchase flow: steps + sticky total, on-screen pay result, You're in + ticket with receipt", async ({ page }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      const now = Date.now();
+      const ev = { id: "buy-1", title: "Buy Test", category: "Club Night", host: "H", hostId: "h", venue: "V", area: "Soho",
+        startTime: new Date(now + 50 * 3600000).toISOString(), endTime: new Date(now + 53 * 3600000).toISOString(), desc: "", capacity: 100, price: 12 };
+      computeEventDates(ev);
+      EVENTS.push(ev);
+      state.userId = "00000000-0000-0000-0000-000000000008";
+      state.profileName = "Buyer";
+      renderNav();
+      openBook("buy-1");
+      setBookingQty(2);
+    });
+    await expect(page.locator(".bk-steps li.on")).toContainText("Tickets");
+    await expect(page.locator(".bk-cta-total b")).toHaveText("£27.00");
+    await expect(page.locator(".bk-cta-btn")).toContainText("Continue · £27.00");
+    // Tab bar hidden while buying.
+    await expect(page.locator(".bottom-nav")).toBeHidden();
+    // A failed payment is shown on screen, not as a toast, and is dismissable.
+    await page.evaluate(() =>
+      showPayResult("failed", { title: "Payment didn't go through", body: "Declined.", primary: { label: "Try again", onclick: "hidePayOverlay()" } }),
+    );
+    await expect(page.locator("#pay-overlay[role=alertdialog] .po-title")).toHaveText("Payment didn't go through");
+    await page.locator("#pay-overlay .po-acts .v-btn").click();
+    await expect(page.locator("#pay-overlay")).toHaveCount(0);
+    expect(await page.evaluate(() => state.view)).toBe("book");
+    // Success: You're in, then the ticket with an openable receipt.
+    await page.evaluate(() => {
+      bookingDraft.confirmedTickets = [1, 2].map((i) => ({ ticketId: "TK-B-0" + i, bookingId: "TK-B", seatNum: i, totalSeats: 2,
+        eventId: "buy-1", typeLabel: "General", pricePerTicket: 12, total: 13.5, purchaserName: "Buyer", purchasedAt: Date.now() }));
+      showConfirmedAfterPurchase();
+    });
+    await expect(page.locator(".yi-overlay .yi-title")).toHaveText("You're in!");
+    await expect(page.locator(".tv-h1")).toHaveText("You're in.");
+    await expect(page.locator(".tv-ticket")).toHaveCount(2);
+    await page.locator(".tv-receipt summary").click({ force: true });
+    await expect(page.locator(".tv-r-body")).toContainText("Order number");
+    await expect(page.locator(".tv-r-body .bk-line.total")).toContainText("£27.00");
+    await expect(page.locator(".tv-r-body")).toContainText("Booking fee");
+  });
 });

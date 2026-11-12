@@ -1,12 +1,41 @@
-// ─── Render: Ticket selection ────────────────────────────────────────────
+// ─── Purchase flow: Tickets → Pay → You're in ─────────────────────────────
+// Built against Dice / Eventbrite / Fever's quick-buy pattern: one screen to
+// pick, one to pay, a moment of celebration, then the ticket itself. Every
+// price shown is all-in (UK DMCC Act), the CTA always lives in the thumb
+// zone, and "is this safe?" is answered before anyone has to ask.
+
+const _bkIc = (d, s) =>
+  `<svg viewBox="0 0 24 24" width="${s || 16}" height="${s || 16}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const BK_LOCK = '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>';
+const BK_CHECK = '<path d="m5 12 5 5 9-10"/>';
+const BK_RETURN = '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>';
+
+function _bkSteps(n) {
+  const steps = ["Tickets", "Pay", "Done"];
+  return `<ol class="bk-steps" aria-label="Step ${n} of 3">${steps
+    .map((s, i) => `<li class="${i + 1 < n ? "done" : i + 1 === n ? "on" : ""}"${i + 1 === n ? ' aria-current="step"' : ""}><i>${i + 1 < n ? _bkIc(BK_CHECK, 11) : i + 1}</i>${s}</li>`)
+    .join("")}</ol>`;
+}
+function _bkEventHead(ev) {
+  return `<div class="bk-event">
+    <div class="bk-art ${posterClass(ev)}" style="${posterStyle(ev)}" aria-hidden="true">${posterGlyph(ev)}</div>
+    <div class="bk-ev-txt">
+      <div class="bk-ev-when">${feedDateLabel(ev)} · ${feedTimeLabel(ev)}</div>
+      <div class="bk-ev-title">${escapeHtml(ev.title)}</div>
+      <div class="bk-ev-where">${escapeHtml([ev.venue, ev.area].filter(Boolean).join(" · "))}</div>
+    </div>
+  </div>`;
+}
+
+// ─── Step 1: choose tickets ───────────────────────────────────────────────
 function renderBook() {
   const ev = EVENTS.find((e) => e.id === bookingDraft.eventId);
   if (!ev) return '<div class="empty-state">Event not found.</div>';
-  const c = CATS[ev.category];
   const types = ticketTypes(ev);
   const sel = types.find((t) => t.id === bookingDraft.type) || types[0];
   const isFree = !eventPrice(ev);
   const qty = bookingDraft.qty;
+  const each = sel.price + (sel.platformFee || 0);
   const baseTotal = sel.price * qty;
   const feeTotal = (sel.platformFee || 0) * qty;
   const finalTotal = baseTotal + feeTotal;
@@ -15,123 +44,100 @@ function renderBook() {
       (t) => `
     <div class="tt-card${bookingDraft.type === t.id ? " on" : ""}" onclick="setBookingType('${t.id}')" role="radio" tabindex="0" aria-checked="${bookingDraft.type === t.id ? "true" : "false"}" aria-label="${escapeHtml(t.label)}, ${t.price ? `£${(t.price + (t.platformFee || 0)).toFixed(2)} including booking fee` : "Free"}">
       <span class="tt-radio" aria-hidden="true"></span>
-      <div class="tt-body"><div class="tt-name">${escapeHtml(t.label)}</div><div class="tt-desc">${escapeHtml(t.desc || "")}</div></div>
+      <div class="tt-body"><div class="tt-name">${escapeHtml(t.label)}</div>${t.desc ? `<div class="tt-desc">${escapeHtml(t.desc)}</div>` : ""}</div>
       <div class="tt-price">${t.price ? `£${(t.price + (t.platformFee || 0)).toFixed(2)}<span class="tt-incl">£${t.price.toFixed(2)} + £${(t.platformFee || 0).toFixed(2)} fee</span>` : "Free"}</div>
     </div>`,
     )
     .join("");
-  return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><span class="event-badge" style="--cat:;">${ev.category}</span><h2>${escapeHtml(ev.title)}</h2><p>${ev.date} · ${escapeHtml(ev.venue)}</p></div>
-    <div class="section-title">Choose your ticket</div>
-    ${typeCards}
+  const cta = isFree
+    ? `<button class="v-btn bk-cta-btn" onclick="registerFree('${ev.id}')">${_bkIc(BK_CHECK)}Get ${qty > 1 ? `${qty} free tickets` : "free ticket"}</button>`
+    : `<button class="v-btn bk-cta-btn" onclick="proceedToCheckout()">Continue · £${finalTotal.toFixed(2)}</button>`;
+
+  return `<div class="bk-page">
+    <div class="bk-top"><button class="bk-back" onclick="goBack()" aria-label="Back">${_bkIc('<path d="M15 5l-7 7 7 7"/>', 20)}</button>${_bkSteps(1)}</div>
+    ${_bkEventHead(ev)}
+
+    <section class="bk-sec">
+      <h2 class="bk-h">Choose your ticket</h2>
+      <div class="bk-types" role="radiogroup" aria-label="Ticket type">${typeCards}</div>
+    </section>
+
+    <section class="bk-sec bk-qty-row">
+      <div><h2 class="bk-h">How many?</h2><span class="bk-sub">${qty > 1 ? "You'll get one link to share seats with your group" : "Up to 10 per order"}</span></div>
+      <div class="bk-stepper" role="group" aria-label="Number of tickets">
+        <button onclick="setBookingQty(${qty - 1})" aria-label="One fewer" ${qty <= 1 ? "disabled" : ""}>−</button>
+        <output aria-live="polite">${qty}</output>
+        <button onclick="setBookingQty(${qty + 1})" aria-label="One more" ${qty >= 10 ? "disabled" : ""}>+</button>
+      </div>
+    </section>
+
+    <section class="bk-sec bk-summary" aria-label="Order summary">
+      <div class="bk-line"><span>${escapeHtml(sel.label)} × ${qty}</span><span>${sel.price ? `£${baseTotal.toFixed(2)}` : "Free"}</span></div>
+      ${!isFree ? `<div class="bk-line"><span>Booking fee <em>(the host keeps 100% of their price)</em></span><span>£${feeTotal.toFixed(2)}</span></div>` : ""}
+      <div class="bk-line total"><span>Total</span><span>${finalTotal ? `£${finalTotal.toFixed(2)}` : "Free"}</span></div>
+      ${!isFree && qty > 1 ? `<div class="bk-each">£${each.toFixed(2)} each, everything included</div>` : ""}
+    </section>
+
     ${
       !isFree
-        ? `
-    <div class="section-title">Quantity</div>
-    <div class="panel" style="--corner:var(--accent);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <button class="qty-btn" onclick="setBookingQty(${qty - 1})" aria-label="One fewer">−</button>
-      <div style="text-align:center;"><div style="font-size:30px;font-weight:800;color:var(--text);">${qty}</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">ticket${qty !== 1 ? "s" : ""}</div></div>
-      <button class="qty-btn" onclick="setBookingQty(${qty + 1})" aria-label="One more">+</button>
-    </div>`
+        ? `<details class="bk-promo"${bookingDraft.promoCode ? " open" : ""}>
+      <summary>Have a promo code?</summary>
+      <input id="book-promo-code" class="gate-input" placeholder="e.g. EARLYBIRD10" autocapitalize="characters" value="${escapeHtml(bookingDraft.promoCode || "")}" oninput="bookingDraft.promoCode=this.value.trim()"/>
+      <p>Checked live on the next screen — your real total shows before you pay.</p>
+    </details>`
         : ""
     }
-    <div class="panel" style="--corner:${c.color};padding:16px 20px;background:${hexToRgba(c.color, 0.05)};margin-bottom:18px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:2px;">Order summary</div>
-      <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:10px;">The price you see here is exactly what you'll pay — no surprise fees at checkout.</div>
-      <div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--text-soft);margin-bottom:6px;"><span>${sel.label}${!isFree ? ` × ${qty}` : ""}</span><span>${sel.price ? `£${baseTotal.toFixed(2)}` : "Free"}</span></div>
-      ${
-        !isFree
-          ? `
-      <div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--text-soft);margin-bottom:4px;"><span>Cumulus platform fee</span><span>£${feeTotal.toFixed(2)}</span></div>
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-style:italic;">The host keeps 100% of their ticket price.</div>`
-          : ""
-      }
-      <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:var(--text);padding-top:10px;border-top:1px solid var(--line);"><span>Total</span><span style="color:${c.color};">${finalTotal ? `£${finalTotal.toFixed(2)}` : "Free"}</span></div>
-    </div>
-    ${
-      !isFree
-        ? `<div class="host-section" style="padding:12px 14px;margin-bottom:16px;">
-      <label class="intro-field-label">Promo code (optional)</label>
-      <input id="book-promo-code" class="gate-input" placeholder="e.g. EARLYBIRD10" autocapitalize="characters" style="text-transform:uppercase;"/>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Applied at payment — the exact discount is confirmed on the next screen, since it's checked against the event live.</div>
-    </div>`
-        : ""
-    }
-    <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;font-size:12px;color:var(--text-muted);line-height:1.5;cursor:pointer;">
-      <input type="checkbox" id="book-marketing-optin" style="margin-top:2px;width:15px;height:15px;flex-shrink:0;accent-color:${c.color};"/>
-      <span>Allow ${escapeHtml(ev.host || "the host")} to email me about future local events. Off by default — opting in is entirely your choice.</span>
+
+    <label class="bk-optin">
+      <input type="checkbox" id="book-marketing-optin" ${bookingDraft.marketingOptIn ? "checked" : ""} onchange="bookingDraft.marketingOptIn=this.checked"/>
+      <span>Let ${escapeHtml(ev.host || "the host")} email me about their future events <em>(optional)</em></span>
     </label>
-    <button class="btn" style="width:100%;background:${c.color};padding:14px;font-size:15px;" onclick="${isFree ? `registerFree('${ev.id}')` : `proceedToCheckout()`}">${isFree ? "Register Free →" : `Continue to Payment · £${finalTotal.toFixed(2)} →`}</button>
-    <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:10px;">Free cancellation up to 24 hours before the event (Cumulus's standard policy, unless the host states otherwise) · <a href="terms.html" target="_blank" style="color:var(--gold-text);">See full policy</a></p>`;
+
+    <ul class="bk-trust">
+      <li>${_bkIc(BK_CHECK)}<span><b>The price is the price</b> — no fees added later</span></li>
+      ${!isFree ? `<li>${_bkIc(BK_LOCK)}<span><b>Secure payment</b> by Stripe — we never see your card</span></li>` : ""}
+      <li>${_bkIc(BK_RETURN)}<span><b>Can't make it?</b> Free cancellation up to 24h before · <a href="terms.html" target="_blank">policy</a></span></li>
+    </ul>
+
+    <div class="bk-cta">
+      <div class="bk-cta-total"><span>${qty} ticket${qty !== 1 ? "s" : ""}</span><b>${finalTotal ? `£${finalTotal.toFixed(2)}` : "Free"}</b></div>
+      ${cta}
+    </div>
+  </div>`;
 }
 
-// ─── Render: Payment ─────────────────────────────────────────────────────
+// ─── Step 2: pay ──────────────────────────────────────────────────────────
 // Real Stripe payment via a PaymentIntent + Payment Element (create-
-// checkout-session computes the authoritative price server-side from the
-// events table — the numbers rendered here are for display only, never
-// sent as the charge amount). PaymentIntent + Payment Element rather than
-// a Checkout Session: Stripe's pre-built Checkout form always renders its
-// input card on a fixed light surface regardless of branding — a genuine
-// product constraint, not something any parameter can override — so full
-// dark/light theming needs the raw Elements API instead (see
-// stripeAppearanceForCurrentTheme() in 10-badges.js), which only works
-// against a PaymentIntent's client_secret, not a Checkout Session's.
-// No manual "Pay with card" tap: the element starts loading the instant
-// this screen renders (see afterRenderCheckout(), wired from renderView())
-// — "Continue to Payment" IS the action, the same one-step feel as
-// Eventbrite.
-//
-// Layout researched against DICE/Eventbrite/Stripe's own mobile-checkout
-// guidance rather than guessed: mobile collapses the order recap to one
-// line (thumbnail + total, tap to expand the fee breakdown) and puts the
-// Pay button in a floating bar pinned in the thumb zone above the bottom
-// nav pill — full breakdown was already shown once on the Book screen, so
-// collapsing it here is a recap, not a first disclosure. Desktop widens
-// into two columns past 860px (this view's own breakpoint — see
-// styles.css's "Checkout — sleeker mobile + desktop layout" block) with
-// the recap always expanded in a sticky left rail, matching the
-// "never collapse the summary on desktop" pattern those platforms use.
+// checkout-session computes the authoritative price server-side; the
+// numbers here are display only). Elements (not Checkout) so the form can
+// be themed — see stripeAppearanceForCurrentTheme(). The element starts
+// loading the moment this screen mounts (afterRenderCheckout()).
 function renderCheckout() {
   const ev = EVENTS.find((e) => e.id === bookingDraft.eventId);
   if (!ev) return "";
-  const c = CATS[ev.category];
   const types = ticketTypes(ev);
   const sel = types.find((t) => t.id === bookingDraft.type) || types[0];
   const qty = bookingDraft.qty;
   const baseTotal = sel.price * qty;
   const feeTotal = (sel.platformFee || 0) * qty;
   const total = (baseTotal + feeTotal).toFixed(2);
-  const thumb = ev.photoUrl || ev.nightShotUrl || catImg(ev.category);
 
-  return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>Payment</h2><p>Secure checkout<span class="checkout-header-suffix"> · ${escapeHtml(ev.title)}</span></p></div>
+  return `<div class="bk-page bk-pay">
+    <div class="bk-top"><button class="bk-back" onclick="goBack()" aria-label="Back">${_bkIc('<path d="M15 5l-7 7 7 7"/>', 20)}</button>${_bkSteps(2)}</div>
     <div class="checkout-layout">
       <div class="checkout-summary-col">
-        <div class="panel checkout-summary" id="checkout-summary" style="--corner:${c.color};">
-          <button type="button" class="checkout-summary-toggle" onclick="toggleCheckoutSummary()" aria-expanded="false" aria-controls="checkout-summary-details">
-            <div class="checkout-summary-thumb" style="background-image:url('${thumb}');"></div>
-            <div class="checkout-summary-toggle-text">
-              <div class="checkout-summary-title">${escapeHtml(ev.title)}</div>
-              <div class="checkout-summary-sub">${sel.label} × ${qty} · ${ev.date}</div>
-            </div>
-            <div class="checkout-summary-amount">£${total}</div>
-            <svg class="checkout-summary-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-          </button>
-          <div class="checkout-summary-details" id="checkout-summary-details">
-            <div class="checkout-line"><span>${sel.label} × ${qty}</span><span>£${baseTotal.toFixed(2)}</span></div>
-            <div class="checkout-line"><span>Booking fee</span><span>£${feeTotal.toFixed(2)}</span></div>
-            <div class="checkout-line checkout-line-total"><span>Total</span><span style="color:${c.color};">£${total}</span></div>
-            ${
-              bookingDraft.promoCode
-                ? `<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Promo code "${escapeHtml(bookingDraft.promoCode)}" will be checked now — the payment form below reflects your real total, this estimate doesn't.</div>`
-                : ""
-            }
-          </div>
-        </div>
-        <div class="checkout-trust">${lockIconSvg(14)}<span>Payments are encrypted and processed securely by Stripe<span class="checkout-trust-suffix"> — Cumulus never sees your card details.</span></span></div>
+        ${_bkEventHead(ev)}
+        <section class="bk-sec bk-summary" id="checkout-summary" aria-label="Order summary">
+          <div class="bk-line"><span>${escapeHtml(sel.label)} × ${qty}</span><span>£${baseTotal.toFixed(2)}</span></div>
+          <div class="bk-line"><span>Booking fee</span><span>£${feeTotal.toFixed(2)}</span></div>
+          <div class="bk-line total"><span>Total</span><span>£${total}</span></div>
+          ${bookingDraft.promoCode ? `<div class="bk-each">Promo "${escapeHtml(bookingDraft.promoCode)}" is checked now — the pay button shows your real total.</div>` : ""}
+        </section>
+        <div class="bk-secure">${_bkIc(BK_LOCK, 15)}<span><b>Encrypted &amp; processed by Stripe.</b> Cumulus never sees or stores your card.</span></div>
       </div>
       <div class="checkout-main-col">
-        <div class="panel checkout-payment-panel" style="--corner:${c.color};">
+        <h2 class="bk-h">Pay securely</h2>
+        <div class="bk-sec checkout-payment-panel">
           <div id="checkout-status" class="checkout-status" role="status" aria-busy="true" aria-live="polite">
             <span class="sr-only">Loading payment form…</span>
             <div class="checkout-skeleton" aria-hidden="true">
@@ -143,182 +149,271 @@ function renderCheckout() {
           </div>
           <div id="payment-element"></div>
         </div>
-        <div class="checkout-cta-bar" id="checkout-cta-bar">
-          <div class="checkout-cta-total"><span>Total</span><strong style="color:${c.color};">£${total}</strong></div>
-          <button id="pay-btn" class="btn checkout-pay-btn" data-label="Pay £${total} →" style="background:${c.color};" onclick="submitStripePayment()">Pay £${total} →</button>
+        <p class="checkout-footer-note">By paying you agree to the <a href="terms.html" target="_blank">Terms</a> · <a href="privacy.html" target="_blank">Privacy</a></p>
+        <div class="checkout-cta-bar bk-cta" id="checkout-cta-bar">
+          <div class="bk-cta-total"><span>Total</span><b>£${total}</b></div>
+          <button id="pay-btn" class="v-btn bk-cta-btn checkout-pay-btn" data-label="${_bkIc(BK_LOCK).replace(/"/g, "&quot;")}Pay £${total}" onclick="submitStripePayment()">${_bkIc(BK_LOCK)}Pay £${total}</button>
         </div>
-        <p class="checkout-footer-note">Bank-level encryption on every payment · <a href="terms.html" target="_blank">Terms</a> · <a href="privacy.html" target="_blank">Privacy</a></p>
       </div>
-    </div>`;
+    </div>
+  </div>`;
 }
 
-// Fired from renderView() right after the checkout screen mounts. Kicks off
-// the Stripe session immediately — see startStripeCheckout() below.
+// Fired from renderView() right after the checkout screen mounts.
 function afterRenderCheckout() {
   startStripeCheckout();
 }
 
-// ─── Render: Ticket confirmation ─────────────────────────────────────────
+// ─── Payment in progress ──────────────────────────────────────────────────
+// A calm full-screen hold while the bank confirms and the ticket is written,
+// so nobody double-taps Pay or wonders whether it worked.
+function showPayOverlay(msg) {
+  let el = document.getElementById("pay-overlay");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "pay-overlay";
+    el.className = "pay-overlay";
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add("in"));
+  }
+  if (!el.querySelector(".po-msg")) {
+    el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
+    el.removeAttribute("aria-label");
+    el.innerHTML = `<div class="po-card"><span class="po-ring" aria-hidden="true"></span><b class="po-msg"></b><span class="po-sub">${_bkIc(BK_LOCK, 13)} Secure payment · don't close this page</span></div>`;
+  }
+  el.querySelector(".po-msg").textContent = msg || "Processing…";
+}
+// Turns the processing overlay into a clear outcome card, on this screen:
+// kind = "failed" | "pending". Big, readable, and announced to screen
+// readers — the opposite of a toast at the bottom.
+function showPayResult(kind, o) {
+  showPayOverlay("");
+  const el = document.getElementById("pay-overlay");
+  if (!el) return;
+  el.setAttribute("role", "alertdialog");
+  el.setAttribute("aria-live", "assertive");
+  el.setAttribute("aria-label", o.title);
+  const icon =
+    kind === "failed"
+      ? _bkIc('<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5h.01"/>', 30)
+      : _bkIc('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', 30);
+  el.innerHTML = `<div class="po-card po-result ${kind}">
+      <span class="po-ic">${icon}</span>
+      <b class="po-title">${escapeHtml(o.title)}</b>
+      <p class="po-body">${o.body || ""}</p>
+      <div class="po-acts">
+        ${o.secondary ? `<button class="v-btn ghost" onclick="${o.secondary.onclick}">${escapeHtml(o.secondary.label)}</button>` : ""}
+        <button class="v-btn" onclick="${o.primary.onclick}">${escapeHtml(o.primary.label)}</button>
+      </div>
+    </div>`;
+  el.classList.add("in");
+  setTimeout(() => el.querySelector(".po-acts .v-btn:last-child")?.focus(), 60);
+}
+function hidePayOverlay() {
+  const el = document.getElementById("pay-overlay");
+  if (!el) return;
+  el.classList.remove("in");
+  setTimeout(() => el.remove(), 250);
+}
+
+// ─── Step 3: you're in ────────────────────────────────────────────────────
+// Shared by card payments (finalizeStripePayment) and free registrations.
+function showConfirmedAfterPurchase() {
+  hidePayOverlay();
+  bookingDraft.justPurchased = true;
+  bookingDraft.receiptState = "sending";
+  navStack = [];
+  state.view = "confirmed";
+  renderNav();
+  renderView();
+  window.scrollTo({ top: 0 });
+  const tickets = bookingDraft.confirmedTickets || [];
+  const ev = tickets[0] && EVENTS.find((e) => e.id === tickets[0].eventId);
+  playPurchaseCelebration(ev, tickets.length, !tickets.reduce((s, t) => s + (t.total || 0), 0));
+  // Receipt + ticket email, once (server-side idempotent).
+  const bookingId = tickets[0] && tickets[0].bookingId;
+  sendReceipt(bookingId, true).then((res) => _setReceiptState(res && res.ok ? "sent" : "failed", res && res.to));
+}
+
+function playPurchaseCelebration(ev, n, free) {
+  if (!ev) return;
+  const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const el = document.createElement("div");
+  el.className = "yi-overlay";
+  el.setAttribute("role", "status");
+  el.setAttribute("aria-live", "assertive");
+  const bits = reduce
+    ? ""
+    : Array.from({ length: 28 }, (_, i) => {
+        const x = Math.round(Math.random() * 100);
+        const d = (Math.random() * 0.5).toFixed(2);
+        const r = Math.round(Math.random() * 360);
+        const c = ["var(--volt)", "var(--hot)", "#7c5cff", "#ffffff"][i % 4];
+        return `<i style="left:${x}%;--d:${d}s;--r:${r}deg;background:${c}"></i>`;
+      }).join("");
+  el.innerHTML = `<div class="yi-confetti" aria-hidden="true">${bits}</div>
+    <div class="yi-card">
+      <svg class="yi-check" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="23"/><path d="m15 27 7 7 15-16"/></svg>
+      <div class="yi-title">You're in!</div>
+      <div class="yi-sub">${n > 1 ? `${n} tickets` : "Your ticket"} for ${escapeHtml(ev.title)}${free ? "" : " · paid"}</div>
+    </div>`;
+  const close = () => {
+    el.classList.add("out");
+    setTimeout(() => el.remove(), 350);
+  };
+  el.addEventListener("click", close);
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("in"));
+  setTimeout(close, reduce ? 1200 : 2100);
+}
+
+// ─── Your ticket (confirmation + wallet view) ─────────────────────────────
 function renderConfirmed() {
   const tickets = bookingDraft.confirmedTickets || [];
-  if (!tickets.length)
-    return '<div class="empty-state">No tickets found.</div>';
+  if (!tickets.length) return '<div class="empty-state">No tickets found.</div>';
   const t0 = tickets[0];
   const ev = EVENTS.find((e) => e.id === t0.eventId);
   if (!ev) return "";
-  const c = CATS[ev.category];
-  const purchased = new Date(t0.purchasedAt).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const just = !!bookingDraft.justPurchased;
   const totalPaid = tickets.reduce((s, t) => s + (t.total || 0), 0);
-  const ticketCards = tickets
+  const sub = tickets.reduce((s, t) => s + (t.pricePerTicket || 0), 0);
+  const fees = Math.max(0, totalPaid - sub);
+  const st = eventStatus(ev);
+  const safeTitle = escapeHtml(ev.title).replace(/'/g, "&#39;");
+  const unclaimedCount = tickets.filter((t) => t.claimCode).length;
+  const paidAt = new Date(t0.purchasedAt);
+  const fmtPaid = isNaN(paidAt)
+    ? ""
+    : paidAt.toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const byType = {};
+  tickets.forEach((t) => {
+    const k = t.typeLabel || "General";
+    byType[k] = byType[k] || { n: 0, each: t.pricePerTicket || 0 };
+    byType[k].n++;
+  });
+
+  // One master QR for a group purchase ("valid for N entries"), scanned once
+  // per person via check_in_squad_ticket(); individual tickets still work.
+  const master =
+    tickets.length > 1 && t0.squadId
+      ? `<article class="tv-ticket tv-master">
+        <div class="tv-stub">
+          <div class="tv-kick">${_bkIc('<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c.7-3.4 3.2-5 6-5s5.3 1.6 6 5M15 15.2c2.6 0 4.6 1.4 5.2 4.8"/>', 14)} Group pass · valid for ${tickets.length} entries</div>
+          <div class="tv-qr" id="squad-master-qr"></div>
+          <div class="tv-hint">One code for everyone — scanned once per person as you arrive.</div>
+        </div>
+      </article>`
+      : "";
+
+  const cards = tickets
     .map(
-      (t, i) => `
-    <div class="panel" style="--corner:${c.color};overflow:visible;margin-bottom:${i < tickets.length - 1 ? "20" : "0"}px;border-radius:20px;">
-      <div style="position:relative;padding:18px 18px 20px;border-bottom:2px dashed var(--line);">
-        <div style="position:absolute;left:-13px;bottom:-14px;width:26px;height:26px;border-radius:50%;background:var(--bg);border:1px solid var(--line);z-index:2;"></div>
-        <div style="position:absolute;right:-13px;bottom:-14px;width:26px;height:26px;border-radius:50%;background:var(--bg);border:1px solid var(--line);z-index:2;"></div>
-        ${tickets.length > 1 ? `<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${c.color};margin-bottom:6px;">Ticket ${t.seatNum} of ${t.totalSeats}</div>` : ""}
-        <span class="event-badge" style="--cat:;margin-bottom:6px;">${ev.category}</span>
-        <div style="font-size:17px;font-weight:800;margin:6px 0 4px;line-height:1.2;color:var(--text);">${escapeHtml(ev.title)}</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:1px;">${ev.date} · ${ev.time}</div>
-        <div style="font-size:12px;color:var(--text-muted);">${escapeHtml(ev.venue)}, ${escapeHtml(ev.area)}</div>
-        <div style="margin-top:12px;display:flex;gap:8px;font-size:12px;">
-          <div style="background:var(--surface-2);border-radius:9px;padding:7px 10px;flex:1;"><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">Type</div><div style="font-weight:700;color:var(--text);margin-top:1px;">${t.typeLabel}</div></div>
-          <div style="background:var(--surface-2);border-radius:9px;padding:7px 10px;flex:1;"><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">Paid</div><div style="font-weight:700;color:${c.color};margin-top:1px;">${t.total ? `£${t.total.toFixed(2)}` : "Free"}</div></div>
+      (t, i) => `<article class="tv-ticket" style="--i:${i}">
+      <div class="tv-art ${posterClass(ev)}" style="${posterStyle(ev)}">
+        ${posterGlyph(ev)}
+        <div class="tv-art-top">
+          <span class="fp-date${st === "live" ? " live" : ""}">${st === "live" ? '<span class="pulse"></span>' : ""}${feedDateLabel(ev)} · ${feedTimeLabel(ev)}</span>
+          ${tickets.length > 1 ? `<span class="tv-seat">${t.seatNum || i + 1} of ${t.totalSeats || tickets.length}</span>` : ""}
+        </div>
+        <div class="tv-art-foot">
+          <div class="tv-title">${escapeHtml(ev.title)}</div>
+          <div class="tv-venue">${escapeHtml([ev.venue, ev.area].filter(Boolean).join(" · "))}</div>
         </div>
       </div>
-      <div style="padding:18px;text-align:center;">
-        <div id="ticket-qr-${i}" style="width:134px;height:134px;margin:0 auto 10px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;padding:7px;"></div>
-        <div style="font-family:ui-monospace,monospace;font-size:11.5px;font-weight:700;color:var(--text);letter-spacing:1.5px;">${t.ticketId}</div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Show at the door · Purchased ${purchased}</div>
+      <div class="tv-perf" aria-hidden="true"></div>
+      <div class="tv-stub">
+        <div class="tv-qr" id="ticket-qr-${i}"></div>
+        <div class="tv-code mono">${escapeHtml(t.ticketId)}</div>
+        <div class="tv-meta"><span>${escapeHtml(t.typeLabel || "General")}</span><span>Admit one</span>${t.claimCode ? `<span class="tv-open">Seat open to share</span>` : ""}</div>
+        <div class="tv-hint">Show this at the door — turn your screen brightness up.</div>
       </div>
-    </div>`,
+    </article>`,
     )
     .join("");
-  // Codex "Group Logic": one master QR for the whole squad purchase,
-  // "Valid for N Entries" — instead of juggling N separate ticket images at
-  // the door. Encodes SQUAD:<squad_id>; check_in_squad_ticket() (scanned via
-  // checkInSquadScan()) checks in the next still-active seat per scan, so
-  // it's still one tap per person arriving, just from a single QR. The
-  // individual ticket cards below still work too — this is additive, not a
-  // replacement, for groups that split up before doors.
-  const masterQrSection =
-    tickets.length > 1 && t0.squadId
-      ? `<div class="panel" style="--corner:${c.color};overflow:visible;margin-bottom:20px;border-radius:20px;padding:20px;text-align:center;">
-        <div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${c.color};margin-bottom:10px;">✦ Valid for ${tickets.length} entries</div>
-        <div id="squad-master-qr" style="width:150px;height:150px;margin:0 auto 10px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;padding:8px;"></div>
-        <div style="font-size:12px;color:var(--text-muted);line-height:1.5;">One code for your whole group — show this at the door, scanned once per person as you arrive.</div>
-      </div>`
-      : "";
 
-  // Squad ticketing — the blueprint's "Magic Link" model: ONE shareable
-  // group link, not a code per ticket. Whoever opens it claims whichever
-  // seat is still free (claim_group_ticket(), FOR UPDATE SKIP LOCKED),
-  // including auto-provisioning their account via email OTP if they aren't
-  // signed in yet — see checkSquadGroupClaim() at boot.
-  const unclaimedCount = tickets.filter((t) => t.claimCode).length;
-  const squadSection =
-    unclaimedCount > 0 && t0.squadId
-      ? `<div class="hp-panel" style="margin-top:20px;">
-        <div class="hp-title">👥 Share with your squad</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">You bought ${tickets.length} tickets — drop this ONE link in your group chat. Whoever opens it first claims a seat, no phone-number swapping needed.</div>
-        <button class="btn btn-outline" style="width:100%;" onclick="shareSquadGroupLink('${t0.squadId}','${escapeHtml(ev.title).replace(/'/g, "&#39;")}',${unclaimedCount})">📱 Send to your squad on WhatsApp (${unclaimedCount} seat${unclaimedCount > 1 ? "s" : ""} open)</button>
-      </div>`
-      : "";
-
-  // Wallet passes aren't real yet — no Apple/Google signing credentials
-  // exist for this project — so they show as an honest "Coming soon"
-  // rather than a fake button. Email backup is the one that actually works.
-  const walletSection = `<div class="hp-panel" style="margin-top:20px;">
-    <div class="hp-title">🎟️ Ticket backup</div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Keep a copy of your own ticket (${t0.ticketId}) somewhere else too.</div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <button class="btn btn-outline" onclick="emailMyTicket('${t0.ticketId}')">Email my ticket</button>
-      <button class="btn btn-outline" disabled style="opacity:0.5;cursor:not-allowed;" title="Coming soon">Add to Apple Wallet — Coming soon</button>
-      <button class="btn btn-outline" disabled style="opacity:0.5;cursor:not-allowed;" title="Coming soon">Add to Google Wallet — Coming soon</button>
-    </div>
+  const act = (onclick, icon, label) =>
+    `<button type="button" class="tv-act" onclick="${onclick}">${_bkIc(icon, 18)}<span>${label}</span></button>`;
+  const actions = `<div class="tv-acts">
+    ${act(`openCalendarSheet('${ev.id}')`, '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>', "Calendar")}
+    ${act(`openLocationSheet('${ev.id}')`, '<path d="M3 11 21 3l-8 18-2-8-8-2Z"/>', "Directions")}
+    ${
+      unclaimedCount > 0 && t0.squadId
+        ? act(`shareSquadGroupLink('${t0.squadId}','${safeTitle}',${unclaimedCount})`, '<path d="M12 3v13M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>', `Share ${unclaimedCount} seat${unclaimedCount > 1 ? "s" : ""}`)
+        : act(`openEvent('${ev.id}')`, '<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>', "Event info")
+    }
+    ${st !== "past" && myTickets.some((x) => x.ticketId === t0.ticketId) ? act(`openCantGoSheet('${escapeHtml(t0.ticketId)}')`, BK_RETURN, "Can't go?") : ""}
   </div>`;
 
-  return `<div style="text-align:center;padding:20px 0 16px;">
-      <div style="width:58px;height:58px;border-radius:50%;background:var(--success);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 18px rgba(22,163,74,0.3);">${checkIconSvg(28)}</div>
-      <div style="font-size:21px;font-weight:800;color:var(--text);">${totalPaid ? "Payment confirmed!" : "You're registered!"}</div>
-      <div style="font-size:12.5px;color:var(--text-muted);margin-top:3px;">${tickets.length} ticket${tickets.length !== 1 ? "s" : ""} · ${totalPaid ? `£${totalPaid.toFixed(2)} total` : "Free"}</div>
+  const rState = bookingDraft.receiptState || (tickets.some((t) => t.receiptSentAt) ? "sent" : "");
+  const receipt = `<details class="tv-receipt" id="tv-receipt">
+    <summary>
+      <span class="tv-r-ic">${_bkIc('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/>', 18)}</span>
+      <span class="tv-r-txt"><b>Receipt</b><span>Order ${escapeHtml(t0.bookingId || t0.ticketId)}</span></span>
+      <span class="tv-r-amt">${totalPaid ? `£${totalPaid.toFixed(2)}` : "Free"}</span>
+      <span class="tv-r-chev" aria-hidden="true">${_bkIc('<path d="M6 9l6 6 6-6"/>', 16)}</span>
+    </summary>
+    <div class="tv-r-body">
+      <div class="bk-line"><span>Order number</span><span class="mono">${escapeHtml(t0.bookingId || t0.ticketId)}</span></div>
+      ${fmtPaid ? `<div class="bk-line"><span>${totalPaid ? "Paid" : "Booked"}</span><span>${fmtPaid}</span></div>` : ""}
+      <div class="bk-line"><span>Name</span><span>${escapeHtml(t0.purchaserName || state.profileName || "")}</span></div>
+      <div class="tv-r-sep"></div>
+      ${Object.entries(byType)
+        .map(([k, v]) => `<div class="bk-line"><span>${escapeHtml(k)} × ${v.n}</span><span>${v.each ? `£${(v.each * v.n).toFixed(2)}` : "Free"}</span></div>`)
+        .join("")}
+      ${totalPaid ? `<div class="bk-line"><span>Booking fee</span><span>£${fees.toFixed(2)}</span></div>` : ""}
+      <div class="bk-line total"><span>Total ${totalPaid ? "paid" : ""}</span><span>${totalPaid ? `£${totalPaid.toFixed(2)}` : "Free"}</span></div>
+      ${totalPaid ? `<div class="bk-line"><span>Payment</span><span>Card · Stripe ${_bkIc(BK_LOCK, 12)}</span></div>` : ""}
+      <div class="tv-r-foot">
+        <span id="tv-receipt-status" class="tv-r-status">${_receiptStatusText(rState, bookingDraft.receiptTo)}</span>
+        <button type="button" class="v-btn ghost sm" onclick="emailMyTicket('${escapeHtml(t0.ticketId)}')">Email me this receipt</button>
+      </div>
     </div>
-    ${masterQrSection}
-    ${ticketCards}
-    ${squadSection}
-    ${walletSection}
-    <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;">
-      <button class="btn" style="background:${c.color};" onclick="openCalendarSheet('${ev.id}')">+ Add to Calendar</button>
-      <button class="btn btn-text" onclick="openMyTickets()">View all my tickets →</button>
+  </details>`;
+
+  return `<div class="tv-page${just ? " just" : ""}">
+    <div class="bk-top">
+      <button class="bk-back" onclick="${just ? "navStack=[];goFeed()" : "goBack()"}" aria-label="${just ? "Done" : "Back"}">${_bkIc(just ? BK_CHECK : '<path d="M15 5l-7 7 7 7"/>', 20)}</button>
+      ${just ? _bkSteps(3) : `<span class="tv-top-lbl">Your ticket${tickets.length > 1 ? "s" : ""}</span>`}
     </div>
-    <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:14px;">Free cancellation up to 24 hours before the event · <a href="terms.html" target="_blank" style="color:var(--gold-text);">See full policy</a></p>`;
+    <header class="tv-head">
+      <div class="v-kicker">${just ? (totalPaid ? "Payment confirmed" : "Booking confirmed") : st === "past" ? "Past event" : "Ready at the door"}</div>
+      <h1 class="tv-h1">${just ? "You're in." : escapeHtml(ev.title)}</h1>
+      <p class="v-sub">${tickets.length} ticket${tickets.length !== 1 ? "s" : ""} · ${totalPaid ? `£${totalPaid.toFixed(2)} paid` : "Free"}${just ? " · receipt on its way to your email" : ""}</p>
+    </header>
+    ${master}
+    <div class="tv-stack">${cards}</div>
+    ${actions}
+    ${receipt}
+    <p class="tv-policy">Free cancellation up to 24 hours before · <a href="terms.html" target="_blank">See full policy</a></p>
+  </div>`;
 }
 
-// Emails the signed-in user a backup of their own ticket (QR + details) via
-// the email-ticket edge function — the real fallback while Apple/Google
-// Wallet passes are still "Coming soon" (no signing credentials exist for
-// this project). Renders a throwaway, off-screen QR with the same QRCode
-// library already used elsewhere to get a clean data URL to attach.
+function _receiptStatusText(s, to) {
+  if (s === "sending") return "Sending your receipt…";
+  if (s === "sent") return `${_bkIc(BK_CHECK, 13)} Emailed${to ? ` to ${escapeHtml(to)}` : " to you"}`;
+  if (s === "failed") return "Couldn't email it yet — try the button";
+  return "Keep a copy in your inbox";
+}
+function _setReceiptState(s, to) {
+  bookingDraft.receiptState = s;
+  if (to) bookingDraft.receiptTo = to;
+  const el = document.getElementById("tv-receipt-status");
+  if (el) el.innerHTML = _receiptStatusText(s, bookingDraft.receiptTo);
+}
+
+// "Email me this receipt" — the server builds and addresses it (your own
+// account email only); see supabase/functions/send-receipt.
 async function emailMyTicket(ticketId) {
   const t =
-    (bookingDraft.confirmedTickets || []).find(
-      (x) => x.ticketId === ticketId,
-    ) || myTickets.find((x) => x.ticketId === ticketId);
-  if (!t) {
-    showToast("Ticket not found", "error");
-    return;
-  }
-  const ev = EVENTS.find((e) => e.id === t.eventId);
-  if (!ev || !state.profileEmail) {
-    showToast("No email on file for this account", "error");
-    return;
-  }
-  showToast("Sending…", "info");
-
-  const holder = document.createElement("div");
-  holder.style.display = "none";
-  document.body.appendChild(holder);
-  let qrDataUrl = null;
-  try {
-    new QRCode(holder, {
-      text: ticketId,
-      width: 240,
-      height: 240,
-      colorDark: "#000",
-      colorLight: "#fff",
-      correctLevel: QRCode.CorrectLevel.M,
-    });
-    // Read the <canvas> directly, not the library's <img> — the img's src
-    // is set asynchronously after the canvas draws, so it's empty this
-    // early; the canvas itself is drawn synchronously.
-    const canvas = holder.querySelector("canvas");
-    qrDataUrl = canvas ? canvas.toDataURL("image/png") : null;
-  } catch (e) {}
-  holder.remove();
-  if (!qrDataUrl) {
-    showToast("Could not generate a QR code", "error");
-    return;
-  }
-
-  try {
-    const { error } = await sb.functions.invoke("email-ticket", {
-      body: {
-        recipientEmail: state.profileEmail,
-        ticketId,
-        eventTitle: ev.title,
-        eventDate: `${ev.date} · ${ev.time}`,
-        venue: ev.venue,
-        qrDataUrl,
-      },
-    });
-    if (error) throw error;
-    showToast("Ticket emailed!", "success");
-  } catch (e) {
-    showToast("Could not send the email — try again", "error");
+    (bookingDraft.confirmedTickets || []).find((x) => x.ticketId === ticketId) || myTickets.find((x) => x.ticketId === ticketId);
+  if (!t) return showToast("Ticket not found", "error");
+  _setReceiptState("sending");
+  const res = await sendReceipt(t.bookingId || t.ticketId, false);
+  if (res && res.ok) {
+    _setReceiptState("sent", res.to);
+    showToast("Receipt emailed", "success");
+  } else {
+    _setReceiptState("failed");
+    showToast(res?.error && res.error !== "unavailable" ? res.error : "Couldn't send the email — try again", "error");
   }
 }
-

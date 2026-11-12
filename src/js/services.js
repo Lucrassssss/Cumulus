@@ -717,6 +717,25 @@ async function deleteMyAccount() {
   }
 }
 
+// Receipt + ticket email for one booking (send-receipt edge function). The
+// server picks the recipient (your own account email) and the content.
+async function sendReceipt(bookingId, auto) {
+  if (!bookingId) return { ok: false };
+  try {
+    const { data, error } = await sb.functions.invoke("send-receipt", { body: { bookingId, auto: !!auto } });
+    if (error) {
+      let body = null;
+      try {
+        body = await error.context.json();
+      } catch (e) {}
+      return body || { ok: false, error: error.message };
+    }
+    return data || { ok: false };
+  } catch (e) {
+    return { ok: false, error: "unavailable" };
+  }
+}
+
 async function cancelTicketRefund(ticketId) {
   try {
     const { data, error } = await sb.functions.invoke("cancel-ticket-refund", {
