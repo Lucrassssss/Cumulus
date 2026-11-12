@@ -542,19 +542,33 @@ async function initApp() {
         .catch(() => {})
     : Promise.resolve();
 
-  // Background data load — enterApp() rendered the shell already; this fills it
-  // with real events from Supabase without blocking the cloud animation. With no
-  // seed data, the map/list show empty states until this resolves (or stay empty
-  // if there genuinely are no events yet).
+  // Everything the first screen shows loads AT ONCE, behind the boot
+  // loader, so Discover appears a single time already complete — events,
+  // "Up next", going counts, followed hosts, crew — instead of painting and
+  // then filling in (which reads as the page loading twice).
+  const safe = (pr) => Promise.resolve(pr).catch(() => {});
+  const personal = Promise.all([
+    adminCheck,
+    safe(loadAllRsvps()),
+    ...(state.userId
+      ? [
+          safe(loadMyTickets()),
+          safe(loadMyFollows().then((v) => (state.followedHostIds = v || []))),
+          safe(loadMyWaitlist().then((v) => (state.myWaitlist = v || []))),
+          safe(loadCrewGoing()),
+          safe(syncSavedEvents()),
+        ]
+      : []),
+  ]);
   await loadRealEvents();
   state.eventsLoaded = true;
-  // Paint real cards immediately — the remaining loads below (tickets,
-  // RSVPs, follows…) are each a network round-trip and shouldn't hold the
-  // first screen hostage.
+  // Don't hold the screen hostage on a slow personal call: past ~1.2s, show
+  // the events and let the rest slot in quietly.
+  await Promise.race([personal, new Promise((r) => setTimeout(r, 1200))]);
   if (state.view === "feed") renderViewQuiet();
   else if (state.view === "browse") renderView();
   hideBootLoader(); // real content is on screen now — hand over in one go
-  await adminCheck;
+  await personal;
 
   await loadGeocodeCache();
   EVENTS.forEach((ev) => {
@@ -567,8 +581,6 @@ async function initApp() {
   checkEventDeepLink();
   checkPlansLink();
 
-  await loadMyTickets();
-  await loadAllRsvps();
   await checkSquadClaim();
   await checkSquadGroupClaim();
   await checkStripeCheckoutReturn();
@@ -576,10 +588,6 @@ async function initApp() {
   if (!isApprovedHost() && state.userId) {
     state.hostApplicationStatus = await getMyHostApplicationStatus(state.userId);
   }
-  if (state.userId) state.followedHostIds = await loadMyFollows();
-  if (state.userId) state.myWaitlist = await loadMyWaitlist();
-  if (state.userId) await syncSavedEvents();
-  if (state.userId) await loadCrewGoing();
 
   // Refresh quietly once everything's in (map = update markers, feed = add
   // anything personal that changed) — in place, never a second page load.

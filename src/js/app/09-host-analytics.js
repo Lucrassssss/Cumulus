@@ -1432,12 +1432,20 @@ function renderViewQuiet() {
     const html = renderFeed();
     if (html === window._lastFeedHtml) return;
   }
-  const app = document.getElementById("app");
   const y = window.scrollY;
-  app.classList.add("quiet");
   renderView();
   window.scrollTo(0, y);
-  requestAnimationFrame(() => requestAnimationFrame(() => app.classList.remove("quiet")));
+  // Jump every one-off entrance animation/transition in the new content
+  // straight to its end state. (Merely suppressing them for a frame, as
+  // before, just restarted them a frame later — the "double load".)
+  // Infinite ones (live pulse, ticker) are left running.
+  const vc = document.getElementById("view-container");
+  try {
+    (vc && vc.getAnimations ? vc.getAnimations({ subtree: true }) : []).forEach((a) => {
+      const it = a.effect && a.effect.getComputedTiming ? a.effect.getComputedTiming().iterations : 1;
+      if (it !== Infinity) a.finish();
+    });
+  } catch (e) {}
 }
 function renderView() {
   const app = document.getElementById("app");

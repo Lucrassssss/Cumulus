@@ -5134,8 +5134,6 @@ html body .tv-gift{background:color-mix(in srgb,var(--uv,#7c5cff) 22%,transparen
 html body .tv-gift-amt{font-size:13px !important;color:var(--text-muted);}
 html body .tv-r-small{font-size:12px;color:var(--text-muted);margin-top:8px;}
 
-/* Background repaint (renderViewQuiet): in place, no entrance animations. */
-#app.quiet *,#app.quiet *::before,#app.quiet *::after{animation:none !important;transition:none !important;}
 
 /* ══ "Don't miss" wheel ═══════════════════════════════════════════════════ */
 html body .fp-wheel{position:relative;--fw-card:min(60vw,232px);}

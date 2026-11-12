@@ -1140,4 +1140,29 @@ test.describe("Cumulus smoke", () => {
     await page.locator(".fw-arrow.prev").click();
     await expect.poll(active).toBe(3);
   });
+
+  test("quiet repaint never replays the entrance animation (no double load)", async ({ page }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      const now = Date.now();
+      const ev = { id: "ql-1", title: "Quiet Load", category: "Live Music", host: "H", hostId: "h", venue: "V", area: "Soho",
+        startTime: new Date(now + 3 * 3600000).toISOString(), endTime: new Date(now + 5 * 3600000).toISOString(), desc: "", capacity: 50, price: 0 };
+      computeEventDates(ev);
+      EVENTS.push(ev);
+      state.eventsLoaded = true;
+      renderViewQuiet();
+    });
+    const running = await page.evaluate(() =>
+      document.getElementById("view-container").getAnimations({ subtree: true })
+        .filter((a) => a.effect.getComputedTiming().iterations !== Infinity && a.playState === "running").length,
+    );
+    expect(running).toBe(0);
+    await page.waitForTimeout(120);
+    const after = await page.evaluate(() =>
+      document.getElementById("view-container").getAnimations({ subtree: true })
+        .filter((a) => a.effect.getComputedTiming().iterations !== Infinity && a.playState === "running").length,
+    );
+    expect(after).toBe(0);
+  });
 });
