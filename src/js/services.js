@@ -30,10 +30,20 @@ async function adminSendCode(email) {
       email,
       options: { shouldCreateUser: true },
     });
-    return { ok: !error, error: error ? error.message : null };
+    return { ok: !error, error: error ? friendlyAuthError(error.message) : null };
   } catch (e) {
     return { ok: false, error: "unavailable" };
   }
+}
+// Supabase's raw auth errors ("Error sending confirmation email") read like
+// the app is broken. Say what happened and what to do instead.
+function friendlyAuthError(msg) {
+  const m = String(msg || "");
+  if (/sending (confirmation|magic link|otp)? ?email|error sending/i.test(m))
+    return "We couldn't send your code just now — please try again in a few minutes.";
+  if (/rate limit|too many|security purposes/i.test(m))
+    return "Too many code requests — wait a minute, then try again.";
+  return m;
 }
 async function adminVerifyCode(email, token) {
   try {
@@ -67,7 +77,7 @@ async function authSendCode(email, meta) {
       email,
       options: { shouldCreateUser: true, data: meta || {} },
     });
-    return { ok: !error, error: error ? error.message : null };
+    return { ok: !error, error: error ? friendlyAuthError(error.message) : null };
   } catch (e) {
     return { ok: false, error: "unavailable" };
   }
