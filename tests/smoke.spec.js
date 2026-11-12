@@ -1050,4 +1050,35 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator(".tv-r-body .bk-line.total")).toContainText("£27.00");
     await expect(page.locator(".tv-r-body")).toContainText("Booking fee");
   });
+
+  test("transfers: refund rule shown before sending, on received tickets, and on return", async ({ page }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      const now = Date.now();
+      const ev = { id: "tf-1", title: "Transfer Test", category: "Live Music", host: "H", hostId: "h", venue: "V", area: "Soho",
+        startTime: new Date(now + 72 * 3600000).toISOString(), endTime: new Date(now + 75 * 3600000).toISOString(), desc: "", capacity: 50, price: 12 };
+      computeEventDates(ev);
+      EVENTS.push(ev);
+      state.userId = "00000000-0000-0000-0000-000000000006";
+      myTickets.push({ ticketId: "TK-OWN", bookingId: "TK-OWN", eventId: "tf-1", typeLabel: "General", pricePerTicket: 12, total: 13.5, purchaserName: "Me", purchasedAt: now });
+      openCantGoSheet("TK-OWN");
+    });
+    await page.locator("#loc-sheet .loc-opt.primary").click();
+    await expect(page.locator("#loc-sheet .tf-list .key")).toContainText("Refunds stay with you");
+    await expect(page.locator("#loc-sheet .tf-list .key")).toContainText("original card");
+    // A ticket a friend sent you: refund goes back to them.
+    await page.evaluate(() => {
+      closeLocationSheet(true);
+      myTickets.length = 0;
+      myTickets.push({ ticketId: "TK-GIFT", bookingId: "TK-GIFT", eventId: "tf-1", typeLabel: "General", pricePerTicket: 12, total: 13.5,
+        purchaserName: "Priya Shah", purchasedAt: Date.now(), claimedBy: "00000000-0000-0000-0000-000000000006", claimedAt: Date.now() });
+      openViewTicket("tf-1");
+    });
+    await expect(page.locator(".tv-gift")).toHaveText("From Priya");
+    await expect(page.locator(".v-sub")).toContainText("sent to you by Priya");
+    await expect(page.locator(".tv-receipt")).toContainText("go to Priya's original card");
+    await page.evaluate(() => openCantGoSheet("TK-GIFT"));
+    await expect(page.locator("#loc-sheet")).toContainText("Refund goes to Priya Shah's original card, not yours");
+  });
 });

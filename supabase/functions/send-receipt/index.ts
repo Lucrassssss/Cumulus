@@ -137,7 +137,7 @@ Deno.serve(async (req: Request) => {
         ${row("Total", total > 0 ? gbp(total) : "Free", true)}
         ${total > 0 ? row("Payment", "Card · processed securely by Stripe") : ""}
       </table>
-      <div style="font-size:12px;color:#8a8792;margin-top:14px;line-height:1.5;">Tickets: ${tickets.map((t) => `<span style="font-family:ui-monospace,Menlo,monospace;">${esc(t.ticket_id)}</span>`).join(", ")}<br/>Can't make it? Send your ticket to a friend, or return it for a refund up to 24 hours before — all from your Cumulus wallet.</div>
+      <div style="font-size:12px;color:#8a8792;margin-top:14px;line-height:1.5;">Tickets: ${tickets.map((t) => `<span style="font-family:ui-monospace,Menlo,monospace;">${esc(t.ticket_id)}</span>`).join(", ")}<br/>Can't make it? Send your ticket to a friend, or return it for a refund up to 24 hours before — all from your Cumulus wallet. If you send a ticket on, any refund still comes back to the card you paid with.</div>
     </div>
   </div>
   <div style="max-width:520px;margin:12px auto 0;text-align:center;font-size:11px;color:#8a8792;">Cumulus · London · Prices include all fees — no surprises.</div>

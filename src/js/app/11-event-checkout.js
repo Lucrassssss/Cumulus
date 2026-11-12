@@ -164,6 +164,50 @@ function afterRenderCheckout() {
   startStripeCheckout();
 }
 
+// ─── The Cumulus ticket glyph ─────────────────────────────────────────────
+// One drawing, three moods: "scan" while paying (a beam prints the ticket),
+// "win" when it's yours (fills Volt, ticks, the stub tears off and cumulus
+// clouds puff out of the tear), "fail" (a small shake). The same ticket
+// carries you from Pay to You're in — no generic spinner, no stock tick.
+let _tgSeq = 0;
+const TG_TOP = "M18 6H102A12 12 0 0 1 114 18V103A9 9 0 0 0 105 112H15A9 9 0 0 0 6 103V18A12 12 0 0 1 18 6Z";
+const TG_STUB = "M15 112H105A9 9 0 0 0 114 121V150A12 12 0 0 1 102 162H18A12 12 0 0 1 6 150V121A9 9 0 0 0 15 112Z";
+function _ticketGlyph(mode) {
+  const id = `tg${++_tgSeq}`;
+  const bars = [3, 1, 2, 1, 1, 3, 1, 2, 2, 1, 3, 1, 1, 2, 1, 3, 2, 1]
+    .reduce((acc, w) => {
+      acc.html += acc.x < 94 ? `<rect x="${acc.x}" y="126" width="${w * 1.6}" height="22" rx=".6"/>` : "";
+      acc.x += w * 1.6 + 2.2;
+      return acc;
+    }, { x: 26, html: "" }).html;
+  return `<svg class="tg ${mode || ""}" viewBox="0 0 120 168" aria-hidden="true">
+    <defs>
+      <clipPath id="${id}c"><path d="${TG_TOP}"/></clipPath>
+      <linearGradient id="${id}b" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="var(--volt)" stop-opacity="0"/>
+        <stop offset=".85" stop-color="var(--volt)" stop-opacity=".55"/>
+        <stop offset="1" stop-color="var(--volt)" stop-opacity="1"/>
+      </linearGradient>
+    </defs>
+    <g class="tg-top">
+      <path class="tg-shape" d="${TG_TOP}"/>
+      <g clip-path="url(#${id}c)">
+        <rect class="tg-fill" x="0" y="6" width="120" height="106"/>
+        <rect class="tg-beam" x="0" y="-34" width="120" height="34" fill="url(#${id}b)"/>
+      </g>
+      <g class="tg-lines"><rect x="22" y="22" width="34" height="6" rx="3"/><rect x="22" y="34" width="62" height="9" rx="4.5"/><rect x="22" y="49" width="48" height="6" rx="3"/></g>
+      <path class="tg-tick" d="M37 74l14 14 31-33"/>
+    </g>
+    <line class="tg-perf" x1="20" y1="112" x2="100" y2="112"/>
+    <g class="tg-stub"><path class="tg-shape" d="${TG_STUB}"/><g class="tg-bars">${bars}</g></g>
+  </svg>`;
+}
+function _buzz(pattern) {
+  try {
+    if (navigator.vibrate) navigator.vibrate(pattern);
+  } catch (e) {}
+}
+
 // ─── Payment in progress ──────────────────────────────────────────────────
 // A calm full-screen hold while the bank confirms and the ticket is written,
 // so nobody double-taps Pay or wonders whether it worked.
@@ -180,7 +224,7 @@ function showPayOverlay(msg) {
     el.setAttribute("role", "status");
     el.setAttribute("aria-live", "polite");
     el.removeAttribute("aria-label");
-    el.innerHTML = `<div class="po-card"><span class="po-ring" aria-hidden="true"></span><b class="po-msg"></b><span class="po-sub">${_bkIc(BK_LOCK, 13)} Secure payment · don't close this page</span></div>`;
+    el.innerHTML = `<div class="po-card"><div class="po-glyph">${_ticketGlyph("scan")}</div><b class="po-msg"></b><span class="po-sub">${_bkIc(BK_LOCK, 13)} Secure payment · don't close this page</span></div>`;
   }
   el.querySelector(".po-msg").textContent = msg || "Processing…";
 }
@@ -188,6 +232,14 @@ function showPayOverlay(msg) {
 // kind = "failed" | "pending". Big, readable, and announced to screen
 // readers — the opposite of a toast at the bottom.
 function showPayResult(kind, o) {
+  const existing = document.querySelector("#pay-overlay .tg");
+  if (kind === "failed" && existing && !o._shaken) {
+    existing.classList.remove("scan");
+    existing.classList.add("fail");
+    _buzz([40]);
+    setTimeout(() => showPayResult(kind, Object.assign({}, o, { _shaken: true })), 480);
+    return;
+  }
   showPayOverlay("");
   const el = document.getElementById("pay-overlay");
   if (!el) return;
@@ -210,9 +262,10 @@ function showPayResult(kind, o) {
   el.classList.add("in");
   setTimeout(() => el.querySelector(".po-acts .v-btn:last-child")?.focus(), 60);
 }
-function hidePayOverlay() {
+function hidePayOverlay(instant) {
   const el = document.getElementById("pay-overlay");
   if (!el) return;
+  if (instant) return el.remove();
   el.classList.remove("in");
   setTimeout(() => el.remove(), 250);
 }
@@ -220,7 +273,7 @@ function hidePayOverlay() {
 // ─── Step 3: you're in ────────────────────────────────────────────────────
 // Shared by card payments (finalizeStripePayment) and free registrations.
 function showConfirmedAfterPurchase() {
-  hidePayOverlay();
+  const fromPay = !!document.querySelector("#pay-overlay .tg");
   bookingDraft.justPurchased = true;
   bookingDraft.receiptState = "sending";
   navStack = [];
@@ -230,42 +283,66 @@ function showConfirmedAfterPurchase() {
   window.scrollTo({ top: 0 });
   const tickets = bookingDraft.confirmedTickets || [];
   const ev = tickets[0] && EVENTS.find((e) => e.id === tickets[0].eventId);
-  playPurchaseCelebration(ev, tickets.length, !tickets.reduce((s, t) => s + (t.total || 0), 0));
+  playPurchaseCelebration(ev, tickets.length, !tickets.reduce((s, t) => s + (t.total || 0), 0), fromPay);
+  hidePayOverlay(true);
   // Receipt + ticket email, once (server-side idempotent).
   const bookingId = tickets[0] && tickets[0].bookingId;
   sendReceipt(bookingId, true).then((res) => _setReceiptState(res && res.ok ? "sent" : "failed", res && res.to));
 }
 
-function playPurchaseCelebration(ev, n, free) {
+function playPurchaseCelebration(ev, n, free, fromPay) {
   if (!ev) return;
   const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   const el = document.createElement("div");
-  el.className = "yi-overlay";
+  el.className = `yi-overlay${reduce ? " still" : ""}${fromPay ? " cont" : ""}`;
   el.setAttribute("role", "status");
   el.setAttribute("aria-live", "assertive");
-  const bits = reduce
+  el.setAttribute("aria-label", `You're in. ${n > 1 ? `${n} tickets` : "Your ticket"} for ${ev.title}.`);
+  // Cumulus clouds billowing out of the tear, plus a few Volt sparks.
+  const puffs = reduce
     ? ""
-    : Array.from({ length: 28 }, (_, i) => {
-        const x = Math.round(Math.random() * 100);
-        const d = (Math.random() * 0.5).toFixed(2);
-        const r = Math.round(Math.random() * 360);
-        const c = ["var(--volt)", "var(--hot)", "#7c5cff", "#ffffff"][i % 4];
-        return `<i style="left:${x}%;--d:${d}s;--r:${r}deg;background:${c}"></i>`;
+    : [
+        [-86, -8, 1.1, 0], [-58, 26, 0.8, 0.05], [-30, -30, 0.7, 0.1], [0, 34, 1, 0.02],
+        [32, -26, 0.75, 0.08], [60, 22, 0.9, 0.04], [88, -6, 1.05, 0.12], [-8, -44, 0.55, 0.14],
+      ]
+        .map(([dx, dy, sc, d]) => `<i class="yi-puff" style="--dx:${dx}px;--dy:${dy}px;--s:${sc};--d:${d}s"></i>`)
+        .join("") +
+      Array.from({ length: 10 }, (_, i) => {
+        const a = (i / 10) * Math.PI * 2;
+        return `<i class="yi-spark" style="--dx:${Math.round(Math.cos(a) * 120)}px;--dy:${Math.round(Math.sin(a) * 90)}px;--d:${(i % 3) * 0.04}s"></i>`;
       }).join("");
-  el.innerHTML = `<div class="yi-confetti" aria-hidden="true">${bits}</div>
-    <div class="yi-card">
-      <svg class="yi-check" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="23"/><path d="m15 27 7 7 15-16"/></svg>
-      <div class="yi-title">You're in!</div>
-      <div class="yi-sub">${n > 1 ? `${n} tickets` : "Your ticket"} for ${escapeHtml(ev.title)}${free ? "" : " · paid"}</div>
-    </div>`;
+  const title = "You're in!"
+    .split("")
+    .map((ch, i) => `<span style="--i:${i}">${ch === " " ? "&nbsp;" : escapeHtml(ch)}</span>`)
+    .join("");
+  el.innerHTML = `<div class="yi-stage">
+      <div class="yi-glyph">${_ticketGlyph("scan")}</div>
+      <div class="yi-burst" aria-hidden="true">${puffs}</div>
+    </div>
+    <div class="yi-title" aria-hidden="true">${title}</div>
+    <div class="yi-sub">${n > 1 ? `${n} tickets` : "Your ticket"} for ${escapeHtml(ev.title)}</div>`;
   const close = () => {
+    if (el.classList.contains("out")) return;
     el.classList.add("out");
-    setTimeout(() => el.remove(), 350);
+    setTimeout(() => el.remove(), 520);
   };
   el.addEventListener("click", close);
   document.body.appendChild(el);
-  requestAnimationFrame(() => el.classList.add("in"));
-  setTimeout(close, reduce ? 1200 : 2100);
+  requestAnimationFrame(() => {
+    el.classList.add("in");
+    const tg = el.querySelector(".tg");
+    // Let the scan run a beat (continuity with the pay overlay), then win.
+    setTimeout(
+      () => {
+        tg.classList.remove("scan");
+        tg.classList.add("win");
+        el.classList.add("won");
+        _buzz([14, 70, 26]);
+      },
+      reduce ? 0 : fromPay ? 220 : 380,
+    );
+  });
+  setTimeout(close, reduce ? 1300 : 2700);
 }
 
 // ─── Your ticket (confirmation + wallet view) ─────────────────────────────
@@ -324,7 +401,7 @@ function renderConfirmed() {
       <div class="tv-stub">
         <div class="tv-qr" id="ticket-qr-${i}"></div>
         <div class="tv-code mono">${escapeHtml(t.ticketId)}</div>
-        <div class="tv-meta"><span>${escapeHtml(t.typeLabel || "General")}</span><span>Admit one</span>${t.claimCode ? `<span class="tv-open">Seat open to share</span>` : ""}</div>
+        <div class="tv-meta"><span>${escapeHtml(t.typeLabel || "General")}</span><span>Admit one</span>${t.claimCode ? `<span class="tv-open">Seat open to share</span>` : ""}${t.claimedBy ? `<span class="tv-gift">From ${escapeHtml((t.purchaserName || "a friend").split(" ")[0])}</span>` : ""}</div>
         <div class="tv-hint">Show this at the door — turn your screen brightness up.</div>
       </div>
     </article>`,
@@ -345,7 +422,29 @@ function renderConfirmed() {
   </div>`;
 
   const rState = bookingDraft.receiptState || (tickets.some((t) => t.receiptSentAt) ? "sent" : "");
-  const receipt = `<details class="tv-receipt" id="tv-receipt">
+  // A ticket a friend sent you: no money changed hands with you, so the
+  // "receipt" is a transfer record — and it says where refunds go.
+  const received = tickets.every((t) => t.claimedBy);
+  const buyerFirst = escapeHtml((t0.purchaserName || "your friend").split(" ")[0]);
+  const fmtClaimed = t0.claimedAt
+    ? new Date(t0.claimedAt).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+    : "";
+  const receipt = received
+    ? `<details class="tv-receipt" id="tv-receipt">
+    <summary>
+      <span class="tv-r-ic">${_bkIc('<path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/>', 18)}</span>
+      <span class="tv-r-txt"><b>Sent by ${buyerFirst}</b><span>Order ${escapeHtml(t0.bookingId || t0.ticketId)}</span></span>
+      <span class="tv-r-amt tv-gift-amt">Transferred</span>
+      <span class="tv-r-chev" aria-hidden="true">${_bkIc('<path d="M6 9l6 6 6-6"/>', 16)}</span>
+    </summary>
+    <div class="tv-r-body">
+      <div class="bk-line"><span>Bought by</span><span>${escapeHtml(t0.purchaserName || "A friend")}</span></div>
+      ${fmtClaimed ? `<div class="bk-line"><span>Claimed by you</span><span>${fmtClaimed}</span></div>` : ""}
+      <div class="bk-line"><span>Ticket</span><span>${escapeHtml(t0.typeLabel || "General")} × ${tickets.length}</span></div>
+      <div class="tf-note">Refunds for this ticket — if the event is cancelled or it's returned — go to ${buyerFirst}'s original card, not yours. <a href="terms.html#transfers" target="_blank">Transfer policy</a></div>
+    </div>
+  </details>`
+    : `<details class="tv-receipt" id="tv-receipt">
     <summary>
       <span class="tv-r-ic">${_bkIc('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/>', 18)}</span>
       <span class="tv-r-txt"><b>Receipt</b><span>Order ${escapeHtml(t0.bookingId || t0.ticketId)}</span></span>
@@ -363,6 +462,7 @@ function renderConfirmed() {
       ${totalPaid ? `<div class="bk-line"><span>Booking fee</span><span>£${fees.toFixed(2)}</span></div>` : ""}
       <div class="bk-line total"><span>Total ${totalPaid ? "paid" : ""}</span><span>${totalPaid ? `£${totalPaid.toFixed(2)}` : "Free"}</span></div>
       ${totalPaid ? `<div class="bk-line"><span>Payment</span><span>Card · Stripe ${_bkIc(BK_LOCK, 12)}</span></div>` : ""}
+      ${totalPaid ? `<div class="tv-r-small">Sending a ticket to a friend? Any refund still comes back to this card.</div>` : ""}
       <div class="tv-r-foot">
         <span id="tv-receipt-status" class="tv-r-status">${_receiptStatusText(rState, bookingDraft.receiptTo)}</span>
         <button type="button" class="v-btn ghost sm" onclick="emailMyTicket('${escapeHtml(t0.ticketId)}')">Email me this receipt</button>
@@ -372,13 +472,17 @@ function renderConfirmed() {
 
   return `<div class="tv-page${just ? " just" : ""}">
     <div class="bk-top">
-      <button class="bk-back" onclick="${just ? "navStack=[];goFeed()" : "goBack()"}" aria-label="${just ? "Done" : "Back"}">${_bkIc(just ? BK_CHECK : '<path d="M15 5l-7 7 7 7"/>', 20)}</button>
+      ${
+        just
+          ? `<button class="bk-done" onclick="navStack=[];goFeed()">Done</button>`
+          : `<button class="bk-back" onclick="goBack()" aria-label="Back">${_bkIc('<path d="M15 5l-7 7 7 7"/>', 20)}</button>`
+      }
       ${just ? _bkSteps(3) : `<span class="tv-top-lbl">Your ticket${tickets.length > 1 ? "s" : ""}</span>`}
     </div>
     <header class="tv-head">
       <div class="v-kicker">${just ? (totalPaid ? "Payment confirmed" : "Booking confirmed") : st === "past" ? "Past event" : "Ready at the door"}</div>
       <h1 class="tv-h1">${just ? "You're in." : escapeHtml(ev.title)}</h1>
-      <p class="v-sub">${tickets.length} ticket${tickets.length !== 1 ? "s" : ""} · ${totalPaid ? `£${totalPaid.toFixed(2)} paid` : "Free"}${just ? " · receipt on its way to your email" : ""}</p>
+      <p class="v-sub">${tickets.length} ticket${tickets.length !== 1 ? "s" : ""} · ${received ? `sent to you by ${buyerFirst}` : totalPaid ? `£${totalPaid.toFixed(2)} paid` : "Free"}${just ? " · receipt on its way to your email" : ""}</p>
     </header>
     ${master}
     <div class="tv-stack">${cards}</div>

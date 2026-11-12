@@ -1926,9 +1926,9 @@ async function checkSquadClaim() {
   if (!state.userId) return; // claimed after sign-in isn't wired up — keep simple for now
   const res = await claimTicket(code);
   if (res && res.ok) {
-    showToast("Ticket claimed — welcome to the squad!", "success");
     await loadMyTickets();
     renderView();
+    showClaimedSheet(res.event_id || (myTickets.find((t) => t.claimedBy) || {}).eventId);
   } else {
     showToast("That claim link isn't valid or was already used.", "error");
   }
@@ -1967,9 +1967,9 @@ async function checkSquadGroupClaim() {
   history.replaceState(null, "", location.pathname);
   const res = await claimGroupTicket(squadId);
   if (res && res.ok) {
-    showToast("Ticket claimed — welcome to the squad! 🎉", "success");
     await loadMyTickets();
     renderView();
+    showClaimedSheet(res.event_id || (myTickets.find((t) => t.claimedBy) || {}).eventId);
   } else {
     const reason =
       res?.error === "no_tickets_remaining"

@@ -99,6 +99,7 @@ function openCantGoSheet(ticketId) {
   const safeTitle = escapeHtml(ev.title).replace(/'/g, "&#39;");
   const canReturn = ev.startsAt - Date.now() >= 24 * 3600000;
   const amt = t.total ? `£${t.total.toFixed(2)}` : "";
+  const received = !!t.claimedBy;
   const ic = (d) => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
   const el = document.createElement("div");
   el.id = "loc-sheet";
@@ -110,7 +111,7 @@ function openCantGoSheet(ticketId) {
         <div><b>Can't make it?</b><span>${escapeHtml(ev.title)} · ${feedDateLabel(ev)}</span></div>
         <button class="loc-x" onclick="closeLocationSheet()" aria-label="Close">✕</button>
       </div>
-      <button class="loc-opt primary" onclick="closeLocationSheet(true);transferMyTicket('${escapeHtml(t.ticketId)}','${safeTitle}')">
+      <button class="loc-opt primary" onclick="openTransferSheet('${escapeHtml(t.ticketId)}')">
         <span class="loc-ic">${ic('<path d="M4 12h12M12 6l6 6-6 6"/>')}</span>
         <span class="loc-txt"><b>Send it to a friend</b><span>Free · they get the QR, you're off the hook</span></span>
       </button>
@@ -118,11 +119,81 @@ function openCantGoSheet(ticketId) {
         canReturn
           ? `<button class="loc-opt" onclick="closeLocationSheet(true);cancelTicket('${escapeHtml(t.ticketId)}')">
         <span class="loc-ic">${ic('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>')}</span>
-        <span class="loc-txt"><b>${amt ? `Return it · ${amt} back` : "Give up your spot"}</b><span>${amt ? "Full refund at face value — " : ""}your spot goes to the next person on the waitlist</span></span>
+        <span class="loc-txt"><b>${amt ? (received ? `Return it · ${amt} refunded` : `Return it · ${amt} back`) : "Give up your spot"}</b><span>${
+          amt && received
+            ? `Refund goes to ${escapeHtml(t.purchaserName || "the friend who bought it")}'s original card, not yours`
+            : `${amt ? "Full refund at face value — " : ""}your spot goes to the next person on the waitlist`
+        }</span></span>
       </button>`
           : `<div class="cg-note">Returns close 24 hours before doors — you can still send it to a friend.</div>`
       }
       <div class="cg-note">No touting, no mark-ups. Tickets only ever change hands at face value.</div>
+    </div>`;
+  el.addEventListener("click", (e) => {
+    if (e.target === el) closeLocationSheet();
+  });
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("in"));
+  document.addEventListener("keydown", _locEsc);
+}
+
+// "Send it to a friend" — step 2. Industry rule (Ticketmaster, Live Nation,
+// Tixr; DICE/Eventbrite refund only to the original payment method): a
+// transfer moves the TICKET, never the money. Said plainly before any link
+// exists, so nobody is surprised if the event is later cancelled.
+function openTransferSheet(ticketId) {
+  const t = myTickets.find((x) => x.ticketId === ticketId);
+  const ev = t && EVENTS.find((e) => e.id === t.eventId);
+  if (!ev) return;
+  closeLocationSheet(true);
+  const received = !!t.claimedBy;
+  const buyer = escapeHtml(t.purchaserName || "the original buyer");
+  const safeTitle = escapeHtml(ev.title).replace(/'/g, "&#39;");
+  const ic = (d) => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const el = document.createElement("div");
+  el.id = "loc-sheet";
+  el.className = "loc-overlay";
+  el.setAttribute("role", "dialog");
+  el.setAttribute("aria-label", "Send your ticket to a friend");
+  el.innerHTML = `<div class="loc-sheet">
+      <div class="loc-head">
+        <div><b>Send to a friend</b><span>${escapeHtml(ev.title)} · ${feedDateLabel(ev)}</span></div>
+        <button class="loc-x" onclick="closeLocationSheet()" aria-label="Close">✕</button>
+      </div>
+      <ul class="tf-list">
+        <li>${ic('<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>')}<span><b>You'll get a link to send them.</b> When they claim it, the ticket and its QR move to their wallet and leave yours.</span></li>
+        <li class="key">${ic('<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>')}<span><b>Refunds stay with ${received ? buyer : "you"}.</b> If the event is cancelled or the ticket is returned, the money goes back to ${received ? `${buyer}'s` : "your"} original card — never to the person holding the ticket.</span></li>
+        <li>${ic('<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>')}<span><b>Face value only.</b> Any money between you is between you — Cumulus never charges for a transfer.</span></li>
+      </ul>
+      <button class="v-btn wide" onclick="closeLocationSheet(true);transferMyTicket('${escapeHtml(t.ticketId)}','${safeTitle}')">Got it — create the link</button>
+      <div class="cg-note"><a href="terms.html#transfers" target="_blank">Full transfer &amp; refund policy</a></div>
+    </div>`;
+  el.addEventListener("click", (e) => {
+    if (e.target === el) closeLocationSheet();
+  });
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("in"));
+  document.addEventListener("keydown", _locEsc);
+}
+
+// Shown when a friend's link is claimed — a proper moment, not a toast,
+// and the refund rule stated up front.
+function showClaimedSheet(eventId) {
+  const ev = EVENTS.find((e) => e.id === eventId);
+  closeLocationSheet(true);
+  const el = document.createElement("div");
+  el.id = "loc-sheet";
+  el.className = "loc-overlay";
+  el.setAttribute("role", "dialog");
+  el.setAttribute("aria-label", "Ticket received");
+  el.innerHTML = `<div class="loc-sheet">
+      <div class="loc-head">
+        <div><b>You've got a ticket 🎟</b><span>${ev ? `${escapeHtml(ev.title)} · ${feedDateLabel(ev)}` : "It's in your Tickets"}</span></div>
+        <button class="loc-x" onclick="closeLocationSheet()" aria-label="Close">✕</button>
+      </div>
+      <p class="tf-p">It's in your wallet with its own QR code — you're all set for the door.</p>
+      <div class="tf-note">Heads up: this ticket was paid for by a friend, so any refund (if the event is cancelled or it's returned) goes back to their card.</div>
+      <button class="v-btn wide" onclick="closeLocationSheet(true);${ev ? `openViewTicket('${ev.id}')` : "navStack=[];openTicketsTab()"}">View my ticket</button>
     </div>`;
   el.addEventListener("click", (e) => {
     if (e.target === el) closeLocationSheet();

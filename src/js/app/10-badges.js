@@ -800,6 +800,8 @@ async function loadMyTickets() {
       claimCode: t.claim_code,
       platformFee: Number(t.platform_fee || 0),
       receiptSentAt: t.receipt_sent_at || null,
+      claimedBy: t.claimed_by || null,
+      claimedAt: t.claimed_at ? new Date(t.claimed_at).getTime() : null,
     }));
 }
 async function _insertTickets(tickets) {
@@ -1109,12 +1111,15 @@ async function submitStripePayment() {
   const status = document.getElementById("checkout-status");
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<span style="opacity:.7">Processing…</span>';
+    // The padlock clicks shut — then the ticket starts printing.
+    btn.innerHTML =
+      '<svg class="bk-lockanim" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path class="shk" d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Securing…';
   }
   if (status) {
     status.style.display = "none";
     status.innerHTML = "";
   }
+  await new Promise((r) => setTimeout(r, 320));
   showPayOverlay("Talking to your bank…");
   // Remember what was being bought, in case the payment method redirects.
   try {
@@ -1201,6 +1206,10 @@ async function finalizeStripePayment(paymentIntentId) {
         claimCode: t.claim_code,
         platformFee: Number(t.platform_fee || 0),
         receiptSentAt: t.receipt_sent_at || null,
+        claimedBy: t.claimed_by || null,
+        claimedAt: t.claimed_at ? new Date(t.claimed_at).getTime() : null,
+      claimedBy: t.claimed_by || null,
+      claimedAt: t.claimed_at ? new Date(t.claimed_at).getTime() : null,
       }));
       showConfirmedAfterPurchase();
       return;
