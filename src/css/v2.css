@@ -4724,3 +4724,56 @@ html body .mapboxgl-ctrl-geolocate-active .mapboxgl-ctrl-icon {
   overflow-wrap: anywhere;
   hyphens: auto;
 }
+
+/* ── Can't-go sheet note ─────────────────────────────────────────────── */
+html body .cg-note{font-size:13px;line-height:1.4;color:var(--text-muted);padding:10px 4px 2px;}
+
+/* ── Crew (friends going) ────────────────────────────────────────────── */
+html body .crew-faces{display:inline-flex;flex-shrink:0;}
+html body .crew-faces i{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font:700 8.5px var(--font-sans);font-style:normal;color:#0b0b0d;background:var(--volt) center/cover no-repeat;border:2px solid var(--surface);margin-left:-6px;}
+html body .crew-faces i:first-child{margin-left:0;}
+html body .crew-chip{display:inline-flex;align-items:center;gap:6px;font:650 12px var(--font-sans);color:var(--text);background:var(--surface-2);border-radius:999px;padding:2px 9px 2px 3px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+html body .crew-chip.on-poster{background:rgba(0,0,0,.55);color:#fff;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);margin-bottom:6px;align-self:flex-start;}
+html body .crew-chip.on-poster .crew-faces i{border-color:rgba(0,0,0,.55);}
+html body .crew-line{display:flex;align-items:center;gap:10px;margin:12px 2px 6px;font-size:14.5px;color:var(--text-soft);}
+html body .crew-line .crew-faces i{width:28px;height:28px;font-size:10px;margin-left:-8px;}
+html body .crew-line .crew-faces i:first-child{margin-left:0;}
+html body .crew-line b{color:var(--text);}
+
+/* ── Settings switch ─────────────────────────────────────────────────── */
+html body .set-toggle{width:42px;height:26px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);position:relative;flex-shrink:0;transition:background .2s ease;}
+html body .set-toggle i{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--text-muted);transition:transform .3s var(--spring),background .2s ease;}
+html body .set-switch.on .set-toggle{background:var(--cta-bg);border-color:transparent;}
+html body .set-switch.on .set-toggle i{transform:translateX(16px);background:var(--cta-fg);}
+
+/* ── Up next (your next ticket) ──────────────────────────────────────── */
+html body .up-next{display:flex;gap:14px;align-items:stretch;padding:12px;margin:6px 18px 18px;border-radius:22px;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 30px -18px rgba(0,0,0,.35);animation:un-in .5s var(--spring) both;}
+@keyframes un-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+html body .up-next .un-art{width:84px;min-height:96px;border-radius:15px;flex-shrink:0;position:relative;overflow:hidden;}
+html body .up-next .un-body{flex:1;min-width:0;display:flex;flex-direction:column;}
+html body .up-next .un-kicker{font:700 11px var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:6px;}
+html body .up-next .un-title{font:800 19px/1.1 var(--font-display,var(--font-sans));letter-spacing:-.02em;margin:5px 0 3px;cursor:pointer;overflow-wrap:anywhere;}
+html body .up-next .un-venue{font-size:13px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+html body .up-next .un-acts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+html body .v-btn.sm{min-height:36px;padding:0 14px;font-size:13.5px;}
+@media (min-width:1024px){html body .feed-main .up-next{margin:6px 24px 18px 0;}}
+/* "Show more" sat 2px past the right edge on phones (content-box width). */
+html body .v-btn.feed-more{box-sizing:border-box;width:calc(100% - 36px);}
+@media (min-width:1024px){html body .feed-main .v-btn.feed-more{width:calc(100% - 24px);}}
+
+/* ── Promise strip (guest hook) ──────────────────────────────────────── */
+html body .promise-strip{list-style:none;margin:14px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+html body .promise-strip li{display:flex;gap:8px;align-items:flex-start;padding:10px;border-radius:16px;background:var(--surface);border:1px solid var(--line-soft);min-width:0;}
+html body .promise-strip svg{flex-shrink:0;color:var(--accent);margin-top:1px;}
+html body .promise-strip span{display:flex;flex-direction:column;font-size:11.5px;line-height:1.3;color:var(--text-muted);min-width:0;}
+html body .promise-strip b{font:700 12.5px/1.2 var(--font-sans);color:var(--text);margin-bottom:2px;}
+@media (max-width:520px){
+  html body .promise-strip{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:min(72%,240px);overflow-x:auto;scrollbar-width:none;margin-left:-18px;margin-right:-18px;padding:0 18px;scroll-snap-type:x mandatory;}
+  html body .promise-strip::-webkit-scrollbar{display:none;}
+  html body .promise-strip li{scroll-snap-align:start;}
+}
+/* The generic .save-btn (transparent, muted) was beating .glass-btn on the
+   event hero, leaving a bare outline next to the round glass buttons. */
+html body .save-btn.glass-btn{width:44px;height:44px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);color:#fff;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);}
+html body .set-list + .set-group-title{margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft);}
+html body .promise-strip .pr-link{cursor:pointer;transition:border-color .2s ease;}html body .promise-strip .pr-link:hover{border-color:var(--accent);}

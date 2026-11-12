@@ -210,6 +210,64 @@ async function getHostFollowerCount(hostId) {
     return 0;
   }
 }
+/* Saved events (♥) — account mirror of the localStorage list (see
+ * SAVED_KEY in 13-discover.js). localStorage stays the synchronous cache
+ * every render reads; this keeps signed-in users' saves on every device.
+ * All three fail soft: a missing table / offline just leaves local saves. */
+async function loadSavedEventIds() {
+  if (!state.userId) return null;
+  try {
+    const { data, error } = await sb.from("saved_events").select("event_id").eq("user_id", state.userId);
+    if (error || !data) return null;
+    return data.map((r) => String(r.event_id));
+  } catch (e) {
+    return null;
+  }
+}
+const _UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+async function pushSavedEvents(ids) {
+  ids = (ids || []).filter((id) => _UUID_RE.test(id));
+  if (!state.userId || !ids.length) return;
+  try {
+    await sb.from("saved_events").upsert(
+      ids.map((event_id) => ({ user_id: state.userId, event_id })),
+      { onConflict: "user_id,event_id", ignoreDuplicates: true },
+    );
+  } catch (e) {}
+}
+async function removeSavedEvent(id) {
+  if (!state.userId || !_UUID_RE.test(id)) return;
+  try {
+    await sb.from("saved_events").delete().eq("user_id", state.userId).eq("event_id", id);
+  } catch (e) {}
+}
+/* "Your crew is going" — people you've shared a Squad with who hold
+ * tickets for upcoming events (crew_going() RPC, SECURITY DEFINER, own
+ * crew only). Cached as { eventId: [{id,name,avatar}] } for sync renders. */
+async function loadCrewGoing() {
+  state.crewGoing = {};
+  if (!state.userId) return;
+  try {
+    const [{ data }, me] = await Promise.all([
+      sb.rpc("crew_going"),
+      sb.from("users").select("share_going").eq("id", state.userId).maybeSingle(),
+    ]);
+    if (me && me.data && typeof me.data.share_going === "boolean") state.shareGoing = me.data.share_going;
+    (data || []).forEach((r) => {
+      const k = String(r.event_id);
+      (state.crewGoing[k] = state.crewGoing[k] || []).push({ id: r.user_id, name: r.name || "A friend", avatar: r.avatar_url || "" });
+    });
+  } catch (e) {}
+}
+async function saveShareGoing(on) {
+  if (!state.userId) return false;
+  try {
+    const { error } = await sb.from("users").update({ share_going: !!on }).eq("id", state.userId);
+    return !error;
+  } catch (e) {
+    return false;
+  }
+}
 /* Every host id the current user follows, loaded once (initApp()) so
  * isFollowingHost() can stay a synchronous cache read everywhere it's
  * used — the event-detail byline renders synchronously, so an async DB

@@ -2359,11 +2359,11 @@ function renderDetail(id) {
     bookBtn = `<button class="v-btn wide" onclick="claimWaitlistOffer('${id}')">Spot's yours — book →</button>
       <div class="ev-buy-hint">Held for ${mins} more min${mins !== 1 ? "s" : ""}</div>`;
   } else if (isFull && waitlistEntry) {
-    bookBtn = `<button class="v-btn ghost wide" disabled>✓ On the waitlist</button>
+    bookBtn = `<button class="v-btn ghost wide" disabled>✓ On the waitlist — first dibs on returns</button>
       <button class="ev-buy-link" onclick="leaveWaitlist('${id}')">Leave waitlist</button>`;
   } else if (isFull) {
     bookBtn = `<button class="v-btn wide" onclick="joinWaitlist('${id}')">Sold out · Join waitlist</button>
-      <div class="ev-buy-hint">We'll ping you if a spot opens</div>`;
+      <div class="ev-buy-hint">Returned tickets go to the waitlist first, at face value</div>`;
   } else {
     bookBtn = `<button class="v-btn wide" onclick="openBook('${id}')">${price ? "Get tickets" : "Get in free"} →</button>`;
   }
@@ -2424,6 +2424,7 @@ function renderDetail(id) {
       </div>
 
       <div class="ev-host-row">${renderHostByline(ev)}</div>
+      ${crewLineHtml(ev)}
 
       <section class="ev-block">
         <h2 class="ev-h2">About</h2>

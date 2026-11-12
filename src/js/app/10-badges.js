@@ -999,44 +999,118 @@ function afterRenderConfirmed() {
   });
 }
 
+// ── Add to calendar ───────────────────────────────────────────────────────
+// (The old ICS builder had lost its backslashes — it joined lines with the
+// letters "rn" — so every downloaded file was corrupt.)
+function _icsDate(d) {
+  return new Date(d).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+}
+function _icsEsc(s) {
+  return String(s || "").replace(/\\/g, "\\\\").replace(/[;,]/g, (c) => "\\" + c).replace(/\r?\n/g, "\\n");
+}
+function _calTimes(ev) {
+  const start = new Date(ev.startTime || ev.startsAt);
+  let end = new Date(ev.endTime || ev.endsAt || 0);
+  if (!(end > start)) end = new Date(start.getTime() + 3 * 3600000);
+  return { start, end };
+}
+function _calWhere(ev) {
+  return [ev.venue, ev.address, ev.area].filter(Boolean).join(", ") || "London";
+}
+function _calLink(ev) {
+  return `${location.origin}${location.pathname}?event=${encodeURIComponent(ev.id)}`;
+}
 function downloadICS(evId) {
-  const ev = EVENTS.find((e) => e.id === evId);
+  const ev = EVENTS.find((e) => String(e.id) === String(evId));
   if (!ev) return;
-  const pad = (n) => String(n).padStart(2, "0");
-  const fmtDT = (d) => {
-    const u = new Date(d);
-    return `${u.getUTCFullYear()}${pad(u.getUTCMonth() + 1)}${pad(u.getUTCDate())}T${pad(u.getUTCHours())}${pad(u.getUTCMinutes())}${pad(u.getUTCSeconds())}Z`;
-  };
+  const { start, end } = _calTimes(ev);
   const ics = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Cumulus Events//EN",
+    "PRODID:-//Cumulus//Events//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",
-    `UID:cumulus-${ev.id}-${Date.now()}@cumulus.app`,
-    `DTSTART:${fmtDT(ev.startTime)}`,
-    `DTEND:${fmtDT(ev.endTime)}`,
-    `SUMMARY:${ev.title}`,
-    `DESCRIPTION:${ev.desc.replace(/[;,]/g, "$&").replace(/n/g, "n")} — Hosted by ${ev.host}`,
-    `LOCATION:${ev.venue}, ${ev.area}, London`,
-    `ORGANIZER;CN="${ev.host}":mailto:events@cumulus.app`,
-    "STATUS:CONFIRMED",
-    "TRANSP:OPAQUE",
+    `UID:cumulus-${ev.id}@cumulus.app`,
+    `DTSTAMP:${_icsDate(Date.now())}`,
+    `DTSTART:${_icsDate(start)}`,
+    `DTEND:${_icsDate(end)}`,
+    `SUMMARY:${_icsEsc(ev.title)}`,
+    `DESCRIPTION:${_icsEsc(`${ev.desc || ""}\n\nHosted by ${ev.host || "Cumulus"}\nYour ticket: ${_calLink(ev)}`)}`,
+    `LOCATION:${_icsEsc(_calWhere(ev))}`,
+    `URL:${_calLink(ev)}`,
+    "BEGIN:VALARM",
+    "TRIGGER:-PT3H",
+    "ACTION:DISPLAY",
+    `DESCRIPTION:${_icsEsc(ev.title)} starts in 3 hours`,
+    "END:VALARM",
     "END:VEVENT",
     "END:VCALENDAR",
-  ].join("rn");
+  ].join("\r\n");
   const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download =
-    ev.title.replace(/[^a-z0-9]/gi, "-").replace(/-+/g, "-") + ".ics";
+  a.download = (ev.title.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "event") + ".ics";
   document.body.appendChild(a);
   a.click();
   setTimeout(() => {
-    document.body.removeChild(a);
+    a.remove();
     URL.revokeObjectURL(url);
   }, 1000);
+}
+function eventCalendarLinks(ev) {
+  const { start, end } = _calTimes(ev);
+  const details = `${ev.desc ? ev.desc.slice(0, 600) + "\n\n" : ""}Your ticket: ${_calLink(ev)}`;
+  const google =
+    "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+    `&text=${encodeURIComponent(ev.title)}` +
+    `&dates=${_icsDate(start)}/${_icsDate(end)}` +
+    `&details=${encodeURIComponent(details)}` +
+    `&location=${encodeURIComponent(_calWhere(ev))}`;
+  const outlook =
+    "https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent" +
+    `&subject=${encodeURIComponent(ev.title)}` +
+    `&startdt=${encodeURIComponent(start.toISOString())}&enddt=${encodeURIComponent(end.toISOString())}` +
+    `&body=${encodeURIComponent(details)}&location=${encodeURIComponent(_calWhere(ev))}`;
+  return { google, outlook };
+}
+// Same bottom-sheet pattern as "Open location" — one tap per calendar app.
+function openCalendarSheet(evId) {
+  const ev = EVENTS.find((e) => String(e.id) === String(evId));
+  if (!ev) return;
+  closeLocationSheet(true);
+  const L = eventCalendarLinks(ev);
+  const apple = isAppleDevice();
+  const ic = (d) => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const calIc = ic('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>');
+  const link = (href, title, sub, primary) =>
+    `<a class="loc-opt${primary ? " primary" : ""}" href="${href}" target="_blank" rel="noopener" onclick="setTimeout(closeLocationSheet,150)">
+      <span class="loc-ic">${calIc}</span><span class="loc-txt"><b>${title}</b><span>${sub}</span></span><span class="loc-go" aria-hidden="true">↗</span></a>`;
+  const icsBtn = (primary) =>
+    `<button class="loc-opt${primary ? " primary" : ""}" onclick="downloadICS('${ev.id}');setTimeout(closeLocationSheet,150)">
+      <span class="loc-ic">${calIc}</span><span class="loc-txt"><b>Apple Calendar</b><span>${apple ? "Adds straight to your iPhone" : "Also works for any calendar app (.ics)"}</span></span></button>`;
+  const opts = apple
+    ? icsBtn(true) + link(L.google, "Google Calendar", "Opens calendar.google.com", false)
+    : link(L.google, "Google Calendar", "Opens calendar.google.com", true) + icsBtn(false);
+  const el = document.createElement("div");
+  el.id = "loc-sheet";
+  el.className = "loc-overlay";
+  el.setAttribute("role", "dialog");
+  el.setAttribute("aria-label", "Add to calendar");
+  el.innerHTML = `<div class="loc-sheet">
+      <div class="loc-head">
+        <div><b>Add to calendar</b><span>${escapeHtml(ev.title)} · ${feedDateLabel(ev)} ${feedTimeLabel(ev)}</span></div>
+        <button class="loc-x" onclick="closeLocationSheet()" aria-label="Close">✕</button>
+      </div>
+      ${opts}
+      ${link(L.outlook, "Outlook", "Opens outlook.live.com", false)}
+    </div>`;
+  el.addEventListener("click", (e) => {
+    if (e.target === el) closeLocationSheet();
+  });
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("in"));
+  document.addEventListener("keydown", _locEsc);
 }
 

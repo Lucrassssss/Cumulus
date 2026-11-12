@@ -408,6 +408,11 @@ async function signOut(confirmed) {
   try {
     localStorage.removeItem("prefs");
   } catch (e) {}
+  // Saves now live on the account — don't leave them for whoever uses
+  // this device next.
+  try {
+    localStorage.removeItem("cumulus_saved");
+  } catch (e) {}
   // Reset in-memory state
   state.userId = null;
   state.profileName = "";
@@ -418,6 +423,8 @@ async function signOut(confirmed) {
   state.profileId = null;
   state.specialBadges = [];
   state.followedHostIds = [];
+  state.crewGoing = {};
+  state.shareGoing = undefined;
   state.view = "browse";
   state.rsvps = {};
   myTickets = [];

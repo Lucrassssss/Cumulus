@@ -75,3 +75,10 @@ enabled = true
 # bearer check inside the function, same as notify-admin-new-event.
 verify_jwt = false
 entrypoint = "./functions/notify-followers-new-event/index.ts"
+
+[functions.remind-upcoming]
+enabled = true
+# false: called hourly by pg_cron via pg_net, not a signed-in member — trust
+# is the NOTIFY_WEBHOOK_SECRET bearer (see the function header).
+verify_jwt = false
+entrypoint = "./functions/remind-upcoming/index.ts"

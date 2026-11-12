@@ -563,6 +563,8 @@ async function initApp() {
   }
   if (state.userId) state.followedHostIds = await loadMyFollows();
   if (state.userId) state.myWaitlist = await loadMyWaitlist();
+  if (state.userId) await syncSavedEvents();
+  if (state.userId) await loadCrewGoing();
 
   // Refresh view quietly once real data is in (map = update markers, feed =
   // swap the empty state for real cards)

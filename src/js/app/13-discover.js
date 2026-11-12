@@ -164,6 +164,107 @@ function _rerenderFeedResults() {
   );
 }
 
+// ── Your crew (friends going) ─────────────────────────────────────────────
+// Dice/Partiful's strongest pull: "your mates are going". Crew = anyone
+// you've shared a Squad with (see crew_going() in the 20261112 migration).
+function crewFor(ev) {
+  return (state.crewGoing && state.crewGoing[String(ev.id)]) || [];
+}
+function _crewNames(list) {
+  const n = list.map((p) => escapeHtml(p.name));
+  if (n.length === 1) return n[0];
+  if (n.length === 2) return `${n[0]} &amp; ${n[1]}`;
+  return `${n[0]}, ${n[1]} +${n.length - 2}`;
+}
+function crewFacesHtml(list) {
+  return `<span class="crew-faces" aria-hidden="true">${list
+    .slice(0, 3)
+    .map((p) => (p.avatar ? `<i style="background-image:url('${escapeHtml(p.avatar)}')"></i>` : `<i>${escapeHtml(initials(p.name))}</i>`))
+    .join("")}</span>`;
+}
+function crewChipHtml(ev, variant) {
+  const list = crewFor(ev);
+  return `<span class="crew-chip ${variant || ""}">${crewFacesHtml(list)}${_crewNames(list)} going</span>`;
+}
+function crewLineHtml(ev) {
+  const list = crewFor(ev);
+  if (!list.length) return "";
+  return `<div class="crew-line">${crewFacesHtml(list)}<span><b>${_crewNames(list)}</b> ${list.length === 1 ? "is" : "are"} going</span></div>`;
+}
+function crewUpcoming() {
+  return feedUpcoming().filter((ev) => crewFor(ev).length);
+}
+async function toggleShareGoing() {
+  const next = state.shareGoing === false;
+  const ok = await saveShareGoing(next);
+  if (!ok) return showToast("Couldn't update that — try again", "error");
+  state.shareGoing = next;
+  const b = document.querySelector("[data-share-going]");
+  if (b) {
+    b.classList.toggle("on", next);
+    b.setAttribute("aria-checked", next ? "true" : "false");
+  }
+  showToast(next ? "Your crew can see what you're going to" : "Your plans are private now", "info");
+}
+function privacyMenuHtml() {
+  if (!state.userId) return "";
+  const on = state.shareGoing !== false;
+  return `<div class="set-group-title">Privacy</div>
+    <div class="set-list">
+      <button type="button" role="switch" class="set-opt set-switch${on ? " on" : ""}" data-share-going aria-checked="${on}" onclick="toggleShareGoing()">
+        <span class="set-txt"><b>Show my crew what I'm going to</b><span>Only people you've shared squad tickets with</span></span>
+        <span class="set-toggle" aria-hidden="true"><i></i></span>
+      </button>
+    </div>`;
+}
+
+// ── Up next (your next ticket) ────────────────────────────────────────────
+// The in-app half of the 24h reminder: the moment you open Cumulus within a
+// day and a half of something you've booked, it's the first thing you see —
+// QR, directions and calendar one tap away.
+function nextTicketEvent() {
+  if (!state.userId || typeof myTickets === "undefined" || !myTickets.length) return null;
+  const now = Date.now();
+  return (
+    myTickets
+      .map((t) => EVENTS.find((e) => e.id === t.eventId))
+      .filter((ev) => ev && eventStatus(ev) !== "past" && ev.startsAt - now < 36 * 3600000)
+      .sort((a, b) => a.startsAt - b.startsAt)[0] || null
+  );
+}
+function upNextHtml() {
+  const ev = nextTicketEvent();
+  if (!ev) return "";
+  const st = eventStatus(ev);
+  const when = st === "live" ? "Happening now" : feedDateLabel(ev);
+  return `<div class="up-next" role="region" aria-label="Your next event">
+    <div class="un-art ${posterClass(ev)}" style="${posterStyle(ev)}" aria-hidden="true">${posterGlyph(ev)}</div>
+    <div class="un-body">
+      <div class="un-kicker">${st === "live" ? '<span class="pulse"></span>' : ""}Up next · ${escapeHtml(when)} · ${feedTimeLabel(ev)}</div>
+      <div class="un-title" onclick="openEvent('${ev.id}')" role="link" tabindex="0">${escapeHtml(ev.title)}</div>
+      <div class="un-venue">${escapeHtml([ev.venue, ev.area].filter(Boolean).join(" · "))}</div>
+      <div class="un-acts">
+        <button class="v-btn sm" onclick="openViewTicket('${ev.id}')">Show QR</button>
+        <button class="v-btn sm ghost" onclick="openLocationSheet('${ev.id}')">Directions</button>
+        <button class="v-btn sm ghost" onclick="openCalendarSheet('${ev.id}')">Calendar</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── The hook: why Cumulus, in one glance ──────────────────────────────────
+// What a first-timer needs to know before they've scrolled: the three things
+// the big ticketing apps don't promise. Guests only — once you're signed in
+// you've already seen it.
+function promiseStripHtml() {
+  const ic = (d) => `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  return `<ul class="promise-strip" aria-label="Why Cumulus">
+    <li>${ic('<path d="m5 12 5 5 9-10"/>')}<span><b>The price is the price</b>All fees shown up front</span></li>
+    <li>${ic('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>')}<span><b>Face value, always</b>Returns go to the waitlist</span></li>
+    <li class="pr-link" onclick="goBrowse()" role="link" tabindex="0">${ic('<path d="M12 21s7-7.6 7-12A7 7 0 0 0 5 9c0 4.4 7 12 7 12Z"/><circle cx="12" cy="9" r="2.3"/>')}<span><b>Live London map</b>What's on near you, now</span></li>
+  </ul>`;
+}
+
 // ── Building blocks ───────────────────────────────────────────────────────
 function feedPosterCardHtml(ev, size) {
   const st = eventStatus(ev);
@@ -180,7 +281,7 @@ function feedPosterCardHtml(ev, size) {
         </span>
       </div>
       <div class="fp-bottom">
-        <div class="fp-cat">${escapeHtml(ev.category || "Event")}</div>
+        ${crewFor(ev).length ? crewChipHtml(ev, "on-poster") : `<div class="fp-cat">${escapeHtml(ev.category || "Event")}</div>`}
         <h3 class="fp-title">${escapeHtml(ev.title)}</h3>
         <div class="fp-meta"><span>${escapeHtml(ev.venue || ev.area || "London")}</span><span class="fp-price">${feedPriceLabel(ev)}</span></div>
       </div>
@@ -203,7 +304,7 @@ function feedRowHtml(ev, tag) {
         ${tag ? `<span class="fr-chip tag">${escapeHtml(tag)}</span>` : ""}
         ${left !== null && left <= 10 && left > 0 ? `<span class="fr-chip warn">Only ${left} left</span>` : ""}
         ${left === 0 ? `<span class="fr-chip">Waitlist</span>` : ""}
-        ${going >= 2 ? `<span class="fr-chip">${going} going</span>` : ""}
+        ${crewFor(ev).length ? crewChipHtml(ev) : going >= 2 ? `<span class="fr-chip">${going} going</span>` : ""}
       </div>
     </div>
     ${saveBtnHtml(ev, "in-row")}
@@ -243,6 +344,8 @@ function toggleSave(id) {
   try {
     localStorage.setItem(SAVED_KEY, JSON.stringify(next.slice(-300)));
   } catch (e) {}
+  if (on) pushSavedEvents([id]);
+  else removeSavedEvent(id);
   document.querySelectorAll(`[data-save-id="${CSS.escape(id)}"]`).forEach((b) => {
     b.classList.toggle("on", on);
     b.setAttribute("aria-pressed", on ? "true" : "false");
@@ -260,6 +363,27 @@ function toggleSave(id) {
     _rerenderFeedResults();
     _refreshSavedChip();
   } else if (state.view === "my-tickets") renderView();
+}
+// On sign-in: union this device's saves with the account's, write the union
+// back both ways, then repaint anything showing hearts.
+async function syncSavedEvents() {
+  const remote = await loadSavedEventIds();
+  if (!remote) return;
+  const local = getSavedIds();
+  const merged = [...new Set([...remote, ...local])];
+  pushSavedEvents(local.filter((id) => !remote.includes(id)));
+  try {
+    localStorage.setItem(SAVED_KEY, JSON.stringify(merged.slice(-300)));
+  } catch (e) {}
+  if (merged.length !== local.length) {
+    document.querySelectorAll("[data-save-id]").forEach((b) => {
+      const on = merged.includes(b.dataset.saveId);
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    _refreshSavedChip();
+    if (state.view === "my-tickets") renderView();
+  }
 }
 function _refreshSavedChip() {
   const n = savedUpcoming().length;
@@ -347,7 +471,7 @@ function feedResultsHtml() {
   const left = list.length - shown.length;
   return `<div class="fr-list compact">${rows}</div>${
     left > 0
-      ? `<button class="v-btn ghost wide feed-more" onclick="state.feedLimit=(state.feedLimit||FEED_PAGE)+FEED_PAGE;_rerenderFeedResults()">Show ${Math.min(left, FEED_PAGE)} more <span>· ${left} left</span></button>`
+      ? `<button class="v-btn ghost wide feed-more" onclick="state.feedLimit=(state.feedLimit||FEED_PAGE)+FEED_PAGE;_rerenderFeedResults()">Show ${Math.min(left, FEED_PAGE)} more${left > FEED_PAGE ? ` <span>of ${left}</span>` : ""}</button>`
       : list.length > FEED_PAGE
         ? `<div class="feed-end">That's everything coming up · <button class="link-btn" onclick="navStack=[];openCalendar()">See the calendar</button></div>`
         : ""
@@ -466,7 +590,7 @@ function renderFeed() {
           <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
         </button>
       </div>
-      <div id="feed-settings" class="feed-settings" role="dialog" aria-label="Settings">${appearanceMenuHtml()}</div>
+      <div id="feed-settings" class="feed-settings" role="dialog" aria-label="Settings">${appearanceMenuHtml()}${privacyMenuHtml()}</div>
     </header>
 
     <div class="feed-layout">
@@ -477,6 +601,7 @@ function renderFeed() {
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
           <input type="search" placeholder="Artists, venues, vibes…" value="${escapeHtml(state.feedQuery || "")}" oninput="onFeedSearch(this.value)" aria-label="Search events" autocomplete="off"/>
         </label>
+        ${signedIn ? "" : promiseStripHtml()}
       </div>
 
 
@@ -494,7 +619,17 @@ function renderFeed() {
       </aside>
 
       <div class="feed-main">
+    ${upNextHtml()}
     ${ticker}
+
+    ${(() => {
+      const crew = crewUpcoming();
+      if (!crew.length) return "";
+      return `<div class="feed-section">
+        <div class="feed-sec-head"><h2>Your crew's going</h2><span class="feed-count">${crew.length}</span></div>
+        <div class="fr-list compact">${crew.slice(0, 4).map((ev) => feedRowHtml(ev)).join("")}</div>
+      </div>`;
+    })()}
 
     ${(() => {
       const fresh = newFromFollowed();

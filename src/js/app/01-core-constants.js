@@ -302,6 +302,7 @@ let state = {
   profileId: null,
   specialBadges: [],
   hostApplicationStatus: null, // null | "pending" | "approved" | "rejected" — see loadHostApplicationStatus()
+  crewGoing: {}, // crew_going() rows by event id — see loadCrewGoing()
   followedHostIds: [], // host_follows rows for the current user — see loadMyFollows()
   myWaitlist: [], // event_waitlist rows for the current user — see loadMyWaitlist()
   theme: "light",

@@ -874,4 +874,47 @@ test.describe("Cumulus smoke", () => {
     );
     expect(["light", "dark"]).toContain(theme);
   });
+
+  test("Retention: crew going, Up next, can't-go sheet, calendar sheet, promise strip", async ({ page }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      const now = Date.now();
+      const mk = (id, title, h) => {
+        const ev = { id, title, category: "Live Music", host: "R Host", venue: "Venue", area: "Soho",
+          address: "1 Test St, London", lat: 51.51, lon: -0.13,
+          startTime: new Date(now + h * 3600000).toISOString(), endTime: new Date(now + (h + 2) * 3600000).toISOString(),
+          desc: "d", capacity: 50, price: 10 };
+        computeEventDates(ev);
+        EVENTS.push(ev);
+      };
+      mk("rt-1", "Tomorrow Gig", 30);
+      mk("rt-2", "Crew Gig", 50);
+      state.eventsLoaded = true;
+      goFeed();
+    });
+    // Guests see the three promises.
+    await expect(page.locator(".promise-strip li")).toHaveCount(3);
+    await page.evaluate(() => {
+      state.userId = "00000000-0000-0000-0000-000000000009";
+      state.profileName = "Test User";
+      myTickets.push({ eventId: "rt-1", ticketId: "TK-RT1", qty: 1, typeLabel: "General", total: 11.5 });
+      state.crewGoing = { "rt-2": [{ id: "x", name: "Priya" }, { id: "y", name: "Alex" }] };
+      goFeed();
+    });
+    await expect(page.locator(".promise-strip")).toHaveCount(0);
+    await expect(page.locator(".up-next .un-title")).toHaveText("Tomorrow Gig");
+    await expect(page.locator(".crew-chip").first()).toContainText("Priya & Alex going");
+    await page.evaluate(() => openEvent("rt-2"));
+    await expect(page.locator(".crew-line")).toContainText("Priya & Alex are going");
+    // Calendar sheet with a Google link carrying the right dates.
+    await page.evaluate(() => openCalendarSheet("rt-1"));
+    const g = await page.locator('#loc-sheet a[href*="calendar.google.com"]').getAttribute("href");
+    expect(g).toContain("text=Tomorrow%20Gig");
+    expect(g).toMatch(/dates=\d{8}T\d{6}Z\/\d{8}T\d{6}Z/);
+    // Can't-go sheet: transfer always, return >24h out.
+    await page.evaluate(() => { closeLocationSheet(true); openCantGoSheet("TK-RT1"); });
+    await expect(page.locator("#loc-sheet")).toContainText("Send it to a friend");
+    await expect(page.locator("#loc-sheet")).toContainText("Return it · £11.50 back");
+  });
 });

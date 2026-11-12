@@ -77,13 +77,12 @@ function myTicketsCardsHtml() {
         </div>
         <div class="tk-actions">
           <button class="v-btn" onclick="openViewTicket('${ev.id}')">Show QR</button>
-          <button class="v-btn ghost" onclick="downloadICS('${ev.id}')">+ Calendar</button>
+          <button class="v-btn ghost" onclick="openCalendarSheet('${ev.id}')">+ Calendar</button>
         </div>
         ${
           status !== "past"
             ? `<div class="tk-links">
-              <button onclick="transferMyTicket('${t.ticketId}','${safeTitle}')">Transfer</button>
-              ${ev.startsAt - Date.now() >= 24 * 3600000 ? `<button class="danger" onclick="cancelTicket('${t.ticketId}')">Cancel booking</button>` : ""}
+              <button onclick="openCantGoSheet('${escapeHtml(t.ticketId)}')">Can't make it?</button>
             </div>`
             : ""
         }
@@ -93,10 +92,54 @@ function myTicketsCardsHtml() {
     .join("");
 }
 
+// "Can't make it?" — Dice's model, without the touting: hand it to a mate
+// for free, or give it back at face value and the spot goes straight to the
+// next person on the waitlist. One sheet, both honest options.
+function openCantGoSheet(ticketId) {
+  const t = myTickets.find((x) => x.ticketId === ticketId);
+  const ev = t && EVENTS.find((e) => e.id === t.eventId);
+  if (!ev) return;
+  closeLocationSheet(true);
+  const safeTitle = escapeHtml(ev.title).replace(/'/g, "&#39;");
+  const canReturn = ev.startsAt - Date.now() >= 24 * 3600000;
+  const amt = t.total ? `£${t.total.toFixed(2)}` : "";
+  const ic = (d) => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const el = document.createElement("div");
+  el.id = "loc-sheet";
+  el.className = "loc-overlay";
+  el.setAttribute("role", "dialog");
+  el.setAttribute("aria-label", "Can't make it?");
+  el.innerHTML = `<div class="loc-sheet">
+      <div class="loc-head">
+        <div><b>Can't make it?</b><span>${escapeHtml(ev.title)} · ${feedDateLabel(ev)}</span></div>
+        <button class="loc-x" onclick="closeLocationSheet()" aria-label="Close">✕</button>
+      </div>
+      <button class="loc-opt primary" onclick="closeLocationSheet(true);transferMyTicket('${escapeHtml(t.ticketId)}','${safeTitle}')">
+        <span class="loc-ic">${ic('<path d="M4 12h12M12 6l6 6-6 6"/>')}</span>
+        <span class="loc-txt"><b>Send it to a friend</b><span>Free · they get the QR, you're off the hook</span></span>
+      </button>
+      ${
+        canReturn
+          ? `<button class="loc-opt" onclick="closeLocationSheet(true);cancelTicket('${escapeHtml(t.ticketId)}')">
+        <span class="loc-ic">${ic('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>')}</span>
+        <span class="loc-txt"><b>${amt ? `Return it · ${amt} back` : "Give up your spot"}</b><span>${amt ? "Full refund at face value — " : ""}your spot goes to the next person on the waitlist</span></span>
+      </button>`
+          : `<div class="cg-note">Returns close 24 hours before doors — you can still send it to a friend.</div>`
+      }
+      <div class="cg-note">No touting, no mark-ups. Tickets only ever change hands at face value.</div>
+    </div>`;
+  el.addEventListener("click", (e) => {
+    if (e.target === el) closeLocationSheet();
+  });
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("in"));
+  document.addEventListener("keydown", _locEsc);
+}
+
 // Real self-serve cancellation, mirroring deleteEvent()'s Supabase-delete
 // pattern. Gated to >=24h before the event, matching the policy copy shown
 // at booking/confirmation (renderBook/renderConfirmed).
-async function cancelTicket(ticketId) {
+async function cancelTicket(ticketId, confirmed) {
   const t = myTickets.find((x) => x.ticketId === ticketId);
   if (!t) return;
   const ev = EVENTS.find((e) => e.id === t.eventId);
@@ -106,6 +149,7 @@ async function cancelTicket(ticketId) {
   }
   const paid = t.total > 0;
   if (
+    !confirmed &&
     !confirm(
       paid
         ? "Cancel this booking? Your payment will be refunded. This can't be undone."
