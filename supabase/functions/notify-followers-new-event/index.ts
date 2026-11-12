@@ -79,7 +79,7 @@ Deno.serve(async (req: Request) => {
   if (!ids.length) return json({ ok: true, sent: 0 });
 
   const uRes = await fetch(
-    `${SB_URL}/rest/v1/users?select=email,name&id=in.(${ids.map(encodeURIComponent).join(",")})`,
+    `${SB_URL}/rest/v1/users?select=email,name&email_followed=eq.true&id=in.(${ids.map(encodeURIComponent).join(",")})`,
     { headers: sbHeaders },
   );
   const users: { email: string; name: string }[] = uRes.ok ? await uRes.json() : [];

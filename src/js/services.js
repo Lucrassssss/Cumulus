@@ -250,9 +250,16 @@ async function loadCrewGoing() {
   try {
     const [{ data }, me] = await Promise.all([
       sb.rpc("crew_going"),
-      sb.from("users").select("share_going").eq("id", state.userId).maybeSingle(),
+      sb.from("users").select("share_going, created_at, email_reminders, email_followed, plans_token").eq("id", state.userId).maybeSingle(),
     ]);
-    if (me && me.data && typeof me.data.share_going === "boolean") state.shareGoing = me.data.share_going;
+    const u = me && me.data;
+    if (u) {
+      if (typeof u.share_going === "boolean") state.shareGoing = u.share_going;
+      if (typeof u.email_reminders === "boolean") state.emailReminders = u.email_reminders;
+      if (typeof u.email_followed === "boolean") state.emailFollowed = u.email_followed;
+      if (u.created_at) state.memberSince = u.created_at;
+      state.plansToken = u.plans_token || null;
+    }
     (data || []).forEach((r) => {
       const k = String(r.event_id);
       (state.crewGoing[k] = state.crewGoing[k] || []).push({ id: r.user_id, name: r.name || "A friend", avatar: r.avatar_url || "" });
@@ -655,6 +662,51 @@ async function cancelEventRefund(eventId) {
  * ticket. Refunds just that ticket's share of its (possibly shared, for a
  * squad purchase) payment intent, then offers the freed spot to the next
  * person on that event's waitlist. See cancel-ticket-refund's own header. */
+/* ── Account extras ─────────────────────────────────────────────────────── */
+async function saveUserPref(column, on) {
+  if (!state.userId || !["email_reminders", "email_followed", "share_going"].includes(column)) return false;
+  try {
+    const { error } = await sb.from("users").update({ [column]: !!on }).eq("id", state.userId);
+    return !error;
+  } catch (e) {
+    return false;
+  }
+}
+// Shareable "my plans" link — a random token minted on first share.
+async function getPlansToken(reset) {
+  try {
+    const { data, error } = await sb.rpc("ensure_plans_token", { p_reset: !!reset });
+    return error ? null : data;
+  } catch (e) {
+    return null;
+  }
+}
+async function loadSharedPlans(token) {
+  try {
+    const { data, error } = await sb.rpc("shared_plans", { p_token: token });
+    if (error || !data || !data.length) return null;
+    return { name: data[0].owner_name || "A friend", eventIds: data.filter((r) => r.event_id).map((r) => String(r.event_id)) };
+  } catch (e) {
+    return null;
+  }
+}
+// Errors from a non-2xx function response carry the JSON body on .context.
+async function deleteMyAccount() {
+  try {
+    const { data, error } = await sb.functions.invoke("delete-account", { body: {} });
+    if (error) {
+      let body = null;
+      try {
+        body = await error.context.json();
+      } catch (e) {}
+      return body || { ok: false, error: error.message || "Couldn't delete your account" };
+    }
+    return data;
+  } catch (e) {
+    return { ok: false, error: "Couldn't reach the server — try again" };
+  }
+}
+
 async function cancelTicketRefund(ticketId) {
   try {
     const { data, error } = await sb.functions.invoke("cancel-ticket-refund", {

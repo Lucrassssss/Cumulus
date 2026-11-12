@@ -551,6 +551,7 @@ async function initApp() {
   });
   if (mapboxConfigured()) resolveEventLocations();
   checkEventDeepLink();
+  checkPlansLink();
 
   await loadMyTickets();
   await loadAllRsvps();

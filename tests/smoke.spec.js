@@ -371,51 +371,95 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator(".ac-page .v-kicker")).toHaveText("Account");
   });
 
-  test("Account: details are edited inline (no separate page), Save bar only when changed", async ({
-    page,
-  }) => {
+  test("Account: details locked until Edit, then edited all at once", async ({ page }) => {
     await page.goto("/");
     await enterApp(page);
     await page.evaluate(() => {
       state.userId = "00000000-0000-0000-0000-000000000004";
       state.profileName = "Nova Rivers";
       state.profileEmail = "nova@example.com";
-      openAccountDetails(); // old entry point → lands on Account itself
+      state.memberSince = "2026-03-02T10:00:00Z";
+      openAccount();
     });
-    expect(await page.evaluate(() => state.view)).toBe("account");
     await expect(page.locator(".ac-name")).toHaveText("Nova Rivers");
-    await expect(page.locator("#account-details-name")).toHaveValue("Nova Rivers");
-    await expect(page.locator("#account-details-email")).toHaveValue("nova@example.com");
-    await expect(page.locator("#account-details-phone")).toBeVisible();
-    await expect(page.locator(".ac-avatar .account-avatar")).toBeVisible();
+    await expect(page.locator(".ac-since")).toHaveText("Member since March 2026");
     await expect(page.locator(".ac-stat")).toHaveCount(4);
-    // Save bar hidden until something changes.
-    await expect(page.locator("#ac-save")).not.toHaveClass(/show/);
+    // Locked: values shown as text, no inputs to fat-finger.
+    await expect(page.locator("#ac-details input")).toHaveCount(0);
+    await expect(page.locator("#ac-details .ac-val").first()).toHaveText("Nova Rivers");
+    // Edit unlocks all three at once.
+    await page.locator(".ac-edit").click();
+    await expect(page.locator("#ac-details input")).toHaveCount(3);
+    await expect(page.locator("#account-details-email")).toHaveValue("nova@example.com");
+    // Cancel throws edits away and locks again.
+    await page.fill("#account-details-name", "Changed");
+    await page.locator("#ac-save .v-btn.ghost").click();
+    await expect(page.locator("#ac-details input")).toHaveCount(0);
+    await expect(page.locator("#ac-details .ac-val").first()).toHaveText("Nova Rivers");
+    // Invalid phone is rejected without touching the network, still editing.
+    await page.locator(".ac-edit").click();
     await page.fill("#account-details-phone", "abc");
-    await expect(page.locator("#ac-save")).toHaveClass(/show/);
-    // Invalid phone is rejected without touching the network.
     await page.locator("#ac-save .v-btn:not(.ghost)").click();
     await expect(page.locator("#account-details-error")).toBeVisible();
+    await expect(page.locator("#ac-details input")).toHaveCount(3);
   });
 
-  test("Account: host banner editor only shown to approved hosts", async ({
-    page,
-  }) => {
+  test("Account: hosting only for verified hosts; emails, past events, delete confirm", async ({ page }) => {
     await page.goto("/");
     await enterApp(page);
     await page.evaluate(() => {
+      const now = Date.now();
+      const ev = { id: "past-1", title: "Old Gig", category: "Live Music", host: "Past Host", hostId: "ph",
+        venue: "V", area: "Soho", startTime: new Date(now - 72 * 3600000).toISOString(),
+        endTime: new Date(now - 70 * 3600000).toISOString(), desc: "", capacity: 50, price: 5 };
+      computeEventDates(ev);
+      EVENTS.push(ev);
+      myTickets.push({ eventId: "past-1", ticketId: "TK-P1", qty: 1, typeLabel: "GA", total: 6.5 });
       state.userId = "00000000-0000-0000-0000-000000000004";
       state.profileName = "Nova Rivers";
       openAccount();
     });
+    // Regular user: no Hosting card at all.
+    await expect(page.locator("#ac-host-h")).toHaveCount(0);
     await expect(page.locator(".account-cover-edit-zone")).toHaveCount(0);
-    await expect(page.locator(".ac-row", { hasText: "Become a host" })).toBeVisible();
+    // Email preferences + past events with "Go again".
+    await expect(page.locator('[data-pref="email_reminders"]')).toHaveAttribute("aria-checked", "true");
+    await expect(page.locator('[data-pref="email_followed"]')).toBeVisible();
+    await expect(page.locator(".ac-past-row")).toContainText("Old Gig");
+    await expect(page.locator(".ac-past-row .ac-again")).toBeVisible();
+    // Delete needs DELETE typed before the button unlocks.
+    await page.locator(".ac-delete").click();
+    await expect(page.locator("#del-go")).toBeDisabled();
+    await page.fill("#del-input", "delete");
+    await expect(page.locator("#del-go")).toBeEnabled();
+    await page.evaluate(() => closeLocationSheet(true));
+    // Verified host: Hosting card with the banner editor.
     await page.evaluate(() => {
       state.specialBadges = ["verified-host"];
       renderView();
     });
+    await expect(page.locator("#ac-host-h")).toBeVisible();
     await expect(page.locator(".account-cover-edit-zone")).toBeVisible();
     await expect(page.locator("#account-cover-input")).toBeAttached();
+  });
+
+  test("shared plans page lists a friend's upcoming events", async ({ page }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      const now = Date.now();
+      const ev = { id: "pl-1", title: "Friend Gig", category: "Live Music", host: "H", hostId: "h",
+        venue: "V", area: "Soho", startTime: new Date(now + 48 * 3600000).toISOString(),
+        endTime: new Date(now + 50 * 3600000).toISOString(), desc: "", capacity: 50, price: 0 };
+      computeEventDates(ev);
+      EVENTS.push(ev);
+      state.sharedPlans = { name: "Priya", eventIds: ["pl-1"] };
+      state.view = "plans";
+      renderNav();
+      renderView();
+    });
+    await expect(page.locator(".v-h1")).toHaveText("Priya's going to…");
+    await expect(page.locator(".fr-row", { hasText: "Friend Gig" })).toBeVisible();
   });
 
   test("host profile page: real follower stat, Follow gated to reviewed hosts", async ({

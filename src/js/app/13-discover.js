@@ -935,6 +935,37 @@ function openTicketsTab() {
   openMyTickets();
 }
 
+// ── Shared plans (?plans=TOKEN) ───────────────────────────────────────────
+// A friend's "here's what I'm going to" link. Read-only, no account needed;
+// every row opens the real event so they can book and come along.
+async function checkPlansLink() {
+  const tok = new URLSearchParams(location.search).get("plans");
+  if (!tok) return;
+  history.replaceState(null, "", location.pathname);
+  const res = await loadSharedPlans(tok);
+  if (!res) return showToast("That plans link doesn't work any more", "info");
+  state.sharedPlans = res;
+  pushNav();
+  state.view = "plans";
+  renderNav();
+  renderView();
+  window.scrollTo({ top: 0 });
+}
+function renderSharedPlans() {
+  const p = state.sharedPlans || { name: "A friend", eventIds: [] };
+  const list = EVENTS.filter((ev) => p.eventIds.includes(String(ev.id)) && eventStatus(ev) !== "past").sort((a, b) => a.startsAt - b.startsAt);
+  return `<div class="v-page">
+    <button class="back-btn" onclick="goFeed()" aria-label="Back to Discover">←</button>
+    <header class="v-page-head">
+      <div class="v-kicker">Plans</div>
+      <h1 class="v-h1">${escapeHtml(p.name)}'s going to…</h1>
+      <p class="v-sub">${list.length ? `${list.length} thing${list.length !== 1 ? "s" : ""} coming up — tap one to come too.` : "Nothing booked right now — check back soon."}</p>
+    </header>
+    ${list.length ? `<div class="fr-list compact">${list.map((ev) => feedRowHtml(ev)).join("")}</div>` : ""}
+    <div class="feed-empty-actions" style="margin-top:22px;"><button class="v-btn ghost" onclick="goFeed()">See everything on in London</button></div>
+  </div>`;
+}
+
 // ── Accessibility helpers ─────────────────────────────────────────────────
 // Cards are <article role="button" tabindex="0" onclick=…>: make Enter and
 // Space activate them like real buttons (they only responded to clicks).

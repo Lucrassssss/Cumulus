@@ -77,7 +77,7 @@ Deno.serve(async (req: Request) => {
     pairs.get(k)!.ticketIds.push(t.id);
   }
   const userIds = [...new Set([...pairs.values()].map((p) => p.userId))];
-  const uRes = await fetch(`${SB_URL}/rest/v1/users?select=id,email,name&id=in.(${userIds.join(",")})`, {
+  const uRes = await fetch(`${SB_URL}/rest/v1/users?select=id,email,name&email_reminders=eq.true&id=in.(${userIds.join(",")})`, {
     headers: h,
   });
   const users = new Map<string, any>((uRes.ok ? await uRes.json() : []).map((u: any) => [u.id, u]));

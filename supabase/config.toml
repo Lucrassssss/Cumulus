@@ -82,3 +82,10 @@ enabled = true
 # is the NOTIFY_WEBHOOK_SECRET bearer (see the function header).
 verify_jwt = false
 entrypoint = "./functions/remind-upcoming/index.ts"
+
+[functions.delete-account]
+enabled = true
+# true: the signed-in member deletes their OWN account; identity comes from
+# their session token, never the request body.
+verify_jwt = true
+entrypoint = "./functions/delete-account/index.ts"

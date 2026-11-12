@@ -1461,6 +1461,7 @@ function renderView() {
   else if (state.view === "host-profile")
     container.innerHTML = renderHostProfile();
   else if (state.view === "account") container.innerHTML = renderAccount();
+  else if (state.view === "plans") container.innerHTML = renderSharedPlans();
   else if (state.view === "account-details")
     container.innerHTML = renderAccountDetails();
   else if (state.view === "my-tickets")

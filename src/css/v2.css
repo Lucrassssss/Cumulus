@@ -4846,3 +4846,35 @@ html body .ac-signout:hover{background:color-mix(in srgb,var(--hot) 10%,transpar
 html body .ac-field input,html body .ac-field input:focus{background:transparent !important;border:0 !important;box-shadow:none !important;outline:none !important;padding:0 !important;border-radius:0 !important;height:auto !important;min-height:0 !important;font:600 16px var(--font-sans) !important;color:var(--text) !important;}
 html body .ac-card .set-list:first-of-type{border-top:0;padding-top:0;margin-top:0;}
 html body .ac-card .ac-card-head + .set-list{border-top:0;padding-top:0;margin-top:0;}
+
+/* ── Account: locked details + extras ────────────────────────────────── */
+html body .ac-since{margin-top:4px;font:600 12px var(--font-mono);color:var(--text-muted);letter-spacing:.02em;}
+html body .ac-edit{appearance:none;border:1px solid var(--line);background:transparent;color:var(--text);display:inline-flex;align-items:center;gap:6px;font:700 13px var(--font-sans);padding:7px 13px;border-radius:999px;cursor:pointer;transition:border-color .2s ease,background .2s ease;}
+html body .ac-edit svg{width:14px;height:14px;}
+html body .ac-edit:hover{border-color:var(--accent);background:var(--surface-2);}
+html body .ac-field.ro{cursor:default;}
+html body .ac-field.ro:hover{background:transparent;}
+html body .ac-val{font:600 16px var(--font-sans);color:var(--text);overflow-wrap:anywhere;}
+html body .ac-val.empty{color:var(--text-muted);font-weight:500;font-size:14.5px;}
+html body .ac-card.editing{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 14%,transparent);}
+html body .ac-card.editing .ac-field{background:var(--surface-2);}
+html body .ac-card.editing .ac-card-head span{color:var(--accent);}
+html body .ac-plan-acts{display:flex;gap:8px;flex-wrap:wrap;padding:2px 4px 6px;}
+html body .ac-plan-acts .v-btn svg{width:15px;height:15px;}
+html body .ac-past{display:flex;flex-direction:column;gap:2px;}
+html body .ac-past-row{display:flex;align-items:center;gap:8px;}
+html body .ac-past-main{appearance:none;border:0;background:transparent;color:var(--text);flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:8px;border-radius:14px;text-align:left;cursor:pointer;}
+html body .ac-past-main:hover{background:var(--surface-2);}
+html body .ac-past-main .set-txt b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+html body .ac-past-art{width:44px;height:44px;border-radius:12px;flex-shrink:0;position:relative;overflow:hidden;opacity:.85;}
+html body .ac-past-art svg{transform:scale(.6);}
+html body .ac-again{appearance:none;border:1px solid var(--line);background:transparent;color:var(--text);font:700 12.5px var(--font-sans);padding:7px 12px;border-radius:999px;cursor:pointer;flex-shrink:0;margin-right:4px;}
+html body .ac-again:hover{border-color:var(--accent);}
+html body .ac-delete{display:block;margin:14px auto 0;appearance:none;border:0;background:none;color:var(--text-muted);font:600 13px var(--font-sans);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:8px;}
+html body .ac-delete:hover{color:var(--hot);}
+html body .del-list{margin:2px 0 14px;padding:0 0 0 20px;font-size:14px;line-height:1.5;color:var(--text-soft);}
+html body .del-confirm{display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--text-muted);margin-bottom:12px;}
+html body .del-confirm b{color:var(--text);font-family:var(--font-mono);}
+html body .del-confirm input{font:700 16px var(--font-mono) !important;letter-spacing:.08em;padding:12px 14px !important;min-height:48px;}
+html body .v-btn.del-go{background:var(--hot);color:#fff;}
+html body .v-btn.del-go:disabled{opacity:.4;cursor:not-allowed;filter:none;transform:none;}

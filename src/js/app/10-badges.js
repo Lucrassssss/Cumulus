@@ -1,45 +1,60 @@
 // Account — one page, Dice/Eventbrite style: who you are up top (photo,
-// name, the numbers that matter), your details editable right where they're
-// shown (no separate "Account details" screen), then preferences, hosts you
-// follow, hosting tools and help. Tickets have their own tab. No admin tools
-// here — those live in the owner-only Admin tab (renderAdmin()).
+// name, member since, the numbers that matter), then your details — shown
+// read-only and changed all at once behind an Edit button, so a stray tap
+// can never alter an email address — then plans, privacy, emails, past
+// events, hosts you follow, hosting (verified hosts only), help, sign out
+// and delete. Tickets have their own tab; admin tools their own tab.
 function renderAccount() {
-  // Keep anything mid-edit if the page redraws underneath you (background
-  // data loads, theme ticks) — unsaved typing should never vanish.
+  const editing = !!state.acEditing;
+  // While editing, keep anything typed if the page redraws underneath you
+  // (background data loads) — unsaved typing should never vanish.
   const draftOf = (id, fallback) => {
-    const el = document.getElementById(id);
+    const el = editing && document.getElementById(id);
     return el ? el.value : fallback || "";
   };
   const dName = draftOf("account-details-name", state.profileName);
   const dEmail = draftOf("account-details-email", state.profileEmail);
   const dPhone = draftOf("account-details-phone", state.profilePhone);
-  const dirty =
-    dName.trim() !== (state.profileName || "") || dEmail.trim() !== (state.profileEmail || "") || dPhone.trim() !== (state.profilePhone || "");
   const ic = (d) => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
   const ticketEvents = myTickets.map((t) => EVENTS.find((e) => e.id === t.eventId)).filter(Boolean);
   const upcoming = ticketEvents.filter((ev) => eventStatus(ev) !== "past").length;
-  const been = new Set(ticketEvents.filter((ev) => eventStatus(ev) === "past").map((ev) => ev.id)).size;
+  const pastEvents = [...new Map(ticketEvents.filter((ev) => eventStatus(ev) === "past").map((ev) => [ev.id, ev])).values()].sort(
+    (a, b) => b.startsAt - a.startsAt,
+  );
   const saved = savedUpcoming().length;
   const following = state.followedHostIds || [];
+  const showHosting = isApprovedHost() || canAccessScanner();
   const stat = (n, label, action) =>
     `<button type="button" class="ac-stat"${action ? ` onclick="${action}"` : " disabled"}><b>${n}</b><span>${label}</span></button>`;
   const row = (action, icon, title, sub, extra) =>
     `<button type="button" class="ac-row" onclick="${action}"><span class="set-ic">${icon}</span><span class="set-txt"><b>${title}</b>${sub ? `<span>${sub}</span>` : ""}</span>${extra || '<span class="ac-chev" aria-hidden="true">›</span>'}</button>`;
+  const sw = (col, stateKey, title, sub) => {
+    const on = state[stateKey] !== false;
+    return `<button type="button" role="switch" class="set-opt set-switch${on ? " on" : ""}" data-pref="${col}" aria-checked="${on}" onclick="toggleUserPref('${col}','${stateKey}',this)">
+        <span class="set-txt"><b>${title}</b><span>${sub}</span></span>
+        <span class="set-toggle" aria-hidden="true"><i></i></span>
+      </button>`;
+  };
   const hostName = (id) => {
     const ev = EVENTS.find((e) => e.hostId === id);
     return ev ? ev.host : "";
   };
+  const q = (v) => escapeHtml(String(v)).replace(/'/g, "&#39;");
   const followedRows = following
     .map((id) => [id, hostName(id)])
     .filter(([, n]) => n)
     .map(
-      ([id, n]) => `<button type="button" class="ac-host" onclick="openHostProfile('${escapeHtml(String(id)).replace(/'/g, "&#39;")}','${escapeHtml(n).replace(/'/g, "&#39;")}')">
+      ([id, n]) => `<button type="button" class="ac-host" onclick="openHostProfile('${q(id)}','${q(n)}')">
         <span class="ac-host-av" aria-hidden="true">${escapeHtml(initials(n))}</span>
         <span class="ac-host-name">${escapeHtml(n)}</span>
         ${(state.notifyHostIds || []).includes(id) ? '<span class="ac-host-bell" title="Notifications on" aria-label="Notifications on">🔔</span>' : ""}
       </button>`,
     )
     .join("");
+  const since = state.memberSince ? new Date(state.memberSince) : null;
+  const sinceLabel = since && !isNaN(since) ? since.toLocaleDateString("en-GB", { month: "long", year: "numeric" }) : "";
+  const field = (label, value, empty) =>
+    `<div class="ac-field ro"><span>${label}</span><div class="ac-val${value ? "" : " empty"}">${value ? escapeHtml(value) : empty}</div></div>`;
 
   return `<div class="v-page ac-page">
     <header class="ac-hero">
@@ -52,36 +67,82 @@ function renderAccount() {
         <div class="v-kicker">Account</div>
         <h1 class="ac-name">${escapeHtml(state.profileName || "You")}</h1>
         <div class="ac-email">${escapeHtml(state.profileEmail || "")}</div>
+        ${sinceLabel ? `<div class="ac-since">Member since ${sinceLabel}</div>` : ""}
       </div>
       <div class="ac-stats">
         ${stat(upcoming, "Upcoming", "navStack=[];openTicketsTab()")}
         ${stat(saved, "Saved", saved ? "goFeed();setFeedRange('saved')" : "")}
         ${stat(following.length, "Following", following.length ? "document.getElementById('ac-following').scrollIntoView({behavior:'smooth',block:'start'})" : "")}
-        ${stat(been, "Been to", "")}
+        ${stat(pastEvents.length, "Been to", pastEvents.length ? "document.getElementById('ac-past').scrollIntoView({behavior:'smooth',block:'start'})" : "")}
       </div>
     </header>
 
-    <section class="ac-card" id="ac-details" aria-labelledby="ac-details-h">
-      <div class="ac-card-head"><h2 id="ac-details-h">Your details</h2><span>Tap to edit</span></div>
-      <label class="ac-field"><span>Name</span>
-        <input id="account-details-name" value="${escapeHtml(dName)}" autocomplete="name" oninput="acDirty()" onkeydown="if(event.key==='Enter')saveAccountDetailsForm()"/>
+    <section class="ac-card${editing ? " editing" : ""}" id="ac-details" aria-labelledby="ac-details-h">
+      <div class="ac-card-head"><h2 id="ac-details-h">Your details</h2>${
+        editing ? `<span>Editing</span>` : `<button type="button" class="ac-edit" onclick="acStartEdit()" aria-label="Edit your details">${ic('<path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>')}Edit</button>`
+      }</div>
+      ${
+        editing
+          ? `<label class="ac-field"><span>Name</span>
+        <input id="account-details-name" value="${escapeHtml(dName)}" autocomplete="name" onkeydown="acKey(event)"/>
       </label>
       <label class="ac-field"><span>Email</span>
-        <input id="account-details-email" type="email" value="${escapeHtml(dEmail)}" autocomplete="email" inputmode="email" oninput="acDirty()" onkeydown="if(event.key==='Enter')saveAccountDetailsForm()"/>
+        <input id="account-details-email" type="email" value="${escapeHtml(dEmail)}" autocomplete="email" inputmode="email" onkeydown="acKey(event)"/>
       </label>
       <label class="ac-field"><span>Phone <em>optional</em></span>
-        <input id="account-details-phone" type="tel" value="${escapeHtml(dPhone)}" autocomplete="tel" inputmode="tel" placeholder="Add a number for door issues" oninput="acDirty()" onkeydown="if(event.key==='Enter')saveAccountDetailsForm()"/>
+        <input id="account-details-phone" type="tel" value="${escapeHtml(dPhone)}" autocomplete="tel" inputmode="tel" placeholder="For door issues on the night" onkeydown="acKey(event)"/>
       </label>
       <div id="account-details-error" class="ac-err" role="alert" style="${state._acErr ? "" : "display:none;"}">${escapeHtml(state._acErr || "")}</div>
-      <div class="ac-save${dirty ? " show" : ""}" id="ac-save" aria-hidden="${!dirty}">
+      <div class="ac-save show" id="ac-save">
         <button type="button" class="v-btn ghost sm" onclick="acCancel()">Cancel</button>
         <button type="button" class="v-btn sm" onclick="saveAccountDetailsForm()">Save changes</button>
+      </div>`
+          : field("Name", state.profileName, "Not added") +
+            field("Email", state.profileEmail, "Not added") +
+            field("Phone", state.profilePhone, "Not added — handy if there's a problem at the door")
+      }
+    </section>
+
+    <section class="ac-card" aria-labelledby="ac-plans-h">
+      <div class="ac-card-head"><h2 id="ac-plans-h">Your plans</h2>${upcoming ? `<span>${upcoming} coming up</span>` : ""}</div>
+      <p class="ac-empty">Send friends one link to everything you're going to — they can grab tickets and come too. Only people with the link can see it.</p>
+      <div class="ac-plan-acts">
+        <button type="button" class="v-btn sm" onclick="sharePlans()">${ic('<path d="M12 3v13M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>')}Share my plans</button>
+        ${state.plansToken ? `<button type="button" class="v-btn ghost sm" onclick="sharePlans(true)">Reset link</button>` : ""}
       </div>
     </section>
 
     <section class="ac-card" aria-labelledby="ac-prefs-h">
       <div class="ac-card-head"><h2 id="ac-prefs-h">Privacy</h2></div>
       ${privacyMenuHtml().replace('<div class="set-group-title">Privacy</div>', "")}
+    </section>
+
+    <section class="ac-card" aria-labelledby="ac-mail-h">
+      <div class="ac-card-head"><h2 id="ac-mail-h">Emails</h2></div>
+      <div class="set-list">
+        ${sw("email_reminders", "emailReminders", "Reminder the day before", "Time, venue and your ticket, 24 hours out")}
+        ${sw("email_followed", "emailFollowed", "New events from hosts I follow", "Only hosts where you've turned the 🔔 on")}
+      </div>
+    </section>
+
+    <section class="ac-card" id="ac-past" aria-labelledby="ac-past-h">
+      <div class="ac-card-head"><h2 id="ac-past-h">Been to</h2><span>${pastEvents.length || ""}</span></div>
+      ${
+        pastEvents.length
+          ? `<div class="ac-past">${pastEvents
+              .slice(0, 6)
+              .map(
+                (ev) => `<div class="ac-past-row">
+            <button type="button" class="ac-past-main" onclick="openEvent('${q(ev.id)}')">
+              <span class="ac-past-art ${posterClass(ev)}" style="${posterStyle(ev)}" aria-hidden="true">${posterGlyph(ev)}</span>
+              <span class="set-txt"><b>${escapeHtml(ev.title)}</b><span>${new Date(ev.startsAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} · ${escapeHtml(ev.host || "")}</span></span>
+            </button>
+            ${ev.host ? `<button type="button" class="ac-again" onclick="openHostProfile('${q(ev.hostId || ev.host)}','${q(ev.host)}')">Go again</button>` : ""}
+          </div>`,
+              )
+              .join("")}</div>`
+          : `<p class="ac-empty">Events you've been to show up here — handy for finding that host again.</p>`
+      }
     </section>
 
     <section class="ac-card" id="ac-following" aria-labelledby="ac-follow-h">
@@ -93,7 +154,9 @@ function renderAccount() {
       }
     </section>
 
-    <section class="ac-card" aria-labelledby="ac-host-h">
+    ${
+      showHosting
+        ? `<section class="ac-card" aria-labelledby="ac-host-h">
       <div class="ac-card-head"><h2 id="ac-host-h">Hosting</h2></div>
       ${
         isApprovedHost()
@@ -103,12 +166,12 @@ function renderAccount() {
               <div class="ac-banner-lbl"><b>Host page banner</b><span>Shown at the top of your public page</span></div>
               ${accountCoverHtml()}
             </div>`
-          : state.hostApplicationStatus === "pending"
-            ? `<div class="ac-row static"><span class="set-ic">${ic('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')}</span><span class="set-txt"><b>Application in review</b><span>Usually within 48 hours</span></span></div>`
-            : row("openHostApply()", ic('<path d="M12 5v14M5 12h14"/>'), "Become a host", "Keep 100% of the ticket price · paid in 24–48h")
+          : ""
       }
       ${canAccessScanner() ? row("openScannerPicker()", ic('<path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M7 12h10"/>'), "Scan tickets", "Check guests in at the door") : ""}
-    </section>
+    </section>`
+        : ""
+    }
 
     <section class="ac-card" aria-labelledby="ac-help-h">
       <div class="ac-card-head"><h2 id="ac-help-h">Help</h2></div>
@@ -118,31 +181,129 @@ function renderAccount() {
     </section>
 
     <button type="button" class="ac-signout" onclick="signOut()">Sign out</button>
+    <button type="button" class="ac-delete" onclick="openDeleteAccountSheet()">Delete my account</button>
   </div>`;
 }
-function acCancel() {
-  const set = (id, v) => {
-    const el = document.getElementById(id);
-    if (el) el.value = v || "";
-  };
-  set("account-details-name", state.profileName);
-  set("account-details-email", state.profileEmail);
-  set("account-details-phone", state.profilePhone);
-  const err = document.getElementById("account-details-error");
-  if (err) err.style.display = "none";
+
+// ── Details: locked until Edit ────────────────────────────────────────────
+function acStartEdit() {
+  state.acEditing = true;
   state._acErr = "";
-  acDirty();
+  renderView();
+  const el = document.getElementById("account-details-name");
+  if (el) {
+    el.focus();
+    el.setSelectionRange(el.value.length, el.value.length);
+  }
 }
-// Shows the Save / Cancel bar as soon as a detail is edited.
-function acDirty() {
-  const bar = document.getElementById("ac-save");
-  if (!bar) return;
-  const changed =
-    (document.getElementById("account-details-name")?.value || "").trim() !== (state.profileName || "") ||
-    (document.getElementById("account-details-email")?.value || "").trim() !== (state.profileEmail || "") ||
-    (document.getElementById("account-details-phone")?.value || "").trim() !== (state.profilePhone || "");
-  bar.classList.toggle("show", changed);
-  bar.setAttribute("aria-hidden", changed ? "false" : "true");
+function acCancel() {
+  state.acEditing = false;
+  state._acErr = "";
+  renderView();
+}
+function acKey(e) {
+  if (e.key === "Enter") saveAccountDetailsForm();
+  else if (e.key === "Escape") acCancel();
+}
+
+// ── Email / privacy switches ──────────────────────────────────────────────
+async function toggleUserPref(column, stateKey, btn) {
+  const next = state[stateKey] === false;
+  // Flip immediately; roll back if the save fails.
+  const paint = (on) => {
+    if (!btn) return;
+    btn.classList.toggle("on", on);
+    btn.setAttribute("aria-checked", on ? "true" : "false");
+  };
+  paint(next);
+  const ok = await saveUserPref(column, next);
+  if (!ok) {
+    paint(!next);
+    return showToast("Couldn't save that — try again", "error");
+  }
+  state[stateKey] = next;
+  showToast(next ? "Turned on" : "Turned off", "info");
+}
+
+// ── Share my plans ────────────────────────────────────────────────────────
+async function sharePlans(reset) {
+  if (reset && !confirm("Reset your plans link? The old link will stop working.")) return;
+  const tok = await getPlansToken(!!reset);
+  if (!tok) return showToast("Couldn't make your link — try again", "error");
+  const fresh = !state.plansToken;
+  state.plansToken = tok;
+  const url = `${location.origin}${location.pathname}?plans=${tok}`;
+  if (reset) {
+    showToast("New link made — the old one no longer works", "success");
+  } else if (navigator.share) {
+    navigator.share({ title: "My plans on Cumulus", text: "Here's what I'm going to — come along:", url }).catch(() => {});
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(
+      () => showToast("Link copied — send it to your friends", "success"),
+      () => showToast("Couldn't copy — try again"),
+    );
+  }
+  if (fresh || reset) renderView();
+}
+
+// ── Delete my account ─────────────────────────────────────────────────────
+// Type-to-confirm, like GitHub / Dice: one tap can't erase an account.
+function openDeleteAccountSheet() {
+  closeLocationSheet(true);
+  const el = document.createElement("div");
+  el.id = "loc-sheet";
+  el.className = "loc-overlay";
+  el.setAttribute("role", "dialog");
+  el.setAttribute("aria-label", "Delete your account");
+  el.innerHTML = `<div class="loc-sheet">
+      <div class="loc-head">
+        <div><b>Delete your account?</b><span>This can't be undone.</span></div>
+        <button class="loc-x" onclick="closeLocationSheet()" aria-label="Close">✕</button>
+      </div>
+      <ul class="del-list">
+        <li>Your profile, saved events, follows and settings are erased.</li>
+        <li>Past ticket records stay with the host, with your name removed.</li>
+        <li>Got tickets coming up? Cancel or transfer them first.</li>
+      </ul>
+      <label class="del-confirm"><span>Type <b>DELETE</b> to confirm</span>
+        <input id="del-input" autocomplete="off" autocapitalize="characters" oninput="document.getElementById('del-go').disabled=this.value.trim().toUpperCase()!=='DELETE'"/>
+      </label>
+      <div id="del-err" class="ac-err" role="alert" style="display:none;"></div>
+      <button id="del-go" class="v-btn wide del-go" disabled onclick="confirmDeleteAccount()">Delete my account</button>
+    </div>`;
+  el.addEventListener("click", (e) => {
+    if (e.target === el) closeLocationSheet();
+  });
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("in"));
+  document.addEventListener("keydown", _locEsc);
+  setTimeout(() => document.getElementById("del-input")?.focus(), 250);
+}
+async function confirmDeleteAccount() {
+  const btn = document.getElementById("del-go");
+  const err = document.getElementById("del-err");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Deleting…";
+  }
+  const res = await deleteMyAccount();
+  if (!res || res.ok !== true) {
+    if (err) {
+      err.textContent =
+        res?.reason === "host"
+          ? "Hosts close their account through support so payout records are kept — email hello@cumulusapp.co."
+          : res?.error || "Couldn't delete your account — try again";
+      err.style.display = "block";
+    }
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Delete my account";
+    }
+    return;
+  }
+  closeLocationSheet(true);
+  showToast("Your account has been deleted", "success");
+  signOut(true);
 }
 
 // Shared avatar — a real photo (state.profileAvatarUrl) once uploaded, a
@@ -164,13 +325,9 @@ function accountAvatarHtml(size) {
 // with the name field focused.
 function openAccountDetails() {
   if (state.view !== "account") openAccount();
-  setTimeout(() => {
-    const el = document.getElementById("account-details-name");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.focus({ preventScroll: true });
-    }
-  }, 60);
+  if (state.view !== "account") return; // guest → sign-in prompt instead
+  acStartEdit();
+  document.getElementById("ac-details")?.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 // Banner shown on a host's own public profile page — a real uploaded
@@ -294,6 +451,7 @@ async function saveAccountDetailsForm() {
     return showErr("Enter a valid phone number, or leave it blank.");
 
   state._acErr = "";
+  state.acEditing = false;
   state.profileName = name;
   state.profileEmail = email;
   state.profilePhone = phone;

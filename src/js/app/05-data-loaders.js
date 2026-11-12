@@ -271,7 +271,7 @@ function renderNav() {
       ? "account"
       : state.view === "my-tickets"
         ? "tickets"
-      : ["calendar", "calendar-day", "detail", "host-profile"].includes(state.view)
+      : ["calendar", "calendar-day", "detail", "host-profile", "plans"].includes(state.view)
         ? "feed"
         : state.view;
   const navContainer = document.getElementById("nav-container");
@@ -427,6 +427,11 @@ async function signOut(confirmed) {
   state.followedHostIds = [];
   state.crewGoing = {};
   state.shareGoing = undefined;
+  state.emailReminders = undefined;
+  state.emailFollowed = undefined;
+  state.memberSince = null;
+  state.plansToken = null;
+  state.acEditing = false;
   state.view = "browse";
   state.rsvps = {};
   myTickets = [];
@@ -554,6 +559,7 @@ function openAccount() {
   }
   pushNav();
   state._acErr = "";
+  state.acEditing = false;
   state.view = "account";
   renderNav();
   renderView();
