@@ -1424,6 +1424,21 @@ async function _publishApprovedEvent(rec) {
   return true;
 }
 
+// Background refreshes (data arriving after first paint) must not look like
+// a second page load: skip if nothing changed, otherwise repaint in place —
+// no entrance animations, same scroll position.
+function renderViewQuiet() {
+  if (state.view === "feed") {
+    const html = renderFeed();
+    if (html === window._lastFeedHtml) return;
+  }
+  const app = document.getElementById("app");
+  const y = window.scrollY;
+  app.classList.add("quiet");
+  renderView();
+  window.scrollTo(0, y);
+  requestAnimationFrame(() => requestAnimationFrame(() => app.classList.remove("quiet")));
+}
 function renderView() {
   const app = document.getElementById("app");
   const container = document.getElementById("view-container");
@@ -1455,7 +1470,7 @@ function renderView() {
   // Any non-map view is fully rendered from memory — never keep the boot
   // loader up waiting on Mapbox tiles that this screen doesn't show.
   hideBootLoader();
-  if (state.view === "feed") container.innerHTML = renderFeed();
+  if (state.view === "feed") container.innerHTML = window._lastFeedHtml = renderFeed();
   else if (state.view === "detail")
     container.innerHTML = renderDetail(state.selectedEventId);
   else if (state.view === "host-profile")

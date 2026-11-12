@@ -803,6 +803,11 @@ async function loadMyTickets() {
       claimedBy: t.claimed_by || null,
       claimedAt: t.claimed_at ? new Date(t.claimed_at).getTime() : null,
     }));
+  if (data) {
+    try {
+      localStorage.setItem(`cumulus_tix_${state.userId}`, JSON.stringify(myTickets));
+    } catch (e) {}
+  }
 }
 async function _insertTickets(tickets) {
   if (!state.userId) return;

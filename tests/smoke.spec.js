@@ -1081,4 +1081,34 @@ test.describe("Cumulus smoke", () => {
     await page.evaluate(() => openCantGoSheet("TK-GIFT"));
     await expect(page.locator("#loc-sheet")).toContainText("Refund goes to Priya Shah's original card, not yours");
   });
+
+  test("background refresh repaints quietly: skipped when unchanged, no replayed animation, scroll kept", async ({ page }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      const now = Date.now();
+      for (let i = 0; i < 14; i++) {
+        const ev = { id: "q-" + i, title: "Quiet " + i, category: "Live Music", host: "H", hostId: "h", venue: "V", area: "Soho",
+          startTime: new Date(now + (i + 2) * 3600000).toISOString(), endTime: new Date(now + (i + 4) * 3600000).toISOString(), desc: "", capacity: 50, price: 0 };
+        computeEventDates(ev);
+        EVENTS.push(ev);
+      }
+      state.eventsLoaded = true;
+      goFeed();
+    });
+    const feed = await page.evaluateHandle(() => document.querySelector(".feed"));
+    // Nothing changed → the DOM node survives (no repaint at all).
+    await page.evaluate(() => renderViewQuiet());
+    expect(await page.evaluate((el) => el.isConnected, feed)).toBe(true);
+    // Something changed (a ticket for today arrived) → repaint in place.
+    await page.evaluate(() => window.scrollTo(0, 400));
+    const y0 = await page.evaluate(() => window.scrollY);
+    await page.evaluate(() => {
+      state.userId = "00000000-0000-0000-0000-000000000002";
+      myTickets.push({ ticketId: "TK-Q", bookingId: "TK-Q", eventId: "q-0", typeLabel: "GA", total: 0, purchasedAt: Date.now() });
+      renderViewQuiet();
+    });
+    await expect(page.locator(".up-next")).toBeVisible();
+    expect(await page.evaluate(() => window.scrollY)).toBe(y0);
+  });
 });

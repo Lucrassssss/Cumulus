@@ -513,6 +513,14 @@ function enterApp() {
 }
 
 async function initApp() {
+  // Last-known tickets for this account, so "Up next" is on the very first
+  // real paint instead of popping in a few round-trips later.
+  if (state.userId && (typeof myTickets === "undefined" || !myTickets.length)) {
+    try {
+      const cached = JSON.parse(localStorage.getItem(`cumulus_tix_${state.userId}`) || "null");
+      if (Array.isArray(cached)) myTickets = cached;
+    } catch (e) {}
+  }
   // Auto-detect admin status for the signed-in session — server-verified via
   // is_admin() (checks the real auth.uid() against public.admins), so it
   // can't be spoofed client-side. Previously this only ever got set inside
@@ -540,7 +548,8 @@ async function initApp() {
   // Paint real cards immediately — the remaining loads below (tickets,
   // RSVPs, follows…) are each a network round-trip and shouldn't hold the
   // first screen hostage.
-  if (state.view === "feed" || state.view === "browse") renderView();
+  if (state.view === "feed") renderViewQuiet();
+  else if (state.view === "browse") renderView();
 
   await loadGeocodeCache();
   EVENTS.forEach((ev) => {
@@ -567,8 +576,9 @@ async function initApp() {
   if (state.userId) await syncSavedEvents();
   if (state.userId) await loadCrewGoing();
 
-  // Refresh view quietly once real data is in (map = update markers, feed =
-  // swap the empty state for real cards)
-  if (state.view === "browse" || state.view === "feed") renderView();
+  // Refresh quietly once everything's in (map = update markers, feed = add
+  // anything personal that changed) — in place, never a second page load.
+  if (state.view === "feed") renderViewQuiet();
+  else if (state.view === "browse") renderView();
 }
 

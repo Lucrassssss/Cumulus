@@ -414,6 +414,9 @@ async function signOut(confirmed) {
   // this device next.
   try {
     localStorage.removeItem("cumulus_saved");
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith("cumulus_tix_"))
+      .forEach((k) => localStorage.removeItem(k));
   } catch (e) {}
   // Reset in-memory state
   state.userId = null;
