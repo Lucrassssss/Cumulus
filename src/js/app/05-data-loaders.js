@@ -336,8 +336,18 @@ function renderNav() {
   }
 
   // Every call: patch active state and theme toggle — no DOM destruction
+  // The highlight only animates when the active tab actually changes — not
+  // when the dock reappears after an event page or a redraw.
+  const prevTab = navContainer.dataset.activeTab;
+  navContainer.dataset.activeTab = activeTab;
   navContainer.querySelectorAll(".nav-link").forEach((btn) => {
-    btn.classList.toggle("active-cloud-tab", btn.dataset.nav === activeTab);
+    const on = btn.dataset.nav === activeTab;
+    btn.classList.toggle("active-cloud-tab", on);
+    if (on && prevTab && prevTab !== activeTab) {
+      btn.classList.remove("tab-in");
+      void btn.offsetWidth;
+      btn.classList.add("tab-in");
+    } else if (!on) btn.classList.remove("tab-in");
   });
   updateLiveTicketBadge();
 
@@ -358,7 +368,8 @@ function updateLiveTicketBadge() {
   let dot = btn.querySelector(".nav-badge");
   if (n && !dot) {
     dot = document.createElement("span");
-    dot.className = "nav-badge";
+    dot.className = "nav-badge pop";
+    setTimeout(() => dot.classList.remove("pop"), 400);
     dot.setAttribute("aria-hidden", "true");
     btn.appendChild(dot);
   } else if (!n && dot) dot.remove();
@@ -484,6 +495,7 @@ function pushNav() {
 function goBack() {
   if (navStack.length > 0) {
     const p = navStack.pop();
+    window._navBack = true;
     state.view = p.view;
     state.selectedEventId = p.selectedEventId;
     renderNav();

@@ -139,6 +139,7 @@ function goFeed() {
   // Tapping Home while already on Home scrolls to the top; coming back from
   // another tab returns to where you were.
   const already = state.view === "feed";
+  if (!already && window._feedSeen) window._navBack = true;
   navStack = [];
   state.view = "feed";
   state.selectedEventId = null;

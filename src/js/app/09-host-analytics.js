@@ -1507,9 +1507,14 @@ function renderView() {
   // Same-page redraws (quantity +/−, filters, toggles) must not replay the
   // page's entrance — only a real page change fades in.
   app.classList.toggle("same-view", app.dataset.view === state.view);
+  // Going back (Back button, or a tab you've already visited) returns to the
+  // page as you left it — no entrance fade, nothing re-entering.
+  const back = !!window._navBack;
+  window._navBack = false;
+  app.classList.toggle("nav-back", back);
   // A redraw of the page you're already on (filters, toggles, live data)
   // shows the new content settled — rows and chips don't re-enter.
-  if (app.dataset.view === state.view) requestAnimationFrame(() => _settleEntrances(container));
+  if (back || app.dataset.view === state.view) requestAnimationFrame(() => _settleEntrances(container));
   // Remember where Home was scrolled to, so coming back lands in place.
   if (app.dataset.view === "feed" && state.view !== "feed") state._feedY = window.scrollY;
   app.dataset.view = state.view;

@@ -5407,7 +5407,8 @@ html body .nav-link{position:relative;}
    icon (ringed in the dock colour so it reads as cut out of it), a quiet
    halo while the event is on, and an accented Show QR on the live ticket. */
 html body .bottom-nav .nav-link{position:relative;}
-html body .nav-badge{position:absolute;top:4px;left:calc(50% + 6px);min-width:15px;height:15px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:var(--hot);color:#fff;font:800 9.5px/15px var(--font-sans);font-variant-numeric:tabular-nums;text-align:center;letter-spacing:0;box-shadow:0 0 0 2.5px var(--surface);pointer-events:none;animation:nav-badge-in .32s cubic-bezier(.2,1.4,.4,1) backwards;}
+html body .nav-badge{position:absolute;top:4px;left:calc(50% + 6px);min-width:15px;height:15px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:var(--hot);color:#fff;font:800 9.5px/15px var(--font-sans);font-variant-numeric:tabular-nums;text-align:center;letter-spacing:0;box-shadow:0 0 0 2.5px var(--surface);pointer-events:none;}
+html body .nav-badge.pop{animation:nav-badge-in .32s cubic-bezier(.2,1.2,.4,1) backwards;}
 html body .nav-badge::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:0 0 0 0 color-mix(in srgb,var(--hot) 55%,transparent);animation:nav-badge-halo 2.4s 1s ease-out infinite;}
 html body .nav-link.active-cloud-tab .nav-badge{box-shadow:0 0 0 2.5px var(--volt);}
 @keyframes nav-badge-in{from{transform:scale(.3);opacity:0}}
@@ -5466,3 +5467,11 @@ html body :is(.nav-link,.fr-row,.v-chip,.fr-chip,.ac-row,.tk-art){-webkit-tap-hi
 html body :is(.nav-link,.v-chip,.fr-chip,.ac-row):active{transform:scale(.96);}
 html body :is(.fr-row,.tk-art):active{transform:scale(.985);}
 @media (prefers-reduced-motion:reduce){html body :is(.nav-link,.fr-row,.v-chip,.fr-chip,.ac-row,.tk-art):active{transform:none;}}
+
+/* Tab highlight: no replay when the dock comes back (it's hidden on event
+   and checkout pages); a short, soft fade only when you switch tabs. */
+html body .nav-link.active-cloud-tab{animation:none !important;}
+html body .nav-link.active-cloud-tab.tab-in{animation:nav-tab-in .26s cubic-bezier(.2,.8,.2,1) !important;}
+@keyframes nav-tab-in{from{background-color:transparent;transform:scale(.94)}}
+/* Back navigation shows the page as you left it. */
+#app.nav-back :is(.feed,.v-page,.tv-page,.ac-page,.ev-page,.bk-page,.hx,.up-next){animation:none !important;}
