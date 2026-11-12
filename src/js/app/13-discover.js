@@ -744,7 +744,7 @@ function accountMenuHtml() {
       ${item("navStack=[];openTicketsTab()", ic('<path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/>'), "Your tickets", upcoming ? `${upcoming} coming up` : "Nothing booked yet")}
       ${saved ? item("setFeedRange('saved')", ic('<path d="M12 20.5s-7.5-4.6-9.4-9.3C1.4 8.2 3.4 4.5 7 4.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.6 0 5.6 3.7 4.4 6.7-1.9 4.7-9.4 9.3-9.4 9.3Z"/>'), "Saved", `${saved} event${saved !== 1 ? "s" : ""}`) : ""}
       ${host}
-      ${item("navStack=[];openAccount()", ic('<circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1-4 4-6 7.5-6s6.5 2 7.5 6"/>'), "Account &amp; settings", "Details, photo, help")}
+      ${item("navStack=[];openAccount()", ic('<circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1-4 4-6 7.5-6s6.5 2 7.5 6"/>'), "Account & settings", "Your details, preferences, help")}
     </div>
     <div class="set-list acct-foot">
       ${item("signOut()", ic('<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5M5 12h11"/>'), "Sign out", "", "danger")}

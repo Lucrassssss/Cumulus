@@ -553,6 +553,7 @@ function openAccount() {
     return;
   }
   pushNav();
+  state._acErr = "";
   state.view = "account";
   renderNav();
   renderView();

@@ -366,58 +366,56 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator(".host-section").first()).toBeVisible();
     await setView(page, "calendar");
     await expect(page.locator(".calendar-scroll")).toBeVisible();
+    await page.evaluate(() => (state.userId = "00000000-0000-0000-0000-000000000004"));
     await setView(page, "account");
-    await expect(page.locator(".connect-header h2")).toHaveText("Account");
+    await expect(page.locator(".ac-page .v-kicker")).toHaveText("Account");
   });
 
-  test("Account details opens as its own page with name/email/phone/avatar", async ({
+  test("Account: details are edited inline (no separate page), Save bar only when changed", async ({
     page,
   }) => {
     await page.goto("/");
     await enterApp(page);
     await page.evaluate(() => {
+      state.userId = "00000000-0000-0000-0000-000000000004";
       state.profileName = "Nova Rivers";
       state.profileEmail = "nova@example.com";
-      openAccountDetails();
+      openAccountDetails(); // old entry point → lands on Account itself
     });
-    await expect(page.locator("h2")).toHaveText("Account details");
-    await expect(page.locator("#account-details-name")).toHaveValue(
-      "Nova Rivers",
-    );
-    await expect(page.locator("#account-details-email")).toHaveValue(
-      "nova@example.com",
-    );
+    expect(await page.evaluate(() => state.view)).toBe("account");
+    await expect(page.locator(".ac-name")).toHaveText("Nova Rivers");
+    await expect(page.locator("#account-details-name")).toHaveValue("Nova Rivers");
+    await expect(page.locator("#account-details-email")).toHaveValue("nova@example.com");
     await expect(page.locator("#account-details-phone")).toBeVisible();
-    await expect(page.locator(".account-avatar")).toBeVisible();
-    // Invalid phone is rejected without touching the network.
+    await expect(page.locator(".ac-avatar .account-avatar")).toBeVisible();
+    await expect(page.locator(".ac-stat")).toHaveCount(4);
+    // Save bar hidden until something changes.
+    await expect(page.locator("#ac-save")).not.toHaveClass(/show/);
     await page.fill("#account-details-phone", "abc");
-    await page.evaluate(() => saveAccountDetailsForm());
+    await expect(page.locator("#ac-save")).toHaveClass(/show/);
+    // Invalid phone is rejected without touching the network.
+    await page.locator("#ac-save .v-btn:not(.ghost)").click();
     await expect(page.locator("#account-details-error")).toBeVisible();
   });
 
-  test("Account details: host banner editor only shown to approved hosts", async ({
+  test("Account: host banner editor only shown to approved hosts", async ({
     page,
   }) => {
     await page.goto("/");
     await enterApp(page);
     await page.evaluate(() => {
+      state.userId = "00000000-0000-0000-0000-000000000004";
       state.profileName = "Nova Rivers";
-      state.profileEmail = "nova@example.com";
-      openAccountDetails();
+      openAccount();
     });
-    // A regular (non-host) account gets the avatar editor only — no banner
-    // upload zone, since there's no host profile page for it to appear on.
     await expect(page.locator(".account-cover-edit-zone")).toHaveCount(0);
-    await expect(page.locator(".account-avatar-edit-zone")).toBeVisible();
-
+    await expect(page.locator(".ac-row", { hasText: "Become a host" })).toBeVisible();
     await page.evaluate(() => {
       state.specialBadges = ["verified-host"];
-      openAccountDetails();
+      renderView();
     });
     await expect(page.locator(".account-cover-edit-zone")).toBeVisible();
-    await expect(
-      page.locator("#account-cover-input"),
-    ).toBeAttached();
+    await expect(page.locator("#account-cover-input")).toBeAttached();
   });
 
   test("host profile page: real follower stat, Follow gated to reviewed hosts", async ({
