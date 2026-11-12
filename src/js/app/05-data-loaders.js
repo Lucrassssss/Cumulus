@@ -389,7 +389,7 @@ async function signOut(confirmed) {
   if (!confirmed) {
     showConfirm(
       "Sign out?",
-      "You'll return to the welcome screen. Your data is saved.",
+      "Your tickets stay safe on your account — sign back in any time.",
       "Sign out",
       "signOut",
     );

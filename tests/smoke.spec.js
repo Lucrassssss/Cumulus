@@ -934,4 +934,35 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator("#loc-sheet")).toContainText("Send it to a friend");
     await expect(page.locator("#loc-sheet")).toContainText("Return it · £11.50 back");
   });
+
+  test("home account dropdown: tickets, account page only on request, sign out stays home", async ({ page }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      state.userId = "00000000-0000-0000-0000-000000000003";
+      state.profileName = "Menu User";
+      state.profileEmail = "menu@example.com";
+      renderNav();
+      goFeed();
+    });
+    await page.locator("#feed-account-btn").click();
+    await expect(page.locator("#feed-account")).toHaveClass(/open/);
+    await expect(page.locator("#feed-account")).toContainText("menu@example.com");
+    await expect(page.locator("#feed-account")).toContainText("Your tickets");
+    expect(await page.evaluate(() => state.view)).toBe("feed");
+    // Opening Settings closes the account menu (one dropdown at a time).
+    await page.locator("#feed-settings-btn").click();
+    await expect(page.locator("#feed-account")).not.toHaveClass(/open/);
+    // Account page only when chosen from the menu.
+    await page.locator("#feed-account-btn").click();
+    await page.locator("#feed-account .set-opt", { hasText: "Account & settings" }).click();
+    expect(await page.evaluate(() => state.view)).toBe("account");
+    // Sign out from the menu lands back on Discover as a guest.
+    await page.evaluate(() => goFeed());
+    await page.locator("#feed-account-btn").click();
+    await page.locator("#feed-account .set-opt.danger").click();
+    await page.locator(".cu-confirm-actions .btn:not(.btn-cancel)").click();
+    await expect(page.locator(".feed-head .icon-pill.solid")).toHaveText("Sign in");
+    expect(await page.evaluate(() => [state.view, state.userId])).toEqual(["feed", null]);
+  });
 });

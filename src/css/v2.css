@@ -4777,3 +4777,12 @@ html body .promise-strip b{font:700 12.5px/1.2 var(--font-sans);color:var(--text
 html body .save-btn.glass-btn{width:44px;height:44px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);color:#fff;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);}
 html body .set-list + .set-group-title{margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft);}
 html body .promise-strip .pr-link{cursor:pointer;transition:border-color .2s ease;}html body .promise-strip .pr-link:hover{border-color:var(--accent);}
+
+/* ── Account dropdown (home header) ──────────────────────────────────── */
+html body .acct-head{display:flex;align-items:center;gap:12px;padding:4px 6px 12px;margin-bottom:6px;border-bottom:1px solid var(--line-soft);}
+html body .acct-av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;background:var(--cta-bg);color:var(--cta-fg);font:800 14px var(--font-sans);}
+html body .acct-head .set-txt span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+html body .acct-foot{margin-top:6px;padding-top:6px;border-top:1px solid var(--line-soft);}
+html body .set-opt.danger b{color:var(--hot);}
+html body .set-opt.danger .set-ic{color:var(--hot);}
+html body .avatar-pill.on{box-shadow:0 0 0 3px var(--accent);}

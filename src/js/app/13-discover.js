@@ -586,7 +586,7 @@ function renderFeed() {
         </button>
         ${
           signedIn
-            ? `<button class="avatar-pill" onclick="navStack=[];openAccount()" aria-label="Your account">${escapeHtml(initials(state.profileName || "You"))}</button>`
+            ? `<button id="feed-account-btn" class="avatar-pill" onclick="toggleAccountMenu()" aria-label="Your account" aria-haspopup="true" aria-expanded="false" aria-controls="feed-account">${escapeHtml(initials(state.profileName || "You"))}</button>`
             : `<button class="icon-pill solid" onclick="showLpSignup()">Sign in</button>`
         }
         <button id="feed-settings-btn" class="settings-btn" onclick="toggleFeedSettings()" aria-label="Settings" aria-expanded="false" aria-controls="feed-settings">
@@ -594,6 +594,7 @@ function renderFeed() {
         </button>
       </div>
       <div id="feed-settings" class="feed-settings" role="dialog" aria-label="Settings">${appearanceMenuHtml()}${privacyMenuHtml()}</div>
+      ${signedIn ? `<div id="feed-account" class="feed-settings feed-account" role="menu" aria-label="Your account">${accountMenuHtml()}</div>` : ""}
     </header>
 
     <div class="feed-layout">
@@ -691,6 +692,7 @@ function renderFeed() {
 // Opens from the three-line button, same behaviour as the map's filter
 // dropdown: stays open while you change things, closes on outside tap / Esc.
 function toggleFeedSettings(force) {
+  if (force !== false) toggleAccountMenu(false);
   const panel = document.getElementById("feed-settings");
   const btn = document.getElementById("feed-settings-btn");
   if (!panel || !btn) return;
@@ -712,6 +714,68 @@ function _feedSettingsOutside(e) {
 }
 function _feedSettingsEsc(e) {
   if (e.key === "Escape") toggleFeedSettings(false);
+}
+
+// ── Account dropdown (home header) ────────────────────────────────────────
+// Same pattern as Settings: everything you'd reach for — tickets, saved,
+// hosting, sign out — without leaving Discover. The full Account page is
+// only opened when you pick it here.
+function accountMenuHtml() {
+  const ic = (d) => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const upcoming = (typeof myTickets !== "undefined" ? myTickets : []).filter((t) => {
+    const ev = EVENTS.find((e) => e.id === t.eventId);
+    return ev && eventStatus(ev) !== "past";
+  }).length;
+  const saved = savedUpcoming().length;
+  const item = (action, icon, title, sub, cls) =>
+    `<button type="button" role="menuitem" class="set-opt${cls ? " " + cls : ""}" onclick="toggleAccountMenu(false);${action}">
+      <span class="set-ic">${icon}</span><span class="set-txt"><b>${title}</b>${sub ? `<span>${sub}</span>` : ""}</span>
+    </button>`;
+  const host = isApprovedHost()
+    ? item("navStack=[];openHost()", ic('<path d="M12 5v14M5 12h14"/>'), "Host an event", "Create and manage your events")
+    : state.hostApplicationStatus === "pending"
+      ? ""
+      : item("openHostApply()", ic('<path d="M12 5v14M5 12h14"/>'), "Become a host", "Keep 100% of the ticket price");
+  return `<div class="acct-head">
+      <span class="acct-av" aria-hidden="true">${escapeHtml(initials(state.profileName || "You"))}</span>
+      <span class="set-txt"><b>${escapeHtml(state.profileName || "Your account")}</b><span>${escapeHtml(state.profileEmail || "")}</span></span>
+    </div>
+    <div class="set-list">
+      ${item("navStack=[];openTicketsTab()", ic('<path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/>'), "Your tickets", upcoming ? `${upcoming} coming up` : "Nothing booked yet")}
+      ${saved ? item("setFeedRange('saved')", ic('<path d="M12 20.5s-7.5-4.6-9.4-9.3C1.4 8.2 3.4 4.5 7 4.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.6 0 5.6 3.7 4.4 6.7-1.9 4.7-9.4 9.3-9.4 9.3Z"/>'), "Saved", `${saved} event${saved !== 1 ? "s" : ""}`) : ""}
+      ${host}
+      ${item("navStack=[];openAccount()", ic('<circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1-4 4-6 7.5-6s6.5 2 7.5 6"/>'), "Account &amp; settings", "Details, photo, help")}
+    </div>
+    <div class="set-list acct-foot">
+      ${item("signOut()", ic('<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5M5 12h11"/>'), "Sign out", "", "danger")}
+    </div>`;
+}
+function toggleAccountMenu(force) {
+  const panel = document.getElementById("feed-account");
+  const btn = document.getElementById("feed-account-btn");
+  if (!panel || !btn) return;
+  const open = force !== undefined ? force : !panel.classList.contains("open");
+  if (open) {
+    toggleFeedSettings(false);
+    panel.innerHTML = accountMenuHtml(); // fresh counts every time
+  }
+  panel.classList.toggle("open", open);
+  btn.classList.toggle("on", open);
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+  document.removeEventListener("pointerdown", _acctOutside, true);
+  document.removeEventListener("keydown", _acctEsc);
+  if (open) {
+    document.addEventListener("pointerdown", _acctOutside, true);
+    document.addEventListener("keydown", _acctEsc);
+  }
+}
+function _acctOutside(e) {
+  const panel = document.getElementById("feed-account");
+  const btn = document.getElementById("feed-account-btn");
+  if (!panel || (!panel.contains(e.target) && !(btn && btn.contains(e.target)))) toggleAccountMenu(false);
+}
+function _acctEsc(e) {
+  if (e.key === "Escape") toggleAccountMenu(false);
 }
 
 // ── Location: exact-coordinate map links ──────────────────────────────────
