@@ -473,7 +473,7 @@ async function saveAccountDetailsForm() {
 // (<=15% of capacity) — reuses the exact spacesLeft calc from renderDetail().
 function almostFullBadgeHtml(ev) {
   if (!ev.capacity) return "";
-  const going = attendeesFor(ev.id).length;
+  const going = goingCount(ev.id);
   const spacesLeft = Math.max(0, ev.capacity - going);
   if (spacesLeft > 0 && spacesLeft <= Math.ceil(ev.capacity * 0.15)) {
     return `<span class="badge-almost-full">Almost full</span>`;

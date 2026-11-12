@@ -736,6 +736,21 @@ async function sendReceipt(bookingId, auto) {
   }
 }
 
+// Tickets sold per event (event_ticket_counts RPC — numbers only). Merged
+// into state.ticketCounts; pass an event id to refresh just that one.
+async function loadTicketCounts(eventId) {
+  try {
+    const { data, error } = await sb.rpc("event_ticket_counts", eventId ? { p_event: eventId } : {});
+    if (error || !data) return false;
+    state.ticketCounts = state.ticketCounts || {};
+    if (eventId) state.ticketCounts[String(eventId)] = 0;
+    data.forEach((r) => (state.ticketCounts[String(r.event_id)] = r.sold || 0));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 async function cancelTicketRefund(ticketId) {
   try {
     const { data, error } = await sb.functions.invoke("cancel-ticket-refund", {

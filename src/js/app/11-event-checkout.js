@@ -283,6 +283,12 @@ function showConfirmedAfterPurchase() {
   window.scrollTo({ top: 0 });
   const tickets = bookingDraft.confirmedTickets || [];
   const ev = tickets[0] && EVENTS.find((e) => e.id === tickets[0].eventId);
+  // The counter moves the moment you buy, then the server's number confirms.
+  if (ev) {
+    state.ticketCounts = state.ticketCounts || {};
+    state.ticketCounts[String(ev.id)] = (state.ticketCounts[String(ev.id)] || 0) + tickets.length;
+    loadTicketCounts(ev.id);
+  }
   playPurchaseCelebration(ev, tickets.length, !tickets.reduce((s, t) => s + (t.total || 0), 0), fromPay);
   hidePayOverlay(true);
   // Receipt + ticket email, once (server-side idempotent).

@@ -1481,7 +1481,10 @@ function renderView() {
   // rows and then filling them in reads as the page loading twice, so the
   // loader holds until initApp() has real events (8s safety in enterApp()).
   if (!(state.view === "feed" && !state.eventsLoaded)) hideBootLoader();
-  if (state.view === "feed") container.innerHTML = window._lastFeedHtml = renderFeed();
+  if (state.view === "feed") {
+    container.innerHTML = window._lastFeedHtml = renderFeed();
+    wheelInit();
+  }
   else if (state.view === "detail")
     container.innerHTML = renderDetail(state.selectedEventId);
   else if (state.view === "host-profile")
@@ -1775,20 +1778,23 @@ function pinTooltipHtml(ev) {
   const status = eventStatus(ev);
   const c = CATS[ev.category];
   const att = attendeesFor(ev.id);
+  const attN = goingCount(ev.id);
   const statusBadge =
     status === "live"
       ? `<span class="tip-live"><span class="d"></span>LIVE NOW</span>`
       : `<span class="tip-up">${status === "past" ? "Ended" : "Upcoming"}</span>`;
   let goingLine;
-  if (att.length === 0) {
+  if (attN === 0) {
     goingLine = `<div class="tip-going none">No one yet — be the first!</div>`;
+  } else if (!att.length) {
+    goingLine = `<div class="tip-going"><strong>${attN} going</strong></div>`;
   } else {
     const names = att.slice(0, 3).map(escapeHtml);
-    const extra = att.length > 3 ? ` +${att.length - 3}` : "";
-    goingLine = `<div class="tip-going"><strong>${att.length} going</strong> — ${names.join(", ")}${extra}</div>`;
+    const extra = attN > 3 ? ` +${attN - 3}` : "";
+    goingLine = `<div class="tip-going"><strong>${attN} going</strong> — ${names.join(", ")}${extra}</div>`;
   }
   const capLine = ev.capacity
-    ? `<div class="tip-going" style="margin-top:2px;"><strong>${Math.max(0, ev.capacity - att.length)} spaces left</strong></div>`
+    ? `<div class="tip-going" style="margin-top:2px;"><strong>${Math.max(0, ev.capacity - attN)} spaces left</strong></div>`
     : "";
   const img = ev.photoUrl || ev.nightShotUrl || catImg(ev.category);
   return `<div class="evtip-inner" style="--c:${c.color}">
@@ -2148,7 +2154,7 @@ function renderHostProfile() {
   );
   const reviewed = hostEvents.some((e) => e.hostId != null);
   const totalAttendees = hostEvents.reduce(
-    (sum, e) => sum + attendeesFor(e.id).length,
+    (sum, e) => sum + goingCount(e.id),
     0,
   );
   const upcoming = hostEvents
@@ -2252,7 +2258,7 @@ function hostWeeklyTitles(upcoming) {
 // Past-event block: same shape as the feed row, with the date, an "Ended"
 // tag and how many went instead of price/scarcity.
 function hostPastRowHtml(ev, hidden) {
-  const went = attendeesFor(ev.id).length;
+  const went = goingCount(ev.id);
   const when = new Date(ev.startsAt)
     .toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: new Date(ev.startsAt).getFullYear() !== new Date().getFullYear() ? "numeric" : undefined })
     .toUpperCase()
@@ -2335,11 +2341,12 @@ function renderDetail(id) {
   if (!ev) return `<div class="empty-state">Event not found.</div>`;
   const c = CATS[ev.category] || { color: "#D4FF3F", textColor: "#4D6B00" };
   const attendees = attendeesFor(id);
+  const goingN = goingCount(id);
   const status = eventStatus(ev);
   const ticket = getTicketForEvent(id);
   const price = eventPrice(ev);
   const spacesLeft = ev.capacity
-    ? Math.max(0, ev.capacity - attendees.length)
+    ? Math.max(0, ev.capacity - goingN)
     : null;
   const isFull = spacesLeft !== null && spacesLeft <= 0 && !ticket;
   const statusChip =
@@ -2410,7 +2417,7 @@ function renderDetail(id) {
   const mon = startD.toLocaleDateString("en-GB", { month: "short" }).toUpperCase();
   const longDate = startD.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
   const staticMap = eventStaticMapUrl(ev);
-  const pct = ev.capacity ? Math.min(100, Math.round((attendees.length / ev.capacity) * 100)) : 0;
+  const pct = ev.capacity ? Math.min(100, Math.round((goingN / ev.capacity) * 100)) : 0;
   return `<div class="ev-page" style="--cat:${c ? c.color : "var(--volt)"};">
     <div class="ev-hero ${posterClass(ev)}" style="${posterStyle(ev)}">
       ${posterGlyph(ev)}
@@ -2460,7 +2467,7 @@ function renderDetail(id) {
 
       <section class="ev-block" id="going-section">
         <div class="ev-going-head">
-          <h2 class="ev-h2">${attendees.length ? `${attendees.length} going` : "Be the first in"}</h2>
+          <h2 class="ev-h2">${goingN ? `${goingN} going` : "Be the first in"}</h2>
           ${ev.capacity ? `<span class="ev-cap">${spacesLeft} of ${ev.capacity} left</span>` : ""}
         </div>
         ${ev.capacity ? `<div class="ev-meter"><i style="width:${pct}%"></i></div>` : ""}
@@ -2470,9 +2477,11 @@ function renderDetail(id) {
                 .slice(0, 12)
                 .map((n) => `<span class="ev-face" title="${escapeHtml(n)}">${escapeHtml(initials(n))}</span>`)
                 .join("") + (attendees.length > 12 ? `<span class="ev-face more">+${attendees.length - 12}</span>` : "")
-            : `<span class="ev-muted">No one's booked yet — grab the first spot.</span>`
+            : goingN
+              ? `<span class="ev-muted">${goingN} ${goingN === 1 ? "person has" : "people have"} tickets${ticket ? " — including you" : ""}.</span>`
+              : `<span class="ev-muted">No one's booked yet — grab the first spot.</span>`
         }</div>
-        ${going ? `<div class="ev-muted" style="margin-top:8px;">You're on the list ✓</div>` : ""}
+        ${going || ticket ? `<div class="ev-muted" style="margin-top:8px;">You're on the list ✓</div>` : ""}
       </section>
 
       ${ownerTools ? `<section class="ev-block ev-owner">${ownerTools}</section>` : ""}

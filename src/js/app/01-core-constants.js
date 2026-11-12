@@ -47,7 +47,7 @@ function isHotEvent(ev) {
   const st = eventStatus(ev);
   if (st === "past") return false;
   if (st === "live") return true;
-  return attendeesFor(ev.id).length >= 2;
+  return goingCount(ev.id) >= 2;
 }
 function generateUniqueId() {
   return Math.floor(Math.random() * 1000000)
@@ -302,6 +302,7 @@ let state = {
   profileId: null,
   specialBadges: [],
   hostApplicationStatus: null, // null | "pending" | "approved" | "rejected" — see loadHostApplicationStatus()
+  ticketCounts: {}, // tickets sold per event id — see loadTicketCounts()
   crewGoing: {}, // crew_going() rows by event id — see loadCrewGoing()
   followedHostIds: [], // host_follows rows for the current user — see loadMyFollows()
   myWaitlist: [], // event_waitlist rows for the current user — see loadMyWaitlist()

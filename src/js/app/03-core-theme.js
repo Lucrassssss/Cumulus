@@ -239,6 +239,12 @@ async function resolveEventLocations() {
   updateGeocodeBanner();
 }
 
+// How many are going: real tickets sold (paid + free) from the server, or
+// the RSVP names list if that's somehow higher / counts aren't loaded.
+function goingCount(id) {
+  const sold = (state.ticketCounts && state.ticketCounts[String(id)]) || 0;
+  return Math.max(sold, attendeesFor(id).length);
+}
 function attendeesFor(id) {
   const out = DEMO_PEOPLE.filter((p) => p.events.includes(id)).map(
     (p) => p.name,

@@ -1112,7 +1112,7 @@ test.describe("Cumulus smoke", () => {
     expect(await page.evaluate(() => window.scrollY)).toBe(y0);
   });
 
-  test("Don't miss wheel: equal cards, arrows step and wrap round", async ({ page }) => {
+  test("Don't miss wheel: equal cards, cards both sides from the start, spins round", async ({ page }) => {
     await page.goto("/");
     await enterApp(page);
     await page.evaluate(() => {
@@ -1129,16 +1129,30 @@ test.describe("Cumulus smoke", () => {
     });
     const widths = await page.$$eval("#fp-rail .fp-card", (els) => els.map((e) => Math.round(e.getBoundingClientRect().width)));
     expect(new Set(widths).size).toBe(1);
-    const active = () => page.$$eval("#fp-rail .fp-card", (els) => els.findIndex((e) => e.classList.contains("on")));
-    expect(await active()).toBe(0);
+    // One real (focusable) card per event; the rest are visual copies.
+    await expect(page.locator("#fp-rail .fp-card:not(.clone)")).toHaveCount(4);
+    // No empty gap on the left: a card sits left of the centred one from the start.
+    const leftOfCentre = await page.evaluate(() => {
+      const rail = document.getElementById("fp-rail");
+      const r = rail.getBoundingClientRect();
+      const on = rail.querySelector(".fp-card.on").getBoundingClientRect();
+      return [...rail.querySelectorAll(".fp-card")].some((c) => {
+        const b = c.getBoundingClientRect();
+        return b.right <= on.left + 1 && b.right > r.left + 10;
+      });
+    });
+    expect(leftOfCentre).toBe(true);
+    const dot = () => page.$$eval(".fw-dots button", (els) => els.findIndex((e) => e.classList.contains("on")));
+    expect(await dot()).toBe(0);
     await page.locator(".fw-arrow.next").click();
-    await expect.poll(active).toBe(1);
-    await page.evaluate(() => wheelGo(3));
-    await expect.poll(active).toBe(3);
-    await page.locator(".fw-arrow.next").click();
-    await expect.poll(active).toBe(0);
+    await expect.poll(dot).toBe(1);
     await page.locator(".fw-arrow.prev").click();
-    await expect.poll(active).toBe(3);
+    await expect.poll(dot).toBe(0);
+    // Going left from the first spins round to the last.
+    await page.locator(".fw-arrow.prev").click();
+    await expect.poll(dot).toBe(3);
+    // ...and settles back onto the real set (a real card is centred).
+    await expect.poll(() => page.evaluate(() => !document.querySelector("#fp-rail .fp-card.on").classList.contains("clone"))).toBe(true);
   });
 
   test("quiet repaint never replays the entrance animation (no double load)", async ({ page }) => {
@@ -1164,5 +1178,31 @@ test.describe("Cumulus smoke", () => {
         .filter((a) => a.effect.getComputedTiming().iterations !== Infinity && a.playState === "running").length,
     );
     expect(after).toBe(0);
+  });
+
+  test("booking counter counts paid tickets, and moves the moment you buy", async ({ page }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.evaluate(() => {
+      const now = Date.now();
+      const ev = { id: "cnt-1", title: "Counter Test", category: "Live Music", host: "H", hostId: "h", venue: "V", area: "Soho",
+        startTime: new Date(now + 48 * 3600000).toISOString(), endTime: new Date(now + 50 * 3600000).toISOString(), desc: "", capacity: 30, price: 10 };
+      computeEventDates(ev);
+      EVENTS.push(ev);
+      state.ticketCounts = { "cnt-1": 3 }; // 3 paid tickets, no RSVP rows
+      openEvent("cnt-1");
+    });
+    await expect(page.locator("#going-section .ev-h2")).toHaveText("3 going");
+    await expect(page.locator("#going-section .ev-cap")).toHaveText("27 of 30 left");
+    // Buying 2 updates it straight away.
+    await page.evaluate(() => {
+      state.userId = "00000000-0000-0000-0000-000000000001";
+      bookingDraft.confirmedTickets = [1, 2].map((i) => ({ ticketId: "TK-C" + i, bookingId: "TK-C", eventId: "cnt-1", typeLabel: "GA", pricePerTicket: 10, total: 11.5, purchasedAt: Date.now() }));
+      myTickets.push(...bookingDraft.confirmedTickets);
+      showConfirmedAfterPurchase();
+      openEvent("cnt-1");
+    });
+    await expect(page.locator("#going-section .ev-h2")).toHaveText("5 going");
+    await expect(page.locator("#going-section .ev-cap")).toHaveText("25 of 30 left");
   });
 });

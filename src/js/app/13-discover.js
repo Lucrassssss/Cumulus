@@ -80,7 +80,7 @@ function feedPriceLabel(ev) {
 }
 function feedSpotsLeft(ev) {
   if (!ev.capacity) return null;
-  return Math.max(0, ev.capacity - attendeesFor(ev.id).length);
+  return Math.max(0, ev.capacity - goingCount(ev.id));
 }
 
 function feedUpcoming() {
@@ -266,12 +266,33 @@ function promiseStripHtml() {
 }
 
 // ── "Don't miss" wheel ────────────────────────────────────────────────────
-// Equal-size posters on a centred carousel: arrows either side, swipe on
-// phones, and it goes round — next on the last card spins back to the
-// first. The centred card is full size; its neighbours sit back a little.
+// A roulette wheel of equal-size posters: the set is laid out three times
+// (copy · real · copy) and the view starts on the real set, so there are
+// always cards either side — no empty gap on the left — and it spins round
+// forever in both directions. When a spin settles inside a copy, it hops
+// silently to the same card in the real set. Arrows, swipe, keys and dots.
+function wheelCardsHtml(list) {
+  const n = list.length;
+  if (n < 2) return list.map((ev) => feedPosterCardHtml(ev, "on")).join("");
+  return [0, 1, 2]
+    .map((rep) =>
+      list
+        .map((ev, i) => {
+          const html = feedPosterCardHtml(ev, rep === 1 && i === 0 ? "on" : "");
+          // Copies are visual only: one real, focusable card per event.
+          return rep === 1 ? html.replace('class="fp-card', `data-wi="${i}" class="fp-card`) : html.replace('class="fp-card', `data-wi="${i}" aria-hidden="true" class="fp-card clone`).replace('tabindex="0"', 'tabindex="-1"');
+        })
+        .join(""),
+    )
+    .join("");
+}
 function _wheelCards() {
   const rail = document.getElementById("fp-rail");
   return rail ? [rail, [...rail.querySelectorAll(".fp-card")]] : [null, []];
+}
+function _wheelN() {
+  const [, cards] = _wheelCards();
+  return cards.length >= 6 && cards.length % 3 === 0 ? cards.length / 3 : cards.length;
 }
 function _wheelIndex() {
   const [rail, cards] = _wheelCards();
@@ -288,26 +309,69 @@ function _wheelIndex() {
   });
   return best;
 }
-function wheelGo(i) {
+function _wheelLeftFor(rail, c) {
+  return c.offsetLeft - (rail.clientWidth - c.offsetWidth) / 2;
+}
+function _wheelTo(k, smooth) {
+  const [rail, cards] = _wheelCards();
+  if (!rail || !cards[k]) return;
+  rail.scrollTo({ left: _wheelLeftFor(rail, cards[k]), behavior: smooth ? "smooth" : "auto" });
+}
+// Called after every feed paint: park on the first real card.
+function wheelInit() {
   const [rail, cards] = _wheelCards();
   if (!rail || !cards.length) return;
-  const n = cards.length;
-  const c = cards[((i % n) + n) % n];
-  rail.scrollTo({ left: c.offsetLeft - (rail.clientWidth - c.offsetWidth) / 2, behavior: "smooth" });
+  const n = _wheelN();
+  const start = cards.length === n * 3 ? n : 0;
+  rail.style.scrollBehavior = "auto";
+  rail.scrollLeft = _wheelLeftFor(rail, cards[start]);
+  rail.style.scrollBehavior = "";
+  _wheelMark(start);
+}
+function wheelGo(i) {
+  const [, cards] = _wheelCards();
+  const n = _wheelN();
+  if (!cards.length) return;
+  const looped = cards.length === n * 3;
+  _wheelTo(looped ? n + (((i % n) + n) % n) : Math.max(0, Math.min(cards.length - 1, i)), true);
 }
 function wheelStep(dir) {
-  wheelGo(_wheelIndex() + dir);
+  const [, cards] = _wheelCards();
+  const n = _wheelN();
+  const looped = cards.length === n * 3;
+  const k = _wheelIndex() + dir;
+  _wheelTo(looped ? k : ((k % n) + n) % n, true);
+}
+function _wheelMark(k) {
+  const [, cards] = _wheelCards();
+  const n = _wheelN();
+  cards.forEach((c, j) => c.classList.toggle("on", j === k));
+  document.querySelectorAll(".fw-dots button").forEach((d, j) => d.classList.toggle("on", j === k % n));
 }
 let _wheelRaf = 0;
+let _wheelSettle = 0;
 function wheelSync() {
-  if (_wheelRaf) return;
-  _wheelRaf = requestAnimationFrame(() => {
-    _wheelRaf = 0;
-    const [, cards] = _wheelCards();
-    const i = _wheelIndex();
-    cards.forEach((c, k) => c.classList.toggle("on", k === i));
-    document.querySelectorAll(".fw-dots button").forEach((d, k) => d.classList.toggle("on", k === i));
-  });
+  if (!_wheelRaf)
+    _wheelRaf = requestAnimationFrame(() => {
+      _wheelRaf = 0;
+      _wheelMark(_wheelIndex());
+    });
+  // Once the spin stops, hop out of a copy into the real set — same card,
+  // same spot on screen, so it's invisible.
+  clearTimeout(_wheelSettle);
+  _wheelSettle = setTimeout(() => {
+    const [rail, cards] = _wheelCards();
+    const n = _wheelN();
+    if (!rail || cards.length !== n * 3) return;
+    const k = _wheelIndex();
+    if (k >= n && k < 2 * n) return;
+    const target = k < n ? k + n : k - n;
+    const shift = cards[target].offsetLeft - cards[k].offsetLeft;
+    rail.style.scrollBehavior = "auto";
+    rail.scrollLeft += shift;
+    rail.style.scrollBehavior = "";
+    _wheelMark(target);
+  }, 140);
 }
 
 // ── Building blocks ───────────────────────────────────────────────────────
@@ -337,7 +401,7 @@ function feedPosterCardHtml(ev, size) {
 function feedRowHtml(ev, tag) {
   const st = eventStatus(ev);
   const left = feedSpotsLeft(ev);
-  const going = attendeesFor(ev.id).length;
+  const going = goingCount(ev.id);
   return `<article class="fr-row" onclick="openEvent('${ev.id}')" role="button" tabindex="0" aria-label="${escapeHtml(ev.title)}">
     <div class="fr-thumb ${posterClass(ev)}" style="${posterStyle(ev)}">${posterGlyph(ev)}</div>
     <div class="fr-body">
@@ -695,7 +759,7 @@ function renderFeed() {
         <div class="feed-sec-head"><h2>Don't miss</h2><span class="feed-count">${all.length} upcoming</span></div>
         <div class="fp-wheel" role="region" aria-roledescription="carousel" aria-label="Don't miss">
           <button type="button" class="fw-arrow prev" onclick="wheelStep(-1)" aria-label="Previous event"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-          <div class="fp-rail" id="fp-rail" onscroll="wheelSync()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();wheelStep(1)}else if(event.key==='ArrowLeft'){event.preventDefault();wheelStep(-1)}">${featured.map((ev, i) => feedPosterCardHtml(ev, i === 0 ? "on" : "")).join("")}</div>
+          <div class="fp-rail" id="fp-rail" onscroll="wheelSync()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();wheelStep(1)}else if(event.key==='ArrowLeft'){event.preventDefault();wheelStep(-1)}">${wheelCardsHtml(featured)}</div>
           <button type="button" class="fw-arrow next" onclick="wheelStep(1)" aria-label="Next event"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
         </div>
         ${featured.length > 1 ? `<div class="fw-dots" aria-hidden="true">${featured.map((_, i) => `<button type="button" tabindex="-1" class="${i === 0 ? "on" : ""}" onclick="wheelGo(${i})"></button>`).join("")}</div>` : ""}

@@ -550,6 +550,7 @@ async function initApp() {
   const personal = Promise.all([
     adminCheck,
     safe(loadAllRsvps()),
+    safe(loadTicketCounts()),
     ...(state.userId
       ? [
           safe(loadMyTickets()),

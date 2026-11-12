@@ -243,6 +243,9 @@ async function cancelTicket(ticketId, confirmed) {
     return;
   }
   myTickets = myTickets.filter((x) => x.ticketId !== ticketId);
+  if (state.ticketCounts && t.eventId && state.ticketCounts[String(t.eventId)])
+    state.ticketCounts[String(t.eventId)] = Math.max(0, state.ticketCounts[String(t.eventId)] - 1);
+  loadTicketCounts(t.eventId);
   showToast(
     res.refunded ? "Booking cancelled — refund on its way" : "Booking cancelled",
     "success",

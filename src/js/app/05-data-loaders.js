@@ -541,6 +541,12 @@ function openEvent(id) {
   window.scrollTo({ top: 0, behavior: "smooth" });
   const ev = EVENTS.find((e) => e.id === id);
   if (ev) updateEventUrlAndMeta(ev);
+  // Fresh tickets-sold number for this event; repaint in place if it moved.
+  const before = (state.ticketCounts || {})[String(id)] || 0;
+  loadTicketCounts(id).then((ok) => {
+    if (ok && state.view === "detail" && state.selectedEventId === id && (state.ticketCounts[String(id)] || 0) !== before)
+      renderViewQuiet();
+  });
 }
 // Boot-time deep link: ?event=<id> opens straight to that event once EVENTS
 // has loaded (called from initApp(), after loadRealEvents()).
