@@ -718,13 +718,8 @@ async function submitGate() {
     btn.disabled = false;
     if (label()) label().textContent = origLabel;
   }
-  if (!res.ok) {
-    gateErr(authErrMsg(res.error));
-    return;
-  }
-
   // Stash everything the verify step needs, then swap to the code entry panel.
-  _pendingAuth = {
+  const pending = {
     isLogin,
     name,
     email,
@@ -735,6 +730,26 @@ async function submitGate() {
     whyHost,
     hostCats: [..._hostCats],
   };
+  if (!res.ok) {
+    gateErr(authErrMsg(res.error));
+    // A code from an earlier email (or one support issued) still works even
+    // when this send failed — don't strand people on the email step.
+    const el = document.getElementById("gate-field-error");
+    if (el) {
+      const a = document.createElement("button");
+      a.type = "button";
+      a.className = "gate-have-code";
+      a.textContent = "Already have a code? Enter it →";
+      a.onclick = () => {
+        _pendingAuth = pending;
+        showOtpStep(email);
+      };
+      el.appendChild(document.createElement("br"));
+      el.appendChild(a);
+    }
+    return;
+  }
+  _pendingAuth = pending;
   showOtpStep(email);
 }
 

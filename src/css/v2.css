@@ -4878,3 +4878,4 @@ html body .del-confirm b{color:var(--text);font-family:var(--font-mono);}
 html body .del-confirm input{font:700 16px var(--font-mono) !important;letter-spacing:.08em;padding:12px 14px !important;min-height:48px;}
 html body .v-btn.del-go{background:var(--hot);color:#fff;}
 html body .v-btn.del-go:disabled{opacity:.4;cursor:not-allowed;filter:none;transform:none;}
+html body .gate-have-code{appearance:none;border:0;background:none;padding:6px 0 0;color:var(--text);font:700 13.5px var(--font-sans);text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
