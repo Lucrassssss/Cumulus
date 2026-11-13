@@ -19,12 +19,6 @@ body.no-scroll {
   max-width: none;
 }
 
-.blot-icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
 .search-input::placeholder {
   color: var(--text-muted);
 }
@@ -204,32 +198,6 @@ body.no-scroll {
   margin-bottom: 14px;
 }
 
-.calendar-header-row {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
-  margin-bottom: 6px;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
-}
-
-.calendar-cell.empty {
-  background: transparent;
-  border: none;
-}
-
-.calendar-cell.today .calendar-day-num {
-  color: var(--gold);
-}
-
-[data-theme="light"] .calendar-cell.today .calendar-day-num {
-  color: #725a12;
-}
-
 .map-host {
   position: fixed;
   top: var(--top-h);
@@ -321,53 +289,6 @@ body.no-scroll {
   top: calc(var(--top-h) + 10px);
   right: 12px;
   z-index: 1000;
-}
-
-.tip-top {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-bottom: 7px;
-}
-
-.tip-live {
-  color: #e23b3b;
-  font-weight: 800;
-  font-size: 9px;
-  letter-spacing: 0.6px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  animation: blink 1.3s ease-in-out infinite;
-}
-
-.tip-live .d {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #e23b3b;
-  flex-shrink: 0;
-}
-
-.tip-up {
-  color: var(--text-muted);
-  font-weight: 700;
-  font-size: 9px;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-}
-
-.tip-going {
-  font-size: 11px;
-  margin-top: 8px;
-  color: var(--text-soft);
-  font-weight: 600;
-}
-
-.tip-going.none {
-  color: var(--text-muted);
-  font-style: italic;
-  font-weight: 500;
 }
 
 .mapboxgl-popup,
@@ -600,29 +521,11 @@ body.no-scroll {
   opacity: 0.75;
 }
 
-.calendar-cell.has-events {
-  transition:
-    box-shadow 0.18s ease,
-    transform 0.18s ease,
-    background 0.18s ease !important;
-}
-
 .intro-card {
   transition:
     transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 0.22s ease,
     border-color 0.22s ease !important;
-}
-
-@keyframes popupIn {
-  0% {
-    opacity: 0;
-    transform: translateY(6px) scale(0.96);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 .stagger-item {
@@ -2109,22 +2012,6 @@ body.no-scroll {
   transform: translateY(-1px) scale(0.99) !important;
 }
 
-.social-seg-btn:active {
-  transform: scale(0.88) !important;
-}
-
-@keyframes segTabPop {
-  0% {
-    transform: scale(0.92);
-  }
-  60% {
-    transform: scale(1.03);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
 .prof-action-row:active {
   background: var(--surface-2) !important;
   transform: scale(0.97) !important;
@@ -2468,117 +2355,6 @@ body.no-scroll {
   transition: opacity 0.15s ease;
 }
 
-.evtip-inner::before {
-  content: "" !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  height: 3px !important;
-  background: var(--c, var(--accent)) !important;
-  opacity: 0.9 !important;
-}
-
-.evtip-inner * {
-  color: inherit !important;
-}
-
-.evtip-inner .tip-live {
-  color: #e23b3b !important;
-  animation: blink 1.3s ease-in-out infinite !important;
-}
-
-.evtip-inner .tip-live .d {
-  background: #e23b3b !important;
-}
-
-.tip-title {
-  font-size: 14px !important;
-  font-weight: 800 !important;
-  line-height: 1.3 !important;
-  margin-bottom: 4px;
-  color: var(--text) !important;
-  letter-spacing: -0.02em !important;
-  margin: 6px 0 5px !important;
-}
-
-.tip-meta {
-  font-size: 11px !important;
-  color: var(--text-muted) !important;
-  margin-bottom: 1px;
-  line-height: 1.55 !important;
-}
-
-.evtip-inner .tip-going {
-  color: var(--text-soft) !important;
-}
-
-.evtip-inner .tip-going.none {
-  color: var(--text-muted) !important;
-}
-
-.evtip-inner .tip-up {
-  color: var(--text-muted) !important;
-}
-
-.tip-cat {
-  margin-left: auto;
-  font-size: 9px !important;
-  font-weight: 800 !important;
-  padding: 3px 8px !important;
-  border-radius: 5px !important;
-  letter-spacing: 0.12em !important;
-  text-transform: uppercase !important;
-}
-
-.tip-banner {
-  position: relative !important;
-  margin: -15px -16px 10px !important;
-  height: 88px !important;
-  background-size: cover !important;
-  background-position: center !important;
-  display: flex !important;
-  align-items: flex-end !important;
-}
-
-.tip-banner::before {
-  content: "" !important;
-  position: absolute !important;
-  inset: 0 !important;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0) 35%,
-    rgba(0, 0, 0, 0.75) 100%
-  ) !important;
-}
-
-.tip-banner .tip-top {
-  position: relative !important;
-  z-index: 1 !important;
-  width: 100%;
-  margin: 0 !important;
-  padding: 7px 10px !important;
-}
-
-.tip-banner .tip-up {
-  background: rgba(0, 0, 0, 0.45) !important;
-  color: #fff !important;
-  padding: 3px 7px !important;
-  border-radius: 5px !important;
-}
-
-.tip-cta {
-  border-top: 1px solid var(--line) !important;
-  font-size: 10.5px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.04em !important;
-  margin-top: 10px !important;
-  padding-top: 9px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-}
-
 .stat-box {
   padding: 20px 10px !important;
   flex: 1;
@@ -2813,66 +2589,6 @@ select.gate-input {
 .host-profile-header .btn-follow-host {
   flex-shrink: 0;
   margin-top: 2px;
-}
-
-.host-event-card {
-  scroll-snap-align: start;
-  flex: 0 0 220px;
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-  background: var(--surface);
-  border: 1.5px solid var(--line);
-  border-radius: var(--r-lg);
-  overflow: hidden;
-  cursor: pointer;
-  font: inherit;
-  padding: 0;
-  transition:
-    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.22s ease;
-}
-
-.host-event-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 32px var(--shadow);
-}
-
-.host-event-card-img {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  background-color: var(--surface-2);
-  background-size: cover;
-  background-position: center;
-}
-
-.host-event-card-body {
-  padding: 12px 14px 14px;
-}
-
-.host-event-card-title {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--text);
-  line-height: 1.25;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.host-event-card-meta {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 5px;
-}
-
-.host-event-card-price {
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--text);
-  margin-top: 6px;
 }
 
 .host-stats-row {
@@ -3120,29 +2836,6 @@ select.gate-input {
 
 [data-theme="dark"] .mapboxgl-ctrl-attrib-inner {
   color: rgba(232, 232, 255, 0.5) !important;
-}
-
-.evtip-inner {
-  position: relative !important;
-  overflow: hidden !important;
-  background: color-mix(in srgb, var(--surface) 93%, transparent) !important;
-  border: 1px solid var(--line) !important;
-  border-radius: 16px !important;
-  box-shadow:
-    0 24px 60px var(--shadow),
-    0 0 0 1px var(--line-soft) !important;
-  color: var(--text) !important;
-  padding: 15px 16px 13px !important;
-  border-left: none !important;
-  border-top: none !important;
-  width: max-content;
-  max-width: 230px !important;
-  white-space: normal;
-  cursor: pointer;
-  backdrop-filter: blur(28px) saturate(1.6) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(1.6) !important;
-  animation: popupIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
-  border-color: var(--line) !important;
 }
 
 ::-webkit-scrollbar-track {
@@ -3394,37 +3087,6 @@ textarea:focus {
   opacity: 0.35 !important;
 }
 
-.social-seg {
-  display: flex;
-  gap: 2px !important;
-  background: var(--surface-2) !important;
-  border-radius: 10px !important;
-  padding: 3px !important;
-  margin-bottom: 18px;
-  border: 1.5px solid var(--line) !important;
-}
-
-.social-seg-btn {
-  flex: 1;
-  border: none;
-  background: transparent;
-  border-radius: 7px !important;
-  font-size: 12.5px !important;
-  font-weight: 700 !important;
-  padding: 8px 6px !important;
-  color: var(--text-muted) !important;
-  cursor: pointer;
-  transition:
-    background 0.12s,
-    color 0.12s !important;
-  font-family: var(--font-sans);
-  letter-spacing: 0.005em !important;
-}
-
-[data-theme="dark"] .social-seg-btn {
-  color: rgba(232, 232, 255, 0.6) !important;
-}
-
 .connect-header {
   margin-bottom: 8px !important;
   position: relative;
@@ -3606,18 +3268,6 @@ textarea:focus {
   filter: none !important;
 }
 
-.social-seg-btn.active {
-  background: var(--accent) !important;
-  color: #0a0a0a !important;
-  box-shadow: none !important;
-  animation: segTabPop var(--dur-slow) var(--ease-expo) both;
-  font-weight: 800 !important;
-}
-
-[data-theme="dark"] .social-seg-btn.active {
-  color: #0a0a0a !important;
-}
-
 .logo {
   font-size: 20px !important;
   font-weight: 900 !important;
@@ -3715,15 +3365,6 @@ textarea:focus {
   border-color: var(--accent) !important;
   background: var(--accent) !important;
   box-shadow: none !important;
-}
-
-.prof-about-label {
-  font-size: 10px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.14em !important;
-  text-transform: uppercase;
-  color: var(--gold-text) !important;
-  margin-bottom: 10px;
 }
 
 .back-btn {
@@ -4055,8 +3696,7 @@ body.app-active .bg-grain {
   display: none !important;
   animation: none !important;
 }
-.mchip,
-.social-seg-btn{
+.mchip{
   letter-spacing: -0.005em !important;
 }
 
@@ -4095,281 +3735,16 @@ body.app-active .bg-grain {
   ) !important;
 }
 
-.calendar-scroll {
-  overflow-x: visible !important;
-  padding-bottom: 0 !important;
-  -webkit-overflow-scrolling: touch;
-}
-
-.calendar-inner {
-  min-width: 0 !important;
-  width: 100% !important;
-}
-
-.calendar-grid,
-.calendar-header-row {
-  grid-template-columns: repeat(7, 1fr) !important;
-  gap: 4px !important;
-}
-
-.calendar-weekday {
-  font-size: 9px !important;
-  font-weight: 700;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  text-align: center;
-  padding: 2px 0 !important;
-}
-
-.calendar-cell {
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  min-height: 0 !important;
-  padding: 5px !important;
-  position: relative;
-  border-radius: 9px !important;
-  transition:
-    background 0.12s ease,
-    transform 0.12s ease !important;
-  aspect-ratio: 1 / 1 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-  overflow: hidden !important;
-}
-
-.calendar-cell:hover {
-  transform: none !important;
-}
-
-.calendar-cell.has-events:hover {
-  background: var(--surface) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 14px var(--shadow) !important;
-}
-
-.calendar-day-num {
-  font-weight: 700;
-  font-size: 12px !important;
-  color: var(--text-soft);
-  margin-bottom: 4px !important;
-}
-
-.cal-dots {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-  align-items: center;
-  margin-top: auto;
-}
-
-.cal-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--accent);
-  display: block;
-}
-
-.cal-dot-more {
-  font-size: 8px;
-  font-weight: 700;
-  color: var(--gold-text);
-  line-height: 1;
-}
-
-.calendar-cell.today {
-  border-color: var(--accent) !important;
-  box-shadow:
-    0 0 0 2px var(--accent),
-    0 4px 14px color-mix(in srgb, var(--accent) 25%, transparent) !important;
-  background: color-mix(in srgb, var(--accent) 8%, var(--surface-2)) !important;
-}
-
-.cal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.cal-header > div {
-  text-align: center;
-  flex: 1;
-}
-
-.cal-nav-btn {
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--text);
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition:
-    background 0.14s ease,
-    border-color 0.14s ease,
-    transform 0.14s ease;
-}
-
-.cal-nav-btn:hover {
-  border-color: var(--accent);
-  background: var(--surface-2);
-  transform: translateY(-1px);
-}
-
-.badge-almost-full {
-  flex-shrink: 0;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: color-mix(in srgb, #e23b3b 14%, transparent);
-  color: #e23b3b;
-  border: 1px solid color-mix(in srgb, #e23b3b 30%, transparent);
-  white-space: nowrap;
-}
-
-.cal-agenda-empty {
-  margin-top: 24px;
-  display: flex;
-  justify-content: center;
-}
-
-.cal-mode-seg {
-  margin: 14px 0 20px;
-  max-width: 220px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.cal-list-group {
-  margin-bottom: 18px;
-}
-
-.cal-list-date {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--gold-text);
-  margin-bottom: 8px;
-}
-
 /* Shared bigger event row — a square image plus a real synopsis (location,
    time, host) instead of a bare title-only line. Used by the calendar's
    List mode and Day view (eventListCardHtml in app.js); the whole card is
    the tap target, opening the full event page rather than acting on it
    inline. */
-.event-list-card {
-  display: flex;
-  gap: 14px;
-  padding: 14px;
-  margin-bottom: 12px;
-  cursor: pointer;
-  align-items: stretch;
-}
 
 /* Ended events stay visible in Calendar (never on the map/browse — see
  * getFilteredEvents()) but read as inactive: muted image, faded copy, no
  * category-corner accent. Still fully tappable — opens the real detail
  * page, which is how you reach the host's other upcoming events. */
-.event-list-card-ended {
-  --corner: var(--line) !important;
-}
-
-.event-list-card-ended .elc-img {
-  filter: grayscale(0.85);
-  opacity: 0.7;
-}
-
-.event-list-card-ended .elc-title,
-.event-list-card-ended .elc-meta,
-.event-list-card-ended .elc-host,
-.event-list-card-ended .elc-price {
-  color: var(--text-muted) !important;
-}
-
-.elc-img {
-  width: 88px;
-  height: 88px;
-  flex-shrink: 0;
-  border-radius: 12px;
-  background-color: var(--surface-2);
-  background-size: cover;
-  background-position: center;
-}
-
-.elc-body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.elc-top-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-bottom: 2px;
-}
-
-.elc-title {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--text);
-  line-height: 1.25;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.elc-meta {
-  font-size: 12px;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.elc-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: auto;
-  padding-top: 4px;
-}
-
-.elc-host {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--text-soft);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.elc-price {
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--gold-text);
-  flex-shrink: 0;
-}
 
 .lp-signup-modal {
   background: var(--surface);
@@ -5167,9 +4542,7 @@ body,
    file — freeze them here rather than at each of their ~10 call sites. */
 @media (prefers-reduced-motion: reduce) {
   .cap-live .dot,
-  .live-chip .dot,
-  .tip-live,
-  .evtip-inner .tip-live {
+  .live-chip .dot {
     animation: none !important;
   }
 
@@ -5300,21 +4673,6 @@ body,
   padding: 20px;
 }
 
-.checkout-summary-toggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
-  color: inherit;
-  -webkit-tap-highlight-color: transparent;
-}
-
 .checkout-status {
   display: flex;
   align-items: center;
@@ -5408,11 +4766,6 @@ body,
     font-size: 11px !important;
   }
 
-  .checkout-summary-toggle {
-    padding: 11px 12px;
-    gap: 10px;
-  }
-
   .checkout-status {
     padding: 4px 0 2px;
   }
@@ -5454,7 +4807,7 @@ body,
  * the fixed Pay bar above (bottom: calc(var(--bot-h) + ... + 10/14px)) both
  * anchor to nearly the same offset from the bottom nav, so a toast fired
  * mid-checkout (e.g. "Payment is processing…" from submitStripePayment()/
- * finalizeStripePayment() in 10-account-calendar-payments.js) renders directly on top of the
+ * finalizeStripePayment() in 10-account-payments.js) renders directly on top of the
  * Pay button/total it's describing — the toast wins on z-index (9999 vs the
  * bar's 1100), so the exact message explaining what just happened covers the
  * button the buyer just pressed. Push toasts above the bar height while this
@@ -5471,9 +4824,6 @@ body,
   }
   #app[data-view="checkout"] .cu-toast-wrap {
     bottom: calc(var(--bot-h) + 12px);
-  }
-  #app[data-view="checkout"] .checkout-summary-toggle {
-    cursor: default;
   }
   #app[data-view="checkout"] .checkout-cta-bar {
     position: static;

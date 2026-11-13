@@ -1588,7 +1588,6 @@ function renderView() {
   else if (state.view === "my-tickets")
     container.innerHTML = renderMyTickets();
   else if (state.view === "admin") container.innerHTML = renderAdmin();
-  else if (state.view === "calendar") container.innerHTML = renderCalendar();
   else if (state.view === "host") {
     container.innerHTML = renderHostView();
     updateHostPricePreview();
@@ -1600,9 +1599,7 @@ function renderView() {
   } else if (state.view === "confirmed") {
     container.innerHTML = renderConfirmed();
     setTimeout(afterRenderConfirmed, 60);
-  } else if (state.view === "calendar-day")
-    container.innerHTML = renderCalendarDay();
-  else if (state.view === "scan-picker")
+  } else if (state.view === "scan-picker")
     container.innerHTML = renderScannerPicker();
   else if (state.view === "scan") container.innerHTML = renderScanner();
   else if (state.view === "owner-dash") {
@@ -1632,9 +1629,8 @@ function getFilteredEvents() {
     // the map or in browse/search results. "hidden" = auto-hidden by the
     // community-report trigger pending admin review (see event_reports).
     if (ev.status === "cancelled" || ev.status === "hidden") return false;
-    // Ended events stay findable through Calendar (renderCalendar/
-    // eventListCardHtml show them greyed out as "Event ended") but never as
-    // a live pin or in browse/search — a map full of pins for things that
+    // Ended events stay findable from their host's profile and the
+    // Tickets "Past" tab, but never as a live pin or in browse/search — a map full of pins for things that
     // already happened would just confuse people looking for what's on now.
     if (eventStatus(ev) === "past") return false;
     const hasLocation = ev.lat != null && ev.lon != null;

@@ -1,4 +1,4 @@
-const CACHE = "cumulus-v62";
+const CACHE = "cumulus-v64";
 const ASSETS = [
   "./",
   "./index.html",
@@ -14,7 +14,7 @@ const ASSETS = [
   "./src/js/app/07-map-setup-geocoding.js",
   "./src/js/app/08-host-create-owner-finance.js",
   "./src/js/app/09-host-admin-render-router.js",
-  "./src/js/app/10-account-calendar-payments.js",
+  "./src/js/app/10-account-payments.js",
   "./src/js/app/11-checkout-confirmation.js",
   "./src/js/app/12-wallet-host-form-scanner.js",
   "./src/js/app/13-discover-feed.js",

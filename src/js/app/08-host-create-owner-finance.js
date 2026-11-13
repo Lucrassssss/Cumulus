@@ -310,8 +310,7 @@ async function submitHostEvent() {
     _hostDuplicateSourcePhotoUrl = null;
     if (aDataArr.length > 1) {
       showToast(`${aDataArr.length} events published live to the map!`, "success");
-      navStack = [];
-      openCalendar();
+      goFeed();
     } else {
       showToast("Event published live to the map!", "success");
       openEvent(aDataArr[0].id);

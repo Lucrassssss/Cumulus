@@ -281,49 +281,7 @@ async function cancelTicket(ticketId, confirmed) {
   renderView();
 }
 
-// ════════════════════════════════════════════════
-// CALENDAR DAY VIEW
-// ════════════════════════════════════════════════
-function openCalendarDay(day) {
-  pushNav();
-  state.calendarDay = day;
-  state.view = "calendar-day";
-  renderNav();
-  renderView();
-  window.scrollTo(0, 0);
-}
 
-function renderCalendarDay() {
-  const day = state.calendarDay;
-  const dateObj = new Date(CALENDAR_YEAR, CALENDAR_MONTH, day);
-  const dayLabel = dateObj.toLocaleDateString("en-GB", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-  const eventsByDay = {};
-  EVENTS.forEach((ev) => {
-    const d = getEventDay(ev, CALENDAR_YEAR, CALENDAR_MONTH);
-    if (d) {
-      if (!eventsByDay[d]) eventsByDay[d] = [];
-      eventsByDay[d].push(ev);
-    }
-  });
-  const dayEvents = (eventsByDay[day] || []).sort(
-    (a, b) => a.startsAt - b.startsAt,
-  );
-  if (!dayEvents.length)
-    return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>${dayLabel}</h2><p>Nothing scheduled today</p></div>
-    <div class="empty-state">Nothing on this day. <button class="btn-text" onclick="openHost()">Host one?</button></div>`;
-  // Synopsis only — same card as List mode, not a second purchase flow.
-  // Tapping opens the real event page, where booking actually happens.
-  const cards = dayEvents.map(eventListCardHtml).join("");
-  return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>${dateObj.toLocaleDateString("en-GB", { weekday: "long" })}, ${dateObj.toLocaleDateString("en-GB", { day: "numeric", month: "long" })}</h2><p>${dayEvents.length} event${dayEvents.length !== 1 ? "s" : ""}</p></div>
-    ${cards}`;
-}
 
 // Hosting is frictionless — no eligibility checklist, no connections/check-in
 // gate, no private/public split. Everyone can host; every event is public

@@ -91,7 +91,7 @@ This system explicitly rejects generic corporate SaaS chrome (dashboard-blue, st
 A warm neutral parchment paired with a single gold accent that survives the day/night flip; no secondary or tertiary hue is introduced.
 
 ### Primary
-- **Parchment Gold** (`#c08a00` light / `#ffcf33` dark): the one accent — buttons, links, active states, borders on emphasis, and the ambient glow behind the Host/Calendar/Account/Admin tabs. Saturated enough to pop rather than sit quietly, but still one thread, not a second color; it never becomes a background fill. Vivid yellow physically cannot hold contrast against a light parchment page (yellow is inherently a high-luminance hue), so the light-mode value is pushed as rich/saturated as the cream background allows without failing the 3:1 UI-component floor; the dark-mode value has the contrast headroom to go genuinely electric against the near-black sky, which is where this system's "pop" reads loudest.
+- **Parchment Gold** (`#c08a00` light / `#ffcf33` dark): the one accent — buttons, links, active states, borders on emphasis, and the ambient glow behind the Host/Account/Admin tabs. Saturated enough to pop rather than sit quietly, but still one thread, not a second color; it never becomes a background fill. Vivid yellow physically cannot hold contrast against a light parchment page (yellow is inherently a high-luminance hue), so the light-mode value is pushed as rich/saturated as the cream background allows without failing the 3:1 UI-component floor; the dark-mode value has the contrast headroom to go genuinely electric against the near-black sky, which is where this system's "pop" reads loudest.
 
 ### Neutral
 - **Parchment Cream** (`#eceae4` / dark: `#0d0e10`): the app background — the "paper" the whole interface sits on.
@@ -148,9 +148,6 @@ Tactile and inviting: buttons and cards are built to feel physically responsive 
 - **Background:** card-surface neutral (`--surface`), one tone lifted from the page background.
 - **Shadow Strategy:** flat at rest; on hover, lifts `-3px` with a soft ambient shadow bloom (see Elevation).
 - **Border:** none by default; gold border reserved for active/selected/emphasis states.
-
-### Event list card
-- The default way to show an event in a list (calendar List mode, Day view): a square 88px image on the left (a real photo if one exists, else a category stock photo — same source the detail page's own hero uses) and a synopsis on the right — title, location with a small pin glyph, date/time, host, and price. The whole card is the tap target; it opens the real event page rather than acting on the event inline (no "Book Now" or "Add to calendar" buttons on the row itself — a synopsis links out, it isn't a second checkout flow).
 
 ### Navigation
 - Fixed nav bar (`--nav-h: 72px`), respects safe-area insets on mobile (notch/home-indicator aware). Uses the display font for wayfinding labels; gold marks the active/current state.

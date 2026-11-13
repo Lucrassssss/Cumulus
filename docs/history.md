@@ -24,9 +24,9 @@ fact drives every architectural decision below.
 │           ├── 07-map-setup-geocoding.js     #   readability, not the ES-module
 │           ├── 08-host-create-owner-finance.js     #   Phase 2 rewrite described below.
 │           ├── 09-host-admin-render-router.js    #   Note: the split's naming isn't
-│           ├── 10-account-calendar-payments.js            #   perfectly scoped — e.g. Stripe
+│           ├── 10-account-payments.js            #   perfectly scoped — e.g. Stripe
 │           ├── 11-checkout-confirmation.js    #   checkout logic (startStripe-
-│           └── 12-wallet-host-form-scanner.js     #   Checkout) landed in 10-account-calendar-payments.js,
+│           └── 12-wallet-host-form-scanner.js     #   Checkout) landed in 10-account-payments.js,
 │                                       #   not 11-checkout-confirmation.js.
 ├── assets/
 │   ├── clouds/           # cloud1–5.webp — drifting hero clouds
@@ -253,7 +253,7 @@ Fixed two things together:
    a future Stripe-side rejection is diagnosable straight from
    `get_logs`/`supabase functions logs` instead of requiring the same
    research-from-first-principles this took. `startStripeCheckout()`
-   (`src/js/app/10-account-calendar-payments.js`) now calls
+   (`src/js/app/10-account-payments.js`) now calls
    `stripe.createEmbeddedCheckoutPage()`, falling back to
    `initEmbeddedCheckout()` only if the loaded Stripe.js predates the
    rename (cheap insurance since `js.stripe.com/v3/` is unversioned).
@@ -311,7 +311,7 @@ It's now Stripe's **Embedded Checkout**: `create-checkout-session` passes
 `ui_mode: "embedded"` and a `return_url` (this app's own origin, with a
 `{CHECKOUT_SESSION_ID}` placeholder Stripe fills in) instead of
 `success_url`/`cancel_url`, and returns `client_secret` instead of `url`.
-`startStripeCheckout()` (`src/js/app/10-account-calendar-payments.js`) loads `Stripe.js`
+`startStripeCheckout()` (`src/js/app/10-account-payments.js`) loads `Stripe.js`
 (`https://js.stripe.com/v3/`, the one exception to this repo's "no SDK for
 anything" rule — Embedded Checkout's iframe can only be mounted and driven
 by that library), calls `stripe.initEmbeddedCheckout({ clientSecret })`,
@@ -320,7 +320,7 @@ checkout screen (`renderCheckout()`, `src/js/app/11-checkout-confirmation.js`) �
 same look as Eventbrite's in-page checkout, no new tab, no new domain in
 the address bar. On completion Stripe navigates back to `return_url`
 (`/?checkout=return&session_id=...`), which is still this app's own page;
-`checkStripeCheckoutReturn()` (boot-time, `10-account-calendar-payments.js`) reads that,
+`checkStripeCheckoutReturn()` (boot-time, `10-account-payments.js`) reads that,
 polls `fetchTicketsBySession()` until `stripe-webhook` has finished
 creating the ticket rows (same webhook, same ticket-creation path as
 before — embedded vs. hosted only changes where the *card form* renders,
@@ -380,7 +380,7 @@ unthemed" — never a fourth outage. Verify by watching for a "branding_settings
 rejected, retrying without theming" log line after a real checkout
 attempt; its absence (or a themed-looking payment form) means it worked.
 
-`stripeAppearanceForCurrentTheme()` (`src/js/app/10-account-calendar-payments.js`) is still
+`stripeAppearanceForCurrentTheme()` (`src/js/app/10-account-payments.js`) is still
 unused/uncalled from attempt #1 — left in place as a correctly-computed
 reference for the color values, not wired back into the client init call
 (that specific surface is confirmed to reject unknown options).
@@ -451,7 +451,7 @@ preview build and looked like a strong candidate for a fifth outage.
   as its own payment method (the `receiptEmail`/`billingDetails.email`
   default in `startStripeCheckout()` now only prefills the card form's
   email field, not Link's one-tap recognition).
-- `startStripeCheckout()` (`src/js/app/10-account-calendar-payments.js`) now calls
+- `startStripeCheckout()` (`src/js/app/10-account-payments.js`) now calls
   `stripe.elements({ clientSecret, appearance, fonts })` (the SAME
   `stripeAppearanceForCurrentTheme()` color/font values computed for the
   abandoned attempt #1 — they finally apply for real now) and mounts a
@@ -707,7 +707,7 @@ customised but a full revamp of that system is needed... we will revamp
 this into the site once this full audit removal is done").
 
 **What replaced it — a lean Account tab.** `renderAccount()`
-(`10-account-calendar-payments.js`) is now just: My Tickets (the actual cards, via
+(`10-account-payments.js`) is now just: My Tickets (the actual cards, via
 `myTicketsCardsHtml()`, `12-wallet-host-form-scanner.js` — tickets used to live on two
 separate near-duplicate screens; there's one implementation now, embedded
 directly here rather than behind its own nav destination), then a settings
@@ -772,7 +772,7 @@ Luma, most consumer apps) is a dedicated "Account details" page covering
 name/email/phone/photo, and both attendees and hosts needed a way to set
 a profile photo now that the card system's avatar upload went with it.
 
-`openAccountDetails()`/`renderAccountDetails()` (`10-account-calendar-payments.js`) replace
+`openAccountDetails()`/`renderAccountDetails()` (`10-account-payments.js`) replace
 the old inline `editProfile()`/`accountEditFormHtml()` pair with a real
 full-page view (`state.view = "account-details"`) — avatar upload zone,
 name, email, phone (new `phone_number` column, optional, lenient

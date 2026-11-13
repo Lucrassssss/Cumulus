@@ -40,10 +40,10 @@ Rules that follow from it:
 | `07-map-setup-geocoding.js` | Mapbox init (`initLeaflet`, historical name), weather tint, host address autocomplete |
 | `08-host-create-owner-finance.js` | flyer upload/compression, `submitHostEvent`, owner finance dashboard |
 | `09-host-admin-render-router.js` | **`renderView()`, the view router**, event page (`renderDetail`), host profile, admin screens, promo codes, payouts panel |
-| `10-account-calendar-payments.js` | Account + details, calendar, pricing helpers, `myTickets`/`bookingDraft`, **Stripe checkout** (`startStripeCheckout`, `submitStripePayment`, `finalizeStripePayment`) |
+| `10-account-payments.js` | Account + details, pricing helpers, `myTickets`/`bookingDraft`, **Stripe checkout** (`startStripeCheckout`, `submitStripePayment`, `finalizeStripePayment`) |
 | `11-checkout-confirmation.js` | Book + Pay screens, pay overlay, "You're in" animation, confirmation/ticket view |
 | `12-wallet-host-form-scanner.js` | Tickets wallet (Upcoming/Past), can't-go/transfer sheets, host event form, door scanner (offline queue in IndexedDB) |
-| `13-discover-feed.js` | Discover feed, Filters sheet, poster art, carousel, saved events, crew, location/calendar sheets, keyboard handling |
+| `13-discover-feed.js` | Discover feed (date strip, day headings), Filters sheet + chip-bar dropdown, poster art, carousel, saved events, crew, location/calendar sheets, keyboard handling |
 | `14-delight.js` | Decorative motion: boot screen tips/progress + iris reveal, Home "level load" intro (once per visit), count-ups, save confetti, poster holo tilt, orb easter egg, the event-page ticket button's fly-in (the button itself is `ticketButtonHtml()` in `09`); **boot call** |
 
 ### Rendering model

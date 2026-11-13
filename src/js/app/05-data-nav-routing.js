@@ -264,7 +264,7 @@ function renderNav() {
       ? "account"
       : ["my-tickets", "confirmed"].includes(state.view)
         ? "tickets"
-      : ["calendar", "calendar-day", "detail", "host-profile", "plans", "book", "checkout"].includes(state.view)
+      : ["detail", "host-profile", "plans", "book", "checkout"].includes(state.view)
         ? "feed"
         : state.view;
   const navContainer = document.getElementById("nav-container");
@@ -605,13 +605,6 @@ function openAccount() {
   renderView();
   window.scrollTo(0, 0);
 }
-function openCalendar() {
-  pushNav();
-  state.view = "calendar";
-  renderNav();
-  renderView();
-  window.scrollTo(0, 0);
-}
 // True once an account has been accepted onto the host onboarding system
 // (the verified-host badge, granted server-side in reviewHost() on
 // approval) or is an admin. This — not just being signed in — is what gates
@@ -661,25 +654,6 @@ function closeAttendeePeek() {
   if (ov) ov.classList.remove("open");
 }
 
-function getEventDay(ev, year, monthIdx) {
-  if (ev.startsAt == null) return null;
-  const d = new Date(ev.startsAt);
-  if (year != null && d.getFullYear() !== year) return null;
-  if (monthIdx != null && d.getMonth() !== monthIdx) return null;
-  return d.getDate();
-}
-function buildCalendarWeeks(year, monthIdx) {
-  const firstDay = new Date(year, monthIdx, 1);
-  const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
-  const startOffset = (firstDay.getDay() + 6) % 7;
-  const cells = [];
-  for (let i = 0; i < startOffset; i++) cells.push(null);
-  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
-  while (cells.length % 7 !== 0) cells.push(null);
-  const weeks = [];
-  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
-  return weeks;
-}
 
 // ---- MAPBOX GL MAP & HTML Markers ----
 

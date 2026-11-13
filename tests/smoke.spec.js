@@ -250,7 +250,6 @@ test.describe("Cumulus smoke", () => {
       state.userId = "test-admin-uuid";
     });
     await enterApp(page);
-    await page.waitForTimeout(300);
     const labels = (
       await page.locator(".bottom-nav .nav-link").allInnerTexts()
     ).map((s) => s.trim().toUpperCase());
@@ -366,13 +365,11 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator("#map-caption-bar .cap-live .dot")).toBeVisible();
   });
 
-  test("core views render (host / calendar / account)", async ({ page }) => {
+  test("core views render (host / account)", async ({ page }) => {
     await page.goto("/");
     await enterApp(page);
     await setView(page, "host");
     await expect(page.locator(".host-section").first()).toBeVisible();
-    await setView(page, "calendar");
-    await expect(page.locator(".calendar-scroll")).toBeVisible();
     await page.evaluate(() => (state.userId = "00000000-0000-0000-0000-000000000004"));
     await setView(page, "account");
     await expect(page.locator(".ac-page .v-kicker")).toHaveText("Account");
@@ -723,6 +720,29 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator('.bottom-nav [data-nav="tickets"]')).toHaveCount(0);
     await page.locator('[data-range="saved"]').click();
     await expect(page.locator("#feed-results .fr-row")).toHaveCount(1);
+    await page.evaluate(() => setFeedRange("all"));
+    // Filters dropdown on the chip bar applies live, keeps the chips in sync.
+    await page.locator(".ff-drop-btn").click();
+    await expect(page.locator("#ff-drop")).toBeVisible();
+    await page.locator("#ff-drop .ff-seg button", { hasText: "Free" }).click();
+    await expect(page.locator("#feed-results .fr-row")).toHaveCount(1);
+    await expect(page.locator('[data-range="free"]')).toHaveClass(/\bon\b/);
+    await expect(page.locator(".ff-drop-btn .ffb-n")).toHaveText("1");
+    await page.waitForTimeout(300);
+    await page.locator("#ff-drop .ffd-foot .link-btn").click();
+    await expect(page.locator("#feed-results .fr-row")).toHaveCount(3);
+    await page.keyboard.press("Escape");
+    await expect(page.locator("#ff-drop")).toHaveCount(0);
+    // Date strip replaces the Calendar link: tap a day to see just that day.
+    await expect(page.locator(".feed-sec-head", { hasText: "Coming up" }).locator(".link-btn")).toHaveCount(0);
+    const k = await page.evaluate(() => dayKey(EVENTS.find((e) => e.id === "ux-3").startsAt));
+    await page.locator(`.fd-day[data-day="${k}"]`).click();
+    await expect(page.locator(`.fd-day[data-day="${k}"]`)).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator("#feed-results .fr-row", { hasText: "Third Gig" })).toBeVisible();
+    await expect(page.locator("#feed-results h3.fr-day b").first()).toBeVisible();
+    await page.locator(".fd-any").click();
+    await expect(page.locator("#feed-results .fr-row")).toHaveCount(3);
+    await page.locator('[data-range="saved"]').click();
     // Signing in reveals the Tickets tab, with the Saved list inside it.
     await page.evaluate(() => {
       state.userId = "00000000-0000-0000-0000-000000000007";

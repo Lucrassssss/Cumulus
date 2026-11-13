@@ -516,7 +516,7 @@ async function getRepeatAttendeeCount(eventId) {
  * themselves, same division of responsibility as the rest of this file. */
 
 /* Creates a real Stripe PaymentIntent for a paid event and returns its
- * client_secret for startStripeCheckout() (10-account-calendar-payments.js) to mount a Payment
+ * client_secret for startStripeCheckout() (10-account-payments.js) to mount a Payment
  * Element against. Free events never call this — registerFree() (app.js)
  * handles those with no Stripe involvement at all. */
 async function createCheckoutSession(eventId, qty, marketingOptIn, promoCode) {
@@ -550,7 +550,7 @@ async function createCheckoutSession(eventId, qty, marketingOptIn, promoCode) {
 }
 
 /* Fetches the tickets a just-completed PaymentIntent created, for the
- * confirmation screen — polled by finalizeStripePayment() (10-account-calendar-payments.js)
+ * confirmation screen — polled by finalizeStripePayment() (10-account-payments.js)
  * since stripe-webhook creates these rows asynchronously. Relies on
  * tickets_buyer_read RLS (user_id = auth.uid()) — this never needs a
  * service-role key client-side. */

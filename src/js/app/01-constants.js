@@ -55,40 +55,6 @@ function generateUniqueId() {
     .padStart(6, "0");
 }
 
-
-const nowObj = new Date();
-let CALENDAR_YEAR = nowObj.getFullYear();
-let CALENDAR_MONTH = nowObj.getMonth();
-function changeCalendarMonth(delta) {
-  let m = CALENDAR_MONTH + delta;
-  let y = CALENDAR_YEAR;
-  while (m < 0) {
-    m += 12;
-    y--;
-  }
-  while (m > 11) {
-    m -= 12;
-    y++;
-  }
-  CALENDAR_MONTH = m;
-  CALENDAR_YEAR = y;
-  renderView();
-}
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 // Consistent stroke-icon replacements for the 🔒/✓ emoji used as structural
 // state indicators (locked/complete) throughout the app — matches the
 // Phosphor-style icon set introduced on the landing page/nav.

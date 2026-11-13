@@ -192,7 +192,6 @@ const JUMP_SOURCES = [
   [".fp-card", ".poster"],
   [".mcard", ".mcard-art"],
   [".up-next", ".un-art"],
-  [".event-list-card", ".elc-img"],
 ];
 let _evJump = null;
 document.addEventListener(

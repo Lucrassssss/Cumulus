@@ -1301,26 +1301,6 @@ html body .connect-header p {
   font-size: 15px !important;
   margin: 0 !important;
 }
-html body .cal-header {
-  display: flex !important;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-html body .cal-nav-btn {
-  width: 44px !important;
-  height: 44px !important;
-  border-radius: 50% !important;
-  background: var(--surface) !important;
-  border: 1px solid var(--line) !important;
-  color: var(--text) !important;
-}
-html body .prof-about-label {
-  font: 700 11.5px var(--font-mono) !important;
-  text-transform: uppercase;
-  letter-spacing: 0.08em !important;
-  color: var(--accent) !important;
-}
 
 html body .panel {
   background: var(--surface) !important;
@@ -1382,23 +1362,6 @@ html body :is(.gate-label, .intro-field-label, .gate-wrap label) {
   color: var(--text-muted) !important;
 }
 
-html body .social-seg {
-  background: var(--surface) !important;
-  border: 1px solid var(--line-soft) !important;
-  border-radius: 999px !important;
-  padding: 4px !important;
-}
-html body .social-seg-btn {
-  border-radius: 999px !important;
-  font-weight: 700 !important;
-  color: var(--text-muted) !important;
-  background: transparent !important;
-}
-html body .social-seg-btn.active {
-  background: var(--text) !important;
-  color: var(--bg) !important;
-}
-
 html body .event-badge {
   font: 700 10.5px var(--font-mono) !important;
   text-transform: uppercase !important;
@@ -1415,38 +1378,6 @@ html body .live-chip .dot {
 }
 
 /* Calendar list / day cards */
-html body .event-list-card {
-  display: flex !important;
-  gap: 14px !important;
-  padding: 10px !important;
-  border-radius: var(--r-md) !important;
-  transition: background 0.2s ease, transform 0.2s var(--spring) !important;
-}
-html body .event-list-card:hover {
-  background: var(--surface-2) !important;
-  transform: none !important;
-}
-html body .event-list-card .elc-img {
-  width: 92px !important;
-  height: 92px !important;
-  flex: 0 0 92px !important;
-  border-radius: 14px !important;
-}
-html body .elc-title {
-  font: 750 17px/1.15 var(--font-display) !important;
-  letter-spacing: -0.02em !important;
-}
-html body .elc-price {
-  font-weight: 800 !important;
-  color: var(--text) !important;
-}
-html body .calendar-cell {
-  border-radius: 12px !important;
-}
-html body .calendar-cell.today .calendar-day-num {
-  background: var(--cta-bg) !important;
-  color: var(--cta-fg) !important;
-}
 
 html body .empty-state {
   border: 1.5px dashed var(--line) !important;
@@ -1883,22 +1814,6 @@ html body .auth-mode-btn::after {
 }
 
 /* Calendar */
-html body .cal-header {
-  text-align: center !important;
-  padding: calc(env(safe-area-inset-top, 0px) + 18px) 0 18px !important;
-}
-html body .calendar-cell.today {
-  box-shadow: inset 0 0 0 2px var(--accent) !important;
-  border-color: transparent !important;
-}
-html body .calendar-cell.today .calendar-day-num {
-  display: inline-grid !important;
-  place-items: center;
-  min-width: 24px;
-  height: 24px;
-  border-radius: 999px !important;
-  padding: 0 5px !important;
-}
 
 html body .bottom-nav::before,
 html body .bottom-nav::after {
@@ -2564,51 +2479,9 @@ html body .host-stat-label {
   font: 600 10.5px var(--font-mono) !important;
   letter-spacing: 0.06em !important;
 }
-html body .host-event-card {
-  flex: 0 0 min(64vw, 240px) !important;
-  background: var(--surface) !important;
-  border: 1px solid var(--line-soft) !important;
-  border-radius: var(--r-lg) !important;
-  overflow: hidden;
-  padding: 0 !important;
-}
-html body .host-event-card-img {
-  aspect-ratio: 4 / 3;
-  height: auto !important;
-  border-radius: 0 !important;
-}
-html body .host-event-card-img .poster-glyph {
-  font-size: 120px;
-}
-html body .host-event-card-body {
-  padding: 12px 14px 14px !important;
-}
-html body .host-event-card-title {
-  font: 750 17px/1.15 var(--font-display) !important;
-}
 
 /* ── Calendar list cards: generated posters, not empty boxes ─────────── */
-html body .event-list-card .elc-img::after {
-  display: none;
-}
-html body .event-list-card .elc-img .poster-glyph {
-  font-size: 66px;
-  right: -4px;
-  top: 2px;
-}
 /* Segmented controls: never wrap a label onto two lines */
-html body .social-seg {
-  display: flex !important;
-  width: 100% !important;
-  max-width: 100%;
-}
-html body .social-seg-btn {
-  flex: 1 1 auto;
-  white-space: nowrap !important;
-  padding-left: 14px !important;
-  padding-right: 14px !important;
-  min-height: 38px;
-}
 
 /* ── Become-a-host brochure: off the old gold, onto the new palette ──── */
 
@@ -4563,11 +4436,6 @@ html body .mapboxgl-ctrl-geolocate-active .mapboxgl-ctrl-icon {
 .tt-price {
   text-align: right;
 }
-.host-event-card-price .incl {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
 .host-price-preview {
   margin: 8px 0 10px;
   padding: 10px 12px;
@@ -5571,3 +5439,52 @@ html body .ev-page.jumped .ev-body{animation:ev-in .28s ease-out backwards;}
 @keyframes ev-in{from{opacity:0}}
 html body .gate-otp-links{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;color:var(--text-muted);font-size:13px;}
 html body .gate-otp-links .gate-otp-resend{margin:0 !important;width:auto !important;display:inline !important;padding:4px 0 !important;}
+
+/* ── Filters dropdown on the Home chip bar (toggleFeedDrop in 13) ───────── */
+html body .ff-drop-btn{gap:6px;flex:none;}
+html body .ff-drop-btn .ffb-n{min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:var(--cta-bg);color:var(--cta-fg);font:800 10.5px/18px var(--font-sans);text-align:center;}
+html body .ff-drop-btn .ffd-caret{margin-left:-1px;transition:rotate .22s cubic-bezier(.2,.8,.2,1);}
+html body .ff-drop-btn[aria-expanded="true"] .ffd-caret{rotate:180deg;}
+html body .ff-drop{position:absolute;left:12px;right:12px;top:calc(100% + 6px);z-index:60;overflow:auto;overscroll-behavior:contain;
+  padding:16px 14px 0;border-radius:var(--r-lg);background:var(--surface);border:1px solid var(--line);box-shadow:0 24px 60px -18px rgba(0,0,0,.55);
+  opacity:0;translate:0 -8px;scale:.98;transform-origin:20% 0;transition:opacity .16s ease,translate .2s cubic-bezier(.2,.8,.2,1),scale .2s cubic-bezier(.2,.8,.2,1);}
+html body .ff-drop.in{opacity:1;translate:0 0;scale:1;}
+@media (min-width:761px){html body .ff-drop{right:auto;width:420px;left:0;}}
+html body .ffd-foot{position:sticky;bottom:0;display:flex;align-items:center;gap:12px;margin:0 -14px;padding:12px 14px;background:var(--surface);border-top:1px solid var(--line-soft);}
+html body .ffd-foot > span{flex:1;font-size:13.5px;color:var(--text-muted);}
+html body .ffd-foot > span b{color:var(--text);font-variant-numeric:tabular-nums;}
+html body .ffd-foot .link-btn[disabled]{opacity:.4;pointer-events:none;}
+@media (prefers-reduced-motion:reduce){html body .ff-drop{transition:opacity .12s ease;translate:none;scale:none;}}
+html body .ff-drop.up{top:auto;bottom:calc(100% + 6px);transform-origin:20% 100%;translate:0 8px;}
+html body .ff-drop.up.in{translate:0 0;}
+
+/* ── Home: clear day headings + date strip (13-discover-feed.js) ──────── */
+html body .fr-day{grid-column:1 / -1;display:flex;align-items:baseline;gap:10px;margin:0;padding:22px 4px 10px;font:inherit;text-transform:none;letter-spacing:0;color:var(--text);}
+html body .fr-day:first-child{padding-top:4px;}
+html body .fr-day b{font:800 24px/1 var(--font-display);letter-spacing:-.025em;}
+html body .fr-day span{font:700 15px/1 var(--font-sans);color:var(--text-muted);}
+html body .fr-day em{margin-left:auto;font:700 11px/1 var(--font-mono);font-style:normal;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);}
+html body .fr-day.live b{color:var(--hot);}
+html body .fr-day .pulse{align-self:center;}
+html body .fr-list.compact .fr-date,html body .fr-date{font-size:12.5px;letter-spacing:.04em;font-weight:700;}
+html body .fd-strip{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity;scroll-padding-inline:18px;margin:2px 0 14px;padding:10px 18px 6px;}
+html body .fd-strip::-webkit-scrollbar{display:none;}
+html body .fd-day{appearance:none;flex:none;scroll-snap-align:start;position:relative;width:58px;height:74px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  border-radius:16px;border:1px solid var(--line);background:var(--surface);color:var(--text);cursor:pointer;font:inherit;-webkit-tap-highlight-color:transparent;
+  transition:background-color .2s ease,border-color .2s ease,color .2s ease,transform .18s cubic-bezier(.2,.8,.2,1);}
+html body .fd-day:active{transform:scale(.95);}
+html body .fd-wd{font:700 10.5px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);}
+html body .fd-day b{font:800 22px/1 var(--font-display);letter-spacing:-.02em;}
+html body .fd-mo{font:600 10.5px/1 var(--font-sans);color:var(--text-muted);}
+html body .fd-n{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:var(--surface-2);border:1px solid var(--line);color:var(--text);font:800 10px/16px var(--font-sans);font-style:normal;text-align:center;}
+html body .fd-n:empty{display:none;}
+html body .fd-day.none{opacity:.45;}
+html body .fd-day.wknd .fd-wd{color:var(--accent);}
+html body .fd-day.on{background:var(--text);border-color:var(--text);color:var(--bg);opacity:1;}
+html body .fd-day.on :is(.fd-wd,.fd-mo){color:color-mix(in srgb,var(--bg) 70%,transparent);}
+html body .fd-day.on .fd-n{background:var(--cta-bg);border-color:var(--cta-bg);color:var(--cta-fg);}
+html body .fd-any b{font-size:17px;}
+html body .fd-pick{color:var(--text-muted);gap:6px;overflow:hidden;}
+html body .fd-pick input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+@media (min-width:761px){html body .fd-strip{margin:2px 0 16px;padding:2px 0 6px;scroll-padding-inline:0;}}
+@media (prefers-reduced-motion:reduce){html body .fd-day:active{transform:none;}}
