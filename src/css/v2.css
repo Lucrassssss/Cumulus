@@ -5532,10 +5532,24 @@ html body .fr-foot:empty{display:none;}
 @media (min-width:761px){html body .fr-list{row-gap:10px;}}
 
 /* 6 · Event page "jump in" + ticket tear (see delightEventJump) */
-.ev-ghost{position:fixed !important;z-index:950;margin:0 !important;min-height:0 !important;max-width:none !important;animation:none !important;pointer-events:none;overflow:hidden;will-change:left,top,width,height;}
+.ev-ghost{position:fixed !important;z-index:950;margin:0 !important;animation:none !important;pointer-events:none;transform-origin:0 0;will-change:transform,clip-path;
+  -webkit-mask:radial-gradient(circle at 0 calc(var(--art-h) + 1px),#0000 11px,#000 11.5px) left/51% 100% no-repeat,radial-gradient(circle at 100% calc(var(--art-h) + 1px),#0000 11px,#000 11.5px) right/51% 100% no-repeat;
+          mask:radial-gradient(circle at 0 calc(var(--art-h) + 1px),#0000 11px,#000 11.5px) left/51% 100% no-repeat,radial-gradient(circle at 100% calc(var(--art-h) + 1px),#0000 11px,#000 11.5px) right/51% 100% no-repeat;}
+.ev-ghost.torn{-webkit-mask:none;mask:none;overflow:visible;background:transparent;border-color:transparent;}
+.ev-ghost .tk-art{height:var(--art-h);min-height:0;box-sizing:border-box;transform-origin:0 0;}
+.ev-ghost .tk-perf{margin:0 16px;}
+.ev-ghost .tk-perf::before,.ev-ghost .tk-perf::after{display:none;}
+.ev-ghost .tk-stub{padding:14px 18px 16px;background:var(--surface);}
+.ev-ghost .tk-row{margin:0;gap:12px;}
+.ev-ghost .tk-row b{font-size:14px;white-space:nowrap;}
+.ev-ghost.is-desk .tk-title{font-size:24px !important;}
+.ev-ghost.is-desk .tk-art{padding:14px;}
+.ev-ghost.is-desk .tk-stub{padding:12px 14px 14px;}
+.ev-ghost.is-desk .tk-row b{font-size:13px;}
 #app.ev-jump .ev-page{animation:none !important;}
-#app.ev-jump .ev-hero{animation:none !important;opacity:0;}
-#app.ev-jump.ev-split .ev-hero{opacity:1;transition:opacity .12s ease;}
+#app.ev-jump .ev-hero{animation:none !important;opacity:.22;transition:opacity .3s ease;}
+#app.ev-jump:not(.ev-split) .ev-hero :is(.ev-hero-foot,.poster-glyph){opacity:0;}
+#app.ev-jump.ev-split .ev-hero{opacity:1;transition:opacity .22s ease;}
 /* body waits for the tear, then the stub drops off the poster */
 #app.ev-jump .ev-body > *,#app.ev-jump .ev-buybar{opacity:0;}
 #app.ev-split .ev-body > *{opacity:1;animation:bi-rise .5s calc(.22s + var(--k,0) * 60ms) cubic-bezier(.2,.8,.2,1) backwards;}

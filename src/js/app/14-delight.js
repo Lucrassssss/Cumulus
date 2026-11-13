@@ -182,12 +182,15 @@ document.addEventListener("click", (e) => {
 }, true);
 
 // ── 6. Opening an event: the poster jumps in, the ticket tears off ────────
-// (Shared-element transitions in iOS / Material, plus a ticket stub being
-// torn off.) The poster you tapped lifts off the list and flies, growing,
-// into the event's hero. As it lands a perforation flashes along its edge
-// and the details card tears away like a stub; the rest deals in and the
-// buy bar slides up last. Without a tapped poster (deep link, Back) the
-// page uses its ordinary drop-in.
+// (Shared-element transitions in iOS / Material, plus a real ticket being
+// laid on a table and torn.) The poster you tapped lifts off the list,
+// prints out into a ticket — the same art + perforation + stub look as the
+// wallet — and lays itself onto the page with its perforation on the seam
+// between the hero and the details. Then it tears: the art half becomes
+// the hero (or, on desktop with a photo, the flyer slot), the stub drops
+// into the details, the rest deals in and the buy bar slides up last.
+// Without a tapped poster (deep link, Back) the page uses its ordinary
+// drop-in.
 const JUMP_SOURCES = [
   [".fr-row", ".fr-thumb"],
   [".fp-card", ".poster"],
@@ -206,12 +209,40 @@ document.addEventListener(
       const a = c.querySelector(art) || c;
       const r = a.getBoundingClientRect();
       if (r.width < 20) return;
-      _evJump = { r, radius: getComputedStyle(a).borderRadius, t: performance.now() };
+      _evJump = { r, t: performance.now() };
       return;
     }
   },
   true,
 );
+
+// A pre-purchase ticket for an event, in the wallet's ticket style
+// (.tk / .tk-art / .tk-perf / .tk-stub). Used by the jump-in; kept separate
+// so other screens can lay the same ticket down.
+function eventTicketHtml(ev, { extraClass = "" } = {}) {
+  const d = new Date(ev.startsAt);
+  const day = d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  const no = String((_posterSeed(ev.id) % 900) + 100);
+  return `<div class="tk ev-tk ${extraClass}" aria-hidden="true">
+    <div class="tk-art ${posterClass(ev)}" style="${posterStyle(ev)}">
+      ${posterGlyph(ev)}
+      <div class="tk-art-foot">
+        <span class="fp-date">${feedDateLabel(ev)} · ${feedTimeLabel(ev)}</span>
+        <h3 class="tk-title">${escapeHtml(ev.title)}</h3>
+        <div class="tk-venue">${escapeHtml(ev.venue || "")}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""}</div>
+      </div>
+    </div>
+    <div class="tk-perf"></div>
+    <div class="tk-stub">
+      <div class="tk-row">
+        <div><span class="tk-lbl">Admit one</span><b>${escapeHtml(day)}</b></div>
+        <div><span class="tk-lbl">From</span><b>${feedPriceLabel(ev)}</b></div>
+        <div><span class="tk-lbl">No.</span><b class="mono">${no}</b></div>
+      </div>
+    </div>
+  </div>`;
+}
+
 function delightEventJump(container) {
   const src = _evJump;
   _evJump = null;
@@ -219,50 +250,103 @@ function delightEventJump(container) {
   if (!src || performance.now() - src.t > 900 || _reduceMotion()) return;
   if (app.classList.contains("same-view") || app.classList.contains("nav-back")) return;
   const hero = container.querySelector(".ev-hero");
-  if (!hero) return;
+  const facts = container.querySelector(".ev-facts");
+  const ev = EVENTS.find((e) => String(e.id) === String(state.selectedEventId));
+  if (!hero || !facts || !ev) return;
   app.classList.add("ev-jump");
   // measure after openEvent()'s scroll-to-top has happened
   requestAnimationFrame(() => {
-    let to = hero.getBoundingClientRect();
-    let heroRadius = getComputedStyle(hero).borderRadius;
-    let ghost;
+    const H = hero.getBoundingClientRect();
+    const desk = innerWidth >= 761;
     const img = hero.style.getPropertyValue("--p-img");
-    if (img && innerWidth >= 761) {
-      // Desktop: the flyer sits on the right of a wide banner (see the
-      // .ev-hero.has-photo background in v2.css) — fly just the flyer there.
-      const h = to.height - 104;
-      const probe = new Image();
-      probe.src = (img.match(/url\(["']?([^"')]+)/) || [])[1] || "";
-      const ratio = probe.naturalWidth && probe.naturalHeight ? probe.naturalWidth / probe.naturalHeight : 0.8;
-      const w = h * ratio;
-      to = { left: to.right - 28 - w, top: to.top + 76, width: w, height: h };
-      heroRadius = "4px";
-      ghost = document.createElement("div");
-      ghost.style.background = `${img} center / cover no-repeat`;
+    // Where the ticket's art half rests, and what it turns into after the tear.
+    let rest, artTo;
+    if (desk) {
+      // The flyer slot on the right of the wide banner (.ev-hero.has-photo in v2.css).
+      const h = H.height - 104;
+      let ratio = 0.8;
+      if (img) {
+        const probe = new Image();
+        probe.src = (img.match(/url\(["']?([^"')]+)/) || [])[1] || "";
+        if (probe.naturalWidth && probe.naturalHeight) ratio = probe.naturalWidth / probe.naturalHeight;
+      }
+      const w = Math.max(240, h * ratio);
+      rest = { left: H.right - 28 - w, top: H.top + 76, width: w, artH: h };
+      artTo = img ? { left: rest.left, top: rest.top, width: w, height: h } : H;
     } else {
-      ghost = hero.cloneNode(true);
-      ghost.querySelectorAll(".ev-hero-bar, .ev-hero-foot").forEach((n) => n.remove());
-      ghost.removeAttribute("id");
+      const F = facts.getBoundingClientRect();
+      const artH = Math.min(F.width * 1.02, H.height * 0.62);
+      // perforation on the hero/details seam, but never so low the stub is off-screen
+      const seam = Math.min(H.bottom, innerHeight - 150);
+      rest = { left: F.left, top: seam - artH, width: F.width, artH };
+      artTo = H;
     }
-    ghost.classList.add("ev-ghost");
-    ghost.setAttribute("aria-hidden", "true");
+
+    const wrap = document.createElement("div");
+    wrap.innerHTML = eventTicketHtml(ev, { extraClass: "ev-ghost" + (desk ? " is-desk" : "") });
+    const ghost = wrap.firstElementChild;
+    ghost.style.cssText = `left:${rest.left}px;top:${rest.top}px;width:${rest.width}px;--art-h:${rest.artH}px;`;
     document.body.appendChild(ghost);
-    const box = (r, rad) => ({ left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px`, borderRadius: rad });
-    const lift = { ...box(src.r, src.radius), transform: "scale(1)", boxShadow: "0 0 0 rgba(0,0,0,0)" };
-    const up = { ...box(src.r, src.radius), transform: "scale(1.06) rotate(-2deg)", boxShadow: "0 24px 50px rgba(0,0,0,.45)", offset: 0.16 };
-    const land = { ...box(to, heroRadius), transform: "none", boxShadow: "0 10px 30px rgba(0,0,0,.25)" };
-    const anim = ghost.animate([lift, up, land], { duration: 560, easing: "cubic-bezier(.3,.7,.15,1)", fill: "forwards" });
-    const finish = () => {
+    const artEl = ghost.querySelector(".tk-art");
+    const stubH = ghost.offsetHeight - rest.artH;
+
+    // FLIP: start as the tapped poster (art only, scaled to its width), end at rest.
+    const s = src.r.width / rest.width;
+    const dx = src.r.left - rest.left;
+    const dy = src.r.top - rest.top;
+    const clipArt = `inset(0 0 ${stubH}px 0 round ${12 / s}px)`;
+    const clipAll = "inset(0 0 0 0 round 18px)";
+    const fly = ghost.animate(
+      [
+        { transform: `translate(${dx}px,${dy}px) scale(${s})`, clipPath: clipArt, boxShadow: "0 0 0 rgba(0,0,0,0)" },
+        { transform: `translate(${dx}px,${dy - 10}px) scale(${s * 1.08}) rotate(-3deg)`, clipPath: clipArt, boxShadow: "0 18px 40px rgba(0,0,0,.4)", offset: 0.14 },
+        { transform: "translate(0,-18px) scale(1.04) rotate(1.5deg)", clipPath: clipAll, boxShadow: "0 40px 70px rgba(0,0,0,.5)", offset: 0.7 },
+        { transform: "translate(0,0) scale(.985) rotate(0deg)", clipPath: clipAll, boxShadow: "0 6px 14px rgba(0,0,0,.35)", offset: 0.88 },
+        { transform: "none", clipPath: clipAll, boxShadow: "0 10px 26px rgba(0,0,0,.3)" },
+      ],
+      { duration: 640, easing: "cubic-bezier(.3,.7,.2,1)", fill: "forwards" },
+    );
+
+    let done = false;
+    const tear = () => {
+      if (done) return;
+      done = true;
       app.classList.add("ev-split");
+      ghost.classList.add("torn");
       hero.insertAdjacentHTML("beforeend", '<i class="ev-perf" aria-hidden="true"></i>');
-      ghost.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: "forwards" }).onfinish = () => ghost.remove();
+      const A = artEl.getBoundingClientRect();
+      // art half grows (uniformly, centre to centre) into what it becomes and
+      // dissolves into the real page; its caption goes first so text never doubles
+      const k = Math.max(artTo.width / A.width, artTo.height / A.height);
+      const tx = artTo.left + artTo.width / 2 - (A.left + (A.width * k) / 2);
+      const ty = artTo.top + artTo.height / 2 - (A.top + (A.height * k) / 2);
+      ghost.querySelector(".tk-art-foot")?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 110, fill: "forwards" });
+      artEl.animate(
+        [
+          { transform: "none", opacity: 1 },
+          { transform: `translate(${tx}px,${ty}px) scale(${k})`, opacity: 0 },
+        ],
+        { duration: 340, easing: "cubic-bezier(.5,0,.2,1)", fill: "forwards" },
+      );
+      // stub tears off and drops into the details
+      ghost.querySelectorAll(".tk-perf, .tk-stub").forEach((n) =>
+        n.animate(
+          [
+            { translate: "0 0", rotate: "0deg", opacity: 1 },
+            { translate: "6px 26px", rotate: "2.5deg", opacity: 0 },
+          ],
+          { duration: 320, easing: "cubic-bezier(.4,0,.6,1)", fill: "forwards" },
+        ),
+      );
+      ghost.animate([{ boxShadow: "0 10px 26px rgba(0,0,0,.3)" }, { boxShadow: "0 0 0 rgba(0,0,0,0)" }], { duration: 200, fill: "forwards" });
+      setTimeout(() => ghost.remove(), 420);
       setTimeout(() => {
         app.classList.remove("ev-jump", "ev-split");
         hero.querySelector(".ev-perf")?.remove();
       }, 1400);
     };
-    anim.onfinish = finish;
-    anim.oncancel = finish;
+    fly.onfinish = tear;
+    fly.oncancel = tear;
   });
 }
 
