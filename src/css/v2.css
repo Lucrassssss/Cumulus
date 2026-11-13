@@ -5389,3 +5389,16 @@ html body .tk-empty b{font:800 16px var(--font-sans);color:var(--text);}
 html body .tk-empty span{font-size:13.5px;color:var(--text-muted);max-width:280px;line-height:1.45;}
 html body .tk-empty .v-btn{margin-top:10px;}
 html body .tk.past{opacity:.82;filter:grayscale(.45);}
+
+/* "You've got a ticket" on the event page: a confident, on-brand state —
+   not a second loud call to action, and not an off-palette green. */
+html body .v-btn.have{background:color-mix(in srgb,var(--volt) 14%,var(--surface)) !important;color:var(--text) !important;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--volt) 45%,transparent) !important;display:inline-flex;align-items:center;justify-content:center;gap:8px;}
+html body .v-btn.have svg{color:var(--volt);}
+html[data-theme="light"] body .v-btn.have svg{color:var(--accent);}
+/* Line icons where emoji used to be */
+html body .flyer-ic{display:grid;place-items:center;color:var(--text-muted);margin-bottom:2px;}
+html body .review-empty-icon{display:grid;place-items:center;color:var(--text-muted);}
+html body .review-empty-icon .ui-ic{display:block;}
+/* Sign-in / sign-up submit: the app's one primary-button style, both themes */
+html body .lp-claim-btn{background:var(--cta-bg) !important;color:var(--cta-fg) !important;border:0 !important;box-shadow:none !important;}
+html body .lp-claim-btn:hover{filter:brightness(1.06);}

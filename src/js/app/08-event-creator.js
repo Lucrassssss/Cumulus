@@ -74,7 +74,7 @@ async function handleHostFlyerSelect(input) {
     showToast("Couldn't process that image — try another", "error");
     if (preview) {
       preview.style.border = "2px dashed var(--line)";
-      preview.innerHTML = `<span style="font-size:22px;">📷</span><span>Tap to upload a flyer photo</span>`;
+      preview.innerHTML = `<span class="flyer-ic">${uiIcon("camera", 26)}</span><span>Tap to upload a flyer photo</span>`;
     }
   }
 }

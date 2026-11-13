@@ -609,9 +609,9 @@ function initHostMap() {
         if (addr) addr.value = r.address;
         const area = document.getElementById("host-area");
         if (area && !area.value && r.area) area.value = r.area;
-        if (t) t.innerText = `📍 Pinned at ${r.address}`;
+        if (t) t.innerText = `Pinned at ${r.address}`;
       } else if (t) {
-        t.innerText = `📍 Pinned at ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+        t.innerText = `Pinned at ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
       }
     });
     hostEl.classList.remove("dropped");

@@ -336,7 +336,7 @@ function renderHostView() {
     <div class="connect-header" style="padding-top:16px;"><h2>${p.title ? "Duplicate event" : "Host an event"}</h2><p>${p.title ? "Same details, new date — review and publish." : "Zero platform fee — you keep 100% of your ticket price."}</p></div>
     <div id="host-type-notice" class="host-notice">${
       state.isAdmin
-        ? "⚡ Admin — event publishes immediately to the live map."
+        ? "Admin: this event publishes straight to the live map."
         : "Your event goes live after a quick review, usually within a few hours."
     }</div>
     ${renderMyHostedEventsDuplicatePanel()}
@@ -348,7 +348,7 @@ function renderHostView() {
         ${
           p.photoUrl
             ? ""
-            : `<span style="font-size:22px;">📷</span><span>Tap to upload a flyer photo</span>`
+            : `<span class="flyer-ic">${uiIcon("camera", 26)}</span><span>Tap to upload a flyer photo</span>`
         }
       </div>
       <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">${p.photoUrl ? "Reusing the original event's photo — tap to replace it." : "Compressed automatically. No flyer? We'll show a category photo instead."}</div>
@@ -356,40 +356,40 @@ function renderHostView() {
 
     <div class="host-section">
       <div class="host-section-title">Event basics</div>
-      <label class="intro-field-label">Title</label>
+      <label class="intro-field-label" for="host-title">Title</label>
       <input id="host-title" class="gate-input" placeholder="e.g., Summer Park Picnic" value="${escapeHtml(p.title || "")}"/>
-      <label class="intro-field-label">Category</label>
+      <label class="intro-field-label" for="host-cat">Category</label>
       <select id="host-cat" class="gate-input">${Object.keys(CATS)
         .map((c) => `<option value="${c}"${p.category === c ? " selected" : ""}>${c}</option>`)
         .join("")}</select>
-      <label class="intro-field-label">Description</label>
+      <label class="intro-field-label" for="host-desc">Description</label>
       <textarea id="host-desc" class="gate-input" rows="3" placeholder="What's the vibe? What should people expect?">${escapeHtml(p.desc || "")}</textarea>
     </div>
 
     <div class="host-section">
       <div class="host-section-title">Date &amp; time</div>
       ${p.title ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Dates aren't carried over — pick a new one below.</div>` : ""}
-      <label class="intro-field-label">Start date</label>
+      <label class="intro-field-label" for="host-start-date">Start date</label>
       <input id="host-start-date" type="date" class="gate-input" onchange="autofillEventEndDate(this.value);updateRecurringHint();"/>
-      <label class="intro-field-label">Start time</label>
+      <label class="intro-field-label" for="host-start-time">Start time</label>
       <input id="host-start-time" type="time" class="gate-input"/>
-      <label class="intro-field-label" style="margin-top:14px;">End date</label>
+      <label class="intro-field-label" style="margin-top:14px;" for="host-end-date">End date</label>
       <input id="host-end-date" type="date" class="gate-input"/>
-      <label class="intro-field-label">End time</label>
+      <label class="intro-field-label" for="host-end-time">End time</label>
       <input id="host-end-time" type="time" class="gate-input"/>
       <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;">
         <input type="checkbox" id="host-recurring-toggle" onchange="document.getElementById('host-recurring-rows').style.display=this.checked?'flex':'none';updateRecurringHint();" style="width:16px;height:16px;"/>
         Repeat this event
       </label>
       <div id="host-recurring-rows" style="display:none;gap:8px;margin-top:10px;align-items:flex-end;">
-        <div style="flex:1.4;"><label class="intro-field-label">Every</label>
+        <div style="flex:1.4;"><label class="intro-field-label" for="host-recurring-freq">Every</label>
           <select id="host-recurring-freq" class="gate-input" onchange="updateRecurringHint()">
             <option value="7">Week</option>
             <option value="14">2 weeks</option>
             <option value="30">Month</option>
           </select>
         </div>
-        <div style="flex:1;"><label class="intro-field-label">Times</label>
+        <div style="flex:1;"><label class="intro-field-label" for="host-recurring-count">Times</label>
           <input id="host-recurring-count" type="number" min="2" max="12" value="4" class="gate-input" oninput="updateRecurringHint()"/>
         </div>
       </div>
@@ -398,28 +398,28 @@ function renderHostView() {
 
     <div class="host-section" style="overflow:visible;">
       <div class="host-section-title">Location</div>
-      <label class="intro-field-label">Search address</label>
+      <label class="intro-field-label" for="host-address-search">Search address</label>
       <div style="position:relative;margin-bottom:10px;">
         <input id="host-address-search" class="gate-input" placeholder="Street name or postcode..." oninput="handleAddressAutocomplete()" autocomplete="off" value="${escapeHtml(p.address || "")}"/>
         <div id="autocomplete-results" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;max-height:200px;overflow-y:auto;z-index:2000;display:none;box-shadow:0 8px 20px var(--shadow);"></div>
       </div>
       <div id="host-map-picker"></div>
       <div id="host-lat-lon-text" style="font-size:11px;color:var(--text-muted);margin:6px 0 10px;font-weight:600;">${p.lat != null ? `Location Pinned: (${Number(p.lat).toFixed(4)}, ${Number(p.lon).toFixed(4)})` : "Default: Central London — search above or tap map to pin exact location"}</div>
-      <label class="intro-field-label">Venue name</label>
+      <label class="intro-field-label" for="host-venue">Venue name</label>
       <input id="host-venue" class="gate-input" placeholder="e.g., The Rooftop, Community Hall" value="${escapeHtml(p.venue || "")}"/>
-      <label class="intro-field-label">Area (optional)</label>
+      <label class="intro-field-label" for="host-area">Area (optional)</label>
       <input id="host-area" class="gate-input" placeholder="e.g., Shoreditch" value="${escapeHtml(p.area || "")}"/>
     </div>
 
     <div class="host-section">
       <div class="host-section-title">Capacity</div>
-      <label class="intro-field-label">Max attendees</label>
+      <label class="intro-field-label" for="host-capacity">Max attendees</label>
       <input id="host-capacity" type="number" min="1" class="gate-input" placeholder="e.g., 20" value="${p.capacity ?? ""}"/>
     </div>
 
     <div class="host-section">
       <div class="host-section-title">Pricing</div>
-      <label class="intro-field-label">Ticket Price (£) — You keep 100%</label>
+      <label class="intro-field-label" for="host-price">Ticket price (£) — you keep 100%</label>
       <input id="host-price" type="number" min="0" step="0.01" class="gate-input" placeholder="e.g. 10 (Leave blank for free)" value="${p.priceTiers ? "" : p.price || ""}"/>
       <div class="host-price-preview" id="host-price-preview" aria-live="polite"></div>
       <div class="host-notice">Attendees see one all-in price that includes a small flat booking fee. You keep every penny of your ticket price.</div>

@@ -804,7 +804,7 @@ function renderFeed() {
           <div class="fp-rail" id="fp-rail" onscroll="wheelSync()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();wheelStep(1)}else if(event.key==='ArrowLeft'){event.preventDefault();wheelStep(-1)}">${wheelCardsHtml(featured)}</div>
           <button type="button" class="fw-arrow next" onclick="wheelStep(1)" aria-label="Next event"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
         </div>
-        ${featured.length > 1 ? `<div class="fw-dots" aria-hidden="true">${featured.map((_, i) => `<button type="button" tabindex="-1" class="${i === 0 ? "on" : ""}" onclick="wheelGo(${i})"></button>`).join("")}</div>` : ""}
+        ${featured.length > 1 ? `<div class="fw-dots" aria-hidden="true">${featured.map((_, i) => `<button type="button" tabindex="-1" class="${i === 0 ? "on" : ""}" onclick="wheelGo(${i})" aria-label="Show card ${i + 1}"></button>`).join("")}</div>` : ""}
       </div>`
         : ""
     }

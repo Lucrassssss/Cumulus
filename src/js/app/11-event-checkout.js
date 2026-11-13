@@ -73,7 +73,7 @@ function renderBook() {
         !isFree
           ? `<details class="bk-promo"${bookingDraft.promoCode ? " open" : ""}>
         <summary>Promo code</summary>
-        <input id="book-promo-code" class="gate-input" placeholder="e.g. EARLYBIRD10" autocapitalize="characters" value="${escapeHtml(bookingDraft.promoCode || "")}" oninput="bookingDraft.promoCode=this.value.trim()"/>
+        <input id="book-promo-code" class="gate-input" aria-label="Promo code" placeholder="e.g. EARLYBIRD10" autocapitalize="characters" value="${escapeHtml(bookingDraft.promoCode || "")}" oninput="bookingDraft.promoCode=this.value.trim()"/>
       </details>`
           : ""
       }

@@ -7,7 +7,7 @@ async function loadOwnerLiveData() {
   _ownerLiveLoading = true;
   const btn = document.getElementById("od-live-refresh");
   if (btn) {
-    btn.textContent = "↻ Loading…";
+    btn.textContent = "Loading…";
     btn.disabled = true;
   }
   try {
@@ -73,7 +73,7 @@ async function loadOwnerLiveData() {
     _ownerLiveLoading = false;
     const btn2 = document.getElementById("od-live-refresh");
     if (btn2) {
-      btn2.textContent = "↻ Refresh";
+      btn2.textContent = "Refresh";
       btn2.disabled = false;
     }
   }
@@ -107,7 +107,7 @@ function _renderOwnerLivePanel() {
         <div style="font-size:12px;font-weight:700;color:var(--text);">Live Platform Data</div>
         <div style="font-size:10px;color:var(--text-muted);margin-top:1px;">Updated ${ts} · from Supabase</div>
       </div>
-      <button id="od-live-refresh" onclick="loadOwnerLiveData()" style="background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;color:var(--text-muted);cursor:pointer;font-family:var(--font-sans);">↻ Refresh</button>
+      <button id="od-live-refresh" onclick="loadOwnerLiveData()" style="background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;color:var(--text-muted);cursor:pointer;font-family:var(--font-sans);">Refresh</button>
     </div>
 
     <div class="od-live-stat-grid">
@@ -183,7 +183,7 @@ function renderOwnerDash() {
   <div class="od-live-panel" id="od-live-panel">
     <div class="od-live-loading">
       <div style="font-size:13px;color:var(--text-muted);">Loading live data…</div>
-      <button id="od-live-refresh" onclick="loadOwnerLiveData()" style="margin-top:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;color:var(--text-muted);cursor:pointer;font-family:var(--font-sans);">↻ Refresh</button>
+      <button id="od-live-refresh" onclick="loadOwnerLiveData()" style="margin-top:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;color:var(--text-muted);cursor:pointer;font-family:var(--font-sans);">Refresh</button>
     </div>
   </div>
 
@@ -663,10 +663,10 @@ function renderPromoCodesPanel() {
       _promoSelectedEventId
         ? `${codeRows}
     <div style="display:flex;gap:8px;margin-top:10px;align-items:flex-end;flex-wrap:wrap;">
-      <div style="flex:1.2;min-width:100px;"><label class="intro-field-label">Code</label><input id="promo-code-input" class="gate-input" placeholder="EARLYBIRD10" style="text-transform:uppercase;"/></div>
-      <div style="flex:1;min-width:90px;"><label class="intro-field-label">Type</label><select id="promo-type-input" class="gate-input"><option value="percent">% off</option><option value="fixed">£ off</option></select></div>
-      <div style="flex:0.8;min-width:70px;"><label class="intro-field-label">Amount</label><input id="promo-value-input" type="number" min="0" step="0.01" class="gate-input" placeholder="10"/></div>
-      <div style="flex:0.8;min-width:70px;"><label class="intro-field-label">Max uses</label><input id="promo-maxuses-input" type="number" min="1" class="gate-input" placeholder="∞"/></div>
+      <div style="flex:1.2;min-width:100px;"><label class="intro-field-label" for="promo-code-input">Code</label><input id="promo-code-input" class="gate-input" placeholder="EARLYBIRD10" style="text-transform:uppercase;"/></div>
+      <div style="flex:1;min-width:90px;"><label class="intro-field-label" for="promo-type-input">Type</label><select id="promo-type-input" class="gate-input"><option value="percent">% off</option><option value="fixed">£ off</option></select></div>
+      <div style="flex:0.8;min-width:70px;"><label class="intro-field-label" for="promo-value-input">Amount</label><input id="promo-value-input" type="number" min="0" step="0.01" class="gate-input" placeholder="10"/></div>
+      <div style="flex:0.8;min-width:70px;"><label class="intro-field-label" for="promo-maxuses-input">Max uses</label><input id="promo-maxuses-input" type="number" min="1" class="gate-input" placeholder="∞"/></div>
     </div>
     <button class="btn btn-outline btn-small" style="width:100%;margin-top:10px;" onclick="createPromoCode()">+ Create code</button>`
         : ""
@@ -885,7 +885,7 @@ function renderReview() {
     </div>
     <div id="review-content">
       <div class="review-empty">
-        <div class="review-empty-icon">📋</div>
+        <div class="review-empty-icon">${uiIcon("inbox", 30)}</div>
         <div>Loading applications…</div>
       </div>
     </div>`;
@@ -919,7 +919,7 @@ async function loadAndRenderReview() {
   } catch (e) {}
 
   if (!apps.length) {
-    content.innerHTML = `<div class="review-empty"><div class="review-empty-icon">✅</div><div style="font-weight:700;margin-bottom:4px;">All clear</div><div>No host applications yet.</div></div>`;
+    content.innerHTML = `<div class="review-empty"><div class="review-empty-icon">${uiIcon("checkCircle", 30)}</div><div style="font-weight:700;margin-bottom:4px;">All clear</div><div>No host applications yet.</div></div>`;
     return;
   }
 
@@ -1232,7 +1232,7 @@ function renderEventApprovals() {
       <p>Public events awaiting review before they go live</p>
     </div>
     <div id="evapp-content">
-      <div class="review-empty"><div class="review-empty-icon">📋</div><div>Loading events…</div></div>
+      <div class="review-empty"><div class="review-empty-icon">${uiIcon("inbox", 30)}</div><div>Loading events…</div></div>
     </div>`;
   setTimeout(loadAndRenderEventApprovals, 0);
 }
@@ -1271,7 +1271,7 @@ async function loadAndRenderEventApprovals() {
     evs = evs.filter((e) => e != null);
 
     if (!evs.length) {
-      content.innerHTML = `<div class="review-empty"><div class="review-empty-icon">✅</div><div style="font-weight:700;margin-bottom:4px;">All clear</div><div>No public events awaiting approval.</div></div>`;
+      content.innerHTML = `<div class="review-empty"><div class="review-empty-icon">${uiIcon("checkCircle", 30)}</div><div style="font-weight:700;margin-bottom:4px;">All clear</div><div>No public events awaiting approval.</div></div>`;
       return;
     }
     const pending = evs.filter((e) => e.status === "pending");
@@ -1280,7 +1280,7 @@ async function loadAndRenderEventApprovals() {
       ${pending.length ? `<div class="review-section-hd">Pending (${pending.length})</div>${pending.map(_buildEventApprovalCard).join("")}` : ""}
       ${reviewed.length ? `<div class="review-section-hd" style="margin-top:${pending.length ? "20px" : "0"};">Reviewed (${reviewed.length})</div>${reviewed.map(_buildEventApprovalCard).join("")}` : ""}`;
   } catch (err) {
-    content.innerHTML = `<div class="review-empty"><div class="review-empty-icon">⚠️</div><div style="font-weight:700;margin-bottom:4px;">Error Loading Panel</div><div>${escapeHtml(err.message)}</div></div>`;
+    content.innerHTML = `<div class="review-empty"><div class="review-empty-icon">${uiIcon("alert", 30)}</div><div style="font-weight:700;margin-bottom:4px;">Error Loading Panel</div><div>${escapeHtml(err.message)}</div></div>`;
   }
 }
 
@@ -2396,7 +2396,7 @@ function renderDetail(id) {
   } else if (ev.status === "cancelled") {
     bookBtn = `<div class="ev-notice danger">Cancelled${ticket ? " — you've been refunded" : ""}</div>`;
   } else if (ticket) {
-    bookBtn = `<button class="v-btn success wide" onclick="openViewTicket('${id}')">${checkIconSvg(15)} View your ticket</button>`;
+    bookBtn = `<button class="v-btn have wide" onclick="openViewTicket('${id}')">${checkIconSvg(15)} View your ticket</button>`;
   } else if (status === "past") {
     // Ended events are locked — never bookable, no matter capacity/tier
     // state. Ticket-holders still get the branch above (their own record
@@ -2407,7 +2407,7 @@ function renderDetail(id) {
     bookBtn = `<button class="v-btn wide" onclick="claimWaitlistOffer('${id}')">Spot's yours — book →</button>
       <div class="ev-buy-hint">Held for ${mins} more min${mins !== 1 ? "s" : ""}</div>`;
   } else if (isFull && waitlistEntry) {
-    bookBtn = `<button class="v-btn ghost wide" disabled>✓ On the waitlist — first dibs on returns</button>
+    bookBtn = `<button class="v-btn ghost wide" disabled>${checkIconSvg(15)} On the waitlist — first dibs on returns</button>
       <button class="ev-buy-link" onclick="leaveWaitlist('${id}')">Leave waitlist</button>`;
   } else if (isFull) {
     bookBtn = `<button class="v-btn wide" onclick="joinWaitlist('${id}')">Sold out · Join waitlist</button>
@@ -2594,7 +2594,7 @@ function renderReportedEvents() {
       <p>Auto-hidden after 3+ unique community reports</p>
     </div>
     <div id="reportedev-content">
-      <div class="review-empty"><div class="review-empty-icon">🚩</div><div>Loading reports…</div></div>
+      <div class="review-empty"><div class="review-empty-icon">${uiIcon("flag", 30)}</div><div>Loading reports…</div></div>
     </div>`;
   setTimeout(loadAndRenderReportedEvents, 0);
 }
@@ -2610,7 +2610,7 @@ async function loadAndRenderReportedEvents() {
       .order("start_time", { ascending: true });
     if (error) throw error;
     if (!hidden || !hidden.length) {
-      content.innerHTML = `<div class="review-empty"><div class="review-empty-icon">✅</div><div style="font-weight:700;margin-bottom:4px;">All clear</div><div>No events currently reported.</div></div>`;
+      content.innerHTML = `<div class="review-empty"><div class="review-empty-icon">${uiIcon("checkCircle", 30)}</div><div style="font-weight:700;margin-bottom:4px;">All clear</div><div>No events currently reported.</div></div>`;
       return;
     }
     const ids = hidden.map((e) => e.id);
@@ -2627,7 +2627,7 @@ async function loadAndRenderReportedEvents() {
       )
       .join("");
   } catch (err) {
-    content.innerHTML = `<div class="review-empty"><div class="review-empty-icon">⚠️</div><div style="font-weight:700;margin-bottom:4px;">Error Loading Panel</div><div>${escapeHtml(err.message)}</div></div>`;
+    content.innerHTML = `<div class="review-empty"><div class="review-empty-icon">${uiIcon("alert", 30)}</div><div style="font-weight:700;margin-bottom:4px;">Error Loading Panel</div><div>${escapeHtml(err.message)}</div></div>`;
   }
 }
 

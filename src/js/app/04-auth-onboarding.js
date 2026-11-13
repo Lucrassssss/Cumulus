@@ -406,20 +406,20 @@ function renderHostApplyForm() {
     <button class="back-btn" onclick="_hostApplyStep='brochure';renderView();">←</button>
     <div class="connect-header" style="padding-top:16px;"><h2>Become a host</h2><p>Tell us about your venue or events. Our team reviews every application to keep quality high on Cumulus.</p></div>
     <div class="host-section">
-      <label class="intro-field-label">Venue or business name</label>
+      <label class="intro-field-label" for="apply-biz-name">Venue or business name</label>
       <input id="apply-biz-name" class="gate-input" placeholder="e.g. The Sketch House"/>
-      <label class="intro-field-label" style="margin-top:14px;">Contact email</label>
+      <label class="intro-field-label" style="margin-top:14px;" for="apply-contact-email">Contact email</label>
       <input id="apply-contact-email" class="gate-input" type="email" placeholder="you@email.com" value="${escapeHtml(state.profileEmail || "")}"/>
-      <label class="intro-field-label" style="margin-top:14px;">Phone number</label>
+      <label class="intro-field-label" style="margin-top:14px;" for="apply-phone">Phone number</label>
       <input id="apply-phone" class="gate-input" type="tel" placeholder="e.g. 07123 456789"/>
       <div class="host-notice" style="margin-top:10px;">We may call to talk through your event and how we can help — never shared or used for anything else.</div>
       <div class="gate-field-group-label" style="margin-top:14px;">Event types you'd host</div>
       <div class="host-cat-grid" id="apply-host-cat-grid">
         ${["Creative", "Gaming", "Movie Nights", "Board Games", "Meetups", "Food &amp; Drink", "Live Music", "Wellness &amp; Outdoors", "Tech &amp; Talks"].map((c) => `<button class="host-cat-chip" data-hostcat="${escapeHtml(c.replace(/&amp;/g, "&"))}" onclick="toggleHostCat('${escapeHtml(c.replace(/&amp;/g, "&"))}')">${c}</button>`).join("")}
       </div>
-      <label class="intro-field-label" style="margin-top:14px;">About your events</label>
+      <label class="intro-field-label" style="margin-top:14px;" for="apply-host-desc">About your events</label>
       <textarea id="apply-host-desc" class="gate-input" placeholder="What kind of events do you run? Describe the vibe, size, and frequency…" rows="3" maxlength="400"></textarea>
-      <label class="intro-field-label">Why host on Cumulus?</label>
+      <label class="intro-field-label" for="apply-why-host">Why host on Cumulus?</label>
       <textarea id="apply-why-host" class="gate-input" placeholder="Tell us what you're hoping to achieve…" rows="2" maxlength="300"></textarea>
     </div>
     <p id="apply-host-error" class="gate-field-error"></p>
