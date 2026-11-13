@@ -182,15 +182,13 @@ document.addEventListener("click", (e) => {
 }, true);
 
 // ── 6. Opening an event: the poster jumps in, the ticket tears off ────────
-// (Shared-element transitions in iOS / Material, plus a real ticket being
-// laid on a table and torn.) The poster you tapped lifts off the list,
-// prints out into a ticket — the same art + perforation + stub look as the
-// wallet — and lays itself onto the page with its perforation on the seam
-// between the hero and the details. Then it tears: the art half becomes
-// the hero (or, on desktop with a photo, the flyer slot), the stub drops
-// into the details, the rest deals in and the buy bar slides up last.
-// Without a tapped poster (deep link, Back) the page uses its ordinary
-// drop-in.
+// (Shared-element transitions in iOS / Material, crossed with slapping a
+// sticker on a poster.) Every event page carries a small ticket sticker on
+// its poster. When you open an event by tapping its poster, that sticker
+// is what flies: it lifts off the list, hovers over its spot, then presses
+// down and settles at its slight angle with a glint. The page itself just
+// appears underneath, once, with no staged rebuild. Deep links and Back
+// show the sticker already in place.
 const JUMP_SOURCES = [
   [".fr-row", ".fr-thumb"],
   [".fp-card", ".poster"],
@@ -216,31 +214,26 @@ document.addEventListener(
   true,
 );
 
-// A pre-purchase ticket for an event, in the wallet's ticket style
-// (.tk / .tk-art / .tk-perf / .tk-stub). Used by the jump-in; kept separate
-// so other screens can lay the same ticket down.
-function eventTicketHtml(ev, { extraClass = "" } = {}) {
+// The ticket sticker on an event page's poster: a whole ticket (art,
+// notched perforation, stub) with a die-cut white edge. Rendered by
+// renderDetail(); decorative for now, built to be reused.
+function eventStickerHtml(ev) {
   const d = new Date(ev.startsAt);
-  const day = d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  const day = d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }).toUpperCase();
   const no = String((_posterSeed(ev.id) % 900) + 100);
-  return `<div class="tk ev-tk ${extraClass}" aria-hidden="true">
-    <div class="tk-art ${posterClass(ev)}" style="${posterStyle(ev)}">
-      ${posterGlyph(ev)}
-      <div class="tk-art-foot">
-        <span class="fp-date">${feedDateLabel(ev)} · ${feedTimeLabel(ev)}</span>
-        <h3 class="tk-title">${escapeHtml(ev.title)}</h3>
-        <div class="tk-venue">${escapeHtml(ev.venue || "")}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""}</div>
-      </div>
-    </div>
-    <div class="tk-perf"></div>
-    <div class="tk-stub">
-      <div class="tk-row">
-        <div><span class="tk-lbl">Admit one</span><b>${escapeHtml(day)}</b></div>
-        <div><span class="tk-lbl">From</span><b>${feedPriceLabel(ev)}</b></div>
-        <div><span class="tk-lbl">No.</span><b class="mono">${no}</b></div>
-      </div>
-    </div>
-  </div>`;
+  return `<div class="ev-stk" aria-hidden="true"><div class="ev-stk-cut"><div class="ev-stk-tk">
+      <div class="ev-stk-art ${posterClass(ev)}" style="${posterStyle(ev)}">${posterGlyph(ev)}<span class="ev-stk-date">${escapeHtml(day)}</span></div>
+      <div class="ev-stk-perf"></div>
+      <div class="ev-stk-stub"><b>${escapeHtml(ev.title)}</b><span>${feedPriceLabel(ev)} · No.${no}</span></div>
+    </div></div></div>`;
+}
+
+function _endEvJump() {
+  document.getElementById("app")?.classList.remove("ev-jump");
+  if (window._quietPending) {
+    window._quietPending = false;
+    if (typeof renderViewQuiet === "function") renderViewQuiet();
+  }
 }
 
 function delightEventJump(container) {
@@ -249,104 +242,50 @@ function delightEventJump(container) {
   const app = document.getElementById("app");
   if (!src || performance.now() - src.t > 900 || _reduceMotion()) return;
   if (app.classList.contains("same-view") || app.classList.contains("nav-back")) return;
-  const hero = container.querySelector(".ev-hero");
-  const facts = container.querySelector(".ev-facts");
-  const ev = EVENTS.find((e) => String(e.id) === String(state.selectedEventId));
-  if (!hero || !facts || !ev) return;
+  const stk = container.querySelector(".ev-stk");
+  if (!stk) return;
   app.classList.add("ev-jump");
+  container.querySelector(".ev-page")?.classList.add("jumped");
   // measure after openEvent()'s scroll-to-top has happened
   requestAnimationFrame(() => {
-    const H = hero.getBoundingClientRect();
-    const desk = innerWidth >= 761;
-    const img = hero.style.getPropertyValue("--p-img");
-    // Where the ticket's art half rests, and what it turns into after the tear.
-    let rest, artTo;
-    if (desk) {
-      // The flyer slot on the right of the wide banner (.ev-hero.has-photo in v2.css).
-      const h = H.height - 104;
-      let ratio = 0.8;
-      if (img) {
-        const probe = new Image();
-        probe.src = (img.match(/url\(["']?([^"')]+)/) || [])[1] || "";
-        if (probe.naturalWidth && probe.naturalHeight) ratio = probe.naturalWidth / probe.naturalHeight;
-      }
-      const w = Math.max(240, h * ratio);
-      rest = { left: H.right - 28 - w, top: H.top + 76, width: w, artH: h };
-      artTo = img ? { left: rest.left, top: rest.top, width: w, height: h } : H;
-    } else {
-      const F = facts.getBoundingClientRect();
-      const artH = Math.min(F.width * 1.02, H.height * 0.62);
-      // perforation on the hero/details seam, but never so low the stub is off-screen
-      const seam = Math.min(H.bottom, innerHeight - 150);
-      rest = { left: F.left, top: seam - artH, width: F.width, artH };
-      artTo = H;
-    }
-
-    const wrap = document.createElement("div");
-    wrap.innerHTML = eventTicketHtml(ev, { extraClass: "ev-ghost" + (desk ? " is-desk" : "") });
-    const ghost = wrap.firstElementChild;
-    ghost.style.cssText = `left:${rest.left}px;top:${rest.top}px;width:${rest.width}px;--art-h:${rest.artH}px;`;
-    document.body.appendChild(ghost);
-    const artEl = ghost.querySelector(".tk-art");
-    const stubH = ghost.offsetHeight - rest.artH;
-
-    // FLIP: start as the tapped poster (art only, scaled to its width), end at rest.
-    const s = src.r.width / rest.width;
-    const dx = src.r.left - rest.left;
-    const dy = src.r.top - rest.top;
-    const clipArt = `inset(0 0 ${stubH}px 0 round ${12 / s}px)`;
-    const clipAll = "inset(0 0 0 0 round 18px)";
-    const fly = ghost.animate(
+    if (!stk.isConnected) return _endEvJump();
+    const R = stk.getBoundingClientRect(); // rotated box; its centre is the true centre
+    const w = stk.offsetWidth;
+    const h = stk.offsetHeight;
+    const cx = R.left + R.width / 2;
+    const cy = R.top + R.height / 2;
+    // Fly above the page (the hero clips its children), then go home.
+    const home = stk.parentNode;
+    const next = stk.nextSibling;
+    stk.style.cssText = `position:fixed;left:${cx - w / 2}px;top:${cy - h / 2}px;right:auto;bottom:auto;width:${w}px;z-index:950;`;
+    document.body.appendChild(stk);
+    const s0 = Math.max(src.r.width / w, 0.2);
+    const dx = src.r.left + src.r.width / 2 - cx;
+    const dy = src.r.top + src.r.height / 2 - cy;
+    const rest = getComputedStyle(stk).rotate;
+    const fly = stk.animate(
       [
-        { transform: `translate(${dx}px,${dy}px) scale(${s})`, clipPath: clipArt, boxShadow: "0 0 0 rgba(0,0,0,0)" },
-        { transform: `translate(${dx}px,${dy - 10}px) scale(${s * 1.08}) rotate(-3deg)`, clipPath: clipArt, boxShadow: "0 18px 40px rgba(0,0,0,.4)", offset: 0.14 },
-        { transform: "translate(0,-18px) scale(1.04) rotate(1.5deg)", clipPath: clipAll, boxShadow: "0 40px 70px rgba(0,0,0,.5)", offset: 0.7 },
-        { transform: "translate(0,0) scale(.985) rotate(0deg)", clipPath: clipAll, boxShadow: "0 6px 14px rgba(0,0,0,.35)", offset: 0.88 },
-        { transform: "none", clipPath: clipAll, boxShadow: "0 10px 26px rgba(0,0,0,.3)" },
+        { translate: `${dx}px ${dy}px`, scale: s0, rotate: "0deg", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0))" },
+        { translate: `${dx * 0.92}px ${dy * 0.92 - 16}px`, scale: s0 * 1.08, rotate: "3deg", filter: "drop-shadow(0 14px 16px rgba(0,0,0,.3))", offset: 0.12 },
+        { translate: "0px -20px", scale: 1.18, rotate: "-13deg", filter: "drop-shadow(0 30px 24px rgba(0,0,0,.32))", offset: 0.62 },
+        { translate: "0px 0px", scale: 0.95, rotate: "-5deg", filter: "drop-shadow(0 1px 2px rgba(0,0,0,.5))", offset: 0.84 },
+        { translate: "0px 0px", scale: 1, rotate: rest === "none" ? "0deg" : rest, filter: "drop-shadow(0 6px 10px rgba(0,0,0,.35))" },
       ],
-      { duration: 640, easing: "cubic-bezier(.3,.7,.2,1)", fill: "forwards" },
+      { duration: 640, easing: "cubic-bezier(.33,.7,.22,1)" },
     );
-
     let done = false;
-    const tear = () => {
+    const land = () => {
       if (done) return;
       done = true;
-      app.classList.add("ev-split");
-      ghost.classList.add("torn");
-      hero.insertAdjacentHTML("beforeend", '<i class="ev-perf" aria-hidden="true"></i>');
-      const A = artEl.getBoundingClientRect();
-      // art half grows (uniformly, centre to centre) into what it becomes and
-      // dissolves into the real page; its caption goes first so text never doubles
-      const k = Math.max(artTo.width / A.width, artTo.height / A.height);
-      const tx = artTo.left + artTo.width / 2 - (A.left + (A.width * k) / 2);
-      const ty = artTo.top + artTo.height / 2 - (A.top + (A.height * k) / 2);
-      ghost.querySelector(".tk-art-foot")?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 110, fill: "forwards" });
-      artEl.animate(
-        [
-          { transform: "none", opacity: 1 },
-          { transform: `translate(${tx}px,${ty}px) scale(${k})`, opacity: 0 },
-        ],
-        { duration: 340, easing: "cubic-bezier(.5,0,.2,1)", fill: "forwards" },
-      );
-      // stub tears off and drops into the details
-      ghost.querySelectorAll(".tk-perf, .tk-stub").forEach((n) =>
-        n.animate(
-          [
-            { translate: "0 0", rotate: "0deg", opacity: 1 },
-            { translate: "6px 26px", rotate: "2.5deg", opacity: 0 },
-          ],
-          { duration: 320, easing: "cubic-bezier(.4,0,.6,1)", fill: "forwards" },
-        ),
-      );
-      ghost.animate([{ boxShadow: "0 10px 26px rgba(0,0,0,.3)" }, { boxShadow: "0 0 0 rgba(0,0,0,0)" }], { duration: 200, fill: "forwards" });
-      setTimeout(() => ghost.remove(), 420);
-      setTimeout(() => {
-        app.classList.remove("ev-jump", "ev-split");
-        hero.querySelector(".ev-perf")?.remove();
-      }, 1400);
+      stk.style.cssText = "";
+      if (home && home.isConnected) {
+        home.insertBefore(stk, next && next.parentNode === home ? next : null);
+        stk.classList.add("shine");
+      } else stk.remove();
+      setTimeout(_endEvJump, 120);
     };
-    fly.onfinish = tear;
-    fly.oncancel = tear;
+    fly.onfinish = land;
+    fly.oncancel = land;
   });
 }
 

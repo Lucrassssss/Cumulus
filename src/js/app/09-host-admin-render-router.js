@@ -1473,7 +1473,8 @@ function renderViewQuiet() {
   // Home is mid "level load" (14-delight.js): hold background repaints until
   // it finishes, so late-arriving data doesn't restart or cut the intro.
   const appEl = document.getElementById("app");
-  if (appEl && appEl.classList.contains("boot-play")) return void (window._quietPending = true);
+  // Same while an event's sticker is flying in, so the page isn't swapped mid-flight.
+  if (appEl && (appEl.classList.contains("boot-play") || appEl.classList.contains("ev-jump"))) return void (window._quietPending = true);
   if (state.view === "feed") {
     const html = renderFeed();
     if (html === window._lastFeedHtml) return;
@@ -2457,6 +2458,7 @@ function renderDetail(id) {
         </div>
       </div>
       <div class="ev-hero-foot">
+        ${typeof eventStickerHtml === "function" ? eventStickerHtml(ev) : ""}
         <div class="ev-tags">
           <span class="ev-tag cat">${escapeHtml(ev.category || "Event")}</span>
           ${status === "live" ? `<span class="ev-tag live"><span class="pulse"></span>Live now</span>` : status === "past" ? `<span class="ev-tag">Ended</span>` : ""}

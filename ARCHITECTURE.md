@@ -44,7 +44,7 @@ Rules that follow from it:
 | `11-checkout-confirmation.js` | Book + Pay screens, pay overlay, "You're in" animation, confirmation/ticket view |
 | `12-wallet-host-form-scanner.js` | Tickets wallet (Upcoming/Past), can't-go/transfer sheets, host event form, door scanner (offline queue in IndexedDB) |
 | `13-discover-feed.js` | Discover feed, Filters sheet, poster art, carousel, saved events, crew, location/calendar sheets, keyboard handling |
-| `14-delight.js` | Decorative motion: boot screen tips/progress + iris reveal, Home "level load" intro (once per visit), count-ups, save confetti, poster holo tilt, orb easter egg, event jump-in (`eventTicketHtml()` builds the flying ticket); **boot call** |
+| `14-delight.js` | Decorative motion: boot screen tips/progress + iris reveal, Home "level load" intro (once per visit), count-ups, save confetti, poster holo tilt, orb easter egg, event-page ticket sticker (`eventStickerHtml()`, rendered by `renderDetail`) and its fly-in; **boot call** |
 
 ### Rendering model
 
