@@ -79,7 +79,7 @@ function renderBook() {
       }
       <label class="bk-optin">
         <input type="checkbox" id="book-marketing-optin" ${bookingDraft.marketingOptIn ? "checked" : ""} onchange="bookingDraft.marketingOptIn=this.checked"/>
-        <span>Hear about ${escapeHtml(ev.host || "the host")}'s future events</span>
+        <span>Hear about ${ev.host ? escapeHtml(/s$/i.test(ev.host.trim()) ? `${ev.host.trim()}’` : `${ev.host.trim()}’s`) : "the host’s"} future events</span>
       </label>
     </div>
     <ul class="bk-chips" aria-label="Good to know">
