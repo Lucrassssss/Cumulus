@@ -318,17 +318,6 @@ function accountAvatarHtml(size) {
   return `<div class="account-avatar account-avatar-mono" style="width:${s}px;height:${s}px;font-size:${Math.round(s * 0.38)}px;">${initials(state.profileName)}</div>`;
 }
 
-// ── Account details — its own full page (industry-standard "edit your
-// profile" pattern: name/email/phone/photo, one page, one Save), replacing
-// the old inline-swap row that used to live directly in the Settings list.
-// Details are edited inline on Account now; old entry points land there
-// with the name field focused.
-function openAccountDetails() {
-  if (state.view !== "account") openAccount();
-  if (state.view !== "account") return; // guest → sign-in prompt instead
-  acStartEdit();
-  document.getElementById("ac-details")?.scrollIntoView({ behavior: "smooth", block: "center" });
-}
 
 // Banner shown on a host's own public profile page — a real uploaded
 // photo once set, the same textured gold gradient as a fallback otherwise
@@ -1013,17 +1002,6 @@ function stripeAppearanceForCurrentTheme() {
 // window.stripeInstance below.
 let stripeElementsGroup = null;
 
-// Mobile-only collapse/expand for the order-recap card rendered by
-// renderCheckout() — desktop forces it open via CSS (styles.css, the
-// checkout view's own >=860px breakpoint) and hides the chevron, so this
-// only ever fires from a real tap on narrower viewports.
-function toggleCheckoutSummary() {
-  const el = document.getElementById("checkout-summary");
-  if (!el) return;
-  const expanded = el.classList.toggle("expanded");
-  const btn = el.querySelector(".checkout-summary-toggle");
-  if (btn) btn.setAttribute("aria-expanded", expanded ? "true" : "false");
-}
 
 // Starts a real Stripe payment against a PaymentIntent — auto-triggered by
 // afterRenderCheckout() the instant the payment screen renders, so

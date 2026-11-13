@@ -344,18 +344,6 @@ async function fetchHostProfileExtras(hostId) {
   }
 }
 
-/* Am I signed in as a real, server-verified partner_host? Used to gate the
- * host scanner route — the actual security boundary is RLS on tickets/events
- * (host_id = auth.uid()), this just decides whether to show the entry point. */
-async function currentUserRole() {
-  try {
-    const { data, error } = await sb.rpc("app_role");
-    if (error) return "eventee";
-    return data || "eventee";
-  } catch (e) {
-    return "eventee";
-  }
-}
 
 /* ── PostGIS GeoJSON bounding-box fetch ────────────────────────────────────
  * Calls the `get_events_geojson` Postgres RPC, which returns a micro-payload
@@ -448,17 +436,6 @@ async function getMyHostApplicationStatus(userId) {
   }
 }
 
-/* A host's own past-attendee emails (deduped across every event they've
- * hosted), for the "Invite Past Attendees" one-click blast. */
-async function getPastAttendeeEmails() {
-  try {
-    const { data, error } = await sb.rpc("get_past_attendee_emails");
-    if (error) return null;
-    return data || [];
-  } catch (e) {
-    return null;
-  }
-}
 
 /* A host's payout rows — get_host_payouts() also lazily flips any row whose
  * scheduled_release_at has passed to 'released' before returning. */
@@ -625,18 +602,6 @@ async function startConnectOnboarding() {
   }
 }
 
-/* Asks release-payout to check for (and actually move) any of the caller's
- * own due payouts. Safe to call from the payouts panel — no-ops if nothing
- * is due yet or the host hasn't finished Connect onboarding. */
-async function checkMyPayoutReleases() {
-  try {
-    const { data, error } = await sb.functions.invoke("release-payout", { body: {} });
-    if (error) return { error: error.message || "unavailable" };
-    return data;
-  } catch (e) {
-    return { error: "unavailable" };
-  }
-}
 
 /* Generalised Squad-claim-code mechanism (see start_ticket_transfer() in the
  * migration): puts a fresh, unclaimed code on a ticket the caller owns, for

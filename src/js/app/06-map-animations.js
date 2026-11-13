@@ -410,12 +410,6 @@ function removeActiveHtmlMarker() {
 function closeActivePopup() {
   removeActiveHtmlMarker();
 }
-// Kept for callers that open a specific event's pin (e.g. deep links).
-function openActiveEventMarker(evId) {
-  const ev = EVENTS.find((e) => String(e.id) === String(evId));
-  if (!ev || ev.lat == null || ev.lon == null) return;
-  selectPin(`${ev.lon.toFixed(6)},${ev.lat.toFixed(6)}`, [ev], [ev.lon, ev.lat]);
-}
 
 // ── Source + layers ───────────────────────────────────────────────────────
 function attachMapLayers() {

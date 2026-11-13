@@ -167,7 +167,7 @@ function _renderOwnerLivePanel() {
 // ─────────────────────────────────────────────────────────────────────
 
 function renderOwnerDash() {
-  const isOwner = state.profileEmail === "gondoxml@gmail.com";
+  const isOwner = isAdminAccount();
   if (!isOwner)
     return `<div class="empty-state" style="padding:40px 20px;text-align:center;"><div style="margin-bottom:12px;color:var(--text-muted);">${lockIconSvg(32)}</div><div style="font-weight:700;margin-bottom:6px;">Restricted</div><div style="color:var(--text-muted);font-size:13px;">Owner access only.</div></div>`;
 
@@ -1852,45 +1852,6 @@ function _mapFiltersOutsideClick(e) {
   closeMapFiltersPanel();
 }
 
-function pinTooltipHtml(ev) {
-  const status = eventStatus(ev);
-  const c = CATS[ev.category];
-  const att = attendeesFor(ev.id);
-  const attN = goingCount(ev.id);
-  const statusBadge =
-    status === "live"
-      ? `<span class="tip-live"><span class="d"></span>LIVE NOW</span>`
-      : `<span class="tip-up">${status === "past" ? "Ended" : "Upcoming"}</span>`;
-  let goingLine;
-  if (attN === 0) {
-    goingLine = `<div class="tip-going none">No one yet — be the first!</div>`;
-  } else if (!att.length) {
-    goingLine = `<div class="tip-going"><strong>${attN} going</strong></div>`;
-  } else {
-    const names = att.slice(0, 3).map(escapeHtml);
-    const extra = attN > 3 ? ` +${attN - 3}` : "";
-    goingLine = `<div class="tip-going"><strong>${attN} going</strong> — ${names.join(", ")}${extra}</div>`;
-  }
-  const capLine = ev.capacity
-    ? `<div class="tip-going" style="margin-top:2px;"><strong>${Math.max(0, ev.capacity - attN)} spaces left</strong></div>`
-    : "";
-  const img = ev.photoUrl || ev.nightShotUrl || catImg(ev.category);
-  return `<div class="evtip-inner" style="--c:${c.color}">
-    <div class="tip-banner" style="background-image:url('${img}')">
-      <div class="tip-top">${statusBadge}<span class="tip-cat" style="background:${c.color};color:${c.textColor}">${ev.category}</span></div>
-    </div>
-    <div class="tip-body">
-      <div class="tip-title">${escapeHtml(ev.title)}</div>
-      <div class="tip-meta">${ev.date} · ${ev.time}</div>
-      <div class="tip-meta">${escapeHtml(ev.venue)}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""}</div>
-      ${goingLine}${capLine}
-      <div class="tip-cta" style="color:${c.color};">
-        <span>Open &amp; RSVP</span>
-        <span style="font-size:13px;opacity:0.85;">→</span>
-      </div>
-    </div>
-  </div>`;
-}
 
 function shareEvent(id) {
   const ev = EVENTS.find((e) => e.id === id);
@@ -2020,11 +1981,6 @@ async function transferMyTicket(ticketCode, eventTitle) {
   );
 }
 
-function shareSquadTicket(code, eventTitle) {
-  const url = `${location.origin}${location.pathname}?claim=${code}`;
-  const text = `You're on my squad for ${eventTitle} on Cumulus — tap to claim your ticket:`;
-  shareTicketLink("Claim your Cumulus ticket", text, url, "Claim link copied");
-}
 
 // Runs once at boot: if the URL carries a Squad claim link (?claim=CODE),
 // claim it for whoever is signed in and strip the param from the URL.
@@ -2182,26 +2138,6 @@ function openHostProfile(hostKey, hostName) {
   });
 }
 
-// Big square card for the host profile's horizontally-scrolling event row —
-// deliberately a different, larger format from eventListCardHtml's compact
-// list rows (Calendar/search results): this is a browsing surface for one
-// host's own lineup, closer to how a portfolio or gallery presents a body of
-// work, so each event gets real visual weight instead of a dense row.
-function hostEventBigCardHtml(ev) {
-  const c = CATS[ev.category] || { color: "var(--accent)", textColor: "#fff" };
-  const price = eventPrice(ev);
-  return `<button type="button" class="host-event-card" style="--corner:${c.color};" onclick="openEvent('${ev.id}')">
-    <div class="host-event-card-img ${posterClass(ev)}" style="${posterStyle(ev)}">
-      ${posterGlyph(ev)}
-      <span class="fp-date" style="position:absolute;top:10px;left:10px;">${feedDateLabel(ev)}</span>
-    </div>
-    <div class="host-event-card-body">
-      <div class="host-event-card-title">${escapeHtml(ev.title)}</div>
-      <div class="host-event-card-meta">${escapeHtml(ev.date)} · ${escapeHtml(ev.time)}</div>
-      <div class="host-event-card-price">${price ? `${feedPriceLabel(ev)} <span class="incl">incl. fees</span>` : "Free"}</div>
-    </div>
-  </button>`;
-}
 
 // Deterministic 2-letter monogram from a host's display name — "Nova
 // Collective" -> "NC", a single-word name -> its first two letters. Used for

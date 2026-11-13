@@ -12,7 +12,6 @@
 // fire more than one RPC per camera settle. Falls back to the local
 // buildEventsGeoJSON() if the RPC is unavailable (offline / not deployed).
 
-let _bboxFetchTimer = null;
 
 async function fetchVisibleEvents() {
   if (!lmap || typeof mapboxgl === "undefined") return;

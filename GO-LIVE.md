@@ -46,7 +46,7 @@ migration" for the full rationale and what changed.
   `public read users` / `public update users`) were dropped. Advisor: 0
   permissive public policies remain.
 - **Clean slate:** all demo/seed events and old pre-auth accounts deleted.
-- **Owner set up:** `gondoxml@gmail.com` is an admin + `partner_host`, with a
+- **Owner set up:** the owner account is an admin + `partner_host`, with a
   real auth-linked profile.
 - Migrations of record: `supabase/migrations/2026070*.sql`, `2026072*.sql`.
 
@@ -94,17 +94,17 @@ The built-in mailer is test-only and caps at a few emails/hour (that's the
 
   Get the `re_…` key at resend.com → API Keys → Create. The `onboarding@resend.dev`
   sender needs **no DNS** but can only email your own Resend-account address —
-  fine for testing as `gondoxml@gmail.com`. To email anyone, verify a domain in
+  fine for testing as the owner account. To email anyone, verify a domain in
   Resend (add its SPF+DKIM records **at your domain registrar**, not in Supabase).
 
 ### 3. Delete the typo account
 
-**Authentication → Users** → `gondoxnl@gmail.com` (note the `n`) → ⋯ → Delete.
-Keep `gondoxml@gmail.com`.
+**Authentication → Users** → `a second test account` (note the `n`) → ⋯ → Delete.
+Keep the owner account.
 
 ### 4. Test
 
-Live site → sign in as `gondoxml@gmail.com` → 6-digit code arrives → enter it →
+Live site → sign in as the owner account → 6-digit code arrives → enter it →
 you're in as admin (admin panel + event approvals visible).
 
 ### 5. Enable leaked-password protection
@@ -128,7 +128,7 @@ are stuck disabled, open a **new chat** and paste:
 > Using the Supabase and Resend connectors, for Supabase project ref
 > `xyzrvgbdnevllwvxqcka`: (1) create a Resend API key named "Cumulus SMTP" with
 > sending permission and show it to me; (2) delete the Supabase auth user
-> `gondoxnl@gmail.com` (keep `gondoxml@gmail.com`, my admin); (3) check my auth
+> `a second test account` (keep the owner account, my admin); (3) check my auth
 > logs and tell me if the email rate limit has reset. I'll paste the key into
 > Supabase SMTP settings and set the Magic Link template to `{{ .Token }}` myself.
 

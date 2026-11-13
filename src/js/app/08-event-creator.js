@@ -403,7 +403,7 @@ function showMapLayer(visible) {
   const fab = document.getElementById("owner-fin-fab");
   if (fab)
     fab.style.display =
-      visible && state.profileEmail === "gondoxml@gmail.com" ? "block" : "none";
+      visible && isAdminAccount() ? "block" : "none";
 }
 
 // ═══════════════════════════════════════════════════════
@@ -527,7 +527,7 @@ const _odFmt = (v) =>
       : Math.round(v).toString();
 
 async function clearAllTestData(confirmed) {
-  if (state.profileEmail !== "gondoxml@gmail.com") {
+  if (!isAdminAccount()) {
     showToast("Owner only", "error");
     return;
   }
@@ -566,7 +566,7 @@ async function clearAllTestData(confirmed) {
 // session. Discovered live: the site owner's account lost admin/host state
 // and couldn't publish events until the row was manually restored.
 async function clearAllUsers(confirmed) {
-  if (state.profileEmail !== "gondoxml@gmail.com") {
+  if (!isAdminAccount()) {
     showToast("Owner only", "error");
     return;
   }

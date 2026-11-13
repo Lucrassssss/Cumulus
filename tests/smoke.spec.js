@@ -81,7 +81,7 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator("#main-map")).toBeHidden();
   });
 
-  test("local assets load (css / js / cloud) with no failures", async ({
+  test("local assets load (css / js / icons / flyers) with no failures", async ({
     page,
   }) => {
     const failed = [];
@@ -92,15 +92,14 @@ test.describe("Cumulus smoke", () => {
     await page.waitForTimeout(400);
     expect(failed, "no failed local requests").toEqual([]);
     // Deterministic: fetch each split asset directly.
-    // (The skyline is an inline SVG diorama now — only cloud photos load as assets.)
     for (const path of [
       "/src/css/styles.css",
       "/src/js/config.js",
       "/src/js/app/01-core-constants.js",
       "/src/js/app/11-event-checkout.js",
-      "/assets/clouds/cloud1.webp",
-      "/assets/clouds/cloud3.webp",
-      "/assets/img/discover.svg",
+      "/src/css/v2.css",
+      "/assets/icons/icon-192.png",
+      "/assets/flyers/late-night-jazz.svg",
     ]) {
       const res = await page.request.get(path);
       expect(res.status(), `${path} served`).toBe(200);

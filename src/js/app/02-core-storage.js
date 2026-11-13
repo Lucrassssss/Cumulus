@@ -25,12 +25,6 @@ function initials(name) {
   const p = name.trim().split(/\s+/);
   return (p[0][0] + (p.length > 1 ? p[1][0] : "")).toUpperCase();
 }
-function hexToRgba(hex, a) {
-  const r = parseInt(hex.slice(1, 3), 16),
-    g = parseInt(hex.slice(3, 5), 16),
-    b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${a})`;
-}
 function escapeHtml(s) {
   return String(s != null ? s : "").replace(
     /[&<>"']/g,

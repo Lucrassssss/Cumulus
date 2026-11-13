@@ -245,16 +245,10 @@ function goingCount(id) {
   const sold = (state.ticketCounts && state.ticketCounts[String(id)]) || 0;
   return Math.max(sold, attendeesFor(id).length);
 }
+// Names of people who've RSVP'd (de-duplicated).
 function attendeesFor(id) {
-  const out = DEMO_PEOPLE.filter((p) => p.events.includes(id)).map(
-    (p) => p.name,
-  );
-  (state.rsvps[id] || []).forEach((n) => {
-    if (!out.includes(n)) out.push(n);
-  });
-  return out;
+  return [...new Set(state.rsvps[id] || [])];
 }
-/* toggleTheme removed */
 async function persistProfile() {
   if (!state.profileId) state.profileId = generateUniqueId();
   const payload = {
@@ -628,9 +622,6 @@ window.addEventListener("popstate", () => {
   const y = _closeAuthNow();
   requestAnimationFrame(() => Math.abs(window.scrollY - y) > 2 && window.scrollTo(0, y));
 });
-function showLpLogin() {
-  showLpSignup("login");
-}
 function closeLpSignup() {
   const root = document.documentElement;
   // Phone page mode with our history entry: step back, and let the popstate

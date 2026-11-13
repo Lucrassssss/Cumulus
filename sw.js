@@ -1,4 +1,4 @@
-const CACHE = "cumulus-v53";
+const CACHE = "cumulus-v54";
 const ASSETS = [
   "./",
   "./index.html",
@@ -23,16 +23,6 @@ const ASSETS = [
   "./assets/icons/icon.svg?v=2",
   "./assets/icons/favicon-32.png?v=2",
   "./assets/icons/apple-touch-icon.png?v=2",
-  "./assets/clouds/cloud1.webp",
-  "./assets/clouds/cloud2.webp",
-  "./assets/clouds/cloud3.webp",
-  "./assets/clouds/cloud4.webp",
-  "./assets/clouds/cloud5.webp",
-  "./assets/img/connect.svg",
-  "./assets/img/discover.svg",
-  "./assets/img/hero-rooftops.svg",
-  "./assets/img/pass.svg",
-  "./assets/img/venues-network.svg",
   "./assets/og-image.png",
 ];
 

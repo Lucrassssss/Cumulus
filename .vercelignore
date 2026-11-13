@@ -1,1 +1,14 @@
+# Only the static app is deployed. Everything else stays in the repo.
 native/
+supabase/
+tests/
+test-results/
+scripts/
+docs/
+sweep/
+node_modules/
+*.md
+playwright.config.js
+package.json
+package-lock.json
+.github/
