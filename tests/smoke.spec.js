@@ -713,7 +713,7 @@ test.describe("Cumulus smoke", () => {
     });
     // All-in: £12 ticket + £1.50 booking fee shown as £13.50 before checkout.
     const row = page.locator("#feed-results .fr-row", { hasText: "Paid Gig" });
-    await expect(row.locator(".fr-price")).toHaveText("£13.50");
+    await expect(row.locator(".fr-cost b")).toHaveText("£13.50");
 
     // ♥ save from the feed → Saved chip appears with a count.
     await row.locator(".save-btn").click();

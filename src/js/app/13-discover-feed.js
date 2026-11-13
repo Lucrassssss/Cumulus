@@ -107,14 +107,32 @@ function feedUpcoming() {
   ).sort((a, b) => a.startsAt - b.startsAt);
 }
 
-function feedFiltered() {
+// Current filter settings, as one object (the filter sheet edits a copy).
+function feedFilterState() {
+  let range = state.feedRange || "all";
+  let price = state.feedPrice || "any";
+  if (range === "free") (range = "all"), (price = "free"); // legacy chip value
+  return { range, price, cat: state.selectedCategory || "all", hideSold: !!state.feedHideSold, near: !!state.nearMe };
+}
+// How many filters differ from the defaults (the badge on the Filters button).
+function feedFilterCount(f = feedFilterState()) {
+  return (f.range !== "all" && f.range !== "saved") + (f.price !== "any") + (f.cat !== "all") + f.hideSold + f.near;
+}
+const PRICE_CAPS = { free: 0, u10: 10, u20: 20 };
+function feedFiltered(f = feedFilterState()) {
   const q = (state.feedQuery || "").trim().toLowerCase();
-  const cat = state.selectedCategory || "all";
-  const range = state.feedRange || "all";
+  const { cat, range, price, hideSold } = f;
   return feedUpcoming().filter((ev) => {
     if (cat !== "all" && ev.category !== cat) return false;
     if (range === "saved" && !isSaved(ev.id)) return false;
-    if (range === "free" && eventPrice(ev)) return false;
+    if (price !== "any") {
+      const p = eventAllInPrice(ev);
+      if (price === "free" ? p > 0 : p > PRICE_CAPS[price]) return false;
+    }
+    if (hideSold) {
+      const left = feedSpotsLeft(ev);
+      if (left !== null && left <= 0) return false;
+    }
     if (range === "today" && !eventInDateRange(ev, "today") && eventStatus(ev) !== "live") return false;
     if (range === "weekend" && !eventInDateRange(ev, "weekend")) return false;
     if (range === "tomorrow") {
@@ -150,6 +168,12 @@ function goFeed() {
   else window.scrollTo(0, state._feedY || 0);
 }
 function setFeedRange(r) {
+  if (r === "free") {
+    state.feedPrice = state.feedPrice === "free" ? "any" : "free";
+    if (state.feedRange === "free") state.feedRange = "all";
+    state.feedLimit = FEED_PAGE;
+    return _rerenderFeedResults();
+  }
   state.feedRange = r;
   state.feedLimit = FEED_PAGE;
   _rerenderFeedResults();
@@ -170,9 +194,11 @@ function _rerenderFeedResults() {
   const el = document.getElementById("feed-results");
   if (!el) return renderView();
   el.innerHTML = feedResultsHtml();
+  const f = feedFilterState();
   document.querySelectorAll("[data-range]").forEach((b) =>
-    b.classList.toggle("on", b.dataset.range === (state.feedRange || "all")),
+    b.classList.toggle("on", b.dataset.range === "free" ? f.price === "free" : b.dataset.range === f.range),
   );
+  _syncFilterBadge(f);
   const near = document.querySelector('[data-near="1"]');
   if (near) {
     near.classList.remove("loading");
@@ -182,6 +208,99 @@ function _rerenderFeedResults() {
   document.querySelectorAll("[data-fcat]").forEach((b) =>
     b.classList.toggle("on", b.dataset.fcat === (state.selectedCategory || "all")),
   );
+}
+
+// ── Filters sheet (Home) ──────────────────────────────────────────────────
+// One place for every filter: when, price, category, sort, sold-out. Edits
+// a draft and shows a live "Show N events" count; chips on the page stay
+// as quick shortcuts and stay in sync.
+const FILTER_SLIDERS = '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/>';
+function feedFilterBtnHtml() {
+  const n = feedFilterCount();
+  return `<button type="button" class="feed-filter-btn${n ? " on" : ""}" onclick="openFeedFilters()" aria-label="Filters${n ? ` (${n} on)` : ""}">
+    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true">${FILTER_SLIDERS}</svg>
+    <span class="ffb-label">Filters</span><b class="ffb-n"${n ? "" : " hidden"}>${n || ""}</b></button>`;
+}
+function _syncFilterBadge(f = feedFilterState()) {
+  const b = document.querySelector(".feed-filter-btn");
+  if (!b) return;
+  const n = feedFilterCount(f), badge = b.querySelector(".ffb-n");
+  b.classList.toggle("on", !!n);
+  b.setAttribute("aria-label", `Filters${n ? ` (${n} on)` : ""}`);
+  if (badge) (badge.hidden = !n), (badge.textContent = n || "");
+}
+let _filterDraft = null;
+function openFeedFilters() {
+  _filterDraft = feedFilterState();
+  if (_filterDraft.range === "saved") _filterDraft.range = "all";
+  closeLocationSheet(true);
+  const el = document.createElement("div");
+  el.id = "loc-sheet";
+  el.className = "loc-overlay";
+  el.setAttribute("role", "dialog");
+  el.setAttribute("aria-label", "Filters");
+  el.innerHTML = `<div class="loc-sheet ff-sheet"></div>`;
+  el.addEventListener("click", (e) => {
+    if (e.target === el) closeLocationSheet();
+  });
+  document.body.appendChild(el);
+  _renderFilterSheet();
+  requestAnimationFrame(() => el.classList.add("in"));
+  document.addEventListener("keydown", _locEsc);
+}
+function _renderFilterSheet() {
+  const sheet = document.querySelector(".ff-sheet");
+  if (!sheet || !_filterDraft) return;
+  const d = _filterDraft;
+  const seg = (key, opts) =>
+    `<div class="ff-seg" role="radiogroup">${opts
+      .map(([v, l]) => {
+        const on = String(d[key]) === v;
+        return `<button type="button" role="radio" aria-checked="${on}" class="${on ? "on" : ""}" onclick="_ffSet('${key}','${v}')">${l}</button>`;
+      })
+      .join("")}</div>`;
+  const cats = Object.keys(CATS).filter((c) => feedUpcoming().some((ev) => ev.category === c));
+  const n = feedFiltered(d).length;
+  sheet.innerHTML = `
+    <div class="loc-head"><div><b>Filters</b><span>${feedUpcoming().length} events coming up</span></div><button class="loc-x" onclick="closeLocationSheet()" aria-label="Close">✕</button></div>
+    <div class="ff-body">
+      <div class="ff-sec"><h4>When</h4>${seg("range", [["all", "Anytime"], ["today", "Tonight"], ["tomorrow", "Tomorrow"], ["weekend", "Weekend"]])}</div>
+      <div class="ff-sec"><h4>Price</h4>${seg("price", [["any", "Any"], ["free", "Free"], ["u10", "Under £10"], ["u20", "Under £20"]])}</div>
+      ${cats.length > 1 ? `<div class="ff-sec"><h4>Category</h4><div class="ff-cats">
+        <button type="button" class="v-chip sm${d.cat === "all" ? " on" : ""}" onclick="_ffSet('cat','all')">All</button>
+        ${cats.map((c) => `<button type="button" class="v-chip sm${d.cat === c ? " on" : ""}" style="--dot:${posterPalette(c)[0]}" onclick="_ffSet('cat','${c.replace(/'/g, "\\'")}')"><i></i>${escapeHtml(c)}</button>`).join("")}
+      </div></div>` : ""}
+      <div class="ff-sec"><h4>Sort</h4>${seg("near", [["false", "Soonest"], ["true", "Nearest to me"]])}</div>
+      <label class="ff-toggle"><span><b>Hide sold-out events</b><small>Only show events you can still get into</small></span>
+        <input type="checkbox" ${d.hideSold ? "checked" : ""} onchange="_ffSet('hideSold',this.checked)"/><i aria-hidden="true"></i></label>
+    </div>
+    <div class="ff-foot">
+      <button type="button" class="v-btn ghost" onclick="_ffClear()"${feedFilterCount(d) ? "" : " disabled"}>Clear all</button>
+      <button type="button" class="v-btn" onclick="_ffApply()"${n ? "" : " disabled"}>${n ? `Show ${n} event${n === 1 ? "" : "s"}` : "No events match"}</button>
+    </div>`;
+}
+function _ffSet(k, v) {
+  if (!_filterDraft) return;
+  _filterDraft[k] = k === "near" ? v === true || v === "true" : v;
+  _renderFilterSheet();
+}
+function _ffClear() {
+  _filterDraft = { range: "all", price: "any", cat: "all", hideSold: false, near: false };
+  _renderFilterSheet();
+}
+function _ffApply() {
+  const d = _filterDraft;
+  if (!d) return closeLocationSheet();
+  state.feedRange = d.range;
+  state.feedPrice = d.price;
+  state.selectedCategory = d.cat;
+  state.feedHideSold = d.hideSold;
+  state.feedLimit = FEED_PAGE;
+  closeLocationSheet();
+  _filterDraft = null;
+  // "Nearest to me" needs a location fix; toggleNearMe() asks for it.
+  if (d.near !== !!state.nearMe) return toggleNearMe();
+  _rerenderFeedResults();
 }
 
 // ── Your crew (friends going) ─────────────────────────────────────────────
@@ -421,7 +540,7 @@ function feedPosterCardHtml(ev, size) {
   const st = eventStatus(ev);
   const left = feedSpotsLeft(ev);
   const scarce = left !== null && left > 0 && left <= Math.max(3, Math.ceil(ev.capacity * 0.15));
-  return `<article class="fp-card ${size || ""}" onclick="openEvent('${ev.id}')" role="button" tabindex="0" aria-label="${escapeHtml(ev.title)}">
+  return `<article class="fp-card ${size || ""}" onclick="openEvent('${ev.id}')" role="button" tabindex="0" aria-label="${escapeHtml(ev.title)}"><i class="fp-glare" aria-hidden="true"></i>
     <div class="${posterClass(ev)}" style="${posterStyle(ev)}">
       ${posterGlyph(ev)}
       <div class="fp-top">
@@ -451,14 +570,20 @@ function feedRowHtml(ev, tag) {
       <h3 class="fr-title">${escapeHtml(ev.title)}</h3>
       <div class="fr-venue">${escapeHtml(ev.venue || "")}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""}</div>
       <div class="fr-foot">
-        <span class="fr-price${eventPrice(ev) ? "" : " free"}">${feedPriceLabel(ev)}</span>
         ${tag ? `<span class="fr-chip tag">${escapeHtml(tag)}</span>` : ""}
         ${left !== null && left <= 10 && left > 0 ? `<span class="fr-chip warn">Only ${left} left</span>` : ""}
         ${left === 0 ? `<span class="fr-chip">Waitlist</span>` : ""}
         ${crewFor(ev).length ? crewChipHtml(ev) : going >= 2 ? `<span class="fr-chip">${going} going</span>` : ""}
       </div>
     </div>
-    ${saveBtnHtml(ev, "in-row")}
+    <div class="fr-side">
+      ${
+        eventPrice(ev)
+          ? `<div class="fr-cost"><b>${feedPriceLabel(ev)}</b><small>incl. fees</small></div>`
+          : `<div class="fr-cost free"><b>Free</b></div>`
+      }
+      ${saveBtnHtml(ev, "in-row")}
+    </div>
   </article>`;
 }
 
@@ -508,6 +633,10 @@ function toggleSave(id) {
       b.classList.add("pop");
     }
   });
+  if (on && typeof saveBurst === "function") {
+    const src = window.event && window.event.target && window.event.target.closest && window.event.target.closest("[data-save-id]");
+    saveBurst(src || document.querySelector(`[data-save-id="${CSS.escape(id)}"]`));
+  }
   showToast(
     on ? (state.userId ? "Saved — it's in your Tickets" : "Saved — find it under Saved on Discover") : "Removed from saved",
     on ? "success" : "info",
@@ -750,12 +879,15 @@ function renderFeed() {
 
     <div class="feed-layout">
     <div class="feed-hero">
-        <div class="feed-kicker"><span class="pulse"></span>${escapeHtml(kicker)}${live.length ? ` · ${live.length} live now` : ""}</div>
+        <div class="feed-kicker"><span class="pulse"></span>${escapeHtml(kicker)}${live.length ? ` · <b data-countup>${live.length}</b> live now` : ""}</div>
         <h1 class="feed-h1">${escapeHtml(hello)}</h1>
-        <label class="feed-search">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-          <input type="search" placeholder="Artists, venues, vibes…" value="${escapeHtml(state.feedQuery || "")}" oninput="onFeedSearch(this.value)" aria-label="Search events" autocomplete="off"/>
-        </label>
+        <div class="feed-search-row">
+          <label class="feed-search">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" placeholder="Artists, venues, vibes…" value="${escapeHtml(state.feedQuery || "")}" oninput="onFeedSearch(this.value)" aria-label="Search events" autocomplete="off"/>
+          </label>
+          ${feedFilterBtnHtml()}
+        </div>
         ${signedIn ? "" : promiseStripHtml()}
       </div>
 
@@ -798,7 +930,7 @@ function renderFeed() {
     ${
       featured.length
         ? `<div class="feed-section">
-        <div class="feed-sec-head"><h2>Don't miss</h2><span class="feed-count">${all.length} upcoming</span></div>
+        <div class="feed-sec-head"><h2>Don't miss</h2><span class="feed-count"><b data-countup>${all.length}</b> upcoming</span></div>
         <div class="fp-wheel" role="region" aria-roledescription="carousel" aria-label="Don't miss">
           <button type="button" class="fw-arrow prev" onclick="wheelStep(-1)" aria-label="Previous event"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
           <div class="fp-rail" id="fp-rail" onscroll="wheelSync()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();wheelStep(1)}else if(event.key==='ArrowLeft'){event.preventDefault();wheelStep(-1)}">${wheelCardsHtml(featured)}</div>
@@ -814,7 +946,7 @@ function renderFeed() {
         <button class="v-chip near${state.nearMe ? " on" : ""}" data-near="1" onclick="toggleNearMe()" aria-pressed="${!!state.nearMe}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 21 3l-8 18-2-8-8-2Z"/></svg>Near me</button>
         <button class="v-chip saved${range === "saved" ? " on" : ""}" data-range="saved" onclick="setFeedRange('saved')" style="${savedUpcoming().length ? "" : "display:none"}"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M12 20.5s-7.5-4.6-9.4-9.3C1.4 8.2 3.4 4.5 7 4.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.6 0 5.6 3.7 4.4 6.7-1.9 4.7-9.4 9.3-9.4 9.3Z"/></svg>Saved <b>${savedUpcoming().length}</b></button>
         ${ranges
-        .map(([k, l]) => `<button class="v-chip${range === k ? " on" : ""}" data-range="${k}" onclick="setFeedRange('${k}')">${l}</button>`)
+        .map(([k, l]) => `<button class="v-chip${(k === "free" ? feedFilterState().price === "free" : range === k) ? " on" : ""}" data-range="${k}" onclick="setFeedRange('${k}')">${l}</button>`)
         .join("")}</div>
       ${
         cats.length > 1
@@ -1077,6 +1209,7 @@ function hideBootLoader() {
   const loader = document.getElementById("cumulus-loader");
   if (!loader || loader.dataset.hiding) return;
   loader.dataset.hiding = "1";
+  if (typeof bootReveal === "function") return bootReveal(loader); // 14-delight.js
   loader.style.opacity = "0";
   setTimeout(() => loader.remove(), 400);
 }
@@ -1195,12 +1328,3 @@ document.addEventListener("keydown", (e) => {
   el.click();
 });
 
-// ── Boot ──────────────────────────────────────────────────────────────────
-// Lives in the LAST app script so every function start() can reach is
-// already defined. Never let an unexpected rejection leave a blank screen.
-start().catch((e) => {
-  console.error("[cumulus] boot failed", e);
-  try {
-    enterGuestBrowse();
-  } catch (_) {}
-});

@@ -1470,6 +1470,10 @@ async function _publishApprovedEvent(rec) {
 // a second page load: skip if nothing changed, otherwise repaint in place —
 // no entrance animations, same scroll position.
 function renderViewQuiet() {
+  // Home is mid "level load" (14-delight.js): hold background repaints until
+  // it finishes, so late-arriving data doesn't restart or cut the intro.
+  const appEl = document.getElementById("app");
+  if (appEl && appEl.classList.contains("boot-play")) return void (window._quietPending = true);
   if (state.view === "feed") {
     const html = renderFeed();
     if (html === window._lastFeedHtml) return;
@@ -1477,6 +1481,8 @@ function renderViewQuiet() {
   const y = window.scrollY;
   renderView();
   window.scrollTo(0, y);
+  // This repaint just kicked off Home's intro: let it play.
+  if (appEl && appEl.classList.contains("boot-play")) return;
   // Jump every one-off entrance animation/transition in the new content
   // straight to its end state. (Merely suppressing them for a frame, as
   // before, just restarted them a frame later — the "double load".)
@@ -1490,6 +1496,7 @@ function renderViewQuiet() {
   } catch (e) {}
 }
 function _settleEntrances(root) {
+  if (document.getElementById("app")?.classList.contains("boot-play")) return;
   try {
     (root && root.getAnimations ? root.getAnimations({ subtree: true }) : []).forEach((a) => {
       const t = a.effect && a.effect.getComputedTiming ? a.effect.getComputedTiming() : null;
@@ -1506,6 +1513,8 @@ function renderView() {
   // fixed-position containing block, which would clip a viewport layer.
   // Same-page redraws (quantity +/−, filters, toggles) must not replay the
   // page's entrance — only a real page change fades in.
+  // A real redraw (the user tapped something) ends the Home intro early.
+  if (app.dataset.view === state.view && app.classList.contains("boot-play")) app.classList.remove("boot-play");
   app.classList.toggle("same-view", app.dataset.view === state.view);
   // Going back (Back button, or a tab you've already visited) returns to the
   // page as you left it — no entrance fade, nothing re-entering.
@@ -1561,6 +1570,8 @@ function renderView() {
         });
       } catch (e) {}
     }
+    // First real look at Home this visit: the page assembles itself.
+    if (state.eventsLoaded && !window._feedSeen && typeof delightFeedBoot === "function") delightFeedBoot(container);
     if (state.eventsLoaded) window._feedSeen = true;
   }
   else if (state.view === "detail")

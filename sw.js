@@ -1,4 +1,4 @@
-const CACHE = "cumulus-v56";
+const CACHE = "cumulus-v57";
 const ASSETS = [
   "./",
   "./index.html",
@@ -18,6 +18,7 @@ const ASSETS = [
   "./src/js/app/11-checkout-confirmation.js",
   "./src/js/app/12-wallet-host-form-scanner.js",
   "./src/js/app/13-discover-feed.js",
+  "./src/js/app/14-delight.js",
   "./src/css/v2.css",
   "./manifest.json",
   "./assets/icons/icon.svg?v=2",

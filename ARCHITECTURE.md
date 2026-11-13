@@ -14,7 +14,7 @@ code, is in `docs/history.md`. This file is the current map.
 
 ### Scripts and the global scope
 
-`index.html` loads `config.js`, then `services.js`, then the thirteen
+`index.html` loads `config.js`, then `services.js`, then the fourteen
 `src/js/app/NN-*.js` files, all as classic `defer` scripts **in numeric
 order**. They share one global scope: every top-level `function`, `let` and
 `const` is visible to every file. Inline handlers in template strings depend
@@ -25,7 +25,7 @@ Rules that follow from it:
 - **Name collisions are global.** Search before adding a top-level name.
 - **Order matters only for code that runs at load time.** Functions can call
   anything once the page has booted. `start()` in `03` is kicked off from the
-  last file, `13`.
+  last file, `14`.
 - **Escape dynamic text** with `escapeHtml()` whenever it goes into HTML. For
   values inside an inline `onclick='…'`, also replace `'` with `&#39;`.
 
@@ -43,7 +43,8 @@ Rules that follow from it:
 | `10-account-calendar-payments.js` | Account + details, calendar, pricing helpers, `myTickets`/`bookingDraft`, **Stripe checkout** (`startStripeCheckout`, `submitStripePayment`, `finalizeStripePayment`) |
 | `11-checkout-confirmation.js` | Book + Pay screens, pay overlay, "You're in" animation, confirmation/ticket view |
 | `12-wallet-host-form-scanner.js` | Tickets wallet (Upcoming/Past), can't-go/transfer sheets, host event form, door scanner (offline queue in IndexedDB) |
-| `13-discover-feed.js` | Discover feed, poster art, carousel, saved events, crew, location/calendar sheets, keyboard handling, boot call |
+| `13-discover-feed.js` | Discover feed, Filters sheet, poster art, carousel, saved events, crew, location/calendar sheets, keyboard handling |
+| `14-delight.js` | Decorative motion: boot screen tips/progress + iris reveal, Home "level load" intro (once per visit), count-ups, save confetti, poster holo tilt, orb easter egg; **boot call** |
 
 ### Rendering model
 
@@ -211,7 +212,7 @@ Most valuable first:
    `html body …!important` override pattern. This is mechanical but large.
    Pixel-diff the screens before and after; the audit used a Playwright
    screenshot harness of about 50 views, which is worth adding to CI.
-2. **ES modules.** Convert the 13 global-scope scripts to modules, which
+2. **ES modules.** Convert the 14 global-scope scripts to modules, which
    needs a bundler such as Vite. Inline `onclick` handlers would move to event
    delegation. That's the step that unlocks TypeScript and tree-shaking.
 3. **Inline styles in templates.** Mainly the admin and owner-finance

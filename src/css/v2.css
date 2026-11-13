@@ -5402,3 +5402,131 @@ html body .review-empty-icon .ui-ic{display:block;}
 /* Sign-in / sign-up submit: the app's one primary-button style, both themes */
 html body .lp-claim-btn{background:var(--cta-bg) !important;color:var(--cta-fg) !important;border:0 !important;box-shadow:none !important;}
 html body .lp-claim-btn:hover{filter:brightness(1.06);}
+
+/* ══ Home: Filters button + sheet ═══════════════════════════════════════ */
+html body .feed-search-row{display:flex;gap:8px;align-items:stretch;}
+html body .feed-search-row .feed-search{flex:1;min-width:0;margin:0 !important;}
+html body .feed-filter-btn{appearance:none;flex:none;display:inline-flex;align-items:center;gap:7px;padding:0 15px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:700 14px var(--font-sans);cursor:pointer;position:relative;transition:background-color .2s ease,border-color .2s ease,transform .18s cubic-bezier(.2,.8,.2,1);-webkit-tap-highlight-color:transparent;}
+html body .feed-filter-btn:active{transform:scale(.96);}
+html body .feed-filter-btn.on{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));background:color-mix(in srgb,var(--accent) 10%,var(--surface));}
+html body .ffb-n{min-width:19px;height:19px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:var(--cta-bg);color:var(--cta-fg);font:800 11px/19px var(--font-sans);text-align:center;font-variant-numeric:tabular-nums;}
+html body .ffb-n[hidden]{display:none;}
+@media (max-width:360px){html body .ffb-label{display:none;}html body .feed-filter-btn{padding:0 13px;}}
+html body .ff-sheet{padding-bottom:0 !important;}
+html body .ff-body{padding:2px 2px 8px;}
+html body .ff-sec{margin:0 0 18px;}
+html body .ff-sec h4{margin:0 0 8px;font:700 11px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);}
+html body .ff-seg{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--surface-2);}
+html body .ff-seg button{appearance:none;border:0;flex:1;min-width:0;height:38px;border-radius:999px;background:transparent;color:var(--text-muted);font:700 13px var(--font-sans);white-space:nowrap;cursor:pointer;transition:background-color .2s ease,color .2s ease;}
+html body .ff-seg button.on{background:var(--text);color:var(--bg);}
+html body .ff-cats{display:flex;flex-wrap:wrap;gap:6px;}
+html body .ff-toggle{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;border-radius:var(--r-md);background:var(--surface-2);cursor:pointer;}
+html body .ff-toggle span{display:flex;flex-direction:column;gap:2px;}
+html body .ff-toggle b{font:700 14px var(--font-sans);color:var(--text);}
+html body .ff-toggle small{font-size:12.5px;color:var(--text-muted);}
+html body .ff-toggle input{position:absolute;opacity:0;pointer-events:none;}
+html body .ff-toggle i{flex:none;width:44px;height:26px;border-radius:13px;background:var(--line);position:relative;transition:background-color .2s ease;}
+html body .ff-toggle i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .22s cubic-bezier(.2,.8,.2,1);}
+html body .ff-toggle input:checked + i{background:var(--cta-bg);}
+html body .ff-toggle input:checked + i::after{transform:translateX(18px);}
+html body .ff-toggle input:focus-visible + i{outline:2px solid var(--accent);outline-offset:2px;}
+html body .ff-foot{position:sticky;bottom:0;display:flex;gap:8px;margin:0 -14px;padding:12px 14px calc(env(safe-area-inset-bottom,0px) + 14px);border-radius:0 0 var(--r-xl) var(--r-xl);background:var(--surface);border-top:1px solid var(--line);}
+html body .ff-foot .v-btn{flex:1;min-height:50px;}
+html body .ff-foot .v-btn:last-child{flex:1.6;}
+
+/* ══ Delight (see src/js/app/14-delight.js) ════════════════════════════════
+   Decorative motion only: transform/opacity, individual translate/rotate/
+   scale properties so nothing fights existing transforms, and all of it
+   off under prefers-reduced-motion. */
+
+/* 1 · Boot screen: progress bar, rotating tips, iris-wipe reveal */
+@property --iris{syntax:"<length-percentage>";inherits:false;initial-value:0%;}
+#cumulus-loader .boot-bar{width:132px;height:3px;border-radius:2px;background:color-mix(in srgb,var(--text) 12%,transparent);overflow:hidden;margin-top:4px;}
+#cumulus-loader .boot-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--volt),var(--uv),var(--hot));transform:scaleX(.08);transform-origin:0 50%;transition:transform .5s cubic-bezier(.2,.8,.2,1);}
+#cumulus-loader .boot-tip{font:700 11px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);min-height:14px;}
+#cumulus-loader .boot-tip.in{animation:boot-tip .45s cubic-bezier(.2,.8,.2,1) backwards;}
+@keyframes boot-tip{from{opacity:0;translate:0 6px}}
+#cumulus-loader.iris{-webkit-mask:radial-gradient(circle at 50% 46%,transparent var(--iris),#000 calc(var(--iris) + 1px));mask:radial-gradient(circle at 50% 46%,transparent var(--iris),#000 calc(var(--iris) + 1px));animation:boot-iris .7s cubic-bezier(.7,0,.25,1) forwards;}
+#cumulus-loader.iris .boot-mark{animation:v-spin .6s linear infinite,boot-mark-out .3s ease forwards;}
+@keyframes boot-iris{to{--iris:150%}}
+@keyframes boot-mark-out{to{scale:2.4;opacity:0}}
+
+/* 2 · Home "level load" (first view per visit) */
+#app.boot-play .feed-head{animation:bi-down .45s .15s cubic-bezier(.2,.8,.2,1) backwards;}
+#app.boot-play .feed-kicker{animation:bi-type .55s .3s steps(var(--chars,24),end) backwards;}
+@keyframes bi-type{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+#app.boot-play .feed-h1{animation:bi-title .6s .42s cubic-bezier(.16,1,.3,1) backwards;}
+@keyframes bi-title{from{clip-path:inset(0 0 100% 0);translate:0 .45em}to{clip-path:inset(0 0 -10% 0)}}
+#app.boot-play .feed-search{transform-origin:0 50%;animation:bi-draw .5s .56s cubic-bezier(.2,.8,.2,1) backwards;}
+@keyframes bi-draw{from{scale:.35 1;opacity:0}}
+#app.boot-play .feed-filter-btn{animation:bi-pop .4s .74s cubic-bezier(.3,1.5,.5,1) backwards;}
+@keyframes bi-pop{from{scale:.5;opacity:0}}
+#app.boot-play :is(.feed-host-cta,.promise-strip){animation:bi-slide .55s .8s cubic-bezier(.16,1,.3,1) backwards;}
+@keyframes bi-slide{from{translate:-28px 0;opacity:0}}
+#app.boot-play .up-next{animation:bi-flip .6s .9s cubic-bezier(.16,1,.3,1) backwards !important;transform-origin:50% 0;}
+@keyframes bi-flip{from{rotate:x 70deg;opacity:0}}
+#app.boot-play .feed-ticker{animation:bi-wipe .6s 1s cubic-bezier(.65,0,.35,1) backwards;}
+@keyframes bi-wipe{from{clip-path:inset(0 0 0 100%)}to{clip-path:inset(0 0 0 0)}}
+#app.boot-play .fp-rail{perspective:none;}
+#app.boot-play .fp-card{animation:bi-deal .62s calc(1.02s + var(--bi,0) * 70ms) cubic-bezier(.2,1.25,.4,1) backwards;}
+@keyframes bi-deal{from{translate:0 90px;rotate:calc(-10deg + var(--bi,0) * 5deg);opacity:0}}
+#app.boot-play .feed-sec-head{animation:bi-down .45s 1.05s ease backwards;}
+#app.boot-play .feed-sticky-filters .v-chip{animation:bi-pop .38s calc(1.25s + var(--bi,0) * 32ms) cubic-bezier(.3,1.5,.5,1) backwards;}
+#app.boot-play #feed-results .fr-row{animation:bi-rise .45s calc(1.38s + var(--bi,0) * 45ms) cubic-bezier(.2,.8,.2,1) backwards;}
+@keyframes bi-down{from{translate:0 -10px;opacity:0}}
+@keyframes bi-rise{from{translate:0 14px;opacity:0}}
+#app.boot-play .feed-kicker .pulse{animation-delay:.9s;}
+[data-countup]{font-variant-numeric:tabular-nums;font-weight:inherit;}
+
+/* 3 · Save confetti */
+.save-burst{position:fixed;z-index:9000;width:0;height:0;pointer-events:none;}
+.save-burst i{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:2px;animation:save-burst .6s cubic-bezier(.15,.8,.3,1) forwards;}
+.save-burst i:nth-child(odd){border-radius:50%;}
+@keyframes save-burst{0%{translate:0 0;scale:.4;opacity:1}70%{opacity:1}100%{translate:var(--dx) var(--dy);scale:1;rotate:120deg;opacity:0}}
+
+/* 4 · Holo tilt on posters (mouse only) */
+@media (hover:hover) and (pointer:fine){
+  html body .fp-rail{perspective:900px;}
+  html body .fp-card{transition:rotate .5s cubic-bezier(.2,.8,.2,1),scale .25s ease;}
+  html body .fp-card.tilting{rotate:var(--tilt-x,0) var(--tilt-y,0) 0 var(--tilt-a,0deg);transition:rotate .08s linear,scale .25s ease;}
+  html body .fp-glare{position:absolute;inset:0;z-index:3;border-radius:inherit;pointer-events:none;opacity:0;mix-blend-mode:soft-light;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.55),transparent 55%);transition:opacity .3s ease;}
+  html body .fp-card.tilting .fp-glare{opacity:1;}
+}
+html body .fp-glare{display:none;}
+@media (hover:hover) and (pointer:fine){html body .fp-glare{display:block;}}
+
+/* 5 · Tab hop, event poster drop, orb */
+html body .nav-link.tab-in .nav-icon{animation:tab-hop .42s cubic-bezier(.3,1.6,.5,1);}
+@keyframes tab-hop{0%{translate:0 0}35%{translate:0 -5px}100%{translate:0 0}}
+#app:not(.same-view):not(.nav-back) .ev-hero{animation:ev-drop .55s .05s cubic-bezier(.2,1.1,.4,1) backwards;}
+@keyframes ev-drop{from{scale:1.06;rotate:-1.2deg;opacity:0}}
+html body .feed-mark{cursor:pointer;}
+html body .feed-mark.spin{animation:orb-spin .7s cubic-bezier(.3,1.4,.5,1);}
+html body .feed-mark.party{animation:orb-party 1.2s cubic-bezier(.3,1.4,.5,1);}
+@keyframes orb-spin{to{rotate:360deg}}
+@keyframes orb-party{0%{rotate:0;scale:1}30%{scale:1.6}60%{rotate:720deg;filter:hue-rotate(180deg)}100%{rotate:1080deg;scale:1;filter:none}}
+
+@media (prefers-reduced-motion:reduce){
+  #app.boot-play *,#cumulus-loader *,.save-burst,.feed-mark,.ev-hero,.nav-icon{animation:none !important;}
+  html body .fp-card.tilting{rotate:none;}
+}
+
+/* ══ Event rows: bordered cards, price front and centre on the right ════════
+   Every listing is its own card, and what you'll pay is the first thing you
+   see on the right — the all-in price (incl. fees), or a clear "Free". */
+html body .fr-list{gap:8px;}
+html body .fr-row{border:1px solid var(--line) !important;border-radius:var(--r-lg) !important;background:var(--surface) !important;padding:10px 10px 10px 10px !important;gap:12px !important;align-items:stretch !important;transition:border-color .2s ease,background-color .2s ease,transform .18s cubic-bezier(.2,.8,.2,1) !important;}
+html body .fr-row + .fr-row::before{display:none !important;}
+html body .fr-row:hover{border-color:color-mix(in srgb,var(--text) 22%,var(--line)) !important;background:var(--surface) !important;}
+html body .fr-row .fr-thumb{align-self:center;}
+html body .fr-row .fr-body{flex:1;min-width:0;align-self:center;}
+html body .fr-side{flex:none;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:6px;min-width:64px;padding-left:10px;border-left:1px dashed var(--line);}
+html body .fr-cost{display:flex;flex-direction:column;align-items:flex-end;line-height:1.05;}
+html body .fr-cost b{font:800 19px/1 var(--font-sans);letter-spacing:-.02em;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap;}
+html body .fr-cost small{margin-top:3px;font:600 10.5px var(--font-sans);color:var(--text-muted);white-space:nowrap;}
+html body .fr-cost.free b{font-size:13px;padding:5px 10px;border-radius:999px;background:var(--cta-bg);color:var(--cta-fg);letter-spacing:0;}
+html body .fr-side .save-btn.in-row{margin:0 -4px -4px 0 !important;}
+html body .fr-list.compact .fr-row{padding:8px !important;}
+html body .fr-list.compact .fr-cost b{font-size:17px;}
+html body .fr-foot:empty{display:none;}
+@media (min-width:761px){html body .fr-list{row-gap:10px;}}

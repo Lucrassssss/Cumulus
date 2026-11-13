@@ -57,7 +57,7 @@ CI runs both on every push and pull request (`.github/workflows/tests.yml`).
 | `index.html` | App shell: meta tags, third-party scripts, and the ordered `<script>` list |
 | `src/js/config.js` | Public runtime config (Supabase URL + anon key, Mapbox token, Stripe publishable key) and the `sb` client |
 | `src/js/services.js` | Data access: every Supabase query/RPC the UI uses |
-| `src/js/app/01–13-*.js` | The UI, as 13 classic scripts sharing one global scope (see ARCHITECTURE.md) |
+| `src/js/app/01–14-*.js` | The UI, as 14 classic scripts sharing one global scope (see ARCHITECTURE.md) |
 | `src/css/styles.css` | Base layer (older). Variables, resets, legacy components |
 | `src/css/v2.css` | Current design layer. Wins over `styles.css`; new styles go here |
 | `sw.js` | Service worker: precache + offline. **Bump `CACHE` on every release** |
