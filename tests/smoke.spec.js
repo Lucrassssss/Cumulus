@@ -395,7 +395,20 @@ test.describe("Cumulus smoke", () => {
     await page.goto("/");
     await enterApp(page);
     await setView(page, "host");
-    await expect(page.locator(".host-section").first()).toBeVisible();
+    await expect(page.locator(".hx2-step").first()).toBeVisible();
+    // Host form: quick picks fill the fields, steps tick off, the live
+    // ticket follows along, and typing survives a background refresh.
+    await page.fill("#host-title", "Rooftop Jazz");
+    await page.locator('.hx2-cat[data-cat="Live Music"]').click();
+    await page.locator('[data-day="1"]').click();
+    await page.locator('.hx2-seg [data-h="4"]').click();
+    expect(await page.evaluate(() => [_hv("host-cat"), _hv("host-start-time"), _hv("host-end-time")])).toEqual(["Live Music", "19:00", "23:00"]);
+    await page.fill("#host-venue", "Netil 360");
+    await page.locator('[data-cap="50"]').click();
+    await expect(page.locator("#hx2-prog-txt")).toHaveText("Ready to go");
+    await expect(page.locator("#hx2-live")).toContainText("Rooftop Jazz");
+    await page.evaluate(() => renderViewQuiet());
+    expect(await page.inputValue("#host-title")).toBe("Rooftop Jazz");
     await page.evaluate(() => (state.userId = "00000000-0000-0000-0000-000000000004"));
     await setView(page, "account");
     await expect(page.locator(".ac-page .v-kicker")).toHaveText("Account");

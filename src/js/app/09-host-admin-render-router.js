@@ -1463,12 +1463,18 @@ async function _publishApprovedEvent(rec) {
 // Background refreshes (data arriving after first paint) must not look like
 // a second page load: skip if nothing changed, otherwise repaint in place —
 // no entrance animations, same scroll position.
+const QUIET_SKIP_VIEWS = new Set(["host", "host-apply", "book", "checkout", "account-details", "scan"]);
 function renderViewQuiet() {
   // Home is mid "level load" (14-delight.js): hold background repaints until
   // it finishes, so late-arriving data doesn't restart or cut the intro.
   const appEl = document.getElementById("app");
   // Same while an event's sticker is flying in, so the page isn't swapped mid-flight.
   if (appEl && (appEl.classList.contains("boot-play") || appEl.classList.contains("ev-jump"))) return void (window._quietPending = true);
+  // Never repaint a screen someone is filling in — a background refresh
+  // would wipe what they've typed (Host form, checkout, details, scanner).
+  if (QUIET_SKIP_VIEWS.has(state.view)) return;
+  const ae = document.activeElement;
+  if (ae && ae.closest && ae.closest("#view-container") && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
   if (state.view === "feed") {
     const html = renderFeed();
     if (html === window._lastFeedHtml) return;
@@ -1586,8 +1592,12 @@ function renderView() {
     container.innerHTML = renderMyTickets();
   else if (state.view === "admin") container.innerHTML = renderAdmin();
   else if (state.view === "host") {
+    _hostDurManual = false;
+    _hostAllDone = false;
+    if (!_hostFlyerBlob) window._hostFlyerUrl = null;
     container.innerHTML = renderHostView();
     updateHostPricePreview();
+    hostFormChanged();
     if (mapboxConfigured()) setTimeout(initHostMap, 0);
   } else if (state.view === "book") container.innerHTML = renderBook();
   else if (state.view === "checkout") {

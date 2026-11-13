@@ -61,20 +61,25 @@ async function handleHostFlyerSelect(input) {
   if (!file) return;
   const preview = document.getElementById("host-flyer-preview");
   if (preview)
-    preview.innerHTML = `<span style="font-size:12px;color:var(--text-muted);">Compressing…</span>`;
+    preview.innerHTML = `<span class="hx2-spin" aria-label="Compressing"></span>`;
   try {
     _hostFlyerBlob = await compressImageFile(file);
     const url = URL.createObjectURL(_hostFlyerBlob);
+    window._hostFlyerUrl = url;
     if (preview) {
-      preview.style.border = "none";
-      preview.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;"/>`;
+      preview.innerHTML = "";
+      preview.style.background = `url('${url}') center/cover`;
+      const t = preview.parentNode && preview.parentNode.querySelector(".hx2-flyer-txt");
+      if (t) t.innerHTML = "<b>Flyer added</b><small>Tap to swap it</small>";
     }
+    if (typeof hostFormChanged === "function") hostFormChanged();
   } catch (e) {
     _hostFlyerBlob = null;
     showToast("Couldn't process that image — try another", "error");
+    window._hostFlyerUrl = null;
     if (preview) {
-      preview.style.border = "2px dashed var(--line)";
-      preview.innerHTML = `<span class="flyer-ic">${uiIcon("camera", 26)}</span><span>Tap to upload a flyer photo</span>`;
+      preview.style.background = "";
+      preview.innerHTML = uiIcon("camera", 22);
     }
   }
 }

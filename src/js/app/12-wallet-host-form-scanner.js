@@ -283,128 +283,303 @@ async function cancelTicket(ticketId, confirmed) {
 
 
 
-// Hosting is frictionless — no eligibility checklist, no connections/check-in
-// gate, no private/public split. Everyone can host; every event is public
-// (instantly for admins, via a quick pending_events review for everyone else —
-// see the notify-admin-new-event edge function, which emails on every
-// submission).
+// Host form ("Make a night"): four quick steps — the vibe, when, where,
+// tickets — beside a live ticket that fills itself in as you type. Every
+// field keeps its old id, so submitHostEvent() / initHostMap() / the price
+// and recurring helpers in 07–08 read it exactly as before. Hosting is
+// frictionless: every event is public, admins publish instantly, everyone
+// else goes through a quick review (notify-admin-new-event emails on it).
+const HOST_TITLE_IDEAS = ["Rooftop Jazz & Natural Wine", "Sunday Run Club", "Vinyl Swap Social", "Late-night Dumpling Supper", "Beginner Life Drawing"];
 function renderHostView() {
   const p = _hostPrefill || {};
-  return `
-    <div class="connect-header" style="padding-top:16px;"><h2>${p.title ? "Duplicate event" : "Host an event"}</h2><p>${p.title ? "Same details, new date — review and publish." : "Zero platform fee — you keep 100% of your ticket price."}</p></div>
-    <div id="host-type-notice" class="host-notice">${
-      state.isAdmin
-        ? "Admin: this event publishes straight to the live map."
-        : "Your event goes live after a quick review, usually within a few hours."
-    }</div>
+  const dup = !!p.title;
+  const cat0 = p.category && CATS[p.category] ? p.category : Object.keys(CATS)[0];
+  const paid = p.priceTiers ? true : !!p.price;
+  const step = (n, title, sub, body, extra = "") =>
+    `<section class="hx2-step" data-step="${n}" ${extra}>
+      <header class="hx2-step-h"><i class="hx2-n" aria-hidden="true"><span>${n}</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i><div><b>${title}</b><span>${sub}</span></div></header>
+      ${body}
+    </section>`;
+  const chip = (label, onclick, extra = "") => `<button type="button" class="v-chip sm" onclick="${onclick}" ${extra}>${label}</button>`;
+  const day = (offset) => {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    return d;
+  };
+  // the coming Saturday — next week's if that's already "Tomorrow"
+  let nextSat = (6 - new Date().getDay() + 7) % 7 || 7;
+  if (nextSat <= 1) nextSat += 7;
+  return `<div class="hx2${dup ? " is-dup" : ""}">
+    <header class="hx2-head">
+      <div class="v-kicker">${dup ? "Run it back" : "Host · 0% platform fee"}</div>
+      <h1 class="hx2-title">${dup ? "Same night,<br/>new date." : "Make a<br/>night<i>.</i>"}</h1>
+      <p class="hx2-sub">${dup ? "Everything's carried over — pick a new date and it's ready to go." : "Four quick bits and it's on London's live map. You keep 100% of the ticket price."}</p>
+      <div id="host-type-notice" class="hx2-notice">${
+        state.isAdmin
+          ? `${uiIcon("check", 14)} Admin: this goes straight onto the live map.`
+          : "Goes live after a quick review — usually within a few hours."
+      }</div>
+    </header>
     ${renderMyHostedEventsDuplicatePanel()}
 
-    <div class="host-section">
-      <div class="host-section-title">Flyer (optional)</div>
-      <input id="host-flyer-input" type="file" accept="image/*" style="display:none;" onchange="handleHostFlyerSelect(this)"/>
-      <div id="host-flyer-preview" onclick="document.getElementById('host-flyer-input').click()" role="button" tabindex="0" aria-label="Upload a flyer photo" style="cursor:pointer;border:2px dashed var(--line);border-radius:14px;height:140px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--text-muted);font-size:13px;background:${p.photoUrl ? `var(--surface-2) url('${p.photoUrl}') center/cover` : "var(--surface-2)"};overflow:hidden;">
-        ${
-          p.photoUrl
-            ? ""
-            : `<span class="flyer-ic">${uiIcon("camera", 26)}</span><span>Tap to upload a flyer photo</span>`
-        }
+    <div class="hx2-grid">
+      <div class="hx2-form" oninput="hostFormChanged()" onchange="hostFormChanged()">
+        ${step(1, "The vibe", "Name it and tell people what to expect", `
+          <label class="hx2-lbl" for="host-title">Event name</label>
+          <input id="host-title" class="hx2-big" maxlength="80" placeholder="e.g. ${HOST_TITLE_IDEAS[Math.floor(Math.random() * HOST_TITLE_IDEAS.length)]}" value="${escapeHtml(p.title || "")}" autocomplete="off"/>
+          <span class="hx2-lbl">Category</span>
+          <div class="hx2-chips" role="radiogroup" aria-label="Category">${Object.keys(CATS)
+            .map((c) => `<button type="button" role="radio" class="v-chip sm hx2-cat${c === cat0 ? " on" : ""}" aria-checked="${c === cat0}" style="--dot:${posterPalette(c)[0]}" data-cat="${escapeHtml(c)}" onclick="setHostCat(this.dataset.cat)"><i></i>${escapeHtml(c)}</button>`)
+            .join("")}</div>
+          <select id="host-cat" class="hx2-hidden" tabindex="-1" aria-hidden="true">${Object.keys(CATS)
+            .map((c) => `<option value="${escapeHtml(c)}"${c === cat0 ? " selected" : ""}>${escapeHtml(c)}</option>`)
+            .join("")}</select>
+          <label class="hx2-lbl" for="host-desc">What's the plan?</label>
+          <textarea id="host-desc" class="hx2-in" rows="3" placeholder="Doors at 7, two sets, natural wine at the bar. Bring a mate.">${escapeHtml(p.desc || "")}</textarea>
+          <input id="host-flyer-input" type="file" accept="image/*" hidden onchange="handleHostFlyerSelect(this)"/>
+          <button type="button" class="hx2-flyer" onclick="document.getElementById('host-flyer-input').click()">
+            <span id="host-flyer-preview" class="hx2-flyer-art"${p.photoUrl ? ` style="background:url('${p.photoUrl}') center/cover"` : ""}>${p.photoUrl ? "" : uiIcon("camera", 22)}</span>
+            <span class="hx2-flyer-txt"><b>${p.photoUrl ? "Using the original flyer" : "Add a flyer"}</b><small>${p.photoUrl ? "Tap to swap it" : "Optional — no flyer, we'll design a poster for you"}</small></span>
+          </button>`)}
+
+        ${step(2, "When", dup ? "Dates don't carry over — pick a new one" : "Pick a day, a start time and how long it runs", `
+          <div class="hx2-chips" role="group" aria-label="Quick day">
+            ${chip("Tonight", "setHostDay(0)", 'data-day="0"')}${chip("Tomorrow", "setHostDay(1)", 'data-day="1"')}${chip(`This ${day(nextSat).toLocaleDateString("en-GB", { weekday: "short" })} ${day(nextSat).getDate()}`, `setHostDay(${nextSat})`, `data-day="${nextSat}"`)}
+            <label class="v-chip sm hx2-pickday">${uiIcon("calendar", 14)} Pick a date<input id="host-start-date" type="date" min="${dayKey(Date.now())}" onclick="try{this.showPicker()}catch(e){}" onchange="autofillEventEndDate(this.value);updateRecurringHint();hostSyncEnd();"/></label>
+          </div>
+          <div class="hx2-row">
+            <label class="hx2-field"><span class="hx2-lbl">Starts</span><input id="host-start-time" type="time" class="hx2-in" onchange="hostSyncEnd()"/></label>
+            <div class="hx2-field"><span class="hx2-lbl">Runs for</span>
+              <div class="hx2-seg" role="radiogroup" aria-label="How long">${[2, 3, 4, 6].map((h) => `<button type="button" role="radio" aria-checked="${h === 3}" class="${h === 3 ? "on" : ""}" data-h="${h}" onclick="setHostDuration(${h})">${h}h</button>`).join("")}</div>
+            </div>
+          </div>
+          <div class="hx2-when" id="hx2-when" aria-live="polite"></div>
+          <details class="hx2-more">
+            <summary>Different end time, or runs past midnight?</summary>
+            <div class="hx2-row">
+              <label class="hx2-field"><span class="hx2-lbl">End date</span><input id="host-end-date" type="date" class="hx2-in" onchange="_hostDurManual=true"/></label>
+              <label class="hx2-field"><span class="hx2-lbl">End time</span><input id="host-end-time" type="time" class="hx2-in" onchange="_hostDurManual=true"/></label>
+            </div>
+          </details>
+          <label class="ff-toggle hx2-toggle"><span><b>Repeat it</b><small>Weekly, fortnightly or monthly — one form, several events</small></span>
+            <input type="checkbox" id="host-recurring-toggle" onchange="document.getElementById('host-recurring-rows').style.display=this.checked?'flex':'none';updateRecurringHint();"/><i aria-hidden="true"></i></label>
+          <div id="host-recurring-rows" class="hx2-row" style="display:none;">
+            <label class="hx2-field"><span class="hx2-lbl">Every</span><select id="host-recurring-freq" class="hx2-in" onchange="updateRecurringHint()"><option value="7">Week</option><option value="14">2 weeks</option><option value="30">Month</option></select></label>
+            <label class="hx2-field"><span class="hx2-lbl">Times</span><input id="host-recurring-count" type="number" min="2" max="12" value="4" class="hx2-in" oninput="updateRecurringHint()"/></label>
+          </div>
+          <div id="host-recurring-hint" class="hx2-hint" style="display:none;"></div>`)}
+
+        ${step(3, "Where", "Search the address, or tap the map to drop the pin", `
+          <label class="hx2-lbl" for="host-address-search">Address</label>
+          <div class="hx2-search">
+            ${uiIcon("pin", 16)}
+            <input id="host-address-search" class="hx2-in" placeholder="Street or postcode…" oninput="handleAddressAutocomplete()" autocomplete="off" value="${escapeHtml(p.address || "")}"/>
+            <div id="autocomplete-results" class="hx2-ac"></div>
+          </div>
+          <div id="host-map-picker"></div>
+          <div id="host-lat-lon-text" class="hx2-hint">${p.lat != null ? `Pinned at ${Number(p.lat).toFixed(4)}, ${Number(p.lon).toFixed(4)}` : "Pin starts in central London — search or tap the map to move it"}</div>
+          <div class="hx2-row">
+            <label class="hx2-field" style="flex:1.4"><span class="hx2-lbl">Venue name</span><input id="host-venue" class="hx2-in" placeholder="e.g. The Rooftop" value="${escapeHtml(p.venue || "")}"/></label>
+            <label class="hx2-field"><span class="hx2-lbl">Area <small>optional</small></span><input id="host-area" class="hx2-in" placeholder="e.g. Peckham" value="${escapeHtml(p.area || "")}"/></label>
+          </div>`, 'style="overflow:visible"')}
+
+        ${step(4, "Tickets", "How many people, and what it costs", `
+          <span class="hx2-lbl">How many people?</span>
+          <div class="hx2-chips" role="group" aria-label="Capacity">
+            ${[20, 50, 100, 250].map((n) => `<button type="button" class="v-chip sm" data-cap="${n}" onclick="setHostCap(${n})">${n}</button>`).join("")}
+            <input id="host-capacity" type="number" min="1" inputmode="numeric" class="hx2-in hx2-cap" placeholder="Other" value="${p.capacity ?? ""}" aria-label="Capacity"/>
+          </div>
+          <span class="hx2-lbl">Entry</span>
+          <div class="hx2-seg hx2-paid" role="radiogroup" aria-label="Free or paid">
+            <button type="button" role="radio" aria-checked="${!paid}" class="${paid ? "" : "on"}" onclick="setHostPaid(false)">Free</button>
+            <button type="button" role="radio" aria-checked="${paid}" class="${paid ? "on" : ""}" onclick="setHostPaid(true)">Paid</button>
+          </div>
+          <div id="hx2-price-row" class="hx2-price"${paid ? "" : " hidden"}>
+            <label class="hx2-money"><span>£</span><input id="host-price" type="number" min="0" step="0.01" inputmode="decimal" placeholder="10" value="${p.priceTiers ? "" : p.price || ""}" aria-label="Ticket price in pounds"/></label>
+            <div class="host-price-preview" id="host-price-preview" aria-live="polite"></div>
+            <label class="ff-toggle hx2-toggle"><span><b>Price tiers</b><small>Early bird → General → Final, rising on dates you pick</small></span>
+              <input type="checkbox" id="host-tiered-toggle" ${p.priceTiers ? "checked" : ""} onchange="document.getElementById('host-tiered-rows').style.display=this.checked?'block':'none'"/><i aria-hidden="true"></i></label>
+            <div id="host-tiered-rows" style="display:${p.priceTiers ? "block" : "none"};">
+              <p class="hx2-hint">Fill whichever tiers you want. Each price holds until its date, then the next takes over — leave the last one's date blank.${p.priceTiers ? " Prices carried over; dates didn't." : ""}</p>
+              ${["early", "general", "final"]
+                .map((id, i) => {
+                  const label = ["Early bird", "General", "Final"][i];
+                  const prior = (p.priceTiers || []).find((t) => t.label === ["Early Bird", "General", "Final"][i]);
+                  return `<div class="hx2-row hx2-tier"><label class="hx2-field"><span class="hx2-lbl">${label}</span><label class="hx2-money sm"><span>£</span><input id="tier-${id}-price" type="number" min="0" step="0.01" placeholder="0" value="${prior ? prior.price : ""}"/></label></label>
+                    <label class="hx2-field" style="flex:1.5"><span class="hx2-lbl">Rises after</span><input id="tier-${id}-cutoff" type="datetime-local" class="hx2-in"/></label></div>`;
+                })
+                .join("")}
+            </div>
+          </div>
+          <p class="hx2-hint">Guests see one all-in price with a small booking fee on top. You keep every penny of yours, paid out 24–48h after the event.</p>`)}
       </div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">${p.photoUrl ? "Reusing the original event's photo — tap to replace it." : "Compressed automatically. No flyer? We'll show a category photo instead."}</div>
+
+      <aside class="hx2-live" aria-label="Live preview">
+        <div class="hx2-live-h"><span class="pulse"></span>Live preview</div>
+        <div id="hx2-live"></div>
+      </aside>
     </div>
 
-    <div class="host-section">
-      <div class="host-section-title">Event basics</div>
-      <label class="intro-field-label" for="host-title">Title</label>
-      <input id="host-title" class="gate-input" placeholder="e.g., Summer Park Picnic" value="${escapeHtml(p.title || "")}"/>
-      <label class="intro-field-label" for="host-cat">Category</label>
-      <select id="host-cat" class="gate-input">${Object.keys(CATS)
-        .map((c) => `<option value="${c}"${p.category === c ? " selected" : ""}>${c}</option>`)
-        .join("")}</select>
-      <label class="intro-field-label" for="host-desc">Description</label>
-      <textarea id="host-desc" class="gate-input" rows="3" placeholder="What's the vibe? What should people expect?">${escapeHtml(p.desc || "")}</textarea>
+    <div class="hx2-bar">
+      <div class="hx2-prog" aria-live="polite"><div class="hx2-dots">${[1, 2, 3, 4].map((n) => `<i data-d="${n}"></i>`).join("")}</div><span id="hx2-prog-txt">Let's go</span></div>
+      <button id="host-submit-btn" class="v-btn" onclick="submitHostEvent()">${state.isAdmin ? "Put it on the map" : "Send for review"} →</button>
     </div>
 
-    <div class="host-section">
-      <div class="host-section-title">Date &amp; time</div>
-      ${p.title ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Dates aren't carried over — pick a new one below.</div>` : ""}
-      <label class="intro-field-label" for="host-start-date">Start date</label>
-      <input id="host-start-date" type="date" class="gate-input" onchange="autofillEventEndDate(this.value);updateRecurringHint();"/>
-      <label class="intro-field-label" for="host-start-time">Start time</label>
-      <input id="host-start-time" type="time" class="gate-input"/>
-      <label class="intro-field-label" style="margin-top:14px;" for="host-end-date">End date</label>
-      <input id="host-end-date" type="date" class="gate-input"/>
-      <label class="intro-field-label" for="host-end-time">End time</label>
-      <input id="host-end-time" type="time" class="gate-input"/>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;">
-        <input type="checkbox" id="host-recurring-toggle" onchange="document.getElementById('host-recurring-rows').style.display=this.checked?'flex':'none';updateRecurringHint();" style="width:16px;height:16px;"/>
-        Repeat this event
-      </label>
-      <div id="host-recurring-rows" style="display:none;gap:8px;margin-top:10px;align-items:flex-end;">
-        <div style="flex:1.4;"><label class="intro-field-label" for="host-recurring-freq">Every</label>
-          <select id="host-recurring-freq" class="gate-input" onchange="updateRecurringHint()">
-            <option value="7">Week</option>
-            <option value="14">2 weeks</option>
-            <option value="30">Month</option>
-          </select>
-        </div>
-        <div style="flex:1;"><label class="intro-field-label" for="host-recurring-count">Times</label>
-          <input id="host-recurring-count" type="number" min="2" max="12" value="4" class="gate-input" oninput="updateRecurringHint()"/>
-        </div>
-      </div>
-      <div id="host-recurring-hint" style="font-size:11px;color:var(--text-muted);margin-top:6px;display:none;"></div>
+    <div class="hx2-after">
+      <h2 class="hx2-after-h">Your hosting</h2>
+      ${renderHostPayoutsPanel()}
+      ${renderConnectStatusPanel()}
+      ${renderPromoCodesPanel()}
+      ${renderMyHostedEventsCancelPanel()}
     </div>
+  </div>`;
+}
 
-    <div class="host-section" style="overflow:visible;">
-      <div class="host-section-title">Location</div>
-      <label class="intro-field-label" for="host-address-search">Search address</label>
-      <div style="position:relative;margin-bottom:10px;">
-        <input id="host-address-search" class="gate-input" placeholder="Street name or postcode..." oninput="handleAddressAutocomplete()" autocomplete="off" value="${escapeHtml(p.address || "")}"/>
-        <div id="autocomplete-results" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;max-height:200px;overflow-y:auto;z-index:2000;display:none;box-shadow:0 8px 20px var(--shadow);"></div>
-      </div>
-      <div id="host-map-picker"></div>
-      <div id="host-lat-lon-text" style="font-size:11px;color:var(--text-muted);margin:6px 0 10px;font-weight:600;">${p.lat != null ? `Location Pinned: (${Number(p.lat).toFixed(4)}, ${Number(p.lon).toFixed(4)})` : "Default: Central London — search above or tap map to pin exact location"}</div>
-      <label class="intro-field-label" for="host-venue">Venue name</label>
-      <input id="host-venue" class="gate-input" placeholder="e.g., The Rooftop, Community Hall" value="${escapeHtml(p.venue || "")}"/>
-      <label class="intro-field-label" for="host-area">Area (optional)</label>
-      <input id="host-area" class="gate-input" placeholder="e.g., Shoreditch" value="${escapeHtml(p.area || "")}"/>
+// ── Host form helpers ─────────────────────────────────────────────────────
+let _hostDur = 3;
+let _hostDurManual = false;
+let _hostAllDone = false;
+const _hv = (id) => (document.getElementById(id) || {}).value || "";
+function setHostCat(c) {
+  const sel = document.getElementById("host-cat");
+  if (sel) sel.value = c;
+  document.querySelectorAll(".hx2-cat").forEach((b) => {
+    const on = b.dataset.cat === c;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-checked", on);
+  });
+  hostFormChanged();
+}
+function setHostDay(offset) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  const inp = document.getElementById("host-start-date");
+  if (inp) inp.value = dayKey(d);
+  const t = document.getElementById("host-start-time");
+  if (t && !t.value) t.value = offset === 0 && new Date().getHours() >= 19 ? "21:00" : "19:00";
+  const end = document.getElementById("host-end-date");
+  if (end && !_hostDurManual) end.value = "";
+  autofillEventEndDate(inp ? inp.value : "");
+  updateRecurringHint();
+  hostSyncEnd();
+}
+function setHostDuration(h) {
+  _hostDur = h;
+  _hostDurManual = false;
+  document.querySelectorAll(".hx2-seg [data-h]").forEach((b) => {
+    const on = Number(b.dataset.h) === h;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-checked", on);
+  });
+  hostSyncEnd();
+}
+// End = start + the chosen length (crossing midnight moves the end date),
+// unless the host has set an end by hand under "Different end time".
+function hostSyncEnd() {
+  const sd = _hv("host-start-date"), st = _hv("host-start-time");
+  if (sd && st && !_hostDurManual) {
+    const end = new Date(`${sd}T${st}`);
+    end.setHours(end.getHours() + _hostDur);
+    const ed = document.getElementById("host-end-date"), et = document.getElementById("host-end-time");
+    if (ed) ed.value = dayKey(end);
+    if (et) et.value = `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`;
+  }
+  hostFormChanged();
+}
+function setHostCap(n) {
+  const inp = document.getElementById("host-capacity");
+  if (inp) inp.value = n;
+  hostFormChanged();
+}
+function setHostPaid(paid) {
+  document.querySelectorAll(".hx2-paid button").forEach((b, i) => {
+    const on = (i === 1) === paid;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-checked", on);
+  });
+  const row = document.getElementById("hx2-price-row");
+  if (row) row.hidden = !paid;
+  const price = document.getElementById("host-price");
+  if (!paid) {
+    if (price) price.value = "";
+    const tiers = document.getElementById("host-tiered-toggle");
+    if (tiers && tiers.checked) tiers.click();
+  } else if (price) setTimeout(() => price.focus(), 30);
+  updateHostPricePreview();
+  hostFormChanged();
+}
+// Re-checks each step, the progress bar and the live ticket on every edit.
+function hostFormChanged() {
+  const root = document.querySelector(".hx2");
+  if (!root) return;
+  const sd = _hv("host-start-date"), st = _hv("host-start-time");
+  const done = {
+    1: !!_hv("host-title").trim(),
+    2: !!(sd && st && _hv("host-end-date") && _hv("host-end-time")),
+    3: !!_hv("host-venue").trim(),
+    4: Number(_hv("host-capacity")) > 0,
+  };
+  let n = 0;
+  for (const k of [1, 2, 3, 4]) {
+    root.querySelector(`.hx2-step[data-step="${k}"]`)?.classList.toggle("done", done[k]);
+    root.querySelector(`.hx2-dots [data-d="${k}"]`)?.classList.toggle("on", done[k]);
+    n += done[k];
+  }
+  const txt = document.getElementById("hx2-prog-txt");
+  if (txt) txt.textContent = n === 4 ? "Ready to go" : n ? `${n} of 4 done` : "Let's go";
+  const btn = document.getElementById("host-submit-btn");
+  if (btn) btn.classList.toggle("ready", n === 4);
+  if (n === 4 && !_hostAllDone && btn && typeof saveBurst === "function") saveBurst(btn);
+  _hostAllDone = n === 4;
+  // quick-pick chips reflect the fields
+  const today = new Date();
+  root.querySelectorAll("[data-day]").forEach((b) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + Number(b.dataset.day));
+    b.classList.toggle("on", sd === dayKey(d));
+  });
+  root.querySelector(".hx2-pickday")?.classList.toggle("on", !!sd && ![...root.querySelectorAll("[data-day]")].some((b) => b.classList.contains("on")));
+  const cap = _hv("host-capacity");
+  root.querySelectorAll("[data-cap]").forEach((b) => b.classList.toggle("on", b.dataset.cap === cap));
+  // the "when" line
+  const when = document.getElementById("hx2-when");
+  if (when) {
+    if (sd && st && _hv("host-end-time")) {
+      const s = new Date(`${sd}T${st}`), e = new Date(`${_hv("host-end-date") || sd}T${_hv("host-end-time")}`);
+      const f = (d) => d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+      when.innerHTML = e > s
+        ? `${uiIcon("calendar", 14)} <b>${f(s)}</b>, ${st}–${_hv("host-end-time")}${dayKey(e) !== sd ? ` <small>(ends ${e.toLocaleDateString("en-GB", { weekday: "short" })})</small>` : ""}`
+        : `<span class="bad">Ends before it starts — check the end time.</span>`;
+    } else when.textContent = sd ? "Now pick a start time." : "";
+  }
+  renderHostLive();
+}
+// The live ticket: the same poster + ticket look guests will see.
+function renderHostLive() {
+  const el = document.getElementById("hx2-live");
+  if (!el) return;
+  const sd = _hv("host-start-date"), st = _hv("host-start-time") || "19:00";
+  const price = parseFloat(_hv("host-price")) || 0;
+  const ev = {
+    id: "host-preview",
+    title: _hv("host-title").trim() || "Your night",
+    category: _hv("host-cat") || Object.keys(CATS)[0],
+    venue: _hv("host-venue").trim() || "Venue",
+    area: _hv("host-area").trim(),
+    price,
+    startsAt: sd ? new Date(`${sd}T${st}`).getTime() : null,
+    photoUrl: window._hostFlyerUrl || (_hostPrefill && _hostPrefill.photoUrl) || null,
+  };
+  const when = ev.startsAt
+    ? new Date(ev.startsAt).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }).toUpperCase() + " · " + st
+    : "PICK A DATE";
+  const cap = Number(_hv("host-capacity")) || 0;
+  el.innerHTML = `<div class="hx2-poster ${posterClass(ev)}" style="${posterStyle(ev)}">${posterGlyph(ev)}
+      <span class="fp-date">${escapeHtml(when)}</span>
+      <div class="hx2-poster-foot"><span class="hx2-poster-cat">${escapeHtml(ev.category)}</span><b>${escapeHtml(ev.title)}</b><small>${escapeHtml(ev.venue)}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""}</small></div>
     </div>
-
-    <div class="host-section">
-      <div class="host-section-title">Capacity</div>
-      <label class="intro-field-label" for="host-capacity">Max attendees</label>
-      <input id="host-capacity" type="number" min="1" class="gate-input" placeholder="e.g., 20" value="${p.capacity ?? ""}"/>
-    </div>
-
-    <div class="host-section">
-      <div class="host-section-title">Pricing</div>
-      <label class="intro-field-label" for="host-price">Ticket price (£) — you keep 100%</label>
-      <input id="host-price" type="number" min="0" step="0.01" class="gate-input" placeholder="e.g. 10 (Leave blank for free)" value="${p.priceTiers ? "" : p.price || ""}"/>
-      <div class="host-price-preview" id="host-price-preview" aria-live="polite"></div>
-      <div class="host-notice">Attendees see one all-in price that includes a small flat booking fee. You keep every penny of your ticket price.</div>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;">
-        <input type="checkbox" id="host-tiered-toggle" ${p.priceTiers ? "checked" : ""} onchange="document.getElementById('host-tiered-rows').style.display=this.checked?'block':'none'" style="width:16px;height:16px;"/>
-        Use tiered pricing instead (Early Bird → General → Final)
-      </label>
-      <div id="host-tiered-rows" style="display:${p.priceTiers ? "block" : "none"};margin-top:10px;">
-        <div class="host-notice" style="margin-bottom:10px;">Fill in whichever tiers you want (at least one). Each tier's price applies until its cutoff time passes, then the next one takes over automatically — leave a cutoff blank on your last tier.${p.priceTiers ? " Prices carried over — cutoffs didn't, since they were tied to the old date." : ""}</div>
-        ${["early", "general", "final"]
-          .map((id, i) => {
-            const label = ["Early Bird", "General", "Final"][i];
-            const priorTier = (p.priceTiers || []).find((t) => t.label === label);
-            return `<div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-end;">
-              <div style="flex:1;"><label class="intro-field-label">${label} (£)</label><input id="tier-${id}-price" type="number" min="0" step="0.01" class="gate-input" placeholder="£" value="${priorTier ? priorTier.price : ""}"/></div>
-              <div style="flex:1.4;"><label class="intro-field-label">Rises after</label><input id="tier-${id}-cutoff" type="datetime-local" class="gate-input"/></div>
-            </div>`;
-          })
-          .join("")}
-      </div>
-    </div>
-
-    <button id="host-submit-btn" class="btn" style="width:100%;margin-bottom:16px;font-size:15px;" onclick="submitHostEvent()">${state.isAdmin ? "Publish event →" : "Submit for review →"}</button>
-    ${renderHostPayoutsPanel()}
-    ${renderConnectStatusPanel()}
-    ${renderPromoCodesPanel()}
-    ${renderMyHostedEventsCancelPanel()}`;
+    <div class="hx2-live-meta"><span><b>${price ? fmtGBP(price + getCumulusFee(price)) : "Free"}</b>${price ? " all-in" : " entry"}</span><span>${cap ? `${cap} spots` : "— spots"}</span></div>
+    <div class="hx2-live-btn" aria-hidden="true">${ticketButtonHtml({ id: "host-preview", title: ev.title, category: ev.category, photoUrl: ev.photoUrl, startsAt: ev.startsAt }, { label: price ? "Get tickets" : "Get in free", onclick: "" })}</div>`;
 }
 
 // Small convenience toward the "60-second publish" goal: picking a start

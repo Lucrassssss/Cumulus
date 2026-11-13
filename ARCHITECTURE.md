@@ -42,7 +42,7 @@ Rules that follow from it:
 | `09-host-admin-render-router.js` | **`renderView()`, the view router**, event page (`renderDetail`), host profile, admin screens, promo codes, payouts panel |
 | `10-account-payments.js` | Account + details, pricing helpers, `myTickets`/`bookingDraft`, **Stripe checkout** (`startStripeCheckout`, `submitStripePayment`, `finalizeStripePayment`) |
 | `11-checkout-confirmation.js` | Book + Pay screens, pay overlay, "You're in" animation, confirmation/ticket view |
-| `12-wallet-host-form-scanner.js` | Tickets wallet (Upcoming/Past), can't-go/transfer sheets, host event form, door scanner (offline queue in IndexedDB) |
+| `12-wallet-host-form-scanner.js` | Tickets wallet (Upcoming/Past), can't-go/transfer sheets, the Host form ("Make a night": 4 steps + live ticket preview, `hostFormChanged()`), door scanner (offline queue in IndexedDB) |
 | `13-discover-feed.js` | Discover feed (date strip, day headings), the filter bar (Filters dropdown + date strip), poster art, carousel, saved events, crew, location/calendar sheets, keyboard handling |
 | `14-delight.js` | Decorative motion: boot screen tips/progress + iris reveal, Home "level load" intro (once per visit), count-ups, save confetti, poster holo tilt, orb easter egg, the event-page ticket button's fly-in (the button itself is `ticketButtonHtml()` in `09`); **boot call** |
 
