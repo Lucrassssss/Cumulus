@@ -68,6 +68,14 @@ async function seedFixtureEvent(page) {
 }
 
 test.describe("Cumulus smoke", () => {
+  // Hermetic: the suite runs against built-in fixtures, never the live
+  // Supabase project, Mapbox, Stripe or CDNs. Block every request that isn't
+  // to the local test server, so results are identical on a laptop, in a
+  // sandbox and on CI (and tests can never touch production data).
+  test.beforeEach(async ({ page }) => {
+    await page.route(/^https?:\/\/(?!127\.0\.0\.1|localhost)/, (route) => route.abort());
+  });
+
   test("boots straight into the Discover feed with a sign-in entry point", async ({
     page,
   }) => {
