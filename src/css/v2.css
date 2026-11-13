@@ -5392,13 +5392,13 @@ html body.map-moving .mp-tile{transition:none !important;}
 html body .lp-signup-overlay,html body .loc-overlay{overscroll-behavior:contain;}
 html body .lp-signup-modal,html body .loc-sheet{translate:0 calc(-1 * var(--kb,0px));transition:translate .3s cubic-bezier(.2,.8,.2,1),max-height .3s cubic-bezier(.2,.8,.2,1),padding .3s ease !important;max-height:calc(var(--vvh,100dvh) - 12px) !important;overflow-y:auto !important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
 html body .lp-signup-modal{animation-fill-mode:backwards !important;}
-html.kb-open body .lp-signup-modal{padding-top:16px !important;padding-bottom:16px !important;border-radius:var(--r-xl) !important;}
-html.kb-open body .lp-signup-modal::before,html.kb-open body .lp-signup-modal :is(.lp-form-eyebrow,.lp-form-sub,.lp-trust,.lp-form-trust){display:none !important;}
-html.kb-open body .lp-signup-modal :is(.auth-mode-sel,.gate-type-sel){margin-bottom:10px !important;}
-html.kb-open body .lp-signup-modal .lp-form-title{font-size:20px !important;margin:4px 0 10px !important;}
-html.kb-open body .lp-signup-modal .gate-field{margin-bottom:10px !important;}
-html.kb-open body .lp-signup-close{top:18px !important;}
-html.kb-open body .lp-signup-modal .auth-mode-sel{width:calc(100% - 46px) !important;max-width:calc(100% - 46px) !important;margin-right:46px !important;}
+html.kb-open:not(.auth-page) body .lp-signup-modal{padding-top:16px !important;padding-bottom:16px !important;border-radius:var(--r-xl) !important;}
+html.kb-open:not(.auth-page) body .lp-signup-modal::before,html.kb-open:not(.auth-page) body .lp-signup-modal :is(.lp-form-eyebrow,.lp-form-sub,.lp-trust,.lp-form-trust){display:none !important;}
+html.kb-open:not(.auth-page) body .lp-signup-modal :is(.auth-mode-sel,.gate-type-sel){margin-bottom:10px !important;}
+html.kb-open:not(.auth-page) body .lp-signup-modal .lp-form-title{font-size:20px !important;margin:4px 0 10px !important;}
+html.kb-open:not(.auth-page) body .lp-signup-modal .gate-field{margin-bottom:10px !important;}
+html.kb-open:not(.auth-page) body .lp-signup-close{top:18px !important;}
+html.kb-open:not(.auth-page) body .lp-signup-modal .auth-mode-sel{width:calc(100% - 46px) !important;max-width:calc(100% - 46px) !important;margin-right:46px !important;}
 @media (prefers-reduced-motion:reduce){html body .lp-signup-modal,html body .loc-sheet{transition:none !important;}}
 
 /* Live-ticket notification: red dot on the Tickets tab + a strip on the card */
@@ -5475,3 +5475,29 @@ html body .nav-link.active-cloud-tab.tab-in{animation:nav-tab-in .26s cubic-bezi
 @keyframes nav-tab-in{from{background-color:transparent;transform:scale(.94)}}
 /* Back navigation shows the page as you left it. */
 #app.nav-back :is(.feed,.v-page,.tv-page,.ac-page,.ev-page,.bk-page,.hx,.up-next){animation:none !important;}
+
+/* Map card sheet: only the cards themselves catch the pointer. The sheet is
+   full-width, so on desktop the empty space either side of the centred
+   cards used to block dragging the map across the whole bottom band. */
+html body .map-cards.in{pointer-events:none !important;}
+html body .map-cards.in :is(.mcard,.mcard-panel){pointer-events:auto;}
+html body .map-cards .mcard-rail{pointer-events:none;}
+html body .map-cards.in .mcard-rail{pointer-events:auto;}
+@media (min-width:761px){html body .map-cards.in .mcard-rail{pointer-events:none;}html body .map-cards.in .mcard-rail > *{pointer-events:auto;}}
+
+/* ══ Sign-in as a page (phones) ═══════════════════════════════════════════
+   The app steps aside (kept mounted, just hidden and out of the flow) and
+   the sign-in form becomes the page itself: normal document scrolling, so
+   iOS/Android move the focused field above the keyboard natively. */
+@media (max-width:760px){
+  html.auth-page body > #app,html.auth-page body > #gate-root{position:fixed !important;inset:0 !important;visibility:hidden !important;overflow:hidden !important;pointer-events:none !important;}
+  html.auth-page body{overflow:auto !important;}
+  html.auth-page .lp-signup-overlay.open{position:relative !important;inset:auto !important;top:auto !important;height:auto !important;min-height:100dvh;display:block !important;padding:0 !important;background:var(--bg) !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;opacity:1 !important;}
+  html.auth-page .lp-signup-overlay.open .lp-signup-modal{position:relative;width:100% !important;max-width:none !important;max-height:none !important;min-height:100dvh;box-sizing:border-box;overflow:visible !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;background:transparent !important;translate:none !important;transform:none !important;padding:calc(env(safe-area-inset-top,0px) + 68px) 22px calc(env(safe-area-inset-bottom,0px) + 40px) !important;animation:auth-page-in .3s cubic-bezier(.2,.8,.2,1) backwards !important;}
+  @keyframes auth-page-in{from{opacity:0;transform:translate3d(0,12px,0)}}
+  html.auth-page .lp-signup-modal::before{font-size:40px !important;margin:0 0 20px !important;display:block !important;}
+  /* the close ✕ becomes a back arrow, top-left like any pushed page */
+  html.auth-page .lp-signup-close{position:absolute !important;top:calc(env(safe-area-inset-top,0px) + 14px) !important;left:14px !important;right:auto !important;width:42px !important;height:42px !important;font-size:0 !important;color:var(--text) !important;background:var(--surface) !important;border:1px solid var(--line) !important;display:grid !important;place-items:center !important;}
+  html.auth-page .lp-signup-close::before{content:"";width:10px;height:10px;border-left:2.4px solid currentColor;border-bottom:2.4px solid currentColor;transform:translateX(2px) rotate(45deg);border-radius:1px;}
+  html.auth-page .lp-signup-modal .gate-input{font-size:16px !important;} /* ≥16px: iOS won't zoom on focus */
+}

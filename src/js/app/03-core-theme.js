@@ -590,18 +590,78 @@ function showLpSignup(mode) {
     attachSignupModalListeners();
   }
   ov.classList.add("open");
-  document.body.style.overflow = "hidden";
+  // Phones: sign-in is its own page in the normal document flow, not a
+  // pinned sheet — the keyboard, autofill and scrolling then behave like any
+  // web page, and Back / swipe-back closes it. Desktop keeps the sheet.
+  if (_authAsPage()) {
+    const root = document.documentElement;
+    if (!root.classList.contains("auth-page")) {
+      _authReturnY = window.scrollY;
+      root.classList.add("auth-page");
+      window.scrollTo(0, 0);
+      try {
+        history.pushState({ cumulusAuth: 1 }, "");
+        _authPushed = true;
+      } catch (e) {}
+    }
+  } else document.body.style.overflow = "hidden";
   switchAuthMode(mode === "login" ? "login" : "signup");
 }
+let _authReturnY = 0;
+let _authPushed = false;
+function _authAsPage() {
+  return !!(window.matchMedia && matchMedia("(max-width: 760px)").matches);
+}
+window.addEventListener("popstate", () => {
+  // Our own history.back() after closing: keep the restored scroll.
+  if (_authSkipPop) {
+    const { y, view } = _authSkipPop;
+    _authSkipPop = null;
+    if (state.view === view) {
+      window.scrollTo(0, y);
+      requestAnimationFrame(() => Math.abs(window.scrollY - y) > 2 && window.scrollTo(0, y));
+    }
+    return;
+  }
+  if (!document.documentElement.classList.contains("auth-page")) return;
+  _authPushed = false; // the browser already stepped back (Back / swipe)
+  const y = _closeAuthNow();
+  requestAnimationFrame(() => Math.abs(window.scrollY - y) > 2 && window.scrollTo(0, y));
+});
 function showLpLogin() {
   showLpSignup("login");
 }
 function closeLpSignup() {
+  const root = document.documentElement;
+  // Phone page mode with our history entry: step back, and let the popstate
+  // handler do the close — one path for the arrow, Back and swipe-back.
+  const pushed = root.classList.contains("auth-page") && _authPushed;
+  _authPushed = false;
+  const y = _closeAuthNow();
+  // Drop the history entry we added (so Back doesn't land on a dead step).
+  // Closing is synchronous — callers can navigate straight after — and the
+  // scroll is re-asserted once the traversal lands, unless the app moved on.
+  if (pushed) {
+    _authSkipPop = { y, view: state.view };
+    try {
+      history.back();
+    } catch (e) {}
+  }
+}
+let _authSkipPop = null;
+function _closeAuthNow() {
   const ov = document.getElementById("lp-signup-overlay");
   if (ov) {
     ov.classList.remove("open");
     document.body.style.overflow = "";
   }
+  const root = document.documentElement;
+  if (!root.classList.contains("auth-page")) return;
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  root.classList.remove("auth-page");
+  const y = _authReturnY || 0;
+  window.scrollTo(0, y);
+  return y;
 }
 function gateErr(msg) {
   const el = document.getElementById("gate-field-error");

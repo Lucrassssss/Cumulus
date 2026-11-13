@@ -239,13 +239,28 @@ function selectPin(key, evs, coords) {
   const host = document.getElementById("main-map");
   if (host) host.classList.add("has-selection");
   showMapCards(evs);
+  // Only move the camera when it helps: if the pin is already clear of the
+  // card sheet and the map chrome, leave the view exactly where it is (no
+  // re-centre, no zoom jump). Otherwise glide just enough to bring it into
+  // the open area above the cards, keeping the user's zoom.
   if (lmap) {
-    lmap.easeTo({
-      center: coords,
-      offset: [0, -90], // keep the pin clear of the card sheet
-      zoom: Math.max(lmap.getZoom(), 13.5),
-      duration: 650,
-      easing: (t) => 1 - Math.pow(1 - t, 3),
+    requestAnimationFrame(() => {
+      const box = lmap.getContainer().getBoundingClientRect();
+      const sheet = document.getElementById("map-cards");
+      const cardTop = sheet && sheet.firstElementChild ? sheet.firstElementChild.getBoundingClientRect().top - box.top : box.height - 260;
+      const pt = lmap.project(coords);
+      const safe = { top: 110, bottom: cardTop - 56, left: 48, right: box.width - 48 };
+      const visible = pt.x > safe.left && pt.x < safe.right && pt.y > safe.top && pt.y < safe.bottom;
+      const z = lmap.getZoom();
+      if (visible && z >= 11.5) return;
+      lmap.easeTo({
+        center: coords,
+        // land the pin in the middle of the open area above the cards
+        offset: [0, Math.round((safe.top + Math.max(safe.bottom, safe.top + 120)) / 2 - box.height / 2)],
+        zoom: z < 11.5 ? 13 : z,
+        duration: 500,
+        easing: (t) => 1 - Math.pow(1 - t, 3),
+      });
     });
   }
 }
@@ -441,7 +456,7 @@ function attachMapLayers() {
   lmap.on("move", () => {
     const z = lmap.getZoom();
     const now = performance.now();
-    if (_syncZoom === null || Math.abs(z - _syncZoom) > 0.35 || now - _syncAt > 220) {
+    if (_syncZoom === null || Math.abs(z - _syncZoom) > 0.2 || now - _syncAt > 150) {
       _syncZoom = z;
       _syncAt = now;
       schedulePinSync();

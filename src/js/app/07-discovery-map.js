@@ -438,7 +438,7 @@ function initLeaflet() {
     mapConfig.antialias = false;
   } else {
     mapConfig.pitch = 45;
-    mapConfig.maxPitch = 85;
+    mapConfig.maxPitch = 60; // steeper shows empty sky across the top of wide screens
     mapConfig.dragPitch = true;
     mapConfig.touchPitch = true;
     mapConfig.pitchWithRotate = true;
