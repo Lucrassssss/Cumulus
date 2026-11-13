@@ -88,7 +88,7 @@ async function verifyGateCode() {
   enterApp();
 }
 
-// Swap the gate form for the 6-digit code entry step (same modal).
+// Swap the gate form for the code entry step (same modal).
 function showOtpStep(email) {
   const modal = document.querySelector(".lp-signup-modal");
   if (!modal) return;
@@ -112,6 +112,7 @@ function showOtpStep(email) {
     </button>
     <div class="gate-otp-links"><button class="gate-otp-resend" onclick="resendGateCode()">Didn’t get it? Resend code</button><span aria-hidden="true">·</span><button class="gate-otp-resend" onclick="backToGateForm()">Use a different email</button></div>`;
   modal.classList.add("otp-active");
+  otpResendCooldown(panel.querySelector(".gate-otp-resend"));
   const inp = document.getElementById("gate-otp-input");
   if (inp) {
     setTimeout(() => inp.focus(), 50);
@@ -143,21 +144,48 @@ function otpErr(msg) {
     e.classList.add("show");
   }
 }
+// "Resend code" counts down until Supabase will send another (one email per
+// address per minute), so a tap can't fail or quietly invalidate nothing.
+// Shared with the admin sign-in panel.
+let _otpCdT = null;
+function otpResendCooldown(btn) {
+  clearInterval(_otpCdT);
+  if (!btn) return;
+  const tick = () => {
+    const left = Math.ceil(((window._otpNextAt || 0) - Date.now()) / 1000);
+    if (!btn.isConnected) return clearInterval(_otpCdT);
+    if (left > 0) {
+      btn.disabled = true;
+      btn.textContent = `Resend code in ${left}s`;
+    } else {
+      clearInterval(_otpCdT);
+      btn.disabled = false;
+      btn.textContent = "Didn’t get it? Resend code";
+    }
+  };
+  tick();
+  _otpCdT = setInterval(tick, 1000);
+}
+async function otpResend(btn, email, meta, errFn) {
+  if (!email || !btn || btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = "Sending…";
+  const res = await authSendCode(email, meta);
+  if (res.ok) errFn("New code sent — use the newest email; older codes stop working.", true);
+  else errFn(authErrMsg(res.error));
+  otpResendCooldown(btn);
+}
 async function resendGateCode() {
   if (!_pendingAuth) return;
-  const b = document.querySelector(".gate-otp-resend");
-  if (b) {
-    b.disabled = true;
-    b.textContent = "Sending…";
-  }
-  const res = await authSendCode(
+  await otpResend(
+    document.querySelector("#gate-otp-panel .gate-otp-resend"),
     _pendingAuth.email,
     _pendingAuth.isLogin ? {} : { name: _pendingAuth.name },
+    (m, ok) => {
+      otpErr(m);
+      document.getElementById("gate-otp-error")?.classList.toggle("ok", !!ok);
+    },
   );
-  if (b) {
-    b.disabled = false;
-    b.textContent = res.ok ? "Code re-sent ✓" : "Resend failed — try again";
-  }
 }
 
 async function _submitHostApplication({

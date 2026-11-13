@@ -5476,3 +5476,8 @@ html body .feed-sticky-filters .fd-n{top:-4px;right:-4px;min-width:16px;height:1
 html body .feed-sticky-filters .fd-any b{font-size:15px;}
 @media (min-width:761px){html body .fbar-row,html body .feed-sticky-filters .fd-strip{padding-left:4px;padding-right:4px;}html body .fbar-line{margin:10px 0 0;}html body .feed-sticky-filters{box-shadow:-16px 0 0 var(--bg),16px 0 0 var(--bg),0 1px 0 var(--line-soft) !important;}}
 @media (min-width:761px){html body .feed-head{box-shadow:-16px 0 0 var(--bg),16px 0 0 var(--bg);}}
+html body .ev-buy-cta{display:flex;flex-direction:column;gap:8px;}
+html body .ev-buy-more{min-height:42px !important;font-size:14px !important;}
+@media (max-width:760px){html body .ev-buybar:has(.ev-buy-more){border-radius:22px;align-items:flex-end;}html body .ev-buy-more{min-height:36px !important;padding:0 12px !important;font-size:13px !important;}}
+@media (max-width:760px){html body .ev-page:has(.ev-buy-more){padding-bottom:calc(env(safe-area-inset-bottom,0px) + 170px);}}
+html body .gate-field-error.ok{color:var(--good,#2fbf71) !important;}

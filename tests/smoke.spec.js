@@ -144,6 +144,32 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator("#gate-name-field")).toBeVisible();
   });
 
+  test("code step: resend counts down, then sends a fresh code", async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => {
+      showLpSignup();
+      switchAuthMode("login");
+      window._sent = 0;
+      window.authSendCode = async () => {
+        window._sent++;
+        window._otpNextAt = Date.now() + 60000;
+        return { ok: true };
+      };
+      _pendingAuth = { isLogin: true, email: "a@b.co" };
+      window._otpNextAt = Date.now() + 30000;
+      showOtpStep("a@b.co");
+    });
+    const resend = page.locator("#gate-otp-panel .gate-otp-resend").first();
+    await expect(resend).toHaveText(/Resend code in \d+s/);
+    await expect(resend).toBeDisabled();
+    await page.evaluate(() => (window._otpNextAt = 0));
+    await expect(resend).toHaveText(/Resend code$/);
+    await resend.click();
+    await expect(page.locator("#gate-otp-error")).toContainText("New code sent");
+    await expect(resend).toHaveText(/Resend code in \d+s/);
+    expect(await page.evaluate(() => window._sent)).toBe(1);
+  });
+
   test("sign-up form: frictionless, no gating fields", async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => showLpSignup());

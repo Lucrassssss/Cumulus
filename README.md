@@ -42,7 +42,7 @@ npm run check
 ```
 
 - `npx playwright install chromium` is needed once, to get a browser for the tests.
-- `npm test` runs the Playwright smoke tests: 78 checks across mobile and desktop.
+- `npm test` runs the Playwright smoke tests: 80 checks across mobile and desktop.
 - `npm run check` is fast: it syntax-checks every script and confirms that
   `index.html` and the service worker only reference files that exist.
 
@@ -88,7 +88,7 @@ CI runs both on every push and pull request (`.github/workflows/tests.yml`).
 
 ## Accounts and access
 
-- **Sign-in:** a 6-digit email code (Supabase OTP). No passwords.
+- **Sign-in:** an emailed code (Supabase OTP, 6–10 digits). No passwords. Supabase sends at most one code per address per minute; the code screen counts down to the next resend.
 - **Roles:** member, approved host (`verified-host` badge, granted when an
   admin approves a host application), and admin (row in `public.admins` plus
   an admin OTP step). Access is enforced by RLS and `SECURITY DEFINER` RPCs

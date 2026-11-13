@@ -41,8 +41,10 @@ function friendlyAuthError(msg) {
   const m = String(msg || "");
   if (/sending (confirmation|magic link|otp)? ?email|error sending/i.test(m))
     return "We couldn't send your code just now — please try again in a few minutes.";
-  if (/rate limit|too many|security purposes/i.test(m))
-    return "Too many code requests — wait a minute, then try again.";
+  if (/rate limit|too many|security purposes/i.test(m)) {
+    const secs = (m.match(/after (\d+) seconds?/) || [])[1];
+    return secs ? `A code was just sent — you can ask for another in ${secs}s. Use the newest email.` : "Too many code requests — wait a minute, then try again.";
+  }
   return m;
 }
 async function adminVerifyCode(email, token) {
@@ -77,7 +79,11 @@ async function authSendCode(email, meta) {
       email,
       options: { shouldCreateUser: true, data: meta || {} },
     });
-    return { ok: !error, error: error ? friendlyAuthError(error.message) : null };
+    // Supabase allows one code email per address every ~60s; remember when
+    // the next one is allowed so the UI can count down instead of failing.
+    const wait = error ? Number((String(error.message).match(/after (\d+) seconds?/) || [])[1]) || 0 : 60;
+    if (!error || wait) window._otpNextAt = Date.now() + (wait || 60) * 1000;
+    return { ok: !error, error: error ? friendlyAuthError(error.message) : null, retryIn: wait };
   } catch (e) {
     return { ok: false, error: "unavailable" };
   }

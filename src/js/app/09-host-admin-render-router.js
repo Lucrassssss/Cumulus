@@ -1148,6 +1148,7 @@ function renderAdminOtpStep(email) {
     </button>
     <button class="gate-otp-resend" onclick="adminResendCode()">Didn't get it? Resend code</button>`;
   const inp = document.getElementById("admin-otp-input");
+  if (inp) otpResendCooldown(inp.closest("div").parentNode.querySelector(".gate-otp-resend"));
   if (inp) {
     setTimeout(() => inp.focus(), 50);
     inp.addEventListener("keydown", (e) => {
@@ -1157,17 +1158,10 @@ function renderAdminOtpStep(email) {
 }
 
 async function adminResendCode() {
-  if (!_adminPendingEmail) return;
-  const b = document.querySelector(".gate-otp-resend");
-  if (b) {
-    b.disabled = true;
-    b.textContent = "Sending…";
-  }
-  const res = await authSendCode(_adminPendingEmail, {});
-  if (b) {
-    b.disabled = false;
-    b.textContent = res.ok ? "Code re-sent ✓" : "Resend failed — try again";
-  }
+  await otpResend(document.querySelector("#admin-otp-input")?.closest("div")?.parentNode?.querySelector(".gate-otp-resend"), _adminPendingEmail, {}, (m, ok) => {
+    adminAuthErr(m);
+    document.getElementById("admin-auth-error")?.classList.toggle("ok", !!ok);
+  });
 }
 
 async function adminVerifyCode() {
@@ -2420,7 +2414,14 @@ function renderDetail(id) {
   } else if (ev.status === "cancelled") {
     bookBtn = `<div class="ev-notice danger">Cancelled${ticket ? " — you've been refunded" : ""}</div>`;
   } else if (ticket) {
-    bookBtn = ticketButtonHtml(ev, { label: "View your ticket", kicker: "Yours", onclick: `openViewTicket('${id}')`, have: true });
+    // Already going: the ticket opens theirs, and they can still buy more
+    // (for friends) while the event is on sale.
+    const left = spacesLeft === null ? Infinity : spacesLeft;
+    bookBtn =
+      ticketButtonHtml(ev, { label: "View your tickets", kicker: "Yours", onclick: `openViewTicket('${id}')`, have: true }) +
+      (status !== "past" && left > 0
+        ? `<button type="button" class="v-btn ghost wide ev-buy-more" onclick="openBook('${id}')">+ ${price ? "Buy more tickets" : "Get more tickets"}</button>`
+        : "");
   } else if (status === "past") {
     // Ended events are locked — never bookable, no matter capacity/tier
     // state. Ticket-holders still get the branch above (their own record
