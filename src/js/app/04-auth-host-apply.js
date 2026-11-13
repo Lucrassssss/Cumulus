@@ -3,8 +3,8 @@ async function verifyGateCode() {
   const p = _pendingAuth;
   if (!p) return;
   const code = (document.getElementById("gate-otp-input")?.value || "").trim();
-  if (!/^\d{6}$/.test(code)) {
-    otpErr("Enter the 6-digit code from your email.");
+  if (!/^\d{6,10}$/.test(code)) {
+    otpErr("Enter the code from your email.");
     return;
   }
 
@@ -24,11 +24,7 @@ async function verifyGateCode() {
   const res = await authVerifyCode(p.email, code);
   if (!res.ok || !res.userId) {
     reEnable();
-    otpErr(
-      res.error === "unavailable"
-        ? "Verification is temporarily unavailable — try again shortly."
-        : "That code didn’t match. Check it and try again.",
-    );
+    otpErr(otpFailMessage(res.error));
     return;
   }
 
@@ -103,19 +99,18 @@ function showOtpStep(email) {
     modal.appendChild(panel);
   }
   panel.innerHTML = `
-    <button class="gate-otp-back" onclick="backToGateForm()" aria-label="Back to sign-in form">←</button>
     <div class="lp-form-eyebrow">Check your inbox</div>
     <h3 class="lp-form-title">Enter your code</h3>
-    <p class="lp-form-sub">We emailed a 6-digit code to <strong>${escapeHtml(email)}</strong>. It expires in a few minutes.</p>
+    <p class="lp-form-sub">We emailed a code to <strong>${escapeHtml(email)}</strong>. It expires in a few minutes.</p>
     <div class="gate-field">
-      <label class="gate-label" for="gate-otp-input">6-digit code</label>
-      <input id="gate-otp-input" class="gate-input gate-otp-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" aria-describedby="gate-otp-error" oninput="this.value=this.value.replace(/\D/g,'')"/>
+      <label class="gate-label" for="gate-otp-input">Code from your email</label>
+      <input id="gate-otp-input" class="gate-input gate-otp-input" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456" aria-describedby="gate-otp-error" oninput="this.value=this.value.replace(/\D/g,'')"/>
     </div>
     <p id="gate-otp-error" class="gate-field-error" role="alert"></p>
     <button id="gate-otp-verify" class="lp-claim-btn" onclick="verifyGateCode()">
       <span class="lp-claim-btn-text">Verify &amp; continue</span>
     </button>
-    <button class="gate-otp-resend" onclick="resendGateCode()">Didn’t get it? Resend code</button>`;
+    <div class="gate-otp-links"><button class="gate-otp-resend" onclick="resendGateCode()">Didn’t get it? Resend code</button><span aria-hidden="true">·</span><button class="gate-otp-resend" onclick="backToGateForm()">Use a different email</button></div>`;
   modal.classList.add("otp-active");
   const inp = document.getElementById("gate-otp-input");
   if (inp) {
@@ -130,6 +125,16 @@ function backToGateForm() {
   if (m) m.classList.remove("otp-active");
   const e = document.getElementById("gate-field-error");
   if (e) e.classList.remove("show");
+}
+// Say why a code was refused, in plain words — expired and over-used codes
+// need a fresh one, a typo just needs another go.
+function otpFailMessage(err) {
+  const m = String(err || "");
+  if (m === "unavailable") return "Verification is temporarily unavailable — try again shortly.";
+  if (/expired/i.test(m)) return "That code has expired or was already used. Tap “Resend code” for a fresh one.";
+  if (/rate|too many|security purposes/i.test(m)) return "Too many attempts — wait a minute, then try again.";
+  if (/invalid|not found|token/i.test(m)) return "That code didn’t match. Check the newest email and try again — or resend.";
+  return m ? `Couldn’t verify: ${m}` : "That code didn’t match. Check it and try again.";
 }
 function otpErr(msg) {
   const e = document.getElementById("gate-otp-error");

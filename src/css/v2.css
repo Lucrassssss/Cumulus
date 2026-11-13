@@ -5549,3 +5549,5 @@ html body .fr-foot:empty{display:none;}
 .ev-perf{position:absolute;left:14px;right:14px;bottom:0;height:0;border-top:2px dashed color-mix(in srgb,#fff 85%,transparent);z-index:4;pointer-events:none;transform-origin:0 50%;animation:ev-perf .5s cubic-bezier(.65,0,.35,1) forwards;}
 @keyframes ev-perf{0%{scale:0 1;opacity:1}55%{scale:1 1;opacity:1}100%{scale:1 1;opacity:0}}
 @media (prefers-reduced-motion:reduce){.ev-ghost{display:none}#app.ev-jump .ev-hero,#app.ev-jump .ev-body > *,#app.ev-jump .ev-buybar{opacity:1 !important;animation:none !important;}}
+html body .gate-otp-links{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;color:var(--text-muted);font-size:13px;}
+html body .gate-otp-links .gate-otp-resend{margin:0 !important;width:auto !important;display:inline !important;padding:4px 0 !important;}

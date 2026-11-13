@@ -1068,7 +1068,7 @@ function renderAdminEmailStep(prefill) {
   panel.innerHTML = `
     <div class="lp-form-eyebrow">Admin access</div>
     <h3 class="lp-form-title">Sign in as admin</h3>
-    <p class="lp-form-sub">Enter your admin email — we'll send a 6-digit code.</p>
+    <p class="lp-form-sub">Enter your admin email — we'll send you a code.</p>
     <div class="gate-field">
       <label class="gate-label" for="admin-auth-email">Email</label>
       <input id="admin-auth-email" class="gate-input" type="email" autocomplete="email" placeholder="you@example.com" value="${escapeHtml(prefill)}" aria-describedby="admin-auth-error"/>
@@ -1137,10 +1137,10 @@ function renderAdminOtpStep(email) {
     <button class="gate-otp-back" onclick="renderAdminEmailStep('${escapeHtml(email)}')" aria-label="Back">←</button>
     <div class="lp-form-eyebrow">Check your inbox</div>
     <h3 class="lp-form-title">Enter your code</h3>
-    <p class="lp-form-sub">We emailed a 6-digit code to <strong>${escapeHtml(email)}</strong>. Switch to your email app and come back — this stays open.</p>
+    <p class="lp-form-sub">We emailed a code to <strong>${escapeHtml(email)}</strong>. Switch to your email app and come back — this stays open.</p>
     <div class="gate-field">
-      <label class="gate-label" for="admin-otp-input">6-digit code</label>
-      <input id="admin-otp-input" class="gate-input gate-otp-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" aria-describedby="admin-auth-error" oninput="this.value=this.value.replace(/\\D/g,'')"/>
+      <label class="gate-label" for="admin-otp-input">Code from your email</label>
+      <input id="admin-otp-input" class="gate-input gate-otp-input" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456" aria-describedby="admin-auth-error" oninput="this.value=this.value.replace(/\\D/g,'')"/>
     </div>
     <p id="admin-auth-error" class="gate-field-error" role="alert"></p>
     <button id="admin-auth-verify" class="lp-claim-btn" onclick="adminVerifyCode()">
@@ -1176,8 +1176,8 @@ async function adminVerifyCode() {
   const code = (document.getElementById("admin-otp-input")?.value || "").trim();
   const errEl = document.getElementById("admin-auth-error");
   if (errEl) errEl.classList.remove("show");
-  if (!/^\d{6}$/.test(code)) {
-    adminAuthErr("Enter the 6-digit code from your email.");
+  if (!/^\d{6,10}$/.test(code)) {
+    adminAuthErr("Enter the code from your email.");
     return;
   }
 
@@ -2074,7 +2074,7 @@ function nudgeGateForSquadClaim() {
   if (title) title.textContent = "Claim your ticket";
   if (sub)
     sub.textContent =
-      "Enter your email — we'll send a 6-digit code, then your ticket is yours.";
+      "Enter your email — we'll send you a code, then your ticket is yours.";
   if (label) label.textContent = "Claim my ticket →";
 }
 
