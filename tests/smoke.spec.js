@@ -95,8 +95,8 @@ test.describe("Cumulus smoke", () => {
     for (const path of [
       "/src/css/styles.css",
       "/src/js/config.js",
-      "/src/js/app/01-core-constants.js",
-      "/src/js/app/11-event-checkout.js",
+      "/src/js/app/01-constants.js",
+      "/src/js/app/11-checkout-confirmation.js",
       "/src/css/v2.css",
       "/assets/icons/icon-192.png",
       "/assets/flyers/late-night-jazz.svg",

@@ -10,7 +10,7 @@
  * transfer happening) and is superseded by this function. This function
  * does the real transfer THEN marks it released; get_host_payouts() should
  * be treated as a read path only going forward, not a release mechanism.
- * (Left as-is rather than migrated away in this pass — see the ARCHITECTURE.md
+ * (Left as-is rather than migrated away in this pass — see the docs/history.md
  * note for the follow-up.)
  *
  * Two ways to call this, both supported here because there is no pg_cron

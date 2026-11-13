@@ -28,7 +28,7 @@ unrelated and unaffected).
 If this isn't done before the new `create-checkout-session`/`stripe-webhook`
 versions are deployed, tickets stop being created entirely — the webhook is
 the *only* place ticket rows get written, and it will keep listening for an
-event Stripe will never send again. See ARCHITECTURE.md → "Payment Element
+event Stripe will never send again. See docs/history.md → "Payment Element
 migration" for the full rationale and what changed.
 
 ---
@@ -150,7 +150,7 @@ are stuck disabled, open a **new chat** and paste:
   detective work again. Also removed a redundant manual "Pay with card"
   tap that was hiding the failure behind what looked like a dead button —
   "Continue to Payment" now goes straight into loading the embedded
-  checkout, no second click. See ARCHITECTURE.md → "Embedded Checkout
+  checkout, no second click. See docs/history.md → "Embedded Checkout
   outage (2026-07-21)". **This could not be exercised end-to-end from this
   session** (Stripe/Supabase network calls are blocked in this sandbox,
   same limitation noted throughout this doc) — the fix is based on
@@ -165,12 +165,12 @@ are stuck disabled, open a **new chat** and paste:
   Function returned a non-2xx status code" message — it now reads
   `error.context` to surface what actually went wrong, so any future
   failure is diagnosable from the app itself. Deployed as edge function
-  version 6. See ARCHITECTURE.md → "Embedded Checkout outage, round 2".
+  version 6. See docs/history.md → "Embedded Checkout outage, round 2".
 - **Stripe Embedded Checkout — buyer never leaves the app.** Checkout used
   to redirect to a Stripe-hosted page; `create-checkout-session` now
   creates the session in `ui_mode: "embedded"` and the buyer pays inside a
   Stripe.js-mounted iframe right on Cumulus's own checkout screen (same
-  approach as Eventbrite's in-page checkout). See ARCHITECTURE.md →
+  approach as Eventbrite's in-page checkout). See docs/history.md →
   "Embedded Checkout — the buyer never leaves cumulus". No functional
   change to how tickets get created — `stripe-webhook` still does that,
   the same way it always did.
@@ -185,7 +185,7 @@ are stuck disabled, open a **new chat** and paste:
   trigger-only functions, and rewrote every RLS policy's `auth.uid()` calls
   plus merged several redundant/duplicate policies (the full
   `auth_rls_initplan` + `multiple_permissive_policies` performance-advisor
-  list, ~30 findings, all resolved). See ARCHITECTURE.md → "Advisor
+  list, ~30 findings, all resolved). See docs/history.md → "Advisor
   remediation pass" for the complete list, and → "Security model" for what's
   left (all dashboard-only or intentional, not code gaps).
 - Verify the map's day/night relight on the live site (Mapbox is blocked in CI).
@@ -198,7 +198,7 @@ are stuck disabled, open a **new chat** and paste:
   (previously `using (true)` let any signed-in user self-approve their own
   submission). The Host nav tab is now gated behind approved-host status
   (`verified-host` special badge or admin) instead of being shown to every
-  signed-up account — see ARCHITECTURE.md → "Host onboarding — applications
+  signed-up account — see docs/history.md → "Host onboarding — applications
   and the Host tab gate".
 - **Fixed a widespread silent-click bug** — 13 places embedded a raw UUID
   event id unquoted into an `onclick` attribute (e.g.
@@ -218,7 +218,7 @@ are stuck disabled, open a **new chat** and paste:
   one only let files be listed, which Supabase's advisor flagged and this
   migration corrects). `create-checkout-session` and `stripe-webhook`
   redeployed to carry the opt-in flag through Stripe metadata. See
-  ARCHITECTURE.md → "The 'Master Development Codex' reconciliation" for
+  docs/history.md → "The 'Master Development Codex' reconciliation" for
   what was built, reformed, and deliberately declined (Twilio SMS gate,
   Recharts/heatmap, sponsorship matchmaker, scraped-event importer,
   rotating anti-scalping QR, cancellation fee-credit accounting nuance).
@@ -230,7 +230,7 @@ are stuck disabled, open a **new chat** and paste:
   extension out of `public` via the Dashboard's Extensions UI — out of
   reach of the SQL/migration tools available here, and a bigger change
   than it looks (touches `events.coordinates`, its GIST index, and the
-  `get_events_geojson`/`ST_DWithin` viewport query) — see ARCHITECTURE.md
+  `get_events_geojson`/`ST_DWithin` viewport query) — see docs/history.md
   → "Security model" for the full writeup and sources.
 - **Stripe Connect — schema live, functions deployed, still needs a real
   purchase run through it.** Schema
@@ -239,7 +239,7 @@ are stuck disabled, open a **new chat** and paste:
   live project and all 5 Edge Functions
   (`create-checkout-session`/`stripe-webhook`/`connect-onboarding`/
   `release-payout`/`cancel-event-refund`) are deployed and ACTIVE — see
-  ARCHITECTURE.md → "Payments — Stripe Connect scaffolding". The two
+  docs/history.md → "Payments — Stripe Connect scaffolding". The two
   orphaned age-verification functions (`identity-webhook`,
   `create-verification-session`) have been redeployed as harmless 410 stubs
   rather than left as real, billable Stripe Identity endpoints with no
@@ -267,7 +267,7 @@ are stuck disabled, open a **new chat** and paste:
 - **Blueprint growth features — schema live, one new function deployed.**
   `supabase/migrations/20260721020000_blueprint_growth_features.sql` (Magic
   Link group-claim RPC, `price_tiers` columns, past-attendee-emails RPC) and
-  the new `invite-past-attendees` Edge Function — see ARCHITECTURE.md →
+  the new `invite-past-attendees` Edge Function — see docs/history.md →
   "Growth features — the founding Master Blueprint" for what each piece
   does. Capacity-based tier flipping and full SSR event crawlability were
   scoped out as honest gaps, not built partially and mislabeled — see the

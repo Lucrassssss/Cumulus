@@ -341,7 +341,7 @@ async function start() {
   // No active session (or profile incomplete) → straight into guest
   // browsing (map/events, no marketing wall, no login prompt). The old
   // marketing landing page is now host-only — see the "Become a host"
-  // brochure in renderHostApplyView() (09-host-analytics.js) — a plain
+  // brochure in renderHostApplyView() (09-host-admin-render-router.js) — a plain
   // visitor's fastest path to "see an event, look into it, buy a ticket"
   // is the app itself, not a pitch page standing in front of it.
   enterGuestBrowse();
@@ -367,7 +367,7 @@ function enterGuestBrowse() {
 // Follow a host…) — there is no separate marketing landing page anymore.
 //
 // No longer shows a "Cumulus Pass" card preview here — that member-card/
-// badge system was removed from the product outright (see ARCHITECTURE.md
+// badge system was removed from the product outright (see docs/history.md
 // "the gamified card/badge system removal"), but this onboarding teaser
 // kept advertising it ("This is what you'll carry to every event.") with
 // fake interest tags, promising a feature that no longer exists to every

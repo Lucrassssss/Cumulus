@@ -756,7 +756,7 @@ async function hostCancelEvent(eventId, title) {
 }
 
 // Admin — its own owner-only nav tab (gated by isAdminAccount() in
-// renderNav(), 05-data-loaders.js). Used to be a section buried at the
+// renderNav(), 05-data-nav-routing.js). Used to be a section buried at the
 // bottom of the old Profile screen, reachable only by scrolling past the
 // whole gamified card/badges layout — now it's one tap away and nothing
 // else shares the screen with it.
@@ -2143,7 +2143,7 @@ function openHostProfile(hostKey, hostName) {
 // Collective" -> "NC", a single-word name -> its first two letters. Used for
 // the avatar placeholder in place of a real photo, since no avatar_url (or
 // any host-facing photo field) exists anywhere in the schema yet — see
-// PRODUCT.md/ARCHITECTURE.md for the real-data-only convention this follows.
+// PRODUCT.md/docs/history.md for the real-data-only convention this follows.
 function hostInitials(name) {
   const words = (name || "").trim().split(/\s+/).filter(Boolean);
   if (!words.length) return "?";

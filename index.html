@@ -35,7 +35,7 @@
     />
 
     <!-- Theme before first paint (no flash). Mirrors themeForNow() in
-     03-core-theme.js: saved preference → light/dark/system, else LONDON
+     03-theme-boot-signin.js: saved preference → light/dark/system, else LONDON
      time (light 06:00–17:59). -->
     <script>
       (function () {
@@ -163,19 +163,19 @@
     </div>
     <script defer src="./src/js/config.js"></script>
     <script defer src="./src/js/services.js"></script>
-    <script defer src="./src/js/app/01-core-constants.js"></script>
-    <script defer src="./src/js/app/02-core-storage.js"></script>
-    <script defer src="./src/js/app/03-core-theme.js"></script>
-    <script defer src="./src/js/app/04-auth-onboarding.js"></script>
-    <script defer src="./src/js/app/05-data-loaders.js"></script>
-    <script defer src="./src/js/app/06-map-animations.js"></script>
-    <script defer src="./src/js/app/07-discovery-map.js"></script>
-    <script defer src="./src/js/app/08-event-creator.js"></script>
-    <script defer src="./src/js/app/09-host-analytics.js"></script>
-    <script defer src="./src/js/app/10-badges.js"></script>
-    <script defer src="./src/js/app/11-event-checkout.js"></script>
-    <script defer src="./src/js/app/12-ticket-wallet.js"></script>
-    <script defer src="./src/js/app/13-discover.js"></script>
+    <script defer src="./src/js/app/01-constants.js"></script>
+    <script defer src="./src/js/app/02-utils.js"></script>
+    <script defer src="./src/js/app/03-theme-boot-signin.js"></script>
+    <script defer src="./src/js/app/04-auth-host-apply.js"></script>
+    <script defer src="./src/js/app/05-data-nav-routing.js"></script>
+    <script defer src="./src/js/app/06-map-pins-cards.js"></script>
+    <script defer src="./src/js/app/07-map-setup-geocoding.js"></script>
+    <script defer src="./src/js/app/08-host-create-owner-finance.js"></script>
+    <script defer src="./src/js/app/09-host-admin-render-router.js"></script>
+    <script defer src="./src/js/app/10-account-calendar-payments.js"></script>
+    <script defer src="./src/js/app/11-checkout-confirmation.js"></script>
+    <script defer src="./src/js/app/12-wallet-host-form-scanner.js"></script>
+    <script defer src="./src/js/app/13-discover-feed.js"></script>
     <script>
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("./sw.js").catch(() => {});

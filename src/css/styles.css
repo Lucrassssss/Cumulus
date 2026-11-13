@@ -5454,7 +5454,7 @@ body,
  * the fixed Pay bar above (bottom: calc(var(--bot-h) + ... + 10/14px)) both
  * anchor to nearly the same offset from the bottom nav, so a toast fired
  * mid-checkout (e.g. "Payment is processing…" from submitStripePayment()/
- * finalizeStripePayment() in 10-badges.js) renders directly on top of the
+ * finalizeStripePayment() in 10-account-calendar-payments.js) renders directly on top of the
  * Pay button/total it's describing — the toast wins on z-index (9999 vs the
  * bar's 1100), so the exact message explaining what just happened covers the
  * button the buyer just pressed. Push toasts above the bar height while this

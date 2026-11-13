@@ -1,11 +1,11 @@
 -- Production-readiness audit finding: the app has NO anonymous browsing at
 -- all. events_read (20260704010000_auth_hardening.sql) only grants SELECT
--- to `authenticated`, so start() (src/js/app/03-core-theme.js) always shows
+-- to `authenticated`, so start() (src/js/app/03-theme-boot-signin.js) always shows
 -- the sign-up gate to a first-time visitor — there is no code path that
 -- renders the map without a session. This directly contradicts the
 -- product's own stated identity ("no invite code, curator gate, or unlock
 -- step standing between a user and the map" — PRODUCT.md; "Event detail is
--- always fully visible and bookable to everyone" — ARCHITECTURE.md) and is
+-- always fully visible and bookable to everyone" — docs/history.md) and is
 -- behind every competitor researched (Eventbrite/DICE/Skiddle/Fatsoma all
 -- allow anonymous browsing, gating only at RSVP/checkout).
 --
@@ -16,7 +16,7 @@
 -- logged-out visitor even though the authenticated policy doesn't filter
 -- it at the RLS layer (client-side getFilteredEvents() does that
 -- filtering for signed-in users instead). Matches the exact status
--- exclusion getFilteredEvents() already applies (09-host-analytics.js).
+-- exclusion getFilteredEvents() already applies (09-host-admin-render-router.js).
 --
 -- Deliberately NOT extending anon read to `rsvps` in this same pass — that
 -- table's user_name column is real attendee names, and even though

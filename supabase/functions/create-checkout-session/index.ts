@@ -1,6 +1,6 @@
 /* Creates a real Stripe PaymentIntent for a paid event and hands back its
  * `client_secret` for the browser to mount a Stripe Payment Element against
- * (see startStripeCheckout() in src/js/app/10-badges.js) — the buyer never
+ * (see startStripeCheckout() in src/js/app/10-account-calendar-payments.js) — the buyer never
  * leaves cumulus's own origin, and the payment form itself (card fields,
  * wallet buttons) is fully themeable via Stripe.js's Appearance API, unlike
  * the pre-built Checkout Session form this replaces.
@@ -253,7 +253,7 @@ Deno.serve(async (req: Request) => {
   // device support), so this pair alone is card + Apple Pay + Google Pay +
   // PayPal and nothing else, regardless of Dashboard state. Trade-off: Link
   // no longer appears — the email prefill in startStripeCheckout()
-  // (10-badges.js) is now inert for Link recognition specifically, though it
+  // (10-account-calendar-payments.js) is now inert for Link recognition specifically, though it
   // still harmlessly prefills the card form's billing email.
   params.append("allowed_payment_method_types[]", "card");
   params.append("allowed_payment_method_types[]", "paypal");

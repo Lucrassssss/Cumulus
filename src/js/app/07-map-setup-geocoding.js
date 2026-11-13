@@ -639,7 +639,7 @@ function initHostMap() {
 }
 
 // Draws the host form's current values as a poster pin (same markup and
-// styles as 06-map-animations.js _buildPinEl).
+// styles as 06-map-pins-cards.js _buildPinEl).
 function renderHostPreviewPin(el) {
   const title = (document.getElementById("host-title")?.value || "").trim() || "Your event";
   const category = document.getElementById("host-cat")?.value || Object.keys(CATS)[0];

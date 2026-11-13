@@ -676,7 +676,7 @@ function filterCalendarList() {
 // implemented here as a time-cutoff schedule (events.price_tiers, e.g.
 // Early Bird -> General -> Final). Capacity-based flipping is deliberately
 // NOT implemented (would need a live attendee-count trigger; documented as
-// deferred in ARCHITECTURE.md rather than half-built). Tiers are ordered by
+// deferred in docs/history.md rather than half-built). Tiers are ordered by
 // cutoff ascending; the active tier is the first whose cutoff hasn't
 // passed, falling back to the last (final) tier once every cutoff has
 // passed. This same selection logic is duplicated server-side in
@@ -951,7 +951,7 @@ async function registerFree(evId) {
 // which rejects an appearance option outright and, even where a
 // server-side branding_settings equivalent exists, still can't theme its
 // own input card (a fixed-light-surface product constraint, not a missing
-// parameter — see ARCHITECTURE.md). Reads live computed CSS custom
+// parameter — see docs/history.md). Reads live computed CSS custom
 // properties rather than duplicating hex values here, so it can never
 // drift out of sync with styles.css.
 function stripeAppearanceForCurrentTheme() {

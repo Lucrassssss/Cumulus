@@ -2,7 +2,7 @@
 -- Cumulus — Supabase security + performance advisor remediation
 -- ----------------------------------------------------------------------------
 -- A full pass through `get_advisors` (security + performance). See
--- ARCHITECTURE.md → "Advisor remediation pass" for the write-up of what each
+-- docs/history.md → "Advisor remediation pass" for the write-up of what each
 -- section fixes, what was found to be a real vulnerability vs. an intentional
 -- false positive, and what can't be fixed from here (documented, not silently
 -- skipped).

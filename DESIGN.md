@@ -38,7 +38,7 @@ posters. Three moves make it recognisable:
 
 1. **Generated posters.** Every event without a photo gets a deterministic
    mesh-gradient poster from its category palette (`POSTER_PALETTES` in
-   `13-discover.js`) plus film grain and a giant glyph. No grey placeholders, ever.
+   `13-discover-feed.js`) plus film grain and a giant glyph. No grey placeholders, ever.
 2. **Huge condensed type.** Page titles and event names are Bricolage
    Grotesque 800 at 44–92px with tight tracking. Labels, dates and prices are
    JetBrains Mono caps.
@@ -58,7 +58,7 @@ Everything is a pill or a 26px card — no square buttons.
 **Map:** Mapbox Standard, default (full-colour) theme — the basemap is left
 as-is; don't switch it to `monochrome`/`faded`. Pins
 are "wheatpaste" posters — the event's poster on a white sticker border,
-tilted ±6°, with a tail on the venue (`06-map-animations.js`). Clustering is
+tilted ±6°, with a tail on the venue (`06-map-pins-cards.js`). Clustering is
 the GeoJSON source's Supercluster (`clusterRadius 48`, `clusterMaxZoom 14`,
 `clusterProperties` for event + live totals); rendering is DOM markers diffed
 per frame for real CSS motion. Clusters are a fanned stack of their real

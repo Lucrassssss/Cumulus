@@ -963,7 +963,7 @@ function exportGuestlistCsv() {
   showToast(`Exported ${rows.length} guest${rows.length !== 1 ? "s" : ""}`, "success");
 }
 
-// Boot moved to the end of 13-discover.js — the last script — so every
+// Boot moved to the end of 13-discover-feed.js — the last script — so every
 // render path it touches is defined before start() runs.
 
 // ══════════════════════════════════════════════

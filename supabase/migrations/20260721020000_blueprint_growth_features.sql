@@ -15,7 +15,7 @@
 -- 2. Tiered ticketing (Early Bird / General / Final) — events.price_tiers
 --    jsonb, time-cutoff only for this pass (capacity-based flipping would
 --    need live attendee-count triggers; deferred, documented in
---    ARCHITECTURE.md rather than half-built).
+--    docs/history.md rather than half-built).
 --
 -- 3. get_past_attendee_emails() — backs the "Invite Past Attendees"
 --    one-click blast: a host's own distinct past-attendee emails, deduped,

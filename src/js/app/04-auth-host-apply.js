@@ -218,7 +218,7 @@ async function _saveHostApplicationRow({ name, email, phone, bizName, hostDesc, 
 // ── In-app "Become a host" apply flow (already-signed-in eventees) ─────────
 // _hostApplyStep gates the brochure vs. the actual form: every fresh visit
 // to this flow starts on the brochure (former marketing-landing "For
-// Venues" pitch, now scoped to prospective hosts only — see 03-core-theme.js
+// Venues" pitch, now scoped to prospective hosts only — see 03-theme-boot-signin.js
 // removing the general-visitor marketing gate) so hosting still gets a real
 // sales pitch even though a plain attendee never sees one.
 let _hostApplyStep = "brochure";

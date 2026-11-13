@@ -124,7 +124,7 @@ async function loadUserProfile(userId) {
  * everywhere, so a square source avoids a stretched preview; a wide crop
  * for a cover/banner) and uploads straight to the caller's own folder in
  * the avatars/covers bucket — same RLS-scoped-by-auth.uid() pattern as
- * uploadHostFlyer() (08-event-creator.js). No moderation gate: the
+ * uploadHostFlyer() (08-host-create-owner-finance.js). No moderation gate: the
  * identity-verified host-onboarding flow (Twilio SMS OTP + Stripe Connect)
  * is this app's actual anti-abuse check, and public.event_reports handles
  * anything that slips through after the fact — see the migration that
@@ -221,7 +221,7 @@ async function getHostFollowerCount(hostId) {
   }
 }
 /* Saved events (♥) — account mirror of the localStorage list (see
- * SAVED_KEY in 13-discover.js). localStorage stays the synchronous cache
+ * SAVED_KEY in 13-discover-feed.js). localStorage stays the synchronous cache
  * every render reads; this keeps signed-in users' saves on every device.
  * All three fail soft: a missing table / offline just leaves local saves. */
 async function loadSavedEventIds() {
@@ -516,7 +516,7 @@ async function getRepeatAttendeeCount(eventId) {
  * themselves, same division of responsibility as the rest of this file. */
 
 /* Creates a real Stripe PaymentIntent for a paid event and returns its
- * client_secret for startStripeCheckout() (10-badges.js) to mount a Payment
+ * client_secret for startStripeCheckout() (10-account-calendar-payments.js) to mount a Payment
  * Element against. Free events never call this — registerFree() (app.js)
  * handles those with no Stripe involvement at all. */
 async function createCheckoutSession(eventId, qty, marketingOptIn, promoCode) {
@@ -550,7 +550,7 @@ async function createCheckoutSession(eventId, qty, marketingOptIn, promoCode) {
 }
 
 /* Fetches the tickets a just-completed PaymentIntent created, for the
- * confirmation screen — polled by finalizeStripePayment() (10-badges.js)
+ * confirmation screen — polled by finalizeStripePayment() (10-account-calendar-payments.js)
  * since stripe-webhook creates these rows asynchronously. Relies on
  * tickets_buyer_read RLS (user_id = auth.uid()) — this never needs a
  * service-role key client-side. */

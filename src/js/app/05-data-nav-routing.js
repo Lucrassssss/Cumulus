@@ -529,7 +529,7 @@ function setCategory(cat) {
 // Blueprint whitespace: "Web-View SEO Routing... events cannot be trapped
 // inside a map." Full Google-crawlable server-rendered pages would need a
 // server (this app is deliberately static/no-build/no-server — see
-// ARCHITECTURE.md) — that's a separate infra project, not something to
+// docs/history.md) — that's a separate infra project, not something to
 // fake here. What IS shipped: a real shareable/bookmarkable URL per event
 // (?event=<id>) that deep-links straight to it on load, plus a dynamically
 // updated <title>/meta description so a shared link's social-card preview
@@ -643,7 +643,7 @@ function openHost(prefill) {
   _hostFlyerBlob = null;
   _hostPrefill = prefill || null;
   _hostDuplicateSourcePhotoUrl = prefill?.photoUrl || null;
-  // Seeds the location map-picker (initHostMap(), 07-discovery-map.js) at
+  // Seeds the location map-picker (initHostMap(), 07-map-setup-geocoding.js) at
   // the duplicated event's own venue instead of the default central-London
   // pin — reset to the default when there's no prefill.
   newEventLat = prefill?.lat ?? 51.5072;
@@ -701,7 +701,7 @@ function groupEventsByLocation(events) {
 }
 
 // One feature per venue (events sharing a coordinate merge into a single
-// poster pin with a count badge — see 06-map-animations.js). count/live feed
+// poster pin with a count badge — see 06-map-pins-cards.js). count/live feed
 // the source's clusterProperties so clusters know their real event total and
 // how many are live without touching every leaf.
 function buildEventsGeoJSON() {

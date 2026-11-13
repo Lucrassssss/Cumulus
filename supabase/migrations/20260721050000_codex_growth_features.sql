@@ -3,7 +3,7 @@
 -- ----------------------------------------------------------------------------
 -- Concrete, buildable pieces from the founder-supplied 7-page codex that
 -- weren't already covered by the earlier Master Blueprint pass. See
--- ARCHITECTURE.md for the full reconciliation (what matched, what was
+-- docs/history.md for the full reconciliation (what matched, what was
 -- reformed, what was deliberately declined and why).
 -- ============================================================================
 

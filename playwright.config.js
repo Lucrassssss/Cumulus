@@ -1,9 +1,8 @@
 // @ts-check
 const { defineConfig } = require("@playwright/test");
 
-// Use the pre-installed Chromium (this environment ships one and blocks
-// re-downloads). Override with PW_CHROMIUM_PATH if your machine differs.
-const CHROMIUM = process.env.PW_CHROMIUM_PATH || "/opt/pw-browsers/chromium";
+// Locally this environment ships Chromium at a fixed path: set
+// PW_CHROMIUM_PATH to use it. CI installs Playwright's own browser.
 
 module.exports = defineConfig({
   testDir: "./tests",
@@ -30,7 +29,7 @@ module.exports = defineConfig({
     { name: "desktop", use: { viewport: { width: 1440, height: 900 } } },
   ],
   webServer: {
-    command: "python -m http.server 3457 --bind 127.0.0.1",
+    command: "python3 -m http.server 3457 --bind 127.0.0.1",
     url: "http://127.0.0.1:3457",
     reuseExistingServer: true,
     timeout: 20_000,

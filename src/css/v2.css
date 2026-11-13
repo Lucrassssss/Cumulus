@@ -5257,7 +5257,7 @@ html body .mp-root,html body .mc-root{contain:layout style;}
 html body.map-moving .mp-ring,html body.map-moving .mc-live i,html body.map-moving .mp-live,html body.map-moving .pulse{animation-play-state:paused !important;}
 html body.map-moving .mp-tile{transition:none !important;}
 
-/* ══ Keyboard-aware sheets (see keyboardAware() in 13-discover.js) ═══════
+/* ══ Keyboard-aware sheets (see keyboardAware() in 13-discover-feed.js) ═══════
    Overlays follow the visible area above the keyboard; the sheet inside
    scrolls if it's taller than that, so the field you're typing in stays
    on screen. */
