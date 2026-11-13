@@ -170,18 +170,7 @@ function goFeed() {
   else window.scrollTo(0, state._feedY || 0);
 }
 function setFeedRange(r) {
-  if (r === "free") {
-    state.feedPrice = state.feedPrice === "free" ? "any" : "free";
-    if (state.feedRange === "free") state.feedRange = "all";
-    state.feedLimit = FEED_PAGE;
-    return _rerenderFeedResults();
-  }
   state.feedRange = r;
-  state.feedLimit = FEED_PAGE;
-  _rerenderFeedResults();
-}
-function setFeedCategory(c) {
-  state.selectedCategory = c;
   state.feedLimit = FEED_PAGE;
   _rerenderFeedResults();
 }
@@ -198,7 +187,7 @@ function _rerenderFeedResults() {
   el.innerHTML = feedResultsHtml();
   const f = feedFilterState();
   document.querySelectorAll("[data-range]").forEach((b) =>
-    b.classList.toggle("on", b.dataset.range === "free" ? f.price === "free" : b.dataset.range === f.range),
+    b.classList.toggle("on", b.dataset.range === f.range),
   );
   _syncFilterBadge(f);
   const near = document.querySelector('[data-near="1"]');
@@ -207,54 +196,24 @@ function _rerenderFeedResults() {
     near.classList.toggle("on", !!state.nearMe);
     near.setAttribute("aria-pressed", state.nearMe ? "true" : "false");
   }
-  document.querySelectorAll("[data-fcat]").forEach((b) =>
-    b.classList.toggle("on", b.dataset.fcat === (state.selectedCategory || "all")),
-  );
   _syncDateStrip();
   _renderFeedDrop();
 }
 
-// ── Filters sheet (Home) ──────────────────────────────────────────────────
-// One place for every filter: when, price, category, sort, sold-out. Edits
-// a draft and shows a live "Show N events" count; chips on the page stay
-// as quick shortcuts and stay in sync.
+// ── Filters (Home) ────────────────────────────────────────────────────────
+// One place for every filter: when, price, category, sort, sold-out — the
+// Filters dropdown on the filter bar (below). The button shows how many are on.
 const FILTER_SLIDERS = '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/>';
-function feedFilterBtnHtml() {
-  const n = feedFilterCount();
-  return `<button type="button" class="feed-filter-btn${n ? " on" : ""}" onclick="openFeedFilters()" aria-label="Filters${n ? ` (${n} on)` : ""}">
-    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true">${FILTER_SLIDERS}</svg>
-    <span class="ffb-label">Filters</span><b class="ffb-n"${n ? "" : " hidden"}>${n || ""}</b></button>`;
-}
 function _syncFilterBadge(f = feedFilterState()) {
   const n = feedFilterCount(f);
-  document.querySelectorAll(".feed-filter-btn, .ff-drop-btn").forEach((b) => {
+  document.querySelectorAll(".ff-drop-btn").forEach((b) => {
     const badge = b.querySelector(".ffb-n");
     b.classList.toggle("on", !!n || b.getAttribute("aria-expanded") === "true");
     b.setAttribute("aria-label", `Filters${n ? ` (${n} on)` : ""}`);
     if (badge) (badge.hidden = !n), (badge.textContent = n || "");
   });
 }
-let _filterDraft = null;
-function openFeedFilters() {
-  _filterDraft = feedFilterState();
-  if (_filterDraft.range === "saved") _filterDraft.range = "all";
-  closeLocationSheet(true);
-  const el = document.createElement("div");
-  el.id = "loc-sheet";
-  el.className = "loc-overlay";
-  el.setAttribute("role", "dialog");
-  el.setAttribute("aria-label", "Filters");
-  el.innerHTML = `<div class="loc-sheet ff-sheet"></div>`;
-  el.addEventListener("click", (e) => {
-    if (e.target === el) closeLocationSheet();
-  });
-  document.body.appendChild(el);
-  _renderFilterSheet();
-  requestAnimationFrame(() => el.classList.add("in"));
-  document.addEventListener("keydown", _locEsc);
-}
-// The filter controls, shared by the sheet (edits a draft, set = "_ffSet")
-// and the dropdown on the chip bar (applies live, set = "_fdSet").
+// The filter controls in the Filters dropdown (set = the handler name).
 function _filterBodyHtml(d, set) {
   const seg = (key, opts) =>
     `<div class="ff-seg" role="radiogroup">${opts
@@ -276,23 +235,9 @@ function _filterBodyHtml(d, set) {
         <input type="checkbox" ${d.hideSold ? "checked" : ""} onchange="${set}('hideSold',this.checked)"/><i aria-hidden="true"></i></label>
     </div>`;
 }
-function _renderFilterSheet() {
-  const sheet = document.querySelector(".ff-sheet");
-  if (!sheet || !_filterDraft) return;
-  const d = _filterDraft;
-  const n = feedFiltered(d).length;
-  sheet.innerHTML = `
-    <div class="loc-head"><div><b>Filters</b><span>${feedUpcoming().length} events coming up</span></div><button class="loc-x" onclick="closeLocationSheet()" aria-label="Close">✕</button></div>
-    ${_filterBodyHtml(d, "_ffSet")}
-    <div class="ff-foot">
-      <button type="button" class="v-btn ghost" onclick="_ffClear()"${feedFilterCount(d) ? "" : " disabled"}>Clear all</button>
-      <button type="button" class="v-btn" onclick="_ffApply()"${n ? "" : " disabled"}>${n ? `Show ${n} event${n === 1 ? "" : "s"}` : "No events match"}</button>
-    </div>`;
-}
-
-// ── Filters dropdown (the chip bar under "Don't miss") ────────────────────
-// Same controls as the sheet, but it drops down from the bar and every
-// change applies straight away, like the chips next to it.
+// ── Filters dropdown (the filter bar under "Don't miss") ──────────────────
+// Every filter lives here; it drops down from the bar and each change
+// applies straight away. The date strip sits under it in the same bar.
 function feedDropBtnHtml() {
   const n = feedFilterCount();
   return `<button type="button" class="v-chip ff-drop-btn${n ? " on" : ""}" onclick="toggleFeedDrop()" aria-haspopup="true" aria-expanded="false" aria-controls="ff-drop" aria-label="Filters${n ? ` (${n} on)` : ""}">
@@ -398,31 +343,6 @@ function _fdSet(k, v) {
   else if (k === "hideSold") state.feedHideSold = !!v;
   if (state.feedRange === "free") state.feedRange = "all";
   state.feedLimit = FEED_PAGE;
-  _rerenderFeedResults();
-}
-
-function _ffSet(k, v) {
-  if (!_filterDraft) return;
-  _filterDraft[k] = k === "near" ? v === true || v === "true" : v;
-  _renderFilterSheet();
-}
-function _ffClear() {
-  _filterDraft = { range: "all", price: "any", cat: "all", hideSold: false, near: false, days: [] };
-  _renderFilterSheet();
-}
-function _ffApply() {
-  const d = _filterDraft;
-  if (!d) return closeLocationSheet();
-  state.feedRange = d.range;
-  state.feedPrice = d.price;
-  state.selectedCategory = d.cat;
-  state.feedHideSold = d.hideSold;
-  state.feedDays = d.days || [];
-  state.feedLimit = FEED_PAGE;
-  closeLocationSheet();
-  _filterDraft = null;
-  // "Nearest to me" needs a location fix; toggleNearMe() asks for it.
-  if (d.near !== !!state.nearMe) return toggleNearMe();
   _rerenderFeedResults();
 }
 
@@ -1042,17 +962,8 @@ function renderFeed() {
     ...all.filter((ev) => eventStatus(ev) !== "live" && (ev.photoUrl || ev.nightShotUrl)),
     ...all.filter((ev) => eventStatus(ev) !== "live" && !(ev.photoUrl || ev.nightShotUrl)),
   ].slice(0, 6);
-  const cats = Object.keys(CATS).filter((c) => all.some((ev) => ev.category === c));
   const [hello, kicker] = feedGreeting();
   const range = state.feedRange || "all";
-  const cat = state.selectedCategory || "all";
-  const ranges = [
-    ["all", "Anytime"],
-    ["today", "Tonight"],
-    ["tomorrow", "Tomorrow"],
-    ["weekend", "This weekend"],
-    ["free", "Free"],
-  ];
   const signedIn = !!state.userId;
 
   const ticker = live.length
@@ -1095,7 +1006,6 @@ function renderFeed() {
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
             <input type="search" placeholder="Artists, venues, vibes…" value="${escapeHtml(state.feedQuery || "")}" oninput="onFeedSearch(this.value)" aria-label="Search events" autocomplete="off"/>
           </label>
-          ${feedFilterBtnHtml()}
         </div>
         ${signedIn ? "" : promiseStripHtml()}
       </div>
@@ -1151,31 +1061,17 @@ function renderFeed() {
     }
 
     <div class="feed-section feed-sticky-filters">
-      <div class="chip-rail">
+      <div class="fbar-row">
         ${feedDropBtnHtml()}
         <button class="v-chip near${state.nearMe ? " on" : ""}" data-near="1" onclick="toggleNearMe()" aria-pressed="${!!state.nearMe}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 21 3l-8 18-2-8-8-2Z"/></svg>Near me</button>
         <button class="v-chip saved${range === "saved" ? " on" : ""}" data-range="saved" onclick="setFeedRange('saved')" style="${savedUpcoming().length ? "" : "display:none"}"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M12 20.5s-7.5-4.6-9.4-9.3C1.4 8.2 3.4 4.5 7 4.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.6 0 5.6 3.7 4.4 6.7-1.9 4.7-9.4 9.3-9.4 9.3Z"/></svg>Saved <b>${savedUpcoming().length}</b></button>
-        ${ranges
-        .map(([k, l]) => `<button class="v-chip${(k === "free" ? feedFilterState().price === "free" : range === k) ? " on" : ""}" data-range="${k}" onclick="setFeedRange('${k}')">${l}</button>`)
-        .join("")}</div>
-      ${
-        cats.length > 1
-          ? `<div class="chip-rail cats">
-          <button class="v-chip sm${cat === "all" ? " on" : ""}" data-fcat="all" onclick="setFeedCategory('all')">All</button>
-          ${cats
-            .map(
-              (c) =>
-                `<button class="v-chip sm${cat === c ? " on" : ""}" data-fcat="${escapeHtml(c)}" style="--dot:${posterPalette(c)[0]}" onclick="setFeedCategory('${c.replace(/'/g, "\\'")}')"><i></i>${escapeHtml(c)}</button>`,
-            )
-            .join("")}
-        </div>`
-          : ""
-      }
+      </div>
+      <div class="fbar-line" aria-hidden="true"></div>
+      ${feedDateStripHtml()}
     </div>
 
     <div class="feed-section">
       <div class="feed-sec-head"><h2>Coming up</h2></div>
-      ${feedDateStripHtml()}
       <div id="feed-results">${feedResultsHtml()}</div>
     </div>
 

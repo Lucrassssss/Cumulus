@@ -726,14 +726,16 @@ test.describe("Cumulus smoke", () => {
     await expect(page.locator("#ff-drop")).toBeVisible();
     await page.locator("#ff-drop .ff-seg button", { hasText: "Free" }).click();
     await expect(page.locator("#feed-results .fr-row")).toHaveCount(1);
-    await expect(page.locator('[data-range="free"]')).toHaveClass(/\bon\b/);
     await expect(page.locator(".ff-drop-btn .ffb-n")).toHaveText("1");
     await page.waitForTimeout(300);
     await page.locator("#ff-drop .ffd-foot .link-btn").click();
     await expect(page.locator("#feed-results .fr-row")).toHaveCount(3);
     await page.keyboard.press("Escape");
     await expect(page.locator("#ff-drop")).toHaveCount(0);
-    // Date strip replaces the Calendar link: tap a day to see just that day.
+    // One filter bar: no second Filters button by the search box, no chip
+    // sprawl; the date strip sits in the bar under a hairline.
+    await expect(page.locator(".feed-filter-btn")).toHaveCount(0);
+    await expect(page.locator(".feed-sticky-filters .fbar-line + .fd-strip")).toHaveCount(1);
     await expect(page.locator(".feed-sec-head", { hasText: "Coming up" }).locator(".link-btn")).toHaveCount(0);
     const k = await page.evaluate(() => dayKey(EVENTS.find((e) => e.id === "ux-3").startsAt));
     await page.locator(`.fd-day[data-day="${k}"]`).click();
@@ -857,6 +859,8 @@ test.describe("Cumulus smoke", () => {
       const evs = EVENTS.filter((e) => e.id === "pin-a" || e.id === "pin-b");
       let host = document.getElementById("main-map");
       host.style.display = "block";
+      // The map view hides Home; do the same so the feed can't sit on top.
+      document.getElementById("view-container").style.display = "none";
       showMapCards(evs);
     });
     await expect(page.locator("#map-cards .mcard-count")).toHaveText("2");
