@@ -181,6 +181,91 @@ document.addEventListener("click", (e) => {
   } else mark.classList.add("spin");
 }, true);
 
+// ── 6. Opening an event: the poster jumps in, the ticket tears off ────────
+// (Shared-element transitions in iOS / Material, plus a ticket stub being
+// torn off.) The poster you tapped lifts off the list and flies, growing,
+// into the event's hero. As it lands a perforation flashes along its edge
+// and the details card tears away like a stub; the rest deals in and the
+// buy bar slides up last. Without a tapped poster (deep link, Back) the
+// page uses its ordinary drop-in.
+const JUMP_SOURCES = [
+  [".fr-row", ".fr-thumb"],
+  [".fp-card", ".poster"],
+  [".mcard", ".mcard-art"],
+  [".up-next", ".un-art"],
+  [".event-list-card", ".elc-img"],
+];
+let _evJump = null;
+document.addEventListener(
+  "click",
+  (e) => {
+    if (!e.target.closest || e.target.closest(".save-btn, .v-btn, button:not(.fr-row):not(.mcard)")) return;
+    for (const [card, art] of JUMP_SOURCES) {
+      const c = e.target.closest(card);
+      if (!c) continue;
+      const a = c.querySelector(art) || c;
+      const r = a.getBoundingClientRect();
+      if (r.width < 20) return;
+      _evJump = { r, radius: getComputedStyle(a).borderRadius, t: performance.now() };
+      return;
+    }
+  },
+  true,
+);
+function delightEventJump(container) {
+  const src = _evJump;
+  _evJump = null;
+  const app = document.getElementById("app");
+  if (!src || performance.now() - src.t > 900 || _reduceMotion()) return;
+  if (app.classList.contains("same-view") || app.classList.contains("nav-back")) return;
+  const hero = container.querySelector(".ev-hero");
+  if (!hero) return;
+  app.classList.add("ev-jump");
+  // measure after openEvent()'s scroll-to-top has happened
+  requestAnimationFrame(() => {
+    let to = hero.getBoundingClientRect();
+    let heroRadius = getComputedStyle(hero).borderRadius;
+    let ghost;
+    const img = hero.style.getPropertyValue("--p-img");
+    if (img && innerWidth >= 761) {
+      // Desktop: the flyer sits on the right of a wide banner (see the
+      // .ev-hero.has-photo background in v2.css) — fly just the flyer there.
+      const h = to.height - 104;
+      const probe = new Image();
+      probe.src = (img.match(/url\(["']?([^"')]+)/) || [])[1] || "";
+      const ratio = probe.naturalWidth && probe.naturalHeight ? probe.naturalWidth / probe.naturalHeight : 0.8;
+      const w = h * ratio;
+      to = { left: to.right - 28 - w, top: to.top + 76, width: w, height: h };
+      heroRadius = "4px";
+      ghost = document.createElement("div");
+      ghost.style.background = `${img} center / cover no-repeat`;
+    } else {
+      ghost = hero.cloneNode(true);
+      ghost.querySelectorAll(".ev-hero-bar, .ev-hero-foot").forEach((n) => n.remove());
+      ghost.removeAttribute("id");
+    }
+    ghost.classList.add("ev-ghost");
+    ghost.setAttribute("aria-hidden", "true");
+    document.body.appendChild(ghost);
+    const box = (r, rad) => ({ left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px`, borderRadius: rad });
+    const lift = { ...box(src.r, src.radius), transform: "scale(1)", boxShadow: "0 0 0 rgba(0,0,0,0)" };
+    const up = { ...box(src.r, src.radius), transform: "scale(1.06) rotate(-2deg)", boxShadow: "0 24px 50px rgba(0,0,0,.45)", offset: 0.16 };
+    const land = { ...box(to, heroRadius), transform: "none", boxShadow: "0 10px 30px rgba(0,0,0,.25)" };
+    const anim = ghost.animate([lift, up, land], { duration: 560, easing: "cubic-bezier(.3,.7,.15,1)", fill: "forwards" });
+    const finish = () => {
+      app.classList.add("ev-split");
+      hero.insertAdjacentHTML("beforeend", '<i class="ev-perf" aria-hidden="true"></i>');
+      ghost.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: "forwards" }).onfinish = () => ghost.remove();
+      setTimeout(() => {
+        app.classList.remove("ev-jump", "ev-split");
+        hero.querySelector(".ev-perf")?.remove();
+      }, 1400);
+    };
+    anim.onfinish = finish;
+    anim.oncancel = finish;
+  });
+}
+
 // ── Boot ──────────────────────────────────────────────────────────────────
 // Lives in the LAST app script so every function start() can reach is
 // already defined. Never let an unexpected rejection leave a blank screen.

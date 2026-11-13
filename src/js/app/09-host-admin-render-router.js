@@ -1574,8 +1574,10 @@ function renderView() {
     if (state.eventsLoaded && !window._feedSeen && typeof delightFeedBoot === "function") delightFeedBoot(container);
     if (state.eventsLoaded) window._feedSeen = true;
   }
-  else if (state.view === "detail")
+  else if (state.view === "detail") {
     container.innerHTML = renderDetail(state.selectedEventId);
+    if (typeof delightEventJump === "function") delightEventJump(container); // 14-delight.js
+  }
   else if (state.view === "host-profile")
     container.innerHTML = renderHostProfile();
   else if (state.view === "account") container.innerHTML = renderAccount();

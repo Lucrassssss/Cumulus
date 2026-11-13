@@ -5530,3 +5530,22 @@ html body .fr-list.compact .fr-row{padding:8px !important;}
 html body .fr-list.compact .fr-cost b{font-size:17px;}
 html body .fr-foot:empty{display:none;}
 @media (min-width:761px){html body .fr-list{row-gap:10px;}}
+
+/* 6 · Event page "jump in" + ticket tear (see delightEventJump) */
+.ev-ghost{position:fixed !important;z-index:950;margin:0 !important;min-height:0 !important;max-width:none !important;animation:none !important;pointer-events:none;overflow:hidden;will-change:left,top,width,height;}
+#app.ev-jump .ev-page{animation:none !important;}
+#app.ev-jump .ev-hero{animation:none !important;opacity:0;}
+#app.ev-jump.ev-split .ev-hero{opacity:1;transition:opacity .12s ease;}
+/* body waits for the tear, then the stub drops off the poster */
+#app.ev-jump .ev-body > *,#app.ev-jump .ev-buybar{opacity:0;}
+#app.ev-split .ev-body > *{opacity:1;animation:bi-rise .5s calc(.22s + var(--k,0) * 60ms) cubic-bezier(.2,.8,.2,1) backwards;}
+#app.ev-split .ev-body > .ev-facts{transform-origin:12% 0;animation:ev-tear .62s .02s cubic-bezier(.2,1.25,.35,1) backwards;}
+@keyframes ev-tear{0%{translate:0 -26px;rotate:-3deg;opacity:0}45%{opacity:1}100%{translate:0 0;rotate:0deg}}
+#app.ev-split .ev-body > :nth-child(2){--k:1}#app.ev-split .ev-body > :nth-child(3){--k:2}#app.ev-split .ev-body > :nth-child(4){--k:3}#app.ev-split .ev-body > :nth-child(5){--k:4}#app.ev-split .ev-body > :nth-child(n+6){--k:5}
+#app.ev-split .ev-buybar{opacity:1;animation:ev-bar-up .5s .42s cubic-bezier(.2,1.2,.35,1) backwards;}
+@keyframes ev-bar-up{from{translate:0 140%}}
+/* the perforation flashes along the poster's bottom edge as it tears */
+.ev-hero{position:relative;}
+.ev-perf{position:absolute;left:14px;right:14px;bottom:0;height:0;border-top:2px dashed color-mix(in srgb,#fff 85%,transparent);z-index:4;pointer-events:none;transform-origin:0 50%;animation:ev-perf .5s cubic-bezier(.65,0,.35,1) forwards;}
+@keyframes ev-perf{0%{scale:0 1;opacity:1}55%{scale:1 1;opacity:1}100%{scale:1 1;opacity:0}}
+@media (prefers-reduced-motion:reduce){.ev-ghost{display:none}#app.ev-jump .ev-hero,#app.ev-jump .ev-body > *,#app.ev-jump .ev-buybar{opacity:1 !important;animation:none !important;}}
