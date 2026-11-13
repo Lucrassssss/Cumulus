@@ -895,6 +895,18 @@ test.describe("Cumulus smoke", () => {
     await page.locator('#map-cards .mcard-arrow[data-dir="1"]').click();
     await expect(page.locator("#map-cards .mcard-pos")).toHaveText("2 / 2");
     await expect(page.locator("#map-cards .mcard-date.on")).toHaveAttribute("data-i", "1");
+
+    // Open the 2nd event from the map, then Back: the same card is open again.
+    await page.evaluate(() => {
+      document.getElementById("view-container").style.display = "";
+      state.view = "browse";
+      rememberMapCard("pin-b");
+      openEvent("pin-b");
+    });
+    await expect(page.locator(".ev-page")).toBeVisible();
+    await page.evaluate(() => goBack());
+    await expect(page.locator("#map-cards.in")).toHaveCount(1);
+    await expect(page.locator("#map-cards .mcard-pos")).toHaveText("2 / 2");
   });
 
   test("appearance: light / dark / system preference applies, persists and follows the OS", async ({

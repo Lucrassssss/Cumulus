@@ -1532,6 +1532,9 @@ function renderView() {
     initLeaflet();
     refreshFilters();
     refreshMarkers();
+    // Back from an event opened on the map: same pin, same card.
+    if (back) restoreMapCard();
+    else window._mapReturn = null;
     setTimeout(() => {
       if (lmap) lmap.resize();
     }, 60);

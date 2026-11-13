@@ -267,7 +267,7 @@ function selectPin(key, evs, coords) {
 
 function _mcardHtml(ev) {
   const st = eventStatus(ev);
-  return `<article class="mcard" onclick="removeActiveHtmlMarker();openEvent('${ev.id}')" role="button" tabindex="0" aria-label="${escapeHtml(ev.title)}">
+  return `<article class="mcard" onclick="rememberMapCard('${ev.id}');openEvent('${ev.id}')" role="button" tabindex="0" aria-label="${escapeHtml(ev.title)}">
     <div class="mcard-art ${posterClass(ev)}" style="${posterStyle(ev)}">${posterGlyph(ev)}</div>
     <div class="mcard-body">
       <div class="fr-date${st === "live" ? " live" : ""}">${st === "live" ? '<span class="pulse"></span>' : ""}${feedDateLabel(ev)} · ${feedTimeLabel(ev)}</div>
@@ -292,9 +292,11 @@ function _mcardWhen(ev) {
   return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 }
 
+let _mapCardsEvs = [];
 function showMapCards(evs) {
   const host = document.getElementById("main-map");
   if (!host) return;
+  _mapCardsEvs = evs;
   let sheet = document.getElementById("map-cards");
   if (!sheet) {
     sheet = document.createElement("div");
@@ -396,6 +398,28 @@ function _wireMapCardPager(sheet, count) {
   mark(0);
 }
 
+// Opening an event from the map cards remembers what was open, so Back
+// returns to the same spot with the same pin and card still showing (the
+// camera itself never moves: the map stays mounted behind other views).
+function rememberMapCard(id) {
+  window._mapReturn = { key: _selectedPinKey, ids: _mapCardsEvs.map((e) => e.id), id };
+  removeActiveHtmlMarker();
+}
+function restoreMapCard() {
+  const r = window._mapReturn;
+  window._mapReturn = null;
+  if (!r) return;
+  const evs = r.ids.map((id) => EVENTS.find((e) => e.id === id)).filter(Boolean);
+  if (!evs.length) return;
+  _selectedPinKey = r.key;
+  Object.entries(htmlMarkerRefs).forEach(([k, m]) => m.el.classList.toggle("selected", k === r.key));
+  document.getElementById("main-map")?.classList.add("has-selection");
+  showMapCards(evs);
+  const i = Math.max(0, evs.findIndex((e) => e.id === r.id));
+  const rail = document.querySelector("#map-cards .mcard-rail");
+  const card = rail && rail.querySelectorAll(".mcard")[i];
+  if (card) rail.scrollLeft = card.offsetLeft - rail.offsetLeft - (rail.clientWidth - card.offsetWidth) / 2;
+}
 function removeActiveHtmlMarker() {
   _selectedPinKey = null;
   Object.values(htmlMarkerRefs).forEach((r) => r.el.classList.remove("selected"));
