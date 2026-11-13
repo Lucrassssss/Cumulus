@@ -14,18 +14,26 @@ function openMyTickets() {
 }
 
 function renderMyTickets() {
-  const upcoming = myTickets.filter((t) => {
+  const isPast = (t) => {
     const ev = EVENTS.find((e) => e.id === t.eventId);
-    return ev && eventStatus(ev) !== "past";
-  }).length;
+    return ev && eventStatus(ev) === "past";
+  };
+  const known = myTickets.filter((t) => EVENTS.some((e) => e.id === t.eventId));
+  const upcoming = known.filter((t) => !isPast(t)).length;
+  const past = known.length - upcoming;
+  const tab = state.ticketsTab === "past" ? "past" : "upcoming";
+  const seg = (k, label, n) =>
+    `<button type="button" role="tab" class="tk-tab${tab === k ? " on" : ""}" aria-selected="${tab === k}" onclick="setTicketsTab('${k}')">${label}${n ? `<span class="tk-tab-n">${n}</span>` : ""}</button>`;
   return `<div class="v-page">
     <header class="v-page-head">
       <div class="v-kicker">Wallet</div>
       <h1 class="v-h1">Your tickets</h1>
       <p class="v-sub">${upcoming ? `${upcoming} coming up` : myTickets.length ? "Nothing coming up" : "Nothing here yet"}</p>
     </header>
-    ${myTicketsCardsHtml()}
+    ${myTickets.length ? `<div class="tk-tabs" role="tablist" aria-label="Tickets">${seg("upcoming", "Upcoming", upcoming)}${seg("past", "Past", past)}</div>` : ""}
+    ${myTicketsCardsHtml(tab)}
     ${(() => {
+      if (tab !== "upcoming") return "";
       const saved = savedUpcoming();
       if (!saved.length) return "";
       return `<div class="hp-sec-head"><h3>Saved</h3><span>${saved.length} coming up</span></div>
@@ -33,10 +41,15 @@ function renderMyTickets() {
     })()}
   </div>`;
 }
+function setTicketsTab(k) {
+  if (state.ticketsTab === k) return;
+  state.ticketsTab = k;
+  renderView();
+}
 
 // Sorted soonest-event-first (not purchase order) — a ticket wallet reads
 // as "what's coming up", so the next thing you're going to is always on top.
-function myTicketsCardsHtml() {
+function myTicketsCardsHtml(tab = "upcoming") {
   if (!myTickets.length)
     return `<div class="feed-empty">
       <div class="feed-empty-art" aria-hidden="true"><svg class="ui-ic" viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/></svg></div>
@@ -44,11 +57,22 @@ function myTicketsCardsHtml() {
       <p>Everything you book lands here — QR, calendar, transfer, all of it.</p>
       <div class="feed-empty-actions"><button class="v-btn" onclick="goFeed()">Find something on</button></div>
     </div>`;
-  return [...myTickets]
+  const wantPast = tab === "past";
+  const list = myTickets.filter((t) => {
+    const ev = EVENTS.find((e) => e.id === t.eventId);
+    return ev && (eventStatus(ev) === "past") === wantPast;
+  });
+  if (!list.length)
+    return wantPast
+      ? `<div class="tk-empty"><b>No past events yet</b><span>Events you've been to will be kept here, with their tickets and receipts.</span></div>`
+      : `<div class="tk-empty"><b>Nothing coming up</b><span>Your next booking will land here, QR and all.</span><button class="v-btn sm" onclick="goFeed()">Find something on</button></div>`;
+  // Upcoming: soonest first. Past: most recent first.
+  return list
     .sort((a, b) => {
       const evA = EVENTS.find((e) => e.id === a.eventId);
       const evB = EVENTS.find((e) => e.id === b.eventId);
-      return (evA?.startsAt ?? 0) - (evB?.startsAt ?? 0);
+      const d = (evA?.startsAt ?? 0) - (evB?.startsAt ?? 0);
+      return wantPast ? -d : d;
     })
     .map((t) => {
       const ev = EVENTS.find((e) => e.id === t.eventId);
@@ -72,8 +96,12 @@ function myTicketsCardsHtml() {
           <div><span class="tk-lbl">Code</span><b class="mono">${escapeHtml(t.ticketId)}</b></div>
         </div>
         <div class="tk-actions">
-          <button class="v-btn${status === "live" ? " tk-qr-live" : ""}" onclick="openViewTicket('${ev.id}')">${status === "live" ? '<span class="tk-live-dot" aria-hidden="true"></span>Show QR' : "Show QR"}</button>
-          <button class="v-btn ghost" onclick="openCalendarSheet('${ev.id}')">+ Calendar</button>
+          ${
+            status === "past"
+              ? `<button class="v-btn ghost" onclick="openViewTicket('${ev.id}')">Ticket &amp; receipt</button>${ev.host ? `<button class="v-btn ghost" onclick="openHostProfile('${escapeHtml(String(ev.hostId || ev.host)).replace(/'/g, "&#39;")}','${escapeHtml(ev.host).replace(/'/g, "&#39;")}')">Host's events</button>` : ""}`
+              : `<button class="v-btn${status === "live" ? " tk-qr-live" : ""}" onclick="openViewTicket('${ev.id}')">${status === "live" ? '<span class="tk-live-dot" aria-hidden="true"></span>Show QR' : "Show QR"}</button>
+          <button class="v-btn ghost" onclick="openCalendarSheet('${ev.id}')">+ Calendar</button>`
+          }
         </div>
         ${
           status !== "past"

@@ -5501,3 +5501,14 @@ html body .map-cards.in .mcard-rail{pointer-events:auto;}
   html.auth-page .lp-signup-close::before{content:"";width:10px;height:10px;border-left:2.4px solid currentColor;border-bottom:2.4px solid currentColor;transform:translateX(2px) rotate(45deg);border-radius:1px;}
   html.auth-page .lp-signup-modal .gate-input{font-size:16px !important;} /* ≥16px: iOS won't zoom on focus */
 }
+
+/* Tickets: Upcoming / Past */
+html body .tk-tabs{display:flex;gap:4px;padding:4px;margin:0 18px 16px;border-radius:999px;background:var(--surface-2);}
+html body .tk-tab{appearance:none;border:0;flex:1;height:40px;border-radius:999px;background:transparent;color:var(--text-muted);font:700 14px var(--font-sans);display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;transition:background-color .2s ease,color .2s ease;-webkit-tap-highlight-color:transparent;}
+html body .tk-tab.on{background:var(--text);color:var(--bg);}
+html body .tk-tab-n{min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:10px;font:800 11px/20px var(--font-sans);font-variant-numeric:tabular-nums;background:color-mix(in srgb,currentColor 14%,transparent);}
+html body .tk-empty{margin:8px 18px 20px;padding:28px 20px;border-radius:var(--r-lg);border:1px dashed var(--line);display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;}
+html body .tk-empty b{font:800 16px var(--font-sans);color:var(--text);}
+html body .tk-empty span{font-size:13.5px;color:var(--text-muted);max-width:280px;line-height:1.45;}
+html body .tk-empty .v-btn{margin-top:10px;}
+html body .tk.past{opacity:.82;filter:grayscale(.45);}

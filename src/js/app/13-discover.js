@@ -1088,6 +1088,7 @@ function openTicketsTab() {
     showLpSignup();
     return;
   }
+  state.ticketsTab = "upcoming"; // the tab (and after a purchase) opens on what's next
   openMyTickets();
 }
 
