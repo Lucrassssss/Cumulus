@@ -2364,6 +2364,20 @@ async function claimWaitlistOffer(eventId) {
   openBook(eventId);
 }
 
+// The event page's main button is a ticket: a strip of the event's poster
+// art, a notched perforation, and the stub you tap. 14-delight.js flies it in
+// from the poster you tapped. Built to be reused anywhere a ticket is the CTA.
+function ticketButtonHtml(ev, { label, kicker, onclick, have = false }) {
+  const no = String((_posterSeed(ev.id) % 900) + 100);
+  return `<button type="button" class="tk-btn${have ? " have" : ""}" onclick="${onclick}">
+    <span class="tk-btn-art ${posterClass(ev)}" style="${posterStyle(ev)}" aria-hidden="true">${posterGlyph(ev)}</span>
+    <span class="tk-btn-stub">
+      <span class="tk-btn-kick" aria-hidden="true">${escapeHtml(kicker || "Admit one")} · No.${no}</span>
+      <span class="tk-btn-label">${have ? checkIconSvg(14) + " " : ""}${escapeHtml(label)}${have ? "" : ' <span aria-hidden="true">→</span>'}</span>
+    </span>
+  </button>`;
+}
+
 function renderDetail(id) {
   const ev = EVENTS.find((e) => e.id === id);
   if (!ev) return `<div class="empty-state">Event not found.</div>`;
@@ -2410,7 +2424,7 @@ function renderDetail(id) {
   } else if (ev.status === "cancelled") {
     bookBtn = `<div class="ev-notice danger">Cancelled${ticket ? " — you've been refunded" : ""}</div>`;
   } else if (ticket) {
-    bookBtn = `<button class="v-btn have wide" onclick="openViewTicket('${id}')">${checkIconSvg(15)} View your ticket</button>`;
+    bookBtn = ticketButtonHtml(ev, { label: "View your ticket", kicker: "Yours", onclick: `openViewTicket('${id}')`, have: true });
   } else if (status === "past") {
     // Ended events are locked — never bookable, no matter capacity/tier
     // state. Ticket-holders still get the branch above (their own record
@@ -2418,7 +2432,7 @@ function renderDetail(id) {
     bookBtn = `<div class="ev-notice">This event has ended</div>`;
   } else if (waitlistEntry && waitlistEntry.status === "offered") {
     const mins = Math.max(1, Math.round((waitlistEntry.expiresAt - Date.now()) / 60000));
-    bookBtn = `<button class="v-btn wide" onclick="claimWaitlistOffer('${id}')">Spot's yours — book →</button>
+    bookBtn = `${ticketButtonHtml(ev, { label: "Spot's yours — book", kicker: "Held for you", onclick: `claimWaitlistOffer('${id}')` })}
       <div class="ev-buy-hint">Held for ${mins} more min${mins !== 1 ? "s" : ""}</div>`;
   } else if (isFull && waitlistEntry) {
     bookBtn = `<button class="v-btn ghost wide" disabled>${checkIconSvg(15)} On the waitlist — first dibs on returns</button>
@@ -2427,7 +2441,7 @@ function renderDetail(id) {
     bookBtn = `<button class="v-btn wide" onclick="joinWaitlist('${id}')">Sold out · Join waitlist</button>
       <div class="ev-buy-hint">Returned tickets go to the waitlist first, at face value</div>`;
   } else {
-    bookBtn = `<button class="v-btn wide" onclick="openBook('${id}')">${price ? "Get tickets" : "Get in free"} →</button>`;
+    bookBtn = ticketButtonHtml(ev, { label: price ? "Get tickets" : "Get in free", onclick: `openBook('${id}')` });
   }
   const going = attendees.includes(state.profileName);
   const ownerTools =
@@ -2458,7 +2472,6 @@ function renderDetail(id) {
         </div>
       </div>
       <div class="ev-hero-foot">
-        ${typeof eventStickerHtml === "function" ? eventStickerHtml(ev) : ""}
         <div class="ev-tags">
           <span class="ev-tag cat">${escapeHtml(ev.category || "Event")}</span>
           ${status === "live" ? `<span class="ev-tag live"><span class="pulse"></span>Live now</span>` : status === "past" ? `<span class="ev-tag">Ended</span>` : ""}

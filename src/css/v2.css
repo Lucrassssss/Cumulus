@@ -5531,39 +5531,43 @@ html body .fr-list.compact .fr-cost b{font-size:17px;}
 html body .fr-foot:empty{display:none;}
 @media (min-width:761px){html body .fr-list{row-gap:10px;}}
 
-/* 6 · Event page "jump in": the ticket sticker flies onto the poster (see delightEventJump) */
+/* 6 · Event page "jump in": the ticket button flies in from the tapped poster (see delightEventJump) */
 .ev-hero{position:relative;}
-/* Ticket sticker on the event poster (eventStickerHtml in 14-delight.js).
-   Phone: on the poster, just above the tags, on the right. Desktop: over the
-   bottom edge of the flyer on the right of the banner. */
-html body .ev-hero-foot{position:relative;}
-.ev-stk{--sa:70px;position:absolute;right:16px;bottom:calc(100% + 10px);width:112px;rotate:-7deg;z-index:3;pointer-events:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
-.ev-stk-cut{position:relative;padding:3px;border-radius:14px;background:#fff;overflow:hidden;
-  -webkit-mask:radial-gradient(circle at 0 calc(var(--sa) + 3px),#0000 8px,#000 calc(8px + .5px)) left/51% 100% no-repeat,radial-gradient(circle at 100% calc(var(--sa) + 3px),#0000 8px,#000 calc(8px + .5px)) right/51% 100% no-repeat;
-          mask:radial-gradient(circle at 0 calc(var(--sa) + 3px),#0000 8px,#000 calc(8px + .5px)) left/51% 100% no-repeat,radial-gradient(circle at 100% calc(var(--sa) + 3px),#0000 8px,#000 calc(8px + .5px)) right/51% 100% no-repeat;}
-.ev-stk-tk{border-radius:11px;overflow:hidden;background:#fbf8f1;color:#141414;
-  -webkit-mask:radial-gradient(circle at 0 var(--sa),#0000 5.5px,#000 calc(5.5px + .5px)) left/51% 100% no-repeat,radial-gradient(circle at 100% var(--sa),#0000 5.5px,#000 calc(5.5px + .5px)) right/51% 100% no-repeat;
-          mask:radial-gradient(circle at 0 var(--sa),#0000 5.5px,#000 calc(5.5px + .5px)) left/51% 100% no-repeat,radial-gradient(circle at 100% var(--sa),#0000 5.5px,#000 calc(5.5px + .5px)) right/51% 100% no-repeat;}
-.ev-stk-art{height:var(--sa);}
-.ev-stk-art .poster-glyph{font-size:58px;}
-.ev-stk-date{position:absolute;left:6px;bottom:6px;z-index:2;padding:2px 5px;border-radius:4px;background:rgba(0,0,0,.6);color:#fff;font:700 8.5px/1.2 var(--font-mono);letter-spacing:.06em;}
-.ev-stk-perf{height:0;margin:0 9px;border-top:1.5px dashed rgba(0,0,0,.4);}
-.ev-stk-stub{padding:6px 9px 8px;}
-.ev-stk-stub b{display:block;font:800 12px/1.15 var(--font-display);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ev-stk-stub span{display:block;margin-top:2px;font:700 8.5px/1.2 var(--font-mono);letter-spacing:.05em;text-transform:uppercase;color:#6a6a6a;}
-/* a glint sweeps across as it's pressed down */
-.ev-stk-cut::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.7) 48%,transparent 62%);translate:-130% 0;}
-.ev-stk.shine .ev-stk-cut::after{animation:stk-shine .75s cubic-bezier(.3,.6,.3,1) forwards;}
-@keyframes stk-shine{to{translate:130% 0}}
+/* Ticket button: the event page's main CTA (ticketButtonHtml in 09).
+   Poster strip | notched perforation | stub. */
+.tk-btn{--aw:54px;appearance:none;border:0;padding:0;margin:0;width:100%;min-height:54px;display:flex;align-items:stretch;position:relative;overflow:hidden;cursor:pointer;
+  border-radius:12px;background:var(--cta-bg);color:var(--cta-fg);font:inherit;text-align:left;-webkit-tap-highlight-color:transparent;
+  transition:transform .18s cubic-bezier(.2,.8,.2,1),filter .2s ease;
+  -webkit-mask:radial-gradient(circle at var(--aw) 0,#0000 7px,#000 calc(7px + .5px)) top/100% 51% no-repeat,radial-gradient(circle at var(--aw) 100%,#0000 7px,#000 calc(7px + .5px)) bottom/100% 51% no-repeat;mask:radial-gradient(circle at var(--aw) 0,#0000 7px,#000 calc(7px + .5px)) top/100% 51% no-repeat,radial-gradient(circle at var(--aw) 100%,#0000 7px,#000 calc(7px + .5px)) bottom/100% 51% no-repeat;}
+.tk-btn:active{transform:scale(.975);}
+.tk-btn:hover{filter:brightness(1.04);}
+.tk-btn:focus-visible{outline:none;filter:brightness(1.08);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--cta-fg) 60%,transparent);}
+.tk-btn-art{flex:0 0 var(--aw);position:relative;display:block;border-radius:0;}
+.tk-btn-art .poster-glyph{font-size:40px;}
+.tk-btn-stub{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:8px 16px 8px 15px;position:relative;}
+/* the perforation, between the strip and the stub */
+.tk-btn-stub::before{content:"";position:absolute;left:0;top:9px;bottom:9px;border-left:1.5px dashed color-mix(in srgb,var(--cta-fg) 38%,transparent);}
+.tk-btn-kick{font:700 9.5px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;opacity:.62;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tk-btn-label{font:800 16px/1.1 var(--font-sans);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;}
+.tk-btn.have{background:color-mix(in srgb,var(--volt) 14%,var(--surface));color:var(--text);}
+.tk-btn.have .tk-btn-stub::before{border-color:color-mix(in srgb,var(--volt) 45%,transparent);}
+.tk-btn.have svg{color:var(--volt);}
+html[data-theme="light"] .tk-btn.have svg{color:var(--accent);}
+/* a glint sweeps across as it presses into place */
+.tk-btn::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 48%,transparent 64%);translate:-130% 0;}
+.tk-btn.shine::after{animation:tk-shine .8s cubic-bezier(.3,.6,.3,1) forwards;}
+@keyframes tk-shine{to{translate:130% 0}}
+.tk-btn-ghost{position:fixed !important;z-index:1200;margin:0 !important;pointer-events:none;transition:none;}
+.tk-btn-wait{visibility:hidden;}
 @media (min-width:761px){
-  html body .ev-hero-foot{position:static;}
-  .ev-stk{--sa:80px;right:150px;bottom:12px;width:128px;}
+  html body .ev-page > .ev-buybar .tk-btn{--aw:64px;min-height:60px;}
+  html body .ev-page > .ev-buybar .tk-btn-label{font-size:17px;}
 }
+@media (prefers-reduced-motion:reduce){.tk-btn.shine::after{animation:none}.tk-btn:active{transform:none}}
 /* while it flies in, the page simply appears: no staged rebuild */
 /* (a class on the page itself, so ending the jump can't restart the entrance) */
 html body .ev-page.jumped{animation:none !important;}
 html body .ev-page.jumped .ev-body{animation:ev-in .28s ease-out backwards;}
 @keyframes ev-in{from{opacity:0}}
-@media (prefers-reduced-motion:reduce){.ev-stk.shine .ev-stk-cut::after{animation:none}}
 html body .gate-otp-links{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;color:var(--text-muted);font-size:13px;}
 html body .gate-otp-links .gate-otp-resend{margin:0 !important;width:auto !important;display:inline !important;padding:4px 0 !important;}

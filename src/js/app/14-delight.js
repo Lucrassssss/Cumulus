@@ -182,13 +182,11 @@ document.addEventListener("click", (e) => {
 }, true);
 
 // ── 6. Opening an event: the poster jumps in, the ticket tears off ────────
-// (Shared-element transitions in iOS / Material, crossed with slapping a
-// sticker on a poster.) Every event page carries a small ticket sticker on
-// its poster. When you open an event by tapping its poster, that sticker
-// is what flies: it lifts off the list, hovers over its spot, then presses
-// down and settles at its slight angle with a glint. The page itself just
-// appears underneath, once, with no staged rebuild. Deep links and Back
-// show the sticker already in place.
+// (Shared-element transitions in iOS / Material.) The event page's main
+// button is a ticket (ticketButtonHtml in 09). When you open an event by
+// tapping its poster, that ticket flies out of the poster, hovers over the
+// buy bar, then presses down into place with a glint. The page itself just
+// appears underneath, once. Deep links and Back show it already in place.
 const JUMP_SOURCES = [
   [".fr-row", ".fr-thumb"],
   [".fp-card", ".poster"],
@@ -214,20 +212,6 @@ document.addEventListener(
   true,
 );
 
-// The ticket sticker on an event page's poster: a whole ticket (art,
-// notched perforation, stub) with a die-cut white edge. Rendered by
-// renderDetail(); decorative for now, built to be reused.
-function eventStickerHtml(ev) {
-  const d = new Date(ev.startsAt);
-  const day = d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }).toUpperCase();
-  const no = String((_posterSeed(ev.id) % 900) + 100);
-  return `<div class="ev-stk" aria-hidden="true"><div class="ev-stk-cut"><div class="ev-stk-tk">
-      <div class="ev-stk-art ${posterClass(ev)}" style="${posterStyle(ev)}">${posterGlyph(ev)}<span class="ev-stk-date">${escapeHtml(day)}</span></div>
-      <div class="ev-stk-perf"></div>
-      <div class="ev-stk-stub"><b>${escapeHtml(ev.title)}</b><span>${feedPriceLabel(ev)} · No.${no}</span></div>
-    </div></div></div>`;
-}
-
 function _endEvJump() {
   document.getElementById("app")?.classList.remove("ev-jump");
   if (window._quietPending) {
@@ -242,34 +226,35 @@ function delightEventJump(container) {
   const app = document.getElementById("app");
   if (!src || performance.now() - src.t > 900 || _reduceMotion()) return;
   if (app.classList.contains("same-view") || app.classList.contains("nav-back")) return;
-  const stk = container.querySelector(".ev-stk");
-  if (!stk) return;
+  const btn = container.querySelector(".ev-buybar .tk-btn");
+  if (!btn) return;
   app.classList.add("ev-jump");
   container.querySelector(".ev-page")?.classList.add("jumped");
   // measure after openEvent()'s scroll-to-top has happened
   requestAnimationFrame(() => {
-    if (!stk.isConnected) return _endEvJump();
-    const R = stk.getBoundingClientRect(); // rotated box; its centre is the true centre
-    const w = stk.offsetWidth;
-    const h = stk.offsetHeight;
-    const cx = R.left + R.width / 2;
-    const cy = R.top + R.height / 2;
-    // Fly above the page (the hero clips its children), then go home.
-    const home = stk.parentNode;
-    const next = stk.nextSibling;
-    stk.style.cssText = `position:fixed;left:${cx - w / 2}px;top:${cy - h / 2}px;right:auto;bottom:auto;width:${w}px;z-index:950;`;
-    document.body.appendChild(stk);
-    const s0 = Math.max(src.r.width / w, 0.2);
-    const dx = src.r.left + src.r.width / 2 - cx;
-    const dy = src.r.top + src.r.height / 2 - cy;
-    const rest = getComputedStyle(stk).rotate;
-    const fly = stk.animate(
+    if (!btn.isConnected) return _endEvJump();
+    const R = btn.getBoundingClientRect();
+    // A twin flies above everything (the buy bar's blur would trap a fixed
+    // child); the real button waits invisibly in place, so nothing shifts.
+    const ghost = btn.cloneNode(true);
+    ghost.removeAttribute("onclick");
+    ghost.classList.add("tk-btn-ghost");
+    ghost.setAttribute("aria-hidden", "true");
+    ghost.tabIndex = -1;
+    ghost.style.cssText = `left:${R.left}px;top:${R.top}px;width:${R.width}px;height:${R.height}px;`;
+    document.body.appendChild(ghost);
+    btn.classList.add("tk-btn-wait");
+    // start as the tapped poster: same centre, scaled to its width
+    const s0 = Math.max(src.r.width / R.width, 0.15);
+    const dx = src.r.left + src.r.width / 2 - (R.left + R.width / 2);
+    const dy = src.r.top + src.r.height / 2 - (R.top + R.height / 2);
+    const fly = ghost.animate(
       [
-        { translate: `${dx}px ${dy}px`, scale: s0, rotate: "0deg", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0))" },
-        { translate: `${dx * 0.92}px ${dy * 0.92 - 16}px`, scale: s0 * 1.08, rotate: "3deg", filter: "drop-shadow(0 14px 16px rgba(0,0,0,.3))", offset: 0.12 },
-        { translate: "0px -20px", scale: 1.18, rotate: "-13deg", filter: "drop-shadow(0 30px 24px rgba(0,0,0,.32))", offset: 0.62 },
-        { translate: "0px 0px", scale: 0.95, rotate: "-5deg", filter: "drop-shadow(0 1px 2px rgba(0,0,0,.5))", offset: 0.84 },
-        { translate: "0px 0px", scale: 1, rotate: rest === "none" ? "0deg" : rest, filter: "drop-shadow(0 6px 10px rgba(0,0,0,.35))" },
+        { translate: `${dx}px ${dy}px`, scale: s0, rotate: "0deg", boxShadow: "0 0 0 rgba(0,0,0,0)" },
+        { translate: `${dx * 0.9}px ${dy * 0.9 - 14}px`, scale: s0 * 1.1, rotate: "-4deg", boxShadow: "0 14px 26px rgba(0,0,0,.3)", offset: 0.14 },
+        { translate: "0px -26px", scale: 1.06, rotate: "-3deg", boxShadow: "0 30px 40px rgba(0,0,0,.4)", offset: 0.64 },
+        { translate: "0px 0px", scale: 0.97, rotate: "0deg", boxShadow: "0 1px 2px rgba(0,0,0,.4)", offset: 0.86 },
+        { translate: "0px 0px", scale: 1, rotate: "0deg", boxShadow: "0 0 0 rgba(0,0,0,0)" },
       ],
       { duration: 640, easing: "cubic-bezier(.33,.7,.22,1)" },
     );
@@ -277,11 +262,9 @@ function delightEventJump(container) {
     const land = () => {
       if (done) return;
       done = true;
-      stk.style.cssText = "";
-      if (home && home.isConnected) {
-        home.insertBefore(stk, next && next.parentNode === home ? next : null);
-        stk.classList.add("shine");
-      } else stk.remove();
+      btn.classList.remove("tk-btn-wait");
+      btn.classList.add("shine");
+      ghost.remove();
       setTimeout(_endEvJump, 120);
     };
     fly.onfinish = land;
