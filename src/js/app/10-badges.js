@@ -1187,20 +1187,27 @@ async function submitStripePayment() {
     );
   } catch (e) {}
 
-  const { error, paymentIntent } = await window.stripeInstance.confirmPayment({
-    elements: stripeElementsGroup,
-    confirmParams: {
-      return_url: `${location.origin}${location.pathname}?checkout=return`,
-    },
-    redirect: "if_required",
-  });
   const resetBtn = () => {
     if (btn) {
       btn.disabled = false;
       btn.innerHTML = btn.dataset.label || "Pay";
     }
   };
-  await _handlePayOutcome(error, paymentIntent, resetBtn);
+  // Never leave the "Talking to your bank" screen up on an unexpected
+  // failure (network drop, Stripe.js throwing instead of returning error).
+  let result;
+  try {
+    result = await window.stripeInstance.confirmPayment({
+      elements: stripeElementsGroup,
+      confirmParams: {
+        return_url: `${location.origin}${location.pathname}?checkout=return`,
+      },
+      redirect: "if_required",
+    });
+  } catch (e) {
+    result = { error: { message: "We couldn't reach the payment service. Check your connection and try again." } };
+  }
+  await _handlePayOutcome(result.error, result.paymentIntent, resetBtn);
 }
 // One set of on-screen outcomes for every way of paying (card form, Apple
 // Pay, Google Pay, redirect methods).
@@ -1267,8 +1274,6 @@ async function finalizeStripePayment(paymentIntentId) {
         receiptSentAt: t.receipt_sent_at || null,
         claimedBy: t.claimed_by || null,
         claimedAt: t.claimed_at ? new Date(t.claimed_at).getTime() : null,
-      claimedBy: t.claimed_by || null,
-      claimedAt: t.claimed_at ? new Date(t.claimed_at).getTime() : null,
       }));
       showConfirmedAfterPurchase();
       return;

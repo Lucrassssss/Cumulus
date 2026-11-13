@@ -178,6 +178,15 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // Tickets reference public.users. Make sure the buyer's profile exists
+    // first — an account whose profile row had gone missing could still sign
+    // in and pay, and every one of its purchases then failed right here.
+    await fetch(`${supabaseUrl}/rest/v1/rpc/ensure_user_profile`, {
+      method: "POST",
+      headers: svcHeaders,
+      body: JSON.stringify({ p_uid: userId }),
+    }).catch(() => {});
+
     // Purchaser display name for the ticket record (cosmetic only).
     let purchaserName = "";
     try {
@@ -287,6 +296,9 @@ Deno.serve(async (req: Request) => {
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
   } catch (err: any) {
+    // Logged so a failing purchase shows up in the function logs, not just
+    // in Stripe's webhook dashboard.
+    console.error("stripe-webhook failed:", err?.message || err);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
