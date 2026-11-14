@@ -300,7 +300,7 @@ function renderHostApplyView() {
 
 // The host info / pitch page — reached from the Discover feed's "For
 // organisers" box and Account → Become a host. Everything on it is real:
-// 0% host fee and the flat buyer fee come from getCumulusFee(), payouts
+// 0% host fee and the flat buyer fee come from getBookingFee(), payouts
 // from the 24h/48h trust-tier release schedule, features that exist today.
 // Its one CTA adapts: apply → (approved) create an event → (pending) note.
 function hostInfoCta(big) {
@@ -323,7 +323,7 @@ function renderHostApplyBrochure() {
     [ic('<path d="M4 19V5M4 19h16"/><path d="m8 15 3-4 3 2 4-6"/>'), "Live numbers", "See sales, check-ins and repeat attendees as they happen."],
     [ic('<path d="M4 6h16M4 12h10M4 18h7"/><path d="m16 15 2 2 4-4"/>'), "Waitlists & promo codes", "Sold out? A freed spot goes straight to the next person in line. Run discount codes in a tap."],
   ];
-  const fee = typeof getCumulusFee === "function" ? getCumulusFee(20) : 2.5;
+  const fee = typeof getBookingFee === "function" ? getBookingFee(20) : 2.5;
   // Decorative poster wall — sample categories, not real listings.
   const wall = [
     ["Live Music", -9, 6, 0],
@@ -527,7 +527,7 @@ function enterApp() {
   // Load real data in the background without blocking
   initApp();
 
-  // Safety net: the #cumulus-loader overlay is normally hidden by lmap's
+  // Safety net: the #boot-loader overlay is normally hidden by lmap's
   // "idle" event inside initLeaflet(), but that path never fires if Mapbox
   // GL JS's <script defer> hasn't finished loading yet when initLeaflet()
   // runs (it bails out silently with no retry), or if WebGL/the map fails
@@ -538,7 +538,7 @@ function enterApp() {
   // none). Force it gone after a generous timeout so a map failure never
   // blocks the rest of the app from being seen.
   setTimeout(() => {
-    const loader = document.getElementById("cumulus-loader");
+    const loader = document.getElementById("boot-loader");
     if (loader) {
       loader.style.opacity = "0";
       setTimeout(() => loader.remove(), 500);

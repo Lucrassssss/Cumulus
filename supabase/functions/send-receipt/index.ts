@@ -117,6 +117,7 @@ Deno.serve(async (req: Request) => {
   const html = `<div style="background:#f3f1ec;padding:24px 12px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Inter,sans-serif;">
   <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:22px;overflow:hidden;border:1px solid #e6e2d9;">
     <div style="background:#0b0b0d;padding:24px 24px 22px;color:#ffffff;">
+      <table role="presentation" style="border-collapse:collapse;margin:0 0 14px;"><tr><td style="padding:0 10px 0 0;"><img src="${APP_URL}/assets/icons/apple-touch-icon.png" width="36" height="36" alt="" style="display:block;border-radius:9px;"/></td><td style="font-size:17px;font-weight:800;letter-spacing:-.02em;color:#ffffff;">Odd Flock</td></tr></table>
       <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#d4ff3f;font-weight:700;">You're in</div>
       <div style="font-size:28px;line-height:1.05;font-weight:800;letter-spacing:-.02em;margin-top:8px;">${esc(ev.title)}</div>
       <div style="font-size:15px;margin-top:10px;color:#e8e6ef;">${esc(when)}</div>

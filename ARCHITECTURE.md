@@ -152,14 +152,18 @@ Scheduled and triggered work uses `pg_cron` and `pg_net`:
 | `notify-admin-new-event` / `notify-followers-new-event` | DB triggers | Notification emails |
 | `remind-upcoming` | cron (hourly) | "It's tomorrow" reminders |
 | `delete-account` | app | GDPR self-serve deletion (refuses hosts and upcoming tickets) |
-| `email-ticket` | none | Retired stub (410); safe to delete |
 
-Deployed in the project but **not in this repo**:
-- `identity-webhook` and `create-verification-session` (Stripe Identity).
-- `moderate-image-upload`.
-- `issue-test-login` and `load-probe`, both retired stubs that return 410.
+Retired, still deployed but **not in this repo**. Each one only answers
+410 Gone, and nothing (app, triggers, cron) calls it. Deployed functions can
+only be removed from the Supabase dashboard (Edge Functions), so delete them
+there when convenient: `email-ticket`, `identity-webhook`,
+`create-verification-session`, `moderate-image-upload`, `issue-test-login`,
+`load-probe`.
 
-Pull the first three into the repo or delete them.
+**Legacy names kept on purpose:** browser storage keys (`cumulus_*`) and the
+`#cumulus-stress-test` event tag predate the Odd Flock rename. Renaming them
+would sign people out, drop their saved events, or break the admin's
+stress-test wipe, so they stay.
 
 Secrets (Supabase → Edge Functions → Secrets):
 - **Supabase:** `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
@@ -186,7 +190,7 @@ Secrets (Supabase → Edge Functions → Secrets):
    in Tickets, and `send-receipt` emails the receipt.
 
 Pricing: the buyer pays face value plus a booking fee, and the host keeps
-100% of face value. See `getCumulusFee()` / `eventAllInPrice()` in `10`.
+100% of face value. See `getBookingFee()` / `eventAllInPrice()` in `10`.
 
 ---
 

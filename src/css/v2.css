@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   CUMULUS v2 — "Afterglow"
+   ODD FLOCK v2 — "Afterglow"
    Loaded after styles.css. Redefines the tokens every legacy rule reads,
    then restyles the surfaces people actually live in: Discover feed, map
    chrome, event page, checkout, wallet, account, sign-in.
@@ -119,7 +119,7 @@ html[data-theme="light"] :focus-visible {
 }
 
 /* ── Boot loader ────────────────────────────────────────────────────── */
-#cumulus-loader {
+#boot-loader {
   position: fixed;
   inset: 0;
   z-index: 99999;
@@ -221,15 +221,15 @@ html body .nav-link .nav-icon {
 html body .nav-link:hover {
   color: var(--text) !important;
 }
-html body .nav-link.active-cloud-tab {
+html body .nav-link.active-tab {
   color: var(--cta-fg) !important;
   background: var(--cta-bg) !important;
 }
-html body .nav-link.active-cloud-tab::before,
-html body .nav-link.active-cloud-tab::after {
+html body .nav-link.active-tab::before,
+html body .nav-link.active-tab::after {
   display: none !important;
 }
-html body .nav-link.nav-cta:not(.active-cloud-tab) .nav-icon {
+html body .nav-link.nav-cta:not(.active-tab) .nav-icon {
   background: var(--surface-3) !important;
   border-radius: 50% !important;
   padding: 3px !important;
@@ -5135,7 +5135,7 @@ html body .bottom-nav .nav-link{position:relative;}
 html body .nav-badge{position:absolute;top:4px;left:calc(50% + 6px);min-width:15px;height:15px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:var(--hot);color:#fff;font:800 9.5px/15px var(--font-sans);font-variant-numeric:tabular-nums;text-align:center;letter-spacing:0;box-shadow:0 0 0 2.5px var(--surface);pointer-events:none;}
 html body .nav-badge.pop{animation:nav-badge-in .32s cubic-bezier(.2,1.2,.4,1) backwards;}
 html body .nav-badge::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:0 0 0 0 color-mix(in srgb,var(--hot) 55%,transparent);animation:nav-badge-halo 2.4s 1s ease-out infinite;}
-html body .nav-link.active-cloud-tab .nav-badge{box-shadow:0 0 0 2.5px var(--volt);}
+html body .nav-link.active-tab .nav-badge{box-shadow:0 0 0 2.5px var(--volt);}
 @keyframes nav-badge-in{from{transform:scale(.3);opacity:0}}
 @keyframes nav-badge-halo{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--hot) 50%,transparent)}70%,100%{box-shadow:0 0 0 7px transparent}}
 body.map-moving .nav-badge::after{animation:none;}
@@ -5195,8 +5195,8 @@ html body :is(.fr-row,.tk-art):active{transform:scale(.985);}
 
 /* Tab highlight: no replay when the dock comes back (it's hidden on event
    and checkout pages); a short, soft fade only when you switch tabs. */
-html body .nav-link.active-cloud-tab{animation:none !important;}
-html body .nav-link.active-cloud-tab.tab-in{animation:nav-tab-in .26s cubic-bezier(.2,.8,.2,1) !important;}
+html body .nav-link.active-tab{animation:none !important;}
+html body .nav-link.active-tab.tab-in{animation:nav-tab-in .26s cubic-bezier(.2,.8,.2,1) !important;}
 @keyframes nav-tab-in{from{background-color:transparent;transform:scale(.94)}}
 /* Back navigation shows the page as you left it. */
 #app.nav-back :is(.feed,.v-page,.tv-page,.ac-page,.ev-page,.bk-page,.hx,.up-next){animation:none !important;}
@@ -5246,7 +5246,6 @@ html body .v-btn.have{background:color-mix(in srgb,var(--volt) 14%,var(--surface
 html body .v-btn.have svg{color:var(--volt);}
 html[data-theme="light"] body .v-btn.have svg{color:var(--accent);}
 /* Line icons where emoji used to be */
-html body .flyer-ic{display:grid;place-items:center;color:var(--text-muted);margin-bottom:2px;}
 html body .review-empty-icon{display:grid;place-items:center;color:var(--text-muted);}
 html body .review-empty-icon .ui-ic{display:block;}
 /* Sign-in / sign-up submit: the app's one primary-button style, both themes */
@@ -5283,13 +5282,13 @@ html body .ff-toggle input:focus-visible + i{outline:2px solid var(--accent);out
 
 /* 1 · Boot screen: progress bar, rotating tips, iris-wipe reveal */
 @property --iris{syntax:"<length-percentage>";inherits:false;initial-value:0%;}
-#cumulus-loader .boot-bar{width:120px;height:3px;border-radius:2px;background:color-mix(in srgb,var(--text) 12%,transparent);overflow:hidden;margin-top:4px;}
-#cumulus-loader .boot-bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--text) 0 82%,var(--volt));transform:scaleX(.08);transform-origin:0 50%;transition:transform .5s cubic-bezier(.2,.8,.2,1);}
-#cumulus-loader .boot-tip{font:700 11px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);min-height:14px;}
-#cumulus-loader .boot-tip.in{animation:boot-tip .45s cubic-bezier(.2,.8,.2,1) backwards;}
+#boot-loader .boot-bar{width:120px;height:3px;border-radius:2px;background:color-mix(in srgb,var(--text) 12%,transparent);overflow:hidden;margin-top:4px;}
+#boot-loader .boot-bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--text) 0 82%,var(--volt));transform:scaleX(.08);transform-origin:0 50%;transition:transform .5s cubic-bezier(.2,.8,.2,1);}
+#boot-loader .boot-tip{font:700 11px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);min-height:14px;}
+#boot-loader .boot-tip.in{animation:boot-tip .45s cubic-bezier(.2,.8,.2,1) backwards;}
 @keyframes boot-tip{from{opacity:0;translate:0 6px}}
-#cumulus-loader.iris{-webkit-mask:radial-gradient(circle at 50% 46%,transparent var(--iris),#000 calc(var(--iris) + 1px));mask:radial-gradient(circle at 50% 46%,transparent var(--iris),#000 calc(var(--iris) + 1px));animation:boot-iris .7s cubic-bezier(.7,0,.25,1) forwards;}
-#cumulus-loader.iris .boot-mark{animation:boot-mark-out .3s ease forwards;}
+#boot-loader.iris{-webkit-mask:radial-gradient(circle at 50% 46%,transparent var(--iris),#000 calc(var(--iris) + 1px));mask:radial-gradient(circle at 50% 46%,transparent var(--iris),#000 calc(var(--iris) + 1px));animation:boot-iris .7s cubic-bezier(.7,0,.25,1) forwards;}
+#boot-loader.iris .boot-mark{animation:boot-mark-out .3s ease forwards;}
 @keyframes boot-iris{to{--iris:150%}}
 @keyframes boot-mark-out{to{scale:2.4;opacity:0}}
 
@@ -5352,7 +5351,7 @@ html body .feed-mark.party .hm-c{animation-delay:.2s;}
 @keyframes hm-party{25%{translate:0 -30%;rotate:-10deg}50%{translate:0 0;rotate:0deg}75%{translate:0 -20%;rotate:10deg}}
 
 @media (prefers-reduced-motion:reduce){
-  #app.boot-play *,#cumulus-loader *,.save-burst,.feed-mark,.ev-hero,.nav-icon{animation:none !important;}
+  #app.boot-play *,#boot-loader *,.save-burst,.feed-mark,.ev-hero,.nav-icon{animation:none !important;}
   html body .fp-card.tilting{rotate:none;}
 }
 
@@ -5632,16 +5631,16 @@ html body .bottom-nav .nav-link svg{transition:scale .3s cubic-bezier(.2,1.6,.4,
 @media (prefers-reduced-motion:reduce){html body .fr-row.rv{opacity:1;translate:none;}html body :is(.fr-row,.fp-card,.mcard,.tk,.v-btn,.tk-btn):active{scale:none;}}
 
 /* ══ Odd Flock loading screen: the three shuffle in close, then breathe ══ */
-#cumulus-loader .boot-mark .hm-a{animation:hm-in-l .9s cubic-bezier(.2,.8,.2,1) backwards,hm-sway 2.8s 1s ease-in-out infinite;}
-#cumulus-loader .boot-mark .hm-c{animation:hm-in-r .9s .1s cubic-bezier(.2,.8,.2,1) backwards,hm-sway 2.8s 1.4s ease-in-out infinite reverse;}
-#cumulus-loader .boot-mark .hm-b{animation:hm-in-up .7s .2s cubic-bezier(.2,.8,.2,1) backwards;}
-#cumulus-loader .boot-word{animation:hm-word .6s .35s cubic-bezier(.2,.8,.2,1) backwards;}
+#boot-loader .boot-mark .hm-a{animation:hm-in-l .9s cubic-bezier(.2,.8,.2,1) backwards,hm-sway 2.8s 1s ease-in-out infinite;}
+#boot-loader .boot-mark .hm-c{animation:hm-in-r .9s .1s cubic-bezier(.2,.8,.2,1) backwards,hm-sway 2.8s 1.4s ease-in-out infinite reverse;}
+#boot-loader .boot-mark .hm-b{animation:hm-in-up .7s .2s cubic-bezier(.2,.8,.2,1) backwards;}
+#boot-loader .boot-word{animation:hm-word .6s .35s cubic-bezier(.2,.8,.2,1) backwards;}
 @keyframes hm-in-l{from{translate:-18% 0;opacity:0}}
 @keyframes hm-in-r{from{translate:18% 0;opacity:0}}
 @keyframes hm-in-up{from{translate:0 8%;opacity:0}}
 @keyframes hm-sway{50%{rotate:-2.5deg}}
 @keyframes hm-word{from{opacity:0;translate:0 6px;letter-spacing:.04em}}
-@media (prefers-reduced-motion:reduce){#cumulus-loader .boot-mark .brand-mark > g,#cumulus-loader .boot-word,html body .feed-mark .brand-mark > g{animation:none !important;}}
+@media (prefers-reduced-motion:reduce){#boot-loader .boot-mark .brand-mark > g,#boot-loader .boot-word,html body .feed-mark .brand-mark > g{animation:none !important;}}
 
 /* Two-word wordmark: keep "odd flock" and the header buttons on one line */
 html body .feed-brand,html body .logo-wrap{white-space:nowrap;flex-shrink:0;}
@@ -5686,8 +5685,8 @@ html.palette-switching *,html.palette-switching *::before{transition:background-
 
 /* ══ Odd Flock brand: wordmark + the penguins around the site ══════════ */
 html[data-theme]{--font-brand:"Funnel Display","Bricolage Grotesque","Inter",system-ui,sans-serif;}
-html body .feed-brand,html body .logo-wrap .logo,html body #app.map-home .logo-wrap .logo,#cumulus-loader .boot-word{font-family:var(--font-brand) !important;font-weight:800 !important;letter-spacing:-.035em !important;}
-#cumulus-loader .boot-word{font-size:26px;}
+html body .feed-brand,html body .logo-wrap .logo,html body #app.map-home .logo-wrap .logo,#boot-loader .boot-word{font-family:var(--font-brand) !important;font-weight:800 !important;letter-spacing:-.035em !important;}
+#boot-loader .boot-word{font-size:26px;}
 
 /* Ticket glyph (Pay → You're in): penguins in the corner of the ticket */
 html body .tg .tg-mark{color:var(--text-muted);--hm-cut:var(--surface-2);--hm-patch:var(--volt);opacity:.75;transition:color .3s ease,opacity .3s ease;}

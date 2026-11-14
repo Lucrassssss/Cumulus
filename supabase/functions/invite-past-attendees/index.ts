@@ -9,11 +9,11 @@
  * or can influence who gets emailed.
  *
  * verify_jwt = true.
- * DEPLOYED but NOT MONEY/DELIVERY-TESTED — see create-checkout-session's
- * header for the same "no live credentials in this sandbox" caveat; this
- * one also needs RESEND_API_KEY (already configured, per email-ticket and
- * notify-admin-new-event already using it) and a verified sending domain
- * to reach anyone other than the Resend account owner. */
+ * Needs RESEND_API_KEY, and NOTIFY_FROM_EMAIL on a Resend-verified domain
+ * to reach anyone other than the Resend account owner (same as the other
+ * email functions). */
+
+const APP_URL = (Deno.env.get("APP_URL") || "https://cumulusapp.co").replace(/\/$/, "");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -105,24 +105,25 @@ Deno.serve(async (req: Request) => {
           timeStyle: "short",
         })
       : "Details on the app";
-    const eventUrl = `https://cumulusapp.co/?event=${encodeURIComponent(eventId)}`;
+    const eventUrl = `${APP_URL}/?event=${encodeURIComponent(eventId)}`;
 
     const html = (name: string) => `
-      <div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;max-width:480px;">
-        <h2 style="margin:0 0 12px;">You're invited back 👋</h2>
+      <div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;max-width:520px;color:#0b0b0d;">
+        <h2 style="margin:0 0 12px;font-size:26px;line-height:1.1;letter-spacing:-.02em;">You're invited back</h2>
         <p style="color:#333;font-size:14px;">Hey ${escapeHtml(name || "there")} — the host of an event you went to on Odd Flock just put on something new:</p>
         <div style="background:#f7f6f2;border-radius:12px;padding:16px;margin:16px 0;">
           <div style="font-weight:700;font-size:16px;">${escapeHtml(ev.title)}</div>
           <div style="color:#666;font-size:13px;margin-top:4px;">${when}${ev.venue ? ` · ${escapeHtml(ev.venue)}` : ""}${ev.area ? `, ${escapeHtml(ev.area)}` : ""}</div>
         </div>
-        <a href="${eventUrl}" style="display:inline-block;background:#c08a00;color:#0a0a0a;text-decoration:none;font-weight:700;padding:11px 24px;border-radius:999px;font-size:14px;">View on Odd Flock →</a>
+        <a href="${eventUrl}" style="display:inline-block;background:#0b0b0d;color:#d4ff3f;text-decoration:none;font-weight:700;padding:14px 22px;border-radius:999px;font-size:15px;">View on Odd Flock →</a>
         <p style="color:#999;font-size:11px;margin-top:24px;">You're getting this because you've attended an event from this host before on Odd Flock.</p>
       </div>`;
 
     // Resend's batch endpoint — one HTTP call for the whole list rather
     // than looping a request per recipient.
+    const from = Deno.env.get("NOTIFY_FROM_EMAIL") || "Odd Flock <onboarding@resend.dev>";
     const batch = attendees.map((a) => ({
-      from: "Odd Flock <onboarding@resend.dev>",
+      from,
       to: [a.email],
       subject: `${ev.title} — from a host you've seen before`,
       html: html(a.display_name),

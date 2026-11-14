@@ -1392,7 +1392,7 @@ test.describe("Odd Flock smoke", () => {
       bookingDraft.confirmedTickets = [myTickets[0]];
       showConfirmedAfterPurchase();
     });
-    await expect(page.locator('.bottom-nav [data-nav="tickets"]')).toHaveClass(/active-cloud-tab/);
+    await expect(page.locator('.bottom-nav [data-nav="tickets"]')).toHaveClass(/active-tab/);
     await page.locator(".yi-overlay").click({ force: true }).catch(() => {});
     await page.waitForTimeout(600);
     await page.locator(".bk-done").click();

@@ -16,14 +16,14 @@ const BOOT_TIPS = [
   "Mapping the good stuff…",
 ];
 (function bootScreen() {
-  const loader = document.getElementById("cumulus-loader");
+  const loader = document.getElementById("boot-loader");
   if (!loader) return;
   const tip = loader.querySelector(".boot-tip");
   const bar = loader.querySelector(".boot-bar i");
   let i = 0;
   let p = 0.08;
   const tick = () => {
-    if (!document.getElementById("cumulus-loader") || loader.dataset.hiding) return;
+    if (!document.getElementById("boot-loader") || loader.dataset.hiding) return;
     // ease toward 90% — the last 10% only fills when the app is ready
     p += (0.9 - p) * 0.08;
     if (bar) bar.style.transform = `scaleX(${p.toFixed(3)})`;
@@ -319,7 +319,7 @@ function delightEventJump(container) {
 // Lives in the LAST app script so every function start() can reach is
 // already defined. Never let an unexpected rejection leave a blank screen.
 start().catch((e) => {
-  console.error("[cumulus] boot failed", e);
+  console.error("[oddflock] boot failed", e);
   try {
     enterGuestBrowse();
   } catch (_) {}

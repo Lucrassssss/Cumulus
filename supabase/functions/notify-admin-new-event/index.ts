@@ -6,7 +6,7 @@
  * (see verify_jwt = false in config.toml).
  *
  * This is a NOTIFICATION ONLY — approval itself happens inside the app's own
- * admin Review tab (openReview() / _buildEventApprovalCard() in app.js),
+ * admin Review tab (openReview() / _buildEventApprovalCard() in 09-host-admin-render-router.js),
  * which already lists every pending_events row and can approve/reject it.
  * The app has no URL routing, so the email can't deep-link to that specific
  * row — it links to the app's home page and tells the admin where to go. */

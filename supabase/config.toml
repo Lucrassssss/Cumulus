@@ -15,12 +15,6 @@ enabled = true
 verify_jwt = false
 entrypoint = "./functions/notify-admin-new-event/index.ts"
 
-[functions.email-ticket]
-enabled = true
-# true: called by a signed-in member emailing themselves a ticket backup.
-verify_jwt = true
-entrypoint = "./functions/email-ticket/index.ts"
-
 [functions.create-checkout-session]
 enabled = true
 # true: called by a signed-in member starting a paid checkout.

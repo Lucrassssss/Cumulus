@@ -26,11 +26,11 @@ async function loadOwnerLiveData() {
     const free = tix.filter((t) => !((t.price_per_ticket || 0) > 0));
     const grossRev = tix.reduce((s, t) => s + (t.total || 0), 0);
     const feeRev = paid.reduce(
-      (s, t) => s + getCumulusFee(t.price_per_ticket || 0),
+      (s, t) => s + getBookingFee(t.price_per_ticket || 0),
       0,
     );
     const stripeCosts = paid.reduce((s, t) => {
-      const fee = getCumulusFee(t.price_per_ticket || 0);
+      const fee = getBookingFee(t.price_per_ticket || 0);
       return s + ((t.price_per_ticket || 0) + fee) * 0.015 + 0.2;
     }, 0);
 
@@ -42,7 +42,7 @@ async function loadOwnerLiveData() {
     const mPaid = mTix.filter((t) => (t.price_per_ticket || 0) > 0);
     const mGross = mTix.reduce((s, t) => s + (t.total || 0), 0);
     const mFeeRev = mPaid.reduce(
-      (s, t) => s + getCumulusFee(t.price_per_ticket || 0),
+      (s, t) => s + getBookingFee(t.price_per_ticket || 0),
       0,
     );
 
@@ -1463,7 +1463,7 @@ async function _publishApprovedEvent(rec) {
 // Background refreshes (data arriving after first paint) must not look like
 // a second page load: skip if nothing changed, otherwise repaint in place —
 // no entrance animations, same scroll position.
-const QUIET_SKIP_VIEWS = new Set(["host", "host-apply", "book", "checkout", "account-details", "scan"]);
+const QUIET_SKIP_VIEWS = new Set(["host", "host-apply", "book", "checkout", "scan"]);
 function renderViewQuiet() {
   // Home is mid "level load" (14-delight.js): hold background repaints until
   // it finishes, so late-arriving data doesn't restart or cut the intro.
@@ -1586,8 +1586,6 @@ function renderView() {
     container.innerHTML = renderHostProfile();
   else if (state.view === "account") container.innerHTML = renderAccount();
   else if (state.view === "plans") container.innerHTML = renderSharedPlans();
-  else if (state.view === "account-details")
-    container.innerHTML = renderAccountDetails();
   else if (state.view === "my-tickets")
     container.innerHTML = renderMyTickets();
   else if (state.view === "admin") container.innerHTML = renderAdmin();

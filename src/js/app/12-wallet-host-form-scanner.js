@@ -579,7 +579,7 @@ function renderHostLive() {
       <span class="fp-date">${escapeHtml(when)}</span>
       <div class="hx2-poster-foot"><span class="hx2-poster-cat">${escapeHtml(ev.category)}</span><b>${escapeHtml(ev.title)}</b><small>${escapeHtml(ev.venue)}${ev.area ? ` · ${escapeHtml(ev.area)}` : ""}</small></div>
     </div>
-    <div class="hx2-live-meta"><span><b>${price ? fmtGBP(price + getCumulusFee(price)) : "Free"}</b>${price ? " all-in" : " entry"}</span><span>${cap ? `${cap} spots` : "— spots"}</span></div>
+    <div class="hx2-live-meta"><span><b>${price ? fmtGBP(price + getBookingFee(price)) : "Free"}</b>${price ? " all-in" : " entry"}</span><span>${cap ? `${cap} spots` : "— spots"}</span></div>
     <div class="hx2-live-btn" aria-hidden="true">${ticketButtonHtml({ id: "host-preview", title: ev.title, category: ev.category, photoUrl: ev.photoUrl, startsAt: ev.startsAt }, { label: price ? "Get tickets" : "Get in free", onclick: "" })}</div>`;
 }
 

@@ -67,7 +67,7 @@ function getUserIdFromJWT(authHeader: string | null): string | null {
   }
 }
 
-// Mirrors getCumulusFee() in src/js/app.js EXACTLY. The client's number is
+// Mirrors getBookingFee() in src/js/app.js EXACTLY. The client's number is
 // never trusted for the actual charge — this server-side copy is the only
 // one that decides what Stripe collects. If the tiers ever change, both
 // copies need updating together (documented at both call sites).

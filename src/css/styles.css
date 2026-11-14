@@ -1,4 +1,4 @@
-/* Odd Flock optimized stylesheet */
+/* Odd Flock base stylesheet (v2.css layers the current design on top) */
 
 * {
   box-sizing: border-box;
@@ -881,7 +881,7 @@ body.no-scroll {
   filter: none !important;
 }
 
-.nav-link.active-cloud-tab::before {
+.nav-link.active-tab::before {
   display: none !important;
 }
 
@@ -2779,7 +2779,7 @@ select.gate-input {
   transform: translateY(-2px) !important;
 }
 
-.nav-link.active-cloud-tab .nav-icon {
+.nav-link.active-tab .nav-icon {
   transform: scale(1.18) translateY(-2px) !important;
   background: color-mix(in srgb, var(--accent) 15%, transparent);
   box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 30%, transparent);
@@ -2788,7 +2788,7 @@ select.gate-input {
   ) !important;
 }
 
-.nav-link.active-cloud-tab::after {
+.nav-link.active-tab::after {
   content: "" !important;
   position: absolute !important;
   bottom: 4px !important;
@@ -3193,19 +3193,6 @@ textarea:focus {
   font-weight: 800;
   letter-spacing: -0.02em;
 }
-
-.account-avatar-edit {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  margin: 4px 0 22px;
-}
-.account-avatar-edit-zone {
-  position: relative;
-  cursor: pointer;
-  border-radius: 50%;
-}
 .account-avatar-edit-badge {
   position: absolute;
   right: -2px;
@@ -3219,12 +3206,6 @@ textarea:focus {
   justify-content: center;
   font-size: 13px;
   border: 2.5px solid var(--surface);
-}
-.gate-label-optional {
-  font-weight: 500;
-  color: var(--text-muted);
-  text-transform: none;
-  letter-spacing: 0;
 }
 
 .account-cover-edit-zone {
@@ -3252,11 +3233,6 @@ textarea:focus {
   position: absolute;
   right: 10px;
   bottom: 10px;
-}
-.account-cover-hint {
-  font-size: 11.5px;
-  color: var(--text-muted);
-  margin: 0 0 20px;
 }
 
 .btn-text {
@@ -3321,7 +3297,7 @@ textarea:focus {
   display: inline-block !important;
 }
 
-.nav-link.active-cloud-tab {
+.nav-link.active-tab {
   color: var(--gold-text) !important;
   background: transparent !important;
   border-radius: 12px;

@@ -1313,7 +1313,7 @@ async function reverseGeocode(lat, lon) {
 }
 
 function hideBootLoader() {
-  const loader = document.getElementById("cumulus-loader");
+  const loader = document.getElementById("boot-loader");
   if (!loader || loader.dataset.hiding) return;
   loader.dataset.hiding = "1";
   if (typeof bootReveal === "function") return bootReveal(loader); // 14-delight.js

@@ -341,50 +341,6 @@ function accountCoverHtml() {
   </div>`;
 }
 
-function renderAccountDetails() {
-  const showCover = isApprovedHost();
-  return `<button class="back-btn" onclick="goBack()">←</button>
-    <div class="connect-header"><h2>Account details</h2><p>Your name, contact info &amp; photo</p></div>
-
-    ${
-      showCover
-        ? `<div class="section-title">Host banner</div>
-    <input id="account-cover-input" type="file" accept="image/*" style="display:none;" onchange="handleAccountCoverChange(this)"/>
-    ${accountCoverHtml()}
-    <p class="account-cover-hint">Shown at the top of your public host page. Checked automatically — nothing unsuitable gets published.</p>`
-        : ""
-    }
-
-    <div class="account-avatar-edit">
-      <input id="account-avatar-input" type="file" accept="image/*" style="display:none;" onchange="handleAccountAvatarChange(this)"/>
-      <div class="account-avatar-edit-zone" onclick="document.getElementById('account-avatar-input').click()" role="button" tabindex="0" aria-label="Change profile photo">
-        ${accountAvatarHtml(84)}
-        <span class="account-avatar-edit-badge" aria-hidden="true"><svg class="ui-ic" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
-      </div>
-      <button class="btn-text" style="font-size:12.5px;" onclick="document.getElementById('account-avatar-input').click()">${state.profileAvatarUrl ? "Change photo" : "Add a photo"}</button>
-    </div>
-
-    <div class="gate-field">
-      <label class="gate-label" for="account-details-name">Name</label>
-      <input id="account-details-name" class="gate-input" value="${escapeHtml(state.profileName)}" autocomplete="name"/>
-    </div>
-    <div class="gate-field">
-      <label class="gate-label" for="account-details-email">Email</label>
-      <input id="account-details-email" class="gate-input" type="email" value="${escapeHtml(state.profileEmail)}" autocomplete="email"/>
-    </div>
-    <div class="gate-field">
-      <label class="gate-label" for="account-details-phone">Phone number <span class="gate-label-optional">(optional)</span></label>
-      <input id="account-details-phone" class="gate-input" type="tel" value="${escapeHtml(state.profilePhone || "")}" autocomplete="tel" placeholder="+44 7700 900000"/>
-    </div>
-    <div id="account-details-error" style="display:none;color:var(--danger,#dc2626);font-size:12px;margin-bottom:8px;"></div>
-    <button class="btn" style="width:100%;" onclick="saveAccountDetailsForm()">Save changes</button>`;
-}
-
-// Both handlers below route through services.js's direct-upload path
-// (uploadAvatarPhoto/uploadCoverPhoto — straight to the caller's own
-// storage folder, no moderation gate; see the migration that reverted the
-// earlier Google Cloud Vision SafeSearch detour in favour of the
-// event_reports community-report system).
 async function handleAccountAvatarChange(input) {
   const file = input.files && input.files[0];
   if (!file) return;
@@ -421,10 +377,8 @@ async function handleAccountCoverChange(input) {
   renderView();
 }
 
-// Real edit, unlike the old editProfile() this page replaces — that one
-// just flipped state.editingProfile with no form ever consuming it, so the
-// button silently did nothing. persistProfile() already knows how to
-// upsert name/email/phone/avatar; this just points it at the edited values.
+// Saves the inline "Your details" card on the account page through
+// persistProfile() (name/email/phone/avatar upsert).
 async function saveAccountDetailsForm() {
   const nameEl = document.getElementById("account-details-name");
   const emailEl = document.getElementById("account-details-email");
@@ -456,10 +410,8 @@ async function saveAccountDetailsForm() {
   } catch (e) {
     showToast("Couldn't reach the server — try again", "error");
   }
-  // Inline on Account now: stay put and repaint (header name, menu, etc.).
-  // The old standalone details page (hosts' banner editor) still goes back.
-  if (state.view === "account-details") goBack();
-  else renderView();
+  // Inline on Account: stay put and repaint (header name, menu, etc.).
+  renderView();
 }
 
 
@@ -497,7 +449,7 @@ function eventPrice(ev) {
   if (tier) return Number(tier.price) || 0;
   return ev.price || 0;
 }
-function getCumulusFee(ticketPrice) {
+function getBookingFee(ticketPrice) {
   if (ticketPrice <= 0) return 0;
   if (ticketPrice <= 15) return 1.5;
   if (ticketPrice <= 40) return 2.5;
@@ -510,7 +462,7 @@ function getCumulusFee(ticketPrice) {
 // at checkout. Use this anywhere a price is shown before checkout.
 function eventAllInPrice(ev) {
   const p = Number(eventPrice(ev)) || 0;
-  return p ? p + getCumulusFee(p) : 0;
+  return p ? p + getBookingFee(p) : 0;
 }
 function fmtGBP(n) {
   return `£${Number(n) % 1 ? Number(n).toFixed(2) : Number(n)}`;
@@ -528,7 +480,7 @@ function ticketTypes(ev) {
         desc: "Claim your spot — no charge",
       },
     ];
-  const platformFee = getCumulusFee(basePrice);
+  const platformFee = getBookingFee(basePrice);
   if (tier) {
     return [
       {

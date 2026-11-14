@@ -390,7 +390,7 @@ function initLeaflet() {
   // mapbox-gl.js loads via <script defer>, so it can still be mid-download
   // the first time renderView() reaches "browse" (e.g. a fast session
   // restore). Previously this just bailed with no retry, permanently
-  // orphaning the #cumulus-loader overlay since its removal is solely
+  // orphaning the #boot-loader overlay since its removal is solely
   // gated on this map's "idle" event. Retry once, shortly after, instead
   // of giving up outright — renderView("browse") only calls this once per
   // render, so without a retry a mistimed first call meant the map (and
@@ -526,7 +526,7 @@ function initLeaflet() {
   // We add a 2.5 second buffer after 'idle' to ensure HTML markers are fully painted and JIT is settled
   lmap.once("idle", () => {
     setTimeout(() => {
-      const loader = document.getElementById("cumulus-loader");
+      const loader = document.getElementById("boot-loader");
       if (loader) {
         loader.style.opacity = "0";
         setTimeout(() => loader.remove(), 500);
@@ -647,7 +647,7 @@ function renderHostPreviewPin(el) {
   const ev = { id: "host-preview-" + category, title, category };
   el.innerHTML = `<div class="mp" style="--tilt:-3deg;">
       <span class="mp-tile ${posterClass(ev)}" style="${posterStyle(ev)}"><span class="mp-glyph">${_pinGlyphSvg(category, 18)}</span></span>
-      <span class="mp-label" style="opacity:1;transform:none;"><b>${escapeHtml(title.length > 16 ? title.slice(0, 15) + "…" : title)}</b>${price ? ` · ${fmtGBP(price + getCumulusFee(price))}` : " · Free"}</span>
+      <span class="mp-label" style="opacity:1;transform:none;"><b>${escapeHtml(title.length > 16 ? title.slice(0, 15) + "…" : title)}</b>${price ? ` · ${fmtGBP(price + getBookingFee(price))}` : " · Free"}</span>
       <span class="mp-tail" aria-hidden="true"></span>
     </div>`;
 }
@@ -658,7 +658,7 @@ function updateHostPricePreview() {
   if (!el) return;
   const p = parseFloat(document.getElementById("host-price")?.value || "") || 0;
   el.innerHTML = p
-    ? `Attendees see <b>${fmtGBP(p + getCumulusFee(p))}</b> · you get <b>${fmtGBP(p)}</b> · booking fee ${fmtGBP(getCumulusFee(p))}`
+    ? `Attendees see <b>${fmtGBP(p + getBookingFee(p))}</b> · you get <b>${fmtGBP(p)}</b> · booking fee ${fmtGBP(getBookingFee(p))}`
     : `Free to attend — no fees for anyone.`;
 }
 document.addEventListener("input", (e) => {

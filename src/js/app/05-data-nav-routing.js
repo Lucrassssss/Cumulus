@@ -15,7 +15,7 @@ async function loadRealEvents(attempt = 0) {
     // A paused/waking Supabase project or a flaky connection used to fail
     // silently here and leave the whole city looking empty. Log it, retry
     // with backoff, and tell the person what's going on.
-    console.warn("[cumulus] events load failed", error);
+    console.warn("[oddflock] events load failed", error);
     state.eventsLoadError = true;
     if (attempt < 3) {
       setTimeout(async () => {
@@ -260,7 +260,7 @@ function renderNav() {
     state.view,
   )
     ? "admin"
-    : ["scan-picker", "scan", "account-details"].includes(state.view)
+    : ["scan-picker", "scan"].includes(state.view)
       ? "account"
       : ["my-tickets", "confirmed"].includes(state.view)
         ? "tickets"
@@ -342,7 +342,7 @@ function renderNav() {
   navContainer.dataset.activeTab = activeTab;
   navContainer.querySelectorAll(".nav-link").forEach((btn) => {
     const on = btn.dataset.nav === activeTab;
-    btn.classList.toggle("active-cloud-tab", on);
+    btn.classList.toggle("active-tab", on);
     if (on && prevTab && prevTab !== activeTab) {
       btn.classList.remove("tab-in");
       void btn.offsetWidth;
