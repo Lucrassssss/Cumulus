@@ -5614,3 +5614,15 @@ html body .hx2-when{display:block;}
 html body .hx2-when .ui-ic{vertical-align:-2px;margin-right:4px;}
 @media (max-width:899px){html body #hx2-live{display:contents;}}
 html body .hx2-after-h{margin:0 0 12px;font:800 22px var(--font-display);letter-spacing:-.02em;}
+
+/* ══ Flow: scroll rise-in + press give ═══════════════════════════════════ */
+html body .fr-row.rv{opacity:0;translate:0 18px;}
+html body .fr-row.rv.rv-in{opacity:1;translate:0 0;transition:opacity .45s var(--rv,0ms) ease-out,translate .55s var(--rv,0ms) cubic-bezier(.2,.9,.25,1.05),scale .18s cubic-bezier(.2,.8,.2,1),border-color .2s,background-color .2s !important;}
+html body .fr-row:not(.rv){transition:border-color .2s ease,background-color .2s ease,scale .18s cubic-bezier(.2,.8,.2,1) !important;}
+html body :is(.fp-card,.mcard,.tk){transition:scale .18s cubic-bezier(.2,.8,.2,1);}
+html body :is(.fr-row,.fp-card,.mcard,.tk):active{scale:.985;}
+html body :is(.v-btn,.tk-btn,.fd-day,.ff-drop-btn,.fbar-row button,.hx2-cat,.hx2-chip):active{scale:.96;transition:scale .08s ease-out;}
+html body :is(.v-btn,.tk-btn,.fd-day,.ff-drop-btn,.fbar-row button,.hx2-cat,.hx2-chip){transition:scale .22s cubic-bezier(.2,1.4,.4,1),background-color .2s,color .2s,border-color .2s;}
+html body .bottom-nav .nav-link:active svg{scale:.86;transition:scale .08s ease-out;}
+html body .bottom-nav .nav-link svg{transition:scale .3s cubic-bezier(.2,1.6,.4,1);}
+@media (prefers-reduced-motion:reduce){html body .fr-row.rv{opacity:1;translate:none;}html body :is(.fr-row,.fp-card,.mcard,.tk,.v-btn,.tk-btn):active{scale:none;}}

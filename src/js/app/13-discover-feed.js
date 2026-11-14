@@ -606,7 +606,7 @@ function feedRowHtml(ev, tag) {
   const st = eventStatus(ev);
   const left = feedSpotsLeft(ev);
   const going = goingCount(ev.id);
-  return `<article class="fr-row" onclick="openEvent('${ev.id}')" role="button" tabindex="0" aria-label="${escapeHtml(ev.title)}">
+  return `<article class="fr-row" data-ev="${ev.id}" onclick="openEvent('${ev.id}')" role="button" tabindex="0" aria-label="${escapeHtml(ev.title)}">
     <div class="fr-thumb ${posterClass(ev)}" style="${posterStyle(ev)}">${posterGlyph(ev)}</div>
     <div class="fr-body">
       <div class="fr-date${st === "live" ? " live" : ""}">${st === "live" ? '<span class="pulse"></span>' : ""}${feedDateLabel(ev)} · ${feedTimeLabel(ev)}${ev._dist != null ? ` <span class="fr-dist">· ${fmtDistance(ev._dist)}</span>` : ""}</div>

@@ -271,6 +271,50 @@ function delightEventJump(container) {
   });
 }
 
+// ── 7. Scroll flow: list rows rise in as they scroll into view ─────────────
+// Only rows that start below the fold animate, and each event only once per
+// visit, so quiet redraws and Back never replay it.
+(function scrollFlow() {
+  if (_reduceMotion() || !window.IntersectionObserver || !window.MutationObserver) return;
+  const seen = new Set();
+  let batch = 0, batchT = 0;
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        const el = e.target;
+        io.unobserve(el);
+        el.style.setProperty("--rv", Math.min(batch++, 5) * 55 + "ms");
+        clearTimeout(batchT);
+        batchT = setTimeout(() => (batch = 0), 120);
+        el.classList.add("rv-in");
+      });
+    },
+    { rootMargin: "0px 0px -6% 0px" },
+  );
+  const scan = (root) => {
+    root.querySelectorAll(".fr-row[data-ev]:not(.rv)").forEach((el) => {
+      const id = el.dataset.ev;
+      if (seen.has(id)) return;
+      seen.add(id);
+      if (el.getBoundingClientRect().top < innerHeight) return;
+      el.classList.add("rv");
+      io.observe(el);
+    });
+  };
+  const start = () => {
+    const vc = document.getElementById("view-container");
+    if (!vc) return;
+    let q = 0;
+    new MutationObserver(() => {
+      if (q) return;
+      q = requestAnimationFrame(() => ((q = 0), scan(vc)));
+    }).observe(vc, { childList: true, subtree: true });
+    scan(vc);
+  };
+  document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", start) : start();
+})();
+
 // ── Boot ──────────────────────────────────────────────────────────────────
 // Lives in the LAST app script so every function start() can reach is
 // already defined. Never let an unexpected rejection leave a blank screen.
