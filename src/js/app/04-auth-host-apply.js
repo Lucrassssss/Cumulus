@@ -206,8 +206,8 @@ async function _submitHostApplication({
       <div class="gate-host-success">
         <div class="gate-host-success-icon"><svg class="ui-ic" viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 3 3 5-6"/></svg></div>
         <div class="gate-host-success-title">Application submitted!</div>
-        <div class="gate-host-success-sub">Thanks ${escapeHtml(name)} — we'll review your application and get back to you within 48 hours. In the meantime, you can explore Cumulus as an attendee.</div>
-        <button class="btn" style="width:100%;margin-top:24px;" onclick="document.body.style.overflow='';document.getElementById('gate-root').innerHTML='';enterApp();">Explore Cumulus →</button>
+        <div class="gate-host-success-sub">Thanks ${escapeHtml(name)} — we'll review your application and get back to you within 48 hours. In the meantime, you can explore Huddle as an attendee.</div>
+        <button class="btn" style="width:100%;margin-top:24px;" onclick="document.body.style.overflow='';document.getElementById('gate-root').innerHTML='';enterApp();">Explore Huddle →</button>
       </div>`;
   }
 }
@@ -382,7 +382,7 @@ function renderHostApplyBrochure() {
       <h2 class="hx-h2">Your £20 ticket<br/>is your £20.</h2>
       <div class="hx-receipt">
         <div><span>Ticket price</span><b>£20.00</b></div>
-        <div><span>Cumulus fee to you</span><b>£0.00</b></div>
+        <div><span>Huddle fee to you</span><b>£0.00</b></div>
         <div class="tot"><span>You receive</span><b>£20.00</b></div>
         <div class="note"><span>The buyer pays a flat £${fee.toFixed(2)} platform fee on top — no percentage cuts.</span></div>
       </div>
@@ -437,7 +437,7 @@ function initHostInfoReveal() {
 function renderHostApplyForm() {
   return `
     <button class="back-btn" onclick="_hostApplyStep='brochure';renderView();">←</button>
-    <div class="connect-header" style="padding-top:16px;"><h2>Become a host</h2><p>Tell us about your venue or events. Our team reviews every application to keep quality high on Cumulus.</p></div>
+    <div class="connect-header" style="padding-top:16px;"><h2>Become a host</h2><p>Tell us about your venue or events. Our team reviews every application to keep quality high on Huddle.</p></div>
     <div class="host-section">
       <label class="intro-field-label" for="apply-biz-name">Venue or business name</label>
       <input id="apply-biz-name" class="gate-input" placeholder="e.g. The Sketch House"/>
@@ -452,7 +452,7 @@ function renderHostApplyForm() {
       </div>
       <label class="intro-field-label" style="margin-top:14px;" for="apply-host-desc">About your events</label>
       <textarea id="apply-host-desc" class="gate-input" placeholder="What kind of events do you run? Describe the vibe, size, and frequency…" rows="3" maxlength="400"></textarea>
-      <label class="intro-field-label" for="apply-why-host">Why host on Cumulus?</label>
+      <label class="intro-field-label" for="apply-why-host">Why host on Huddle?</label>
       <textarea id="apply-why-host" class="gate-input" placeholder="Tell us what you're hoping to achieve…" rows="2" maxlength="300"></textarea>
     </div>
     <p id="apply-host-error" class="gate-field-error"></p>

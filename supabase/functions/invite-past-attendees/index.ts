@@ -1,7 +1,7 @@
 /* Blueprint B2B2C flywheel: "The One-Click Blast — hosts click 'Invite Past
- * Attendees' for a new event. The backend triggers a clean, Cumulus-branded
+ * Attendees' for a new event. The backend triggers a clean, Huddle-branded
  * email template via Resend to their entire past audience, driving them
- * back to the Cumulus map."
+ * back to the Huddle map."
  *
  * The recipient list is re-derived server-side from
  * get_past_attendee_emails() (SECURITY DEFINER, checks the caller IS the
@@ -110,19 +110,19 @@ Deno.serve(async (req: Request) => {
     const html = (name: string) => `
       <div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;max-width:480px;">
         <h2 style="margin:0 0 12px;">You're invited back 👋</h2>
-        <p style="color:#333;font-size:14px;">Hey ${escapeHtml(name || "there")} — the host of an event you went to on Cumulus just put on something new:</p>
+        <p style="color:#333;font-size:14px;">Hey ${escapeHtml(name || "there")} — the host of an event you went to on Huddle just put on something new:</p>
         <div style="background:#f7f6f2;border-radius:12px;padding:16px;margin:16px 0;">
           <div style="font-weight:700;font-size:16px;">${escapeHtml(ev.title)}</div>
           <div style="color:#666;font-size:13px;margin-top:4px;">${when}${ev.venue ? ` · ${escapeHtml(ev.venue)}` : ""}${ev.area ? `, ${escapeHtml(ev.area)}` : ""}</div>
         </div>
-        <a href="${eventUrl}" style="display:inline-block;background:#c08a00;color:#0a0a0a;text-decoration:none;font-weight:700;padding:11px 24px;border-radius:999px;font-size:14px;">View on Cumulus →</a>
-        <p style="color:#999;font-size:11px;margin-top:24px;">You're getting this because you've attended an event from this host before on Cumulus.</p>
+        <a href="${eventUrl}" style="display:inline-block;background:#c08a00;color:#0a0a0a;text-decoration:none;font-weight:700;padding:11px 24px;border-radius:999px;font-size:14px;">View on Huddle →</a>
+        <p style="color:#999;font-size:11px;margin-top:24px;">You're getting this because you've attended an event from this host before on Huddle.</p>
       </div>`;
 
     // Resend's batch endpoint — one HTTP call for the whole list rather
     // than looping a request per recipient.
     const batch = attendees.map((a) => ({
-      from: "Cumulus <onboarding@resend.dev>",
+      from: "Huddle <onboarding@resend.dev>",
       to: [a.email],
       subject: `${ev.title} — from a host you've seen before`,
       html: html(a.display_name),

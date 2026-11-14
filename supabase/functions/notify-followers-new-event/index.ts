@@ -9,7 +9,7 @@
  *
  * Delivery requirement: Resend's shared sender (onboarding@resend.dev) only
  * delivers to the Resend account owner. Set NOTIFY_FROM_EMAIL to an address
- * on a domain verified in Resend (e.g. "Cumulus <hello@cumulusapp.co>") for
+ * on a domain verified in Resend (e.g. "Huddle <hello@cumulusapp.co>") for
  * these to reach followers. The in-app "New from hosts you follow" strip
  * works regardless. */
 
@@ -88,7 +88,7 @@ Deno.serve(async (req: Request) => {
 
   const resendKey = Deno.env.get("RESEND_API_KEY");
   if (!resendKey) return json({ error: "RESEND_API_KEY not set" }, 500);
-  const from = Deno.env.get("NOTIFY_FROM_EMAIL") || "Cumulus <onboarding@resend.dev>";
+  const from = Deno.env.get("NOTIFY_FROM_EMAIL") || "Huddle <onboarding@resend.dev>";
 
   const host = ev.host_name || "A host you follow";
   const title = ev.title || "New event";
@@ -105,7 +105,7 @@ Deno.serve(async (req: Request) => {
       <p style="margin:0 0 4px;font-size:15px;color:#3b3a41;">${escapeHtml(where)}</p>
       <p style="margin:0 0 22px;font-size:15px;color:#3b3a41;">${escapeHtml(price)}</p>
       <a href="${link}" style="display:inline-block;background:#0b0b0d;color:#d4ff3f;text-decoration:none;font-weight:700;padding:14px 22px;border-radius:999px;">View event →</a>
-      <p style="margin:28px 0 0;font-size:12px;color:#6d6b74;">Hi ${escapeHtml(name || "there")} — you asked to hear when ${escapeHtml(host)} posts. Turn this off any time from their profile on Cumulus.</p>
+      <p style="margin:28px 0 0;font-size:12px;color:#6d6b74;">Hi ${escapeHtml(name || "there")} — you asked to hear when ${escapeHtml(host)} posts. Turn this off any time from their profile on Huddle.</p>
     </div>`;
 
   let sent = 0;

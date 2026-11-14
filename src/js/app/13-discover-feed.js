@@ -401,7 +401,7 @@ function privacyMenuHtml() {
 }
 
 // ── Up next (your next ticket) ────────────────────────────────────────────
-// The in-app half of the 24h reminder: the moment you open Cumulus within a
+// The in-app half of the 24h reminder: the moment you open Huddle within a
 // day and a half of something you've booked, it's the first thing you see —
 // QR, directions and calendar one tap away.
 function nextTicketEvent() {
@@ -434,13 +434,13 @@ function upNextHtml() {
   </div>`;
 }
 
-// ── The hook: why Cumulus, in one glance ──────────────────────────────────
+// ── The hook: why Huddle, in one glance ──────────────────────────────────
 // What a first-timer needs to know before they've scrolled: the three things
 // the big ticketing apps don't promise. Guests only — once you're signed in
 // you've already seen it.
 function promiseStripHtml() {
   const ic = (d) => `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
-  return `<ul class="promise-strip" aria-label="Why Cumulus">
+  return `<ul class="promise-strip" aria-label="Why Huddle">
     <li>${ic('<path d="m5 12 5 5 9-10"/>')}<span><b>The price is the price</b>All fees shown up front</span></li>
     <li>${ic('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>')}<span><b>Face value, always</b>Returns go to the waitlist</span></li>
     <li class="pr-link" onclick="goBrowse()" role="link" tabindex="0">${ic('<path d="M12 21s7-7.6 7-12A7 7 0 0 0 5 9c0 4.4 7 12 7 12Z"/><circle cx="12" cy="9" r="2.3"/>')}<span><b>Live London map</b>What's on near you, now</span></li>
@@ -976,8 +976,8 @@ function renderFeed() {
 
   return `<section class="feed">
     <header class="feed-head">
-      <div class="feed-brand" onclick="goFeed()" role="button" tabindex="0" aria-label="Cumulus home">
-        <span class="feed-mark" aria-hidden="true"></span><span>cumulus</span>
+      <div class="feed-brand" onclick="goFeed()" role="button" tabindex="0" aria-label="Huddle home">
+        <span class="feed-mark" aria-hidden="true">${HUDDLE_MARK}</span><span>huddle</span>
       </div>
       <div class="feed-head-actions">
         <button class="icon-pill" onclick="goBrowse()" aria-label="Open map">
@@ -1012,7 +1012,7 @@ function renderFeed() {
 
 
       <aside class="feed-aside" aria-label="For organisers">
-        <div class="feed-host-cta" onclick="openHostApply()" role="button" tabindex="0" aria-label="For organisers — host an event on Cumulus">
+        <div class="feed-host-cta" onclick="openHostApply()" role="button" tabindex="0" aria-label="For organisers — host an event on Huddle">
           <div class="fhc-stack" aria-hidden="true"><i></i><i></i><i></i></div>
           <div class="fhc-copy">
             <div class="fhc-kicker">For organisers</div>
@@ -1076,7 +1076,7 @@ function renderFeed() {
     </div>
 
     <footer class="feed-foot">
-      <a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><span>© Cumulus · London</span>
+      <a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><span>© Huddle · London</span>
     </footer>
       </div>
     </div>

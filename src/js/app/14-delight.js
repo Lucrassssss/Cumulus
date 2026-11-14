@@ -1,4 +1,4 @@
-// ─── Delight: the small things that make Cumulus feel alive ───────────────
+// ─── Delight: the small things that make Huddle feel alive ───────────────
 // Everything here is decorative and self-contained. Each effect:
 //   • plays once where it matters (the Home "level load" once per visit),
 //   • uses transform/opacity only (no layout thrash),
@@ -161,13 +161,13 @@ function saveBurst(btn) {
   document.addEventListener("pointerleave", () => (reset(card), (card = null)), { passive: true });
 })();
 
-// ── 5. The orb easter egg ──────────────────────────────────────────────────
-// Tap the little Cumulus orb: it spins. Keep going and it gets excited.
+// ── 5. The huddle easter egg ──────────────────────────────────────────────────
+// Tap the penguins: they hop. Keep going and they get excited.
 let _orbTaps = [];
 document.addEventListener("click", (e) => {
   const mark = e.target.closest && e.target.closest(".feed-mark");
   if (!mark) return;
-  e.stopPropagation(); // the orb is a toy, not the "back to top" button
+  e.stopPropagation(); // the mark is a toy, not the "back to top" button
   const now = Date.now();
   _orbTaps = _orbTaps.filter((t) => now - t < 2500).concat(now);
   mark.classList.remove("spin", "party");
@@ -177,7 +177,7 @@ document.addEventListener("click", (e) => {
     mark.classList.add("party");
     saveBurst(mark);
     setTimeout(() => saveBurst(mark), 140);
-    showToast("You found the orb. It likes you.", "success");
+    showToast("You found the huddle. They like you.", "success");
   } else mark.classList.add("spin");
 }, true);
 

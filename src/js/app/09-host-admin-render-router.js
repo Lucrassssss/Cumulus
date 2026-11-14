@@ -135,7 +135,7 @@ function _renderOwnerLivePanel() {
         <div class="od-live-rev-val" style="color:var(--text);">${fmtGbp(d.grossRev)}</div>
       </div>
       <div class="od-live-rev-row">
-        <div><div class="od-live-rev-label">Cumulus Fee Revenue</div><div class="od-live-rev-sub">${d.paidTickets} paid tickets × tiered fee</div></div>
+        <div><div class="od-live-rev-label">Huddle Fee Revenue</div><div class="od-live-rev-sub">${d.paidTickets} paid tickets × tiered fee</div></div>
         <div class="od-live-rev-val" style="color:#22C55E;">${fmtGbp(d.feeRev)}</div>
       </div>
       <div class="od-live-rev-row">
@@ -231,12 +231,12 @@ function renderOwnerDash() {
           <div class="tb-row" id="od-tbr-t4"><span class="tb-label">£72+ <span class="tb-badge badge-t4">Tier 4</span></span><span class="tb-val" style="color:#AFA9EC">£4.50 fee</span></div>
           <div class="tb-div"></div>
           <div class="tb-row"><span class="tb-label">Host sets price</span><span class="tb-val" id="od-tb-host">—</span></div>
-          <div class="tb-row"><span class="tb-label">Cumulus fee (Tier <span id="od-tb-tiern">—</span>)</span><span class="tb-val" style="color:#22C55E" id="od-tb-fee">—</span></div>
+          <div class="tb-row"><span class="tb-label">Huddle fee (Tier <span id="od-tb-tiern">—</span>)</span><span class="tb-val" style="color:#22C55E" id="od-tb-fee">—</span></div>
           <div class="tb-row"><span class="tb-label">Stripe on total (1.5%+20p)</span><span class="tb-val" style="color:#E24B4A" id="od-tb-stripe">—</span></div>
           <div class="tb-row"><span class="tb-label">VAT from fee (if >£90k/yr)</span><span class="tb-val" style="color:#E24B4A" id="od-tb-vat">—</span></div>
           <div class="tb-div"></div>
           <div class="tb-total"><span style="color:#C5C6CB">Attendee pays</span><span style="color:#F1F1EF" id="od-tb-checkout">—</span></div>
-          <div class="tb-total" style="margin-top:4px"><span style="color:#C5C6CB">Cumulus nets/ticket</span><span id="od-tb-net" style="color:#22C55E">—</span></div>
+          <div class="tb-total" style="margin-top:4px"><span style="color:#C5C6CB">Huddle nets/ticket</span><span id="od-tb-net" style="color:#22C55E">—</span></div>
         </div>
       </div>
     </div>
@@ -457,7 +457,7 @@ function renderHostPayoutsPanel() {
   return `
   <div class="hp-panel">
     <div class="hp-title">Your payouts explained</div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">You set the ticket price and <strong style="color:var(--text);">keep 100% of it</strong> — always. Buyers pay a small platform fee at checkout that covers card processing and running Cumulus. It's added on top of your price, so it never comes out of your earnings.</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">You set the ticket price and <strong style="color:var(--text);">keep 100% of it</strong> — always. Buyers pay a small platform fee at checkout that covers card processing and running Huddle. It's added on top of your price, so it never comes out of your earnings.</div>
     <div class="hp-tier-row">
       <span class="hp-tier-label">Your ticket price</span>
       <span class="hp-tier-fee keep">You keep 100%</span>
@@ -573,7 +573,7 @@ function renderMyHostedEventsCancelPanel() {
 }
 
 // ── Promo/discount codes ────────────────────────────────────────────────
-// "Cumulus has time-based tiers but nothing a host can hand out selectively
+// "Huddle has time-based tiers but nothing a host can hand out selectively
 // — guestlist comps, influencer codes, early-supporter discounts" (audit).
 // A code is only ever validated/priced server-side inside create-checkout-
 // session — this panel is pure CRUD against promo_codes' own RLS
@@ -881,7 +881,7 @@ function renderReview() {
     <button class="back-btn" onclick="goBack()">←</button>
     <div class="connect-header">
       <h2>Host Review</h2>
-      <p>Applications to host public events on Cumulus</p>
+      <p>Applications to host public events on Huddle</p>
     </div>
     <div id="review-content">
       <div class="review-empty">
@@ -1873,7 +1873,7 @@ function _mapFiltersOutsideClick(e) {
 function shareEvent(id) {
   const ev = EVENTS.find((e) => e.id === id);
   if (!ev) return;
-  const text = `${ev.title} — ${ev.date}, ${ev.venue}${ev.area ? ", " + ev.area : ""}. Find it on Cumulus.`;
+  const text = `${ev.title} — ${ev.date}, ${ev.venue}${ev.area ? ", " + ev.area : ""}. Find it on Huddle.`;
   const url = "https://cumulusapp.co/";
   if (navigator.share) {
     navigator.share({ title: ev.title, text, url }).catch(() => {});
@@ -1989,9 +1989,9 @@ async function transferMyTicket(ticketCode, eventTitle) {
     return;
   }
   const url = `${location.origin}${location.pathname}?claim=${res.claim_code}`;
-  const text = `Here's my ticket to ${eventTitle} on Cumulus — tap to claim it:`;
+  const text = `Here's my ticket to ${eventTitle} on Huddle — tap to claim it:`;
   shareTicketLink(
-    "Transfer a Cumulus ticket",
+    "Transfer a Huddle ticket",
     text,
     url,
     "Transfer link copied — send it to whoever's taking the ticket",
@@ -2022,14 +2022,14 @@ async function checkSquadClaim() {
 // still free (claim_group_ticket(), race-safe server-side).
 function shareSquadGroupLink(squadId, eventTitle, seatsOpen) {
   const url = `${location.origin}${location.pathname}?squad=${squadId}`;
-  const text = `You're on my squad for ${eventTitle} on Cumulus — tap to claim your ticket:`;
-  shareTicketLink("Claim your Cumulus ticket", text, url, "Squad link copied");
+  const text = `You're on my squad for ${eventTitle} on Huddle — tap to claim your ticket:`;
+  shareTicketLink("Claim your Huddle ticket", text, url, "Squad link copied");
 }
 
 // Companion to checkSquadClaim() for the group-link flow. Deliberately does
 // NOT bail when signed out (unlike checkSquadClaim's ?claim= case) — the
 // whole point of the blueprint's Magic Link is that a friend with no
-// Cumulus account yet can still claim. If there's no session, the URL
+// Huddle account yet can still claim. If there's no session, the URL
 // param is simply left in place (this is a static SPA with no real
 // navigation, so it survives untouched) and the landing gate is nudged
 // into signup mode; once verifyGateCode()/enterApp() completes and
@@ -2102,7 +2102,7 @@ function renderHostByline(ev) {
     <button type="button" class="host-card-main host-byline-link" onclick="openHostProfile('${safeKey}','${safeName}')" aria-label="View ${escapeHtml(ev.host)}'s profile">
       <span class="host-card-av" aria-hidden="true">${escapeHtml(hostInitials(ev.host))}</span>
       <span class="host-card-txt">
-        <span class="host-card-label">Hosted by${reviewed ? ` <span class="host-reviewed-badge" title="Host reviewed by Cumulus">${checkIconSvg(10)} Reviewed</span>` : ""}</span>
+        <span class="host-card-label">Hosted by${reviewed ? ` <span class="host-reviewed-badge" title="Host reviewed by Huddle">${checkIconSvg(10)} Reviewed</span>` : ""}</span>
         <span class="host-card-name">${escapeHtml(ev.host)}</span>
         <span class="host-card-sub">${hostCount >= 2 ? `${hostCount} events · ` : ""}View profile <span class="host-card-chev" aria-hidden="true">›</span></span>
       </span>
@@ -2243,7 +2243,7 @@ function renderHostProfile() {
     <div class="host-profile-avatar-wrap">${avatarHtml}</div>
     <div class="host-profile-header">
       <div class="host-profile-identity">
-        <h2>${escapeHtml(hostName)}${reviewed ? ` <span class="host-reviewed-badge" title="Host reviewed by Cumulus">${checkIconSvg(12)} Reviewed</span>` : ""}</h2>
+        <h2>${escapeHtml(hostName)}${reviewed ? ` <span class="host-reviewed-badge" title="Host reviewed by Huddle">${checkIconSvg(12)} Reviewed</span>` : ""}</h2>
         <p>Event host</p>
         ${memberSince ? `<p class="host-profile-member-since">${memberSince}</p>` : ""}
       </div>

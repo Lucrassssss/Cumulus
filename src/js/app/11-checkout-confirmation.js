@@ -150,7 +150,7 @@ function afterRenderCheckout() {
   startStripeCheckout();
 }
 
-// ─── The Cumulus ticket glyph ─────────────────────────────────────────────
+// ─── The Huddle ticket glyph ─────────────────────────────────────────────
 // One drawing, three moods: "scan" while paying (a beam prints the ticket),
 // "win" when it's yours (fills Volt, ticks, the stub tears off and cumulus
 // clouds puff out of the tear), "fail" (a small shake). The same ticket

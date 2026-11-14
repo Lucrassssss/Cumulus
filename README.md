@@ -1,4 +1,4 @@
-# Cumulus
+# Huddle
 
 London community events: discover what's on (feed + live map), book tickets
 (free or paid via Stripe), carry them in a wallet with QR codes, and host your

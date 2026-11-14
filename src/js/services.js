@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────
- * Cumulus — services layer (data access + business logic)
+ * Huddle — services layer (data access + business logic)
  *
  * This is the seam between the UI (app.js) and the backend (Supabase).
  * It is a **classic deferred script**, exactly like config.js and app.js,

@@ -1,4 +1,4 @@
-/* Cumulus optimized stylesheet */
+/* Huddle optimized stylesheet */
 
 * {
   box-sizing: border-box;
@@ -1031,7 +1031,7 @@ body.no-scroll {
   position: fixed;
   inset: 0;
   z-index: 5000;
-  /* Cumulus's own theme background (day/night-driven, see [data-theme]),
+  /* Huddle's own theme background (day/night-driven, see [data-theme]),
      not a black scrim over a blurred backdrop — signing up/in should read
      as a real themed page, not a modal darkening the app behind it. */
   background: var(--bg);
@@ -4332,12 +4332,12 @@ textarea.gate-input {
      they're reintroduced — cheap insurance against the same bug returning. */
 
   /* .hide-mobile is applied in app.js (landing nav's Features/For Venues
-     links, and the in-app nav's "Cumulus" wordmark) but had NO matching CSS
+     links, and the in-app nav's "Huddle" wordmark) but had NO matching CSS
      rule anywhere in this file — another casualty of the missing @media
      queries. Without it, the landing nav packed logo + 2 links + 2 buttons
      into one unwrapping flex row, overflowing a 390px bar and clipping the
-     "Join Cumulus" button off the right edge. Restore the hide so nav fits:
-     icon + Log in + Join Cumulus. */
+     "Join Huddle" button off the right edge. Restore the hide so nav fits:
+     icon + Log in + Join Huddle. */
 
   /* Better borders and padding for mobile to make it fit */
 }

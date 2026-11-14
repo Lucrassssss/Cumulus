@@ -2,7 +2,7 @@
   "name": "cumulus-native",
   "version": "0.1.0",
   "private": true,
-  "description": "iOS + Android beta shells for Cumulus (Capacitor). Loads the live site.",
+  "description": "iOS + Android beta shells for Huddle (Capacitor). Loads the live site.",
   "scripts": {
     "sync": "cap sync",
     "android": "cap open android",
