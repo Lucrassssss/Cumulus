@@ -922,21 +922,30 @@ test.describe("Odd Flock smoke", () => {
     await expect(page.locator("#map-cards .mcard-pos")).toHaveText("2 / 2");
   });
 
-  test("Try colours: palettes switch the accent, persist, and show in Settings", async ({ page }) => {
+  test("Colour themes: Settings swatches switch the accent, persist, and show on the account page", async ({ page }) => {
     await page.goto("/");
     await enterApp(page);
-    await page.click(".pal-fab");
-    await expect(page.locator(".pal-pop .pal-opt")).toHaveCount(7);
+    await expect(page.locator(".pal-fab")).toHaveCount(0);
+    await page.click("#feed-settings-btn");
+    await expect(page.locator("#feed-settings .pal-dotbtn")).toHaveCount(7);
     const accent = () => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--volt").trim());
     const before = await accent();
-    await page.click('.pal-pop [data-palette-opt="glacier"]');
+    await page.click('#feed-settings [data-palette-opt="glacier"]');
     expect(await page.evaluate(() => document.documentElement.dataset.palette)).toBe("glacier");
     expect(await accent()).not.toBe(before);
+    await expect(page.locator("#feed-settings [data-palette-name]")).toHaveText("Glacier");
     await page.reload();
     expect(await page.evaluate(() => document.documentElement.dataset.palette)).toBe("glacier");
     await enterApp(page);
-    await page.click("#feed-settings-btn");
-    await expect(page.locator('#feed-settings .pal-dotbtn.on')).toHaveAttribute("data-palette-opt", "glacier");
+    await page.evaluate(() => {
+      state.userId = "test-user-uuid";
+      state.profileName = "Test User";
+      openAccount();
+    });
+    await expect(page.locator('#ac-theme .pal-opt.on')).toHaveAttribute("data-palette-opt", "glacier");
+    // A theme saved on the account wins over this device's.
+    await page.evaluate(() => applyAccountPalette({ user_metadata: { palette: "ember" } }));
+    expect(await page.evaluate(() => document.documentElement.dataset.palette)).toBe("ember");
     await page.evaluate(() => setPalette("volt"));
     expect(await page.evaluate(() => document.documentElement.hasAttribute("data-palette"))).toBe(false);
   });

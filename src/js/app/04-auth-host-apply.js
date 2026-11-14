@@ -30,6 +30,7 @@ async function verifyGateCode() {
 
   // We now hold a real session. The DB trigger has created the profile row.
   state.userId = res.userId;
+  authCurrentUser().then(applyAccountPalette).catch(() => {});
   let profile = await loadUserProfile(res.userId);
 
   if (p.isLogin) {

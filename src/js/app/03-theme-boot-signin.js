@@ -55,9 +55,11 @@ try {
     });
 } catch (e) {}
 
-// ── Colour palettes (trial) ───────────────────────────────────────────────
-// Swaps the accent family (data-palette on <html>, see v2.css). Saved per
-// device. Reachable from the "Try colours" button and Settings.
+// ── Colour themes ────────────────────────────────────────────────────────
+// Swaps the accent family (data-palette on <html>, see v2.css). Chosen from
+// Settings (swatches) or the account page (full list). Saved on the device
+// (applied before first paint by the head script) and, when signed in, on
+// the account's auth metadata so it follows the member to other devices.
 const PALETTE_KEY = "cu_palette";
 const PALETTES = [
   ["volt", "Volt", "Electric lime. The current look.", ["#d4ff3f", "#ff3d6e", "#8b5cff", "#08080a"]],
@@ -71,9 +73,18 @@ const PALETTES = [
 function getPalette() {
   try { return localStorage.getItem(PALETTE_KEY) || "volt"; } catch (e) { return "volt"; }
 }
-function setPalette(key) {
+let _palSaveT = 0;
+function setPalette(key, opts = {}) {
   if (!PALETTES.some((p) => p[0] === key)) return;
   try { localStorage.setItem(PALETTE_KEY, key); } catch (e) {}
+  if (!opts.fromAccount && state.userId && typeof authSaveMeta === "function") {
+    clearTimeout(_palSaveT);
+    _palSaveT = setTimeout(() => authSaveMeta({ palette: key }), 600);
+  }
+  document.querySelectorAll("[data-palette-name]").forEach((el) => {
+    const p = PALETTES.find((x) => x[0] === key);
+    if (p) el.textContent = p[1];
+  });
   const root = document.documentElement;
   root.classList.add("palette-switching");
   setTimeout(() => root.classList.remove("palette-switching"), 450);
@@ -84,6 +95,11 @@ function setPalette(key) {
     b.classList.toggle("on", on);
     b.setAttribute("aria-checked", on ? "true" : "false");
   });
+}
+// A signed-in member's saved theme wins over this device's.
+function applyAccountPalette(user) {
+  const k = user && user.user_metadata && user.user_metadata.palette;
+  if (k && k !== getPalette()) setPalette(k, { fromAccount: true });
 }
 function paletteListHtml() {
   const cur = getPalette();
@@ -127,7 +143,7 @@ function appearanceMenuHtml() {
           </button>`,
       )
       .join("")}</div>
-    <div class="set-group-title">Colours</div>
+    <div class="set-group-title">Colour theme · <span data-palette-name>${(PALETTES.find((x) => x[0] === getPalette()) || PALETTES[0])[1]}</span></div>
     <div class="pal-row" role="radiogroup" aria-label="Colours">${paletteDotsHtml()}</div>`;
 }
 
@@ -355,6 +371,7 @@ async function start() {
   } catch (e) {}
 
   if (authUser) {
+    applyAccountPalette(authUser);
     let profile = await loadUserProfile(authUser.id).catch(() => null);
     if (!profile) {
       // Authenticated but profile fetch failed (offline). Restore from cache.

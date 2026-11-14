@@ -315,45 +315,6 @@ function delightEventJump(container) {
   document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", start) : start();
 })();
 
-// ── 8. "Try colours": a floating button to flick through palettes ─────────
-// Trial feature while the brand colour is being chosen. Remove this block
-// (and .pal-fab in v2.css) once one is picked.
-(function paletteTrial() {
-  const fab = document.createElement("button");
-  fab.type = "button";
-  fab.className = "pal-fab";
-  fab.setAttribute("aria-haspopup", "true");
-  fab.setAttribute("aria-expanded", "false");
-  fab.innerHTML = '<span class="pal-dot" aria-hidden="true"></span>Try colours';
-  let pop = null;
-  const close = () => {
-    if (!pop) return;
-    pop.remove();
-    pop = null;
-    fab.setAttribute("aria-expanded", "false");
-    document.removeEventListener("pointerdown", outside, true);
-    document.removeEventListener("keydown", esc);
-  };
-  const outside = (e) => {
-    if (pop && !pop.contains(e.target) && !fab.contains(e.target)) close();
-  };
-  const esc = (e) => e.key === "Escape" && close();
-  fab.onclick = () => {
-    if (pop) return close();
-    pop = document.createElement("div");
-    pop.className = "pal-pop";
-    pop.setAttribute("role", "dialog");
-    pop.setAttribute("aria-label", "Try colours");
-    pop.innerHTML = `<h4>Try a colour scheme</h4><div role="radiogroup" aria-label="Colours">${paletteListHtml()}</div>`;
-    document.body.appendChild(pop);
-    fab.setAttribute("aria-expanded", "true");
-    document.addEventListener("pointerdown", outside, true);
-    document.addEventListener("keydown", esc);
-  };
-  const add = () => document.body.appendChild(fab);
-  document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", add) : add();
-})();
-
 // ── Boot ──────────────────────────────────────────────────────────────────
 // Lives in the LAST app script so every function start() can reach is
 // already defined. Never let an unexpected rejection leave a blank screen.

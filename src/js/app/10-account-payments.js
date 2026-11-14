@@ -112,6 +112,12 @@ function renderAccount() {
       </div>
     </section>
 
+    <section class="ac-card" id="ac-theme" aria-labelledby="ac-theme-h">
+      <div class="ac-card-head"><h2 id="ac-theme-h">Colour theme</h2><span data-palette-name>${(PALETTES.find((x) => x[0] === getPalette()) || PALETTES[0])[1]}</span></div>
+      <p class="ac-empty">Pick the colours Odd Flock uses for you. Saved to your account, so it follows you to any device.</p>
+      <div class="pal-grid" role="radiogroup" aria-label="Colour theme">${paletteListHtml()}</div>
+    </section>
+
     <section class="ac-card" aria-labelledby="ac-prefs-h">
       <div class="ac-card-head"><h2 id="ac-prefs-h">Privacy</h2></div>
       ${privacyMenuHtml().replace('<div class="set-group-title">Privacy</div>', "")}

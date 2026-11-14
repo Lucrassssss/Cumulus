@@ -101,6 +101,16 @@ async function authVerifyCode(email, token) {
     return { ok: false, error: "unavailable" };
   }
 }
+/* Save small per-member preferences (e.g. { palette }) on the auth user's
+ * metadata, so they follow the member to any device. No table needed. */
+async function authSaveMeta(data) {
+  try {
+    const { error } = await sb.auth.updateUser({ data });
+    return !error;
+  } catch (e) {
+    return false;
+  }
+}
 /* The current signed-in auth user (or null). Reads the persisted session, so it
  * works offline until the stored token expires. */
 async function authCurrentUser() {

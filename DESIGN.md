@@ -50,6 +50,15 @@ correction H so they still scan), empty states (Home, Tickets, map, not
 found), the sign-up sheet and the footer. Helpers: `brandMark(cls)`,
 `brandMarkInner()`, `brandEmptyHtml(text)`.
 
+**Colour themes:** seven accent families (Volt default, Crest, Ember, Krill,
+Aurora, Glacier, Tuxedo), set by `data-palette` on `<html>` and defined at the
+end of `v2.css`. Each overrides only the accent tokens (`--volt`, `--accent`,
+`--cta-*`, `--hot`, `--uv`); Aurora and Glacier also tint the background. The
+penguins' yellow follows the accent. Picked from swatches in Settings or the
+Colour theme card on the account page (`PALETTES`, `setPalette()` in `03`).
+Saved per device (applied before first paint in the head script) and, when
+signed in, on the auth user's metadata so it follows the member.
+
 **Source of truth:** `src/css/v2.css` (loaded after `styles.css`; redefines every
 token the legacy cascade reads, then restyles each surface). The v1
 "Parchment & Gold" notes further down are kept for history only.
