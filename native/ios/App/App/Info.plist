@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>Huddle</string>
+        <string>Odd Flock</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -44,7 +44,7 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Huddle uses your location to show events near you.</string>
+	<string>Odd Flock uses your location to show events near you.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Hosts use the camera to scan tickets at the door.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>

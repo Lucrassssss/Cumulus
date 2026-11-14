@@ -1,6 +1,6 @@
-# Huddle — Go-Live Runbook
+# Odd Flock — Go-Live Runbook
 
-Single source of truth for taking Huddle live. Everything already done is
+Single source of truth for taking Odd Flock live. Everything already done is
 checked off; the open items are all **Supabase-dashboard actions** that no API,
 connector, or tool can perform for you.
 
@@ -11,7 +11,7 @@ connector, or tool can perform for you.
 **Without this one dashboard change, every payment will succeed and every
 ticket will silently fail to be created.** Checkout just moved off Stripe's
 pre-built Checkout Session (which couldn't be fully themed to match
-Huddle's dark/light design — the input card always rendered on a fixed
+Odd Flock's dark/light design — the input card always rendered on a fixed
 light surface, a genuine Stripe product constraint, not a bug) onto a
 custom Payment Element form built on raw PaymentIntents. That means
 `stripe-webhook`'s trigger event changed:
@@ -62,7 +62,7 @@ The app asks for a code, so the template must include `{{ .Token }}`.
 **Authentication → Emails → Templates → "Magic Link"** → set the body to:
 
 ```html
-<h2>Your Huddle sign-in code</h2>
+<h2>Your Odd Flock sign-in code</h2>
 <p>Enter this 6-digit code in the app:</p>
 <p style="font-size:28px;font-weight:700;letter-spacing:6px;">{{ .Token }}</p>
 <p style="color:#888;font-size:13px;">
@@ -86,7 +86,7 @@ The built-in mailer is test-only and caps at a few emails/hour (that's the
   | Field        | Value                                                                            |
   | ------------ | -------------------------------------------------------------------------------- |
   | Sender email | `onboarding@resend.dev` (test) or `noreply@cumulusapp.co` (once domain verified) |
-  | Sender name  | `Huddle`                                                                        |
+  | Sender name  | `Odd Flock`                                                                        |
   | Host         | `smtp.resend.com`                                                                |
   | Port         | `465`                                                                            |
   | Username     | `resend`                                                                         |
@@ -126,7 +126,7 @@ Claude with the Supabase + Resend connectors enabled. If this chat's connectors
 are stuck disabled, open a **new chat** and paste:
 
 > Using the Supabase and Resend connectors, for Supabase project ref
-> `xyzrvgbdnevllwvxqcka`: (1) create a Resend API key named "Huddle SMTP" with
+> `xyzrvgbdnevllwvxqcka`: (1) create a Resend API key named "Odd Flock SMTP" with
 > sending permission and show it to me; (2) delete the Supabase auth user
 > `a second test account` (keep the owner account, my admin); (3) check my auth
 > logs and tell me if the email rate limit has reset. I'll paste the key into
@@ -169,7 +169,7 @@ are stuck disabled, open a **new chat** and paste:
 - **Stripe Embedded Checkout — buyer never leaves the app.** Checkout used
   to redirect to a Stripe-hosted page; `create-checkout-session` now
   creates the session in `ui_mode: "embedded"` and the buyer pays inside a
-  Stripe.js-mounted iframe right on Huddle's own checkout screen (same
+  Stripe.js-mounted iframe right on Odd Flock's own checkout screen (same
   approach as Eventbrite's in-page checkout). See docs/history.md →
   "Embedded Checkout — the buyer never leaves cumulus". No functional
   change to how tickets get created — `stripe-webhook` still does that,

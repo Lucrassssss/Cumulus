@@ -84,7 +84,7 @@ Deno.serve(async (req: Request) => {
 
   const resendKey = Deno.env.get("RESEND_API_KEY");
   if (!resendKey) return json({ error: "Email isn't set up yet" }, 500);
-  const from = Deno.env.get("NOTIFY_FROM_EMAIL") || "Huddle Tickets <onboarding@resend.dev>";
+  const from = Deno.env.get("NOTIFY_FROM_EMAIL") || "Odd Flock Tickets <onboarding@resend.dev>";
 
   // Money: price_per_ticket + platform_fee = total, per seat.
   const sub = tickets.reduce((s, t) => s + Number(t.price_per_ticket || 0), 0);
@@ -137,10 +137,10 @@ Deno.serve(async (req: Request) => {
         ${row("Total", total > 0 ? gbp(total) : "Free", true)}
         ${total > 0 ? row("Payment", "Card · processed securely by Stripe") : ""}
       </table>
-      <div style="font-size:12px;color:#8a8792;margin-top:14px;line-height:1.5;">Tickets: ${tickets.map((t) => `<span style="font-family:ui-monospace,Menlo,monospace;">${esc(t.ticket_id)}</span>`).join(", ")}<br/>Can't make it? Send your ticket to a friend, or return it for a refund up to 24 hours before — all from your Huddle wallet. If you send a ticket on, any refund still comes back to the card you paid with.</div>
+      <div style="font-size:12px;color:#8a8792;margin-top:14px;line-height:1.5;">Tickets: ${tickets.map((t) => `<span style="font-family:ui-monospace,Menlo,monospace;">${esc(t.ticket_id)}</span>`).join(", ")}<br/>Can't make it? Send your ticket to a friend, or return it for a refund up to 24 hours before — all from your Odd Flock wallet. If you send a ticket on, any refund still comes back to the card you paid with.</div>
     </div>
   </div>
-  <div style="max-width:520px;margin:12px auto 0;text-align:center;font-size:11px;color:#8a8792;">Huddle · London · Prices include all fees — no surprises.</div>
+  <div style="max-width:520px;margin:12px auto 0;text-align:center;font-size:11px;color:#8a8792;">Odd Flock · London · Prices include all fees — no surprises.</div>
 </div>`;
 
   const r = await fetch("https://api.resend.com/emails", {

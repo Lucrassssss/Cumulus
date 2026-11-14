@@ -191,7 +191,7 @@ function openTransferSheet(ticketId) {
       <ul class="tf-list">
         <li>${ic('<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>')}<span><b>You'll get a link to send them.</b> When they claim it, the ticket and its QR move to their wallet and leave yours.</span></li>
         <li class="key">${ic('<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>')}<span><b>Refunds stay with ${received ? buyer : "you"}.</b> If the event is cancelled or the ticket is returned, the money goes back to ${received ? `${buyer}'s` : "your"} original card — never to the person holding the ticket.</span></li>
-        <li>${ic('<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>')}<span><b>Face value only.</b> Any money between you is between you — Huddle never charges for a transfer.</span></li>
+        <li>${ic('<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>')}<span><b>Face value only.</b> Any money between you is between you — Odd Flock never charges for a transfer.</span></li>
       </ul>
       <button class="v-btn wide" onclick="closeLocationSheet(true);transferMyTicket('${escapeHtml(t.ticketId)}','${safeTitle}')">Got it — create the link</button>
       <div class="cg-note"><a href="terms.html#transfers" target="_blank">Full transfer &amp; refund policy</a></div>
@@ -1088,7 +1088,7 @@ function exportGuestlistCsv() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${(ev?.title || "huddle-event").replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-guestlist.csv`;
+  a.download = `${(ev?.title || "oddflock-event").replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-guestlist.csv`;
   document.body.appendChild(a);
   a.click();
   a.remove();

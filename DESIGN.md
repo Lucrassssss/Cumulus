@@ -1,5 +1,5 @@
 ---
-name: Huddle
+name: Odd Flock
 description: London events app — "Afterglow" system (v2, Nov 2026)
 colors:
   volt: "#d4ff3f"
@@ -27,14 +27,14 @@ rounded:
   pill: "999px"
 ---
 
-# Design System: Huddle (formerly Cumulus) v2 — "Afterglow"
+# Design System: Odd Flock (formerly Cumulus) v2 — "Afterglow"
 
 ## Brand mark
 
 Three penguins standing close: two emperors (one head bowed, one tall) and a
 rockhopper turned in to face them. Flat silhouettes in a linocut style; the
 only colour is the yellow (Volt) on the emperors' neck patches and the
-rockhopper's crest. In the app it's `HUDDLE_MARK` (`01-constants.js`):
+rockhopper's crest. In the app it's `BRAND_MARK` (`01-constants.js`):
 `currentColor` paints the birds, `--hm-cut` the gaps between them (set it to
 whatever sits behind), `--hm-patch` the yellow. App icons and the share image
 in `assets/` are rendered from the same drawing.

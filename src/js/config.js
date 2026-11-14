@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────
- * Huddle — runtime configuration
+ * Odd Flock — runtime configuration
  *
  * IMPORTANT (read before "hiding" these):
  *   This is a static, client-only PWA. Anything the browser runs is shipped

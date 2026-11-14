@@ -100,11 +100,11 @@ Deno.serve(async (req: Request) => {
         <tr><td style="padding:4px 12px 4px 0;color:#666;">Price</td><td>${escapeHtml(price)}</td></tr>
       </table>
       <p style="margin:20px 0 8px;color:#666;font-size:13px;">
-        This is a notification only. Sign in to the Huddle admin account and
+        This is a notification only. Sign in to the Odd Flock admin account and
         open the Review tab to approve or reject it.
       </p>
       <p style="margin:0;">
-        <a href="${APP_URL}">Open Huddle →</a>
+        <a href="${APP_URL}">Open Odd Flock →</a>
       </p>
     </div>`;
 
@@ -127,8 +127,8 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify({
         // Resend's shared sandbox sender — works with zero DNS setup.
         // Swap for a verified sending domain once one exists, e.g.
-        // "Huddle Admin <notifications@cumulusapp.co>".
-        from: "Huddle Admin <onboarding@resend.dev>",
+        // "Odd Flock Admin <notifications@cumulusapp.co>".
+        from: "Odd Flock Admin <onboarding@resend.dev>",
         to: [adminEmail],
         subject: `New event pending review: ${title}`,
         html,

@@ -23,7 +23,7 @@ async function loadRealEvents(attempt = 0) {
         if (!state.eventsLoadError && ["feed", "browse"].includes(state.view)) renderView();
       }, 1500 * 2 ** attempt);
     } else {
-      showToast("Couldn't reach Huddle — check your connection", "error");
+      showToast("Couldn't reach Odd Flock — check your connection", "error");
     }
     return;
   }
@@ -316,7 +316,7 @@ function renderNav() {
     ];
     navContainer.innerHTML = `
       <div class="top-bar">
-        <div class="logo-wrap" onclick="goFeed()" role="button" tabindex="0" aria-label="Huddle home"><span class="feed-mark" aria-hidden="true">${HUDDLE_MARK}</span><span class="logo">huddle</span></div>
+        <div class="logo-wrap" onclick="goFeed()" role="button" tabindex="0" aria-label="Odd Flock home"><span class="feed-mark" aria-hidden="true">${BRAND_MARK}</span><span class="logo">odd flock</span></div>
         <input id="search-input" class="search-input" placeholder="Search the map…" oninput="onSearchInput()" autocomplete="off"/>
         <button id="filter-toggle-btn" class="filter-toggle-btn flt-btn" onclick="toggleMapFiltersPanel()" aria-label="Filters" aria-expanded="false" aria-controls="map-filters">
           <svg class="flt-ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle class="k k1" cx="8" cy="6" r="2.4"/><circle class="k k2" cx="16" cy="12" r="2.4"/><circle class="k k3" cx="10" cy="18" r="2.4"/></svg>
@@ -538,7 +538,7 @@ function updateEventUrlAndMeta(ev) {
   try {
     const url = `${location.pathname}?event=${encodeURIComponent(ev.id)}`;
     history.replaceState(null, "", url);
-    document.title = `${ev.title} — Huddle`;
+    document.title = `${ev.title} — Odd Flock`;
     let desc = document.querySelector('meta[name="description"]');
     if (!desc) {
       desc = document.createElement("meta");
@@ -547,14 +547,14 @@ function updateEventUrlAndMeta(ev) {
     }
     desc.setAttribute(
       "content",
-      `${ev.title} · ${ev.date} · ${ev.venue}${ev.area ? ", " + ev.area : ""} — find it on Huddle's live map of London community events.`,
+      `${ev.title} · ${ev.date} · ${ev.venue}${ev.area ? ", " + ev.area : ""} — find it on Odd Flock's live map of London community events.`,
     );
   } catch (e) {}
 }
 function resetEventUrlAndMeta() {
   try {
     history.replaceState(null, "", location.pathname);
-    document.title = "Huddle — London's live community event map";
+    document.title = "Odd Flock — London's live community event map";
     const desc = document.querySelector('meta[name="description"]');
     if (desc)
       desc.setAttribute(

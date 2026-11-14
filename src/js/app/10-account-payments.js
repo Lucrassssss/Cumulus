@@ -236,7 +236,7 @@ async function sharePlans(reset) {
   if (reset) {
     showToast("New link made — the old one no longer works", "success");
   } else if (navigator.share) {
-    navigator.share({ title: "My plans on Huddle", text: "Here's what I'm going to — come along:", url }).catch(() => {});
+    navigator.share({ title: "My plans on Odd Flock", text: "Here's what I'm going to — come along:", url }).catch(() => {});
   } else if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(url).then(
       () => showToast("Link copied — send it to your friends", "success"),
@@ -498,7 +498,7 @@ function getCumulusFee(ticketPrice) {
   if (ticketPrice <= 71) return 3.5;
   return 4.5;
 }
-// All-in price: ticket + the mandatory Huddle booking fee. UK law (DMCC
+// All-in price: ticket + the mandatory Odd Flock booking fee. UK law (DMCC
 // Act 2024, drip-pricing ban, in force Apr 2025) requires compulsory fees
 // in the headline price — and it's what Dice does: one price, no surprises
 // at checkout. Use this anywhere a price is shown before checkout.
@@ -737,7 +737,7 @@ async function registerFree(evId) {
   showConfirmedAfterPurchase();
 }
 
-// Maps Huddle's current light/dark palette onto Stripe's Elements
+// Maps Odd Flock's current light/dark palette onto Stripe's Elements
 // Appearance API (theme + variables + fonts) so the payment form reads as
 // part of the same page instead of a foreign white card dropped into a
 // themed UI. Genuinely applies here — this is the raw Elements API
@@ -1175,7 +1175,7 @@ function downloadICS(evId) {
   const ics = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Huddle//Events//EN",
+    "PRODID:-//Odd Flock//Events//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",
@@ -1184,7 +1184,7 @@ function downloadICS(evId) {
     `DTSTART:${_icsDate(start)}`,
     `DTEND:${_icsDate(end)}`,
     `SUMMARY:${_icsEsc(ev.title)}`,
-    `DESCRIPTION:${_icsEsc(`${ev.desc || ""}\n\nHosted by ${ev.host || "Huddle"}\nYour ticket: ${_calLink(ev)}`)}`,
+    `DESCRIPTION:${_icsEsc(`${ev.desc || ""}\n\nHosted by ${ev.host || "Odd Flock"}\nYour ticket: ${_calLink(ev)}`)}`,
     `LOCATION:${_icsEsc(_calWhere(ev))}`,
     `URL:${_calLink(ev)}`,
     "BEGIN:VALARM",

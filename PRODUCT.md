@@ -14,11 +14,11 @@ Londoners discovering local community events near them — casual users who open
 
 ## Product Purpose
 
-Huddle surfaces community events happening around London on an interactive map, so people can find things worth showing up to and actually go. The day/night theme, drifting clouds, and skyline motif tie the interface to the city and time of day the user is actually in, reinforcing "your city, your people" as more than a tagline.
+Odd Flock surfaces community events happening around London on an interactive map, so people can find things worth showing up to and actually go. The day/night theme, drifting clouds, and skyline motif tie the interface to the city and time of day the user is actually in, reinforcing "your city, your people" as more than a tagline.
 
 ## Positioning
 
-A live map of your city's community, not a listings feed — Huddle shows what's happening near you right now, tied to real place and real time, so finding an event feels like noticing your neighborhood rather than searching a database.
+A live map of your city's community, not a listings feed — Odd Flock shows what's happening near you right now, tied to real place and real time, so finding an event feels like noticing your neighborhood rather than searching a database.
 
 ## Brand Personality
 
@@ -42,4 +42,4 @@ Standard WCAG AA — contrast, keyboard navigation, and reduced-motion support (
 
 ## Business Model (from the founding Master Blueprint)
 
-Huddle is bootstrapped and cash-flowing, not VC-funded — no "100M valuation mandate" shaping product decisions. Revenue is a flat £1.50–£4.50 booking fee paid by the buyer (see `getCumulusFee()` in `app.js`); hosts keep 100% of their base ticket price, always. Free community events cost the platform nothing to the host and nothing to attend — treated as a loss-leader for map density and user acquisition, not a lesser-tier product. The interface stays ad-free: no banners, no pop-ups, no funnels; monetization beyond the booking fee is meant to happen off-screen (experiential brand sponsorships, e.g. a brewery subsidizing a night's drinks) rather than in the UI itself — **not built as a feature in this codebase**, since the blueprint describes it as a manual sales/ops process, not a product surface. Expansion (a "City Director" per region, a specific London launch corridor, a 100-event launch target) is go-to-market strategy, not something the app enforces in code.
+Odd Flock is bootstrapped and cash-flowing, not VC-funded — no "100M valuation mandate" shaping product decisions. Revenue is a flat £1.50–£4.50 booking fee paid by the buyer (see `getCumulusFee()` in `app.js`); hosts keep 100% of their base ticket price, always. Free community events cost the platform nothing to the host and nothing to attend — treated as a loss-leader for map density and user acquisition, not a lesser-tier product. The interface stays ad-free: no banners, no pop-ups, no funnels; monetization beyond the booking fee is meant to happen off-screen (experiential brand sponsorships, e.g. a brewery subsidizing a night's drinks) rather than in the UI itself — **not built as a feature in this codebase**, since the blueprint describes it as a manual sales/ops process, not a product surface. Expansion (a "City Director" per region, a specific London launch corridor, a 100-event launch target) is go-to-market strategy, not something the app enforces in code.

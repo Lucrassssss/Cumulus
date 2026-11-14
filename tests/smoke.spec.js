@@ -67,7 +67,7 @@ async function seedFixtureEvent(page) {
   });
 }
 
-test.describe("Huddle smoke", () => {
+test.describe("Odd Flock smoke", () => {
   // Hermetic: the suite runs against built-in fixtures, never the live
   // Supabase project, Mapbox, Stripe or CDNs. Block every request that isn't
   // to the local test server, so results are identical on a laptop, in a

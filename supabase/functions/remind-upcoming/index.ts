@@ -85,7 +85,7 @@ Deno.serve(async (req: Request) => {
 
   const resendKey = Deno.env.get("RESEND_API_KEY");
   if (!resendKey) return json({ error: "RESEND_API_KEY not set" }, 500);
-  const sender = Deno.env.get("NOTIFY_FROM_EMAIL") || "Huddle <onboarding@resend.dev>";
+  const sender = Deno.env.get("NOTIFY_FROM_EMAIL") || "Odd Flock <onboarding@resend.dev>";
 
   const jobs = [...pairs.values()].filter((p) => /@/.test(users.get(p.userId)?.email || ""));
   let sent = 0;
@@ -108,7 +108,7 @@ Deno.serve(async (req: Request) => {
   <p style="margin:0 0 4px;font-size:15px;"><strong>${esc(fmtLondon(ev.start_time))}</strong></p>
   <p style="margin:0 0 22px;font-size:15px;color:#3b3a41;">${esc(where)}</p>
   <a href="${link}" style="display:inline-block;background:#0b0b0d;color:#d4ff3f;text-decoration:none;font-weight:700;padding:14px 22px;border-radius:999px;">Your ticket &amp; directions →</a>
-  <p style="margin:28px 0 0;font-size:12px;color:#6d6b74;">Hi ${esc(u.name || "there")} — can't make it any more? Send your ticket to a friend from your Huddle wallet.</p>
+  <p style="margin:28px 0 0;font-size:12px;color:#6d6b74;">Hi ${esc(u.name || "there")} — can't make it any more? Send your ticket to a friend from your Odd Flock wallet.</p>
 </div>`,
       };
     });

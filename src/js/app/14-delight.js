@@ -1,4 +1,4 @@
-// ─── Delight: the small things that make Huddle feel alive ───────────────
+// ─── Delight: the small things that make Odd Flock feel alive ───────────────
 // Everything here is decorative and self-contained. Each effect:
 //   • plays once where it matters (the Home "level load" once per visit),
 //   • uses transform/opacity only (no layout thrash),
@@ -161,7 +161,7 @@ function saveBurst(btn) {
   document.addEventListener("pointerleave", () => (reset(card), (card = null)), { passive: true });
 })();
 
-// ── 5. The huddle easter egg ──────────────────────────────────────────────────
+// ── 5. The flock easter egg ──────────────────────────────────────────────────
 // Tap the penguins: they hop. Keep going and they get excited.
 let _orbTaps = [];
 document.addEventListener("click", (e) => {
@@ -177,7 +177,7 @@ document.addEventListener("click", (e) => {
     mark.classList.add("party");
     saveBurst(mark);
     setTimeout(() => saveBurst(mark), 140);
-    showToast("You found the huddle. They like you.", "success");
+    showToast("You found the flock. They like you.", "success");
   } else mark.classList.add("spin");
 }, true);
 

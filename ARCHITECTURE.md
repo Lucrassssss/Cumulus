@@ -1,6 +1,6 @@
 # Architecture
 
-Huddle is a **static, client-only PWA**: vanilla JavaScript, no framework,
+Odd Flock is a **static, client-only PWA**: vanilla JavaScript, no framework,
 no bundler, no app server. The browser does all the rendering. Supabase
 provides auth, Postgres (with RLS), RPCs, cron and Edge Functions. Stripe
 handles payments, Mapbox the map, and Resend the email.

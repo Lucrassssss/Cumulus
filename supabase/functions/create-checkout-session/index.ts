@@ -165,7 +165,7 @@ Deno.serve(async (req: Request) => {
   // code they were actually given, never enumerate an event's codes. A
   // discount reduces the effective ticket price itself — the host still
   // receives 100% of whatever that discounted price is via the existing
-  // payout mechanism; only Huddle's flat platform fee is recomputed off
+  // payout mechanism; only Odd Flock's flat platform fee is recomputed off
   // the new, lower price.
   let price = listPrice;
   let promoCodeId: string | null = null;
@@ -230,7 +230,7 @@ Deno.serve(async (req: Request) => {
     "metadata[price_per_ticket]": String(price),
     "metadata[platform_fee]": String(fee),
     "metadata[marketing_opt_in]": marketingOptIn ? "true" : "false",
-    description: ev.title || "Huddle ticket",
+    description: ev.title || "Odd Flock ticket",
   });
   if (promoCodeId) params.append("metadata[promo_code_id]", promoCodeId);
   if (receiptEmail) params.append("receipt_email", receiptEmail);
