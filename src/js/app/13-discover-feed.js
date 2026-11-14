@@ -1000,7 +1000,7 @@ function renderFeed() {
     <div class="feed-layout">
     <div class="feed-hero">
         <div class="feed-kicker"><span class="pulse"></span>${escapeHtml(kicker)}${live.length ? ` · <b data-countup>${live.length}</b> live now` : ""}</div>
-        <h1 class="feed-h1">${sprayLastWord(hello)}</h1>
+        <h1 class="feed-h1">${escapeHtml(hello)}</h1>
         <div class="feed-search-row">
           <label class="feed-search">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>

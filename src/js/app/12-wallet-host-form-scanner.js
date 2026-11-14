@@ -312,7 +312,7 @@ function renderHostView() {
   return `<div class="hx2${dup ? " is-dup" : ""}">
     <header class="hx2-head">
       <div class="v-kicker">${dup ? "Run it back" : "Host · 0% platform fee"}</div>
-      <h1 class="hx2-title">${dup ? "Same night,<br/>new date." : 'Make a<br/><span class="spray-word">night</span><i>.</i>'}</h1>
+      <h1 class="hx2-title">${dup ? "Same night,<br/>new date." : "Make a<br/>night<i>.</i>"}</h1>
       <p class="hx2-sub">${dup ? "Everything's carried over — pick a new date and it's ready to go." : "Four quick bits and it's on London's live map. You keep 100% of the ticket price."}</p>
       <div id="host-type-notice" class="hx2-notice">${
         state.isAdmin
