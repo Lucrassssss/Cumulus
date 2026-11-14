@@ -922,6 +922,25 @@ test.describe("Odd Flock smoke", () => {
     await expect(page.locator("#map-cards .mcard-pos")).toHaveText("2 / 2");
   });
 
+  test("Try colours: palettes switch the accent, persist, and show in Settings", async ({ page }) => {
+    await page.goto("/");
+    await enterApp(page);
+    await page.click(".pal-fab");
+    await expect(page.locator(".pal-pop .pal-opt")).toHaveCount(7);
+    const accent = () => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--volt").trim());
+    const before = await accent();
+    await page.click('.pal-pop [data-palette-opt="glacier"]');
+    expect(await page.evaluate(() => document.documentElement.dataset.palette)).toBe("glacier");
+    expect(await accent()).not.toBe(before);
+    await page.reload();
+    expect(await page.evaluate(() => document.documentElement.dataset.palette)).toBe("glacier");
+    await enterApp(page);
+    await page.click("#feed-settings-btn");
+    await expect(page.locator('#feed-settings .pal-dotbtn.on')).toHaveAttribute("data-palette-opt", "glacier");
+    await page.evaluate(() => setPalette("volt"));
+    expect(await page.evaluate(() => document.documentElement.hasAttribute("data-palette"))).toBe(false);
+  });
+
   test("appearance: light / dark / system preference applies, persists and follows the OS", async ({
     page,
   }) => {

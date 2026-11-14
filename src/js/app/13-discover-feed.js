@@ -977,7 +977,7 @@ function renderFeed() {
   return `<section class="feed">
     <header class="feed-head">
       <div class="feed-brand" onclick="goFeed()" role="button" tabindex="0" aria-label="Odd Flock home">
-        <span class="feed-mark" aria-hidden="true">${BRAND_MARK}</span><span>odd flock</span>
+        <span class="feed-mark" aria-hidden="true">${BRAND_MARK}</span><span>Odd Flock</span>
       </div>
       <div class="feed-head-actions">
         <button class="icon-pill" onclick="goBrowse()" aria-label="Open map">

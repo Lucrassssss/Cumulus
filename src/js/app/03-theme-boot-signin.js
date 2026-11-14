@@ -55,6 +55,55 @@ try {
     });
 } catch (e) {}
 
+// ── Colour palettes (trial) ───────────────────────────────────────────────
+// Swaps the accent family (data-palette on <html>, see v2.css). Saved per
+// device. Reachable from the "Try colours" button and Settings.
+const PALETTE_KEY = "cu_palette";
+const PALETTES = [
+  ["volt", "Volt", "Electric lime. The current look.", ["#d4ff3f", "#ff3d6e", "#8b5cff", "#08080a"]],
+  ["crest", "Crest", "Rockhopper yellow with a beak-red pop. Warm and golden.", ["#ffc93c", "#ff5a3c", "#7c5cff", "#08080a"]],
+  ["ember", "Ember", "The emperor's orange neck patch. Like a lit doorway at night.", ["#ff9f45", "#ff3d6e", "#6d5cff", "#08080a"]],
+  ["krill", "Krill", "Soft coral pink. Friendly, playful, a bit flirty.", ["#ff7f73", "#e5245a", "#7c5cff", "#08080a"]],
+  ["aurora", "Aurora", "Southern-lights mint on deep night. Fresh and calm.", ["#5cf2c4", "#ff5fa2", "#8b7bff", "#06090a"]],
+  ["glacier", "Glacier", "Ice blue on navy. Cool, sleek, the most penguin.", ["#8cd4ff", "#ff6b8b", "#9a8cff", "#070a10"]],
+  ["tuxedo", "Tuxedo", "Black and white like the birds, with a warm yellow kept for the logo.", ["#f4f2ee", "#ff3d6e", "#8b5cff", "#08080a"]],
+];
+function getPalette() {
+  try { return localStorage.getItem(PALETTE_KEY) || "volt"; } catch (e) { return "volt"; }
+}
+function setPalette(key) {
+  if (!PALETTES.some((p) => p[0] === key)) return;
+  try { localStorage.setItem(PALETTE_KEY, key); } catch (e) {}
+  const root = document.documentElement;
+  root.classList.add("palette-switching");
+  setTimeout(() => root.classList.remove("palette-switching"), 450);
+  if (key === "volt") root.removeAttribute("data-palette");
+  else root.setAttribute("data-palette", key);
+  document.querySelectorAll("[data-palette-opt]").forEach((b) => {
+    const on = b.dataset.paletteOpt === key;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-checked", on ? "true" : "false");
+  });
+}
+function paletteListHtml() {
+  const cur = getPalette();
+  return PALETTES.map(
+    ([k, n, d, sw]) =>
+      `<button type="button" role="radio" class="pal-opt${cur === k ? " on" : ""}" data-palette-opt="${k}" aria-checked="${cur === k}" onclick="setPalette('${k}')">
+        <span class="pal-sw" aria-hidden="true">${sw.map((c) => `<i style="background:${c}"></i>`).join("")}</span>
+        <span><b>${n}</b><span>${d}</span></span>
+      </button>`,
+  ).join("");
+}
+
+function paletteDotsHtml() {
+  const cur = getPalette();
+  return PALETTES.map(
+    ([k, n, , sw]) =>
+      `<button type="button" role="radio" class="pal-dotbtn${cur === k ? " on" : ""}" data-palette-opt="${k}" aria-checked="${cur === k}" aria-label="${n}" title="${n}" onclick="setPalette('${k}')" style="--a:${sw[0]};--b:${sw[1]}"></button>`,
+  ).join("");
+}
+
 // Appearance options for the Settings dropdown on the Discover header —
 // the only place this lives (same pattern as the map's filter dropdown).
 function appearanceMenuHtml() {
@@ -77,7 +126,9 @@ function appearanceMenuHtml() {
             <span class="set-check" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></span>
           </button>`,
       )
-      .join("")}</div>`;
+      .join("")}</div>
+    <div class="set-group-title">Colours</div>
+    <div class="pal-row" role="radiogroup" aria-label="Colours">${paletteDotsHtml()}</div>`;
 }
 
 // ── Day/night cycle ───────────────────────────────────────────────────────

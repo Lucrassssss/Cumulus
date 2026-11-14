@@ -42,7 +42,7 @@ npm run check
 ```
 
 - `npx playwright install chromium` is needed once, to get a browser for the tests.
-- `npm test` runs the Playwright smoke tests: 80 checks across mobile and desktop.
+- `npm test` runs the Playwright smoke tests: 82 checks across mobile and desktop.
 - `npm run check` is fast: it syntax-checks every script and confirms that
   `index.html` and the service worker only reference files that exist.
 
