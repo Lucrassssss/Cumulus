@@ -130,7 +130,7 @@ function updateMapEmptyState(count) {
          <button class="btn" onclick="clearMapFilters()">Clear filters</button>
        </div>`
     : `<div class="map-empty-card" role="status">
-         <div class="me-emoji" aria-hidden="true"><svg class="ui-ic" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg></div>
+         <div class="me-emoji me-brand" aria-hidden="true">${BRAND_MARK}</div>
          <div class="me-title">No events on the map yet</div>
          <div class="me-sub">Odd Flock is just getting started in London. Be the first to put something on.</div>
          <button class="btn" onclick="openHost()">Host an event</button>

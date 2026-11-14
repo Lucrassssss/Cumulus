@@ -452,6 +452,7 @@ function signupModalHtml(prefillName, prefillEmail) {
           <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">Tell us about your venue or events. Applications are reviewed by our team — approved hosts can post public events, sell tickets, and access host analytics.</div>
         </div>
 
+        <div class="lp-form-mark" aria-hidden="true">${BRAND_MARK}</div>
         <div class="lp-form-eyebrow" id="gate-form-eyebrow">Free to join · Takes 20 seconds</div>
         <h3 class="lp-form-title" id="gate-form-title">Join the flock</h3>
         <p class="lp-form-sub" id="gate-form-sub">Every event on Odd Flock is public — join in seconds, no invite needed.</p>

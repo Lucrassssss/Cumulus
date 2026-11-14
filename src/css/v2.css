@@ -5688,3 +5688,52 @@ html.palette-switching *,html.palette-switching *::before{transition:background-
 .pal-dotbtn{width:30px;height:30px;border-radius:50%;border:0;padding:0;cursor:pointer;background:conic-gradient(from 200deg,var(--a) 0 70%,var(--b) 0);box-shadow:0 0 0 1px var(--line);transition:scale .2s cubic-bezier(.2,1.4,.4,1);}
 .pal-dotbtn:hover{scale:1.08;}
 .pal-dotbtn.on{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--text);}
+
+/* ══ Odd Flock brand: wordmark + the penguins around the site ══════════ */
+html[data-theme]{--font-brand:"Funnel Display","Bricolage Grotesque","Inter",system-ui,sans-serif;}
+html body .feed-brand,html body .logo-wrap .logo,html body #app.map-home .logo-wrap .logo,#cumulus-loader .boot-word{font-family:var(--font-brand) !important;font-weight:800 !important;letter-spacing:-.035em !important;}
+#cumulus-loader .boot-word{font-size:26px;}
+
+/* Ticket glyph (Pay → You're in): penguins in the corner of the ticket */
+html body .tg .tg-mark{color:var(--text-muted);--hm-cut:var(--surface-2);--hm-patch:var(--volt);opacity:.75;transition:color .3s ease,opacity .3s ease;}
+html body .tg.scan .tg-mark{animation:tg-shimmer 1.35s ease-in-out infinite;}
+html body .tg.win .tg-mark{color:var(--volt-ink,#0b0b0d);--hm-cut:var(--volt);--hm-patch:var(--volt);opacity:1;transition-delay:.25s;}
+html body .yi-overlay.still .tg.win .tg-mark{opacity:1;}
+
+/* Get tickets button: the penguins lead the "ADMIT ONE" line */
+.tk-btn-kick{display:flex;align-items:center;gap:5px;}
+.tk-btn-kick > span{overflow:hidden;text-overflow:ellipsis;}
+.tk-btn-kick .brand-mark{width:15px;height:15px;flex:none;color:currentColor;--hm-cut:var(--cta-bg);--hm-patch:currentColor;}
+.tk-btn.have .tk-btn-kick .brand-mark{--hm-cut:color-mix(in srgb,var(--volt) 14%,var(--surface));--hm-patch:var(--volt);}
+
+/* Tickets: a little stamp on the artwork, and a signed-off stub */
+html body .tk-art{position:relative;}
+html body .tk-stamp{position:absolute;top:10px;right:10px;z-index:2;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#111114;color:#f4f2ee;--hm-cut:#111114;--hm-patch:var(--volt);box-shadow:0 4px 14px -6px rgba(0,0,0,.6),0 0 0 1.5px rgba(255,255,255,.14);}
+html body .tk-stamp .brand-mark{width:28px;height:28px;}
+html body .tv-art-top .tk-stamp{position:static;flex:none;margin-left:8px;}
+html body .tv-art-top .tv-seat{margin-left:auto;}
+html body .tv-brand{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font:800 14px/1 var(--font-brand);letter-spacing:-.02em;color:var(--text-muted);--hm-cut:var(--surface);}
+html body .tv-brand .brand-mark{width:22px;height:22px;color:var(--text-muted);}
+
+/* QR: penguins in the middle (codes use error correction H) */
+html body .tv-qr{position:relative;}
+html body .qr-mark{position:absolute;left:50%;top:50%;translate:-50% -50%;width:40px;height:40px;border-radius:10px;background:#fff;display:grid;place-items:center;box-shadow:0 0 0 3px #fff;color:#0b0b0d;--hm-cut:#fff;--hm-patch:#0b0b0d;pointer-events:none;}
+html body .qr-mark .brand-mark{width:32px;height:32px;}
+
+/* Empty states */
+html body .feed-empty-art{display:grid;place-items:center;font-size:0 !important;}
+html body .feed-empty-art .brand-mark,html body .be-mark,html body .me-brand .brand-mark{width:72px;height:72px;color:var(--text-muted);--hm-cut:var(--bg);--hm-patch:var(--volt);opacity:.9;}
+html body .feed-empty-art .brand-mark > g,html body .be-mark > g{animation:hm-sway 3.2s ease-in-out infinite;}
+html body .feed-empty-art .brand-mark .hm-c,html body .be-mark .hm-c{animation-delay:-1.2s;animation-direction:reverse;}
+html body .tk-empty .be-mark{display:block;margin:0 auto 10px;width:64px;height:64px;--hm-cut:var(--surface);}
+html body .brand-empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:48px 20px;text-align:center;color:var(--text-muted);}
+html body .brand-empty p{margin:0;font-weight:600;}
+html body .map-empty-card .me-brand{background:none !important;box-shadow:none !important;width:auto !important;height:auto !important;}
+html body .map-empty-card .me-brand .brand-mark{width:64px;height:64px;--hm-cut:var(--surface);}
+
+/* Sign-up sheet and footer */
+html body .lp-form-mark{display:flex;justify-content:center;margin-bottom:6px;}
+html body .lp-form-mark .brand-mark{width:56px;height:56px;color:var(--text);--hm-cut:var(--surface);}
+html body .ff-brand{display:inline-flex;align-items:center;gap:6px;}
+html body .ff-brand .brand-mark{width:18px;height:18px;color:currentColor;--hm-cut:var(--bg);--hm-patch:currentColor;}
+@media (prefers-reduced-motion:reduce){html body .feed-empty-art .brand-mark > g,html body .be-mark > g,html body .tg .tg-mark{animation:none !important;}}

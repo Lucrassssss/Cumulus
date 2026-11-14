@@ -2179,7 +2179,7 @@ function renderHostProfile() {
   const hostKey = state.selectedHostKey;
   const hostName = state.selectedHostName;
   if (!hostKey || !hostName)
-    return `<div class="empty-state">Host not found.</div>`;
+    return brandEmptyHtml("Host not found.");
   const hostEvents = EVENTS.filter(
     (e) => (e.hostId || e.host) === hostKey || e.host === hostName,
   );
@@ -2370,12 +2370,17 @@ async function claimWaitlistOffer(eventId) {
 // The event page's main button is a ticket: a strip of the event's poster
 // art, a notched perforation, and the stub you tap. 14-delight.js flies it in
 // from the poster you tapped. Built to be reused anywhere a ticket is the CTA.
+// A small branded empty state: the penguins over one line of text.
+function brandEmptyHtml(text) {
+  return `<div class="empty-state brand-empty">${brandMark("be-mark")}<p>${escapeHtml(text)}</p></div>`;
+}
+
 function ticketButtonHtml(ev, { label, kicker, onclick, have = false }) {
   const no = String((_posterSeed(ev.id) % 900) + 100);
   return `<button type="button" class="tk-btn${have ? " have" : ""}" onclick="${onclick}">
     <span class="tk-btn-art ${posterClass(ev)}" style="${posterStyle(ev)}" aria-hidden="true">${posterGlyph(ev)}</span>
     <span class="tk-btn-stub">
-      <span class="tk-btn-kick" aria-hidden="true">${escapeHtml(kicker || "Admit one")} · No.${no}</span>
+      <span class="tk-btn-kick" aria-hidden="true">${BRAND_MARK}<span>${escapeHtml(kicker || "Admit one")} · No.${no}</span></span>
       <span class="tk-btn-label">${have ? checkIconSvg(14) + " " : ""}${escapeHtml(label)}${have ? "" : ' <span aria-hidden="true">→</span>'}</span>
     </span>
   </button>`;
@@ -2383,7 +2388,7 @@ function ticketButtonHtml(ev, { label, kicker, onclick, have = false }) {
 
 function renderDetail(id) {
   const ev = EVENTS.find((e) => e.id === id);
-  if (!ev) return `<div class="empty-state">Event not found.</div>`;
+  if (!ev) return brandEmptyHtml("Event not found.");
   const c = CATS[ev.category] || { color: "#D4FF3F", textColor: "#4D6B00" };
   const attendees = attendeesFor(id);
   const goingN = goingCount(id);

@@ -39,6 +39,17 @@ rockhopper's crest. In the app it's `BRAND_MARK` (`01-constants.js`):
 whatever sits behind), `--hm-patch` the yellow. App icons and the share image
 in `assets/` are rendered from the same drawing.
 
+**Wordmark:** "Odd Flock" in Funnel Display 800 (`--font-brand`), used only for
+the name. The rest of the app keeps Bricolage Grotesque and Inter.
+
+**Where the penguins appear:** header and map badge, loading screen, the
+Pay → You're in ticket glyph (they turn solid when the ticket fills), the
+"Admit one" line on Get tickets, a stamp on every ticket's artwork, the signed
+stub on the full ticket, the middle of ticket QR codes (drawn at error
+correction H so they still scan), empty states (Home, Tickets, map, not
+found), the sign-up sheet and the footer. Helpers: `brandMark(cls)`,
+`brandMarkInner()`, `brandEmptyHtml(text)`.
+
 **Source of truth:** `src/css/v2.css` (loaded after `styles.css`; redefines every
 token the legacy cascade reads, then restyles each surface). The v1
 "Parchment & Gold" notes further down are kept for history only.

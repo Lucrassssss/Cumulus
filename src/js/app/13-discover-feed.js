@@ -847,7 +847,7 @@ function feedResultsHtml() {
   if (!list.length) {
     const anything = feedUpcoming().length > 0;
     return `<div class="feed-empty">
-      <div class="feed-empty-art" aria-hidden="true">☁︎</div>
+      <div class="feed-empty-art" aria-hidden="true">${BRAND_MARK}</div>
       <h3>${anything ? "Nothing matches that." : "London's quiet. For now."}</h3>
       <p>${anything ? "Try another day or category — or clear your search." : "New events drop here first. Got something in mind? Put it on the map."}</p>
       <div class="feed-empty-actions">
@@ -1076,7 +1076,7 @@ function renderFeed() {
     </div>
 
     <footer class="feed-foot">
-      <a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><span>© Odd Flock · London</span>
+      <a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><span class="ff-brand">${BRAND_MARK}© Odd Flock · London</span>
     </footer>
       </div>
     </div>

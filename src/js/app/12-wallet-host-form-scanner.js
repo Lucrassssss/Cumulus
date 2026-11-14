@@ -52,7 +52,7 @@ function setTicketsTab(k) {
 function myTicketsCardsHtml(tab = "upcoming") {
   if (!myTickets.length)
     return `<div class="feed-empty">
-      <div class="feed-empty-art" aria-hidden="true"><svg class="ui-ic" viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/></svg></div>
+      <div class="feed-empty-art" aria-hidden="true">${BRAND_MARK}</div>
       <h3>No tickets. Yet.</h3>
       <p>Everything you book lands here — QR, calendar, transfer, all of it.</p>
       <div class="feed-empty-actions"><button class="v-btn" onclick="goFeed()">Find something on</button></div>
@@ -64,8 +64,8 @@ function myTicketsCardsHtml(tab = "upcoming") {
   });
   if (!list.length)
     return wantPast
-      ? `<div class="tk-empty"><b>No past events yet</b><span>Events you've been to will be kept here, with their tickets and receipts.</span></div>`
-      : `<div class="tk-empty"><b>Nothing coming up</b><span>Your next booking will land here, QR and all.</span><button class="v-btn sm" onclick="goFeed()">Find something on</button></div>`;
+      ? `<div class="tk-empty">${brandMark("be-mark")}<b>No past events yet</b><span>Events you've been to will be kept here, with their tickets and receipts.</span></div>`
+      : `<div class="tk-empty">${brandMark("be-mark")}<b>Nothing coming up</b><span>Your next booking will land here, QR and all.</span><button class="v-btn sm" onclick="goFeed()">Find something on</button></div>`;
   // Upcoming: soonest first. Past: most recent first.
   return list
     .sort((a, b) => {
@@ -82,6 +82,7 @@ function myTicketsCardsHtml(tab = "upcoming") {
       return `<article class="tk${status === "past" ? " past" : ""}${status === "live" ? " is-live" : ""}">
       <div class="tk-art ${posterClass(ev)}" style="${posterStyle(ev)}" onclick="openViewTicket('${ev.id}')" role="button" tabindex="0" aria-label="Open ticket for ${escapeHtml(ev.title)}">
         ${posterGlyph(ev)}
+        <span class="tk-stamp" aria-hidden="true">${BRAND_MARK}</span>
         <div class="tk-art-foot">
           <span class="fp-date${status === "live" ? " live" : ""}">${status === "live" ? '<span class="pulse"></span>' : ""}${feedDateLabel(ev)} · ${feedTimeLabel(ev)}</span>
           <h3 class="tk-title">${escapeHtml(ev.title)}</h3>

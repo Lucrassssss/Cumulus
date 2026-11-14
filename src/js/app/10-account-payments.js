@@ -1108,6 +1108,18 @@ async function checkStripeCheckoutReturn() {
   });
 }
 
+// The penguins in the middle of a ticket QR. Codes are drawn at the highest
+// error-correction level (H, ~30% recoverable), and the badge covers ~5% of
+// the code's area, so it always scans.
+function qrMark(el) {
+  if (!el || !el.querySelector("canvas,img") || el.querySelector(".qr-mark")) return;
+  const m = document.createElement("span");
+  m.className = "qr-mark";
+  m.setAttribute("aria-hidden", "true");
+  m.innerHTML = BRAND_MARK;
+  el.appendChild(m);
+}
+
 function afterRenderConfirmed() {
   const tickets = bookingDraft.confirmedTickets || [];
   if (!tickets.length) return;
@@ -1122,11 +1134,12 @@ function afterRenderConfirmed() {
         height: 176,
         colorDark: "#000",
         colorLight: "#fff",
-        correctLevel: QRCode.CorrectLevel.M,
+        correctLevel: QRCode.CorrectLevel.H,
       });
     } catch (e) {
       masterEl.innerHTML = `<div style="font-size:10px;word-break:break-all;color:#333;">SQUAD:${t0.squadId}</div>`;
     }
+    qrMark(masterEl);
   }
   tickets.forEach((t, i) => {
     const el = document.getElementById(`ticket-qr-${i}`);
@@ -1139,11 +1152,12 @@ function afterRenderConfirmed() {
         height: 176,
         colorDark: "#000",
         colorLight: "#fff",
-        correctLevel: QRCode.CorrectLevel.M,
+        correctLevel: QRCode.CorrectLevel.H,
       });
     } catch (e) {
       el.innerHTML = `<div style="font-size:10px;word-break:break-all;color:#333;">${t.ticketId}</div>`;
     }
+    qrMark(el);
   });
 }
 

@@ -33,7 +33,7 @@ function _bkEventHead(ev) {
 // single row — nothing to scroll past before "Continue".
 function renderBook() {
   const ev = EVENTS.find((e) => e.id === bookingDraft.eventId);
-  if (!ev) return '<div class="empty-state">Event not found.</div>';
+  if (!ev) return brandEmptyHtml("Event not found.");
   const types = ticketTypes(ev);
   const sel = types.find((t) => t.id === bookingDraft.type) || types[0];
   const isFree = !eventPrice(ev);
@@ -152,8 +152,8 @@ function afterRenderCheckout() {
 
 // ─── The Odd Flock ticket glyph ─────────────────────────────────────────────
 // One drawing, three moods: "scan" while paying (a beam prints the ticket),
-// "win" when it's yours (fills Volt, ticks, the stub tears off and cumulus
-// clouds puff out of the tear), "fail" (a small shake). The same ticket
+// "win" when it's yours (fills with the accent, the penguins in the corner
+// darken, it ticks and the stub tears off), "fail" (a small shake). The same ticket
 // carries you from Pay to You're in — no generic spinner, no stock tick.
 let _tgSeq = 0;
 const TG_TOP = "M18 6H102A12 12 0 0 1 114 18V103A9 9 0 0 0 105 112H15A9 9 0 0 0 6 103V18A12 12 0 0 1 18 6Z";
@@ -191,7 +191,8 @@ function _ticketGlyph(mode) {
         <rect class="tg-fill" x="0" y="6" width="120" height="106"/>
         <rect class="tg-beam" x="0" y="-34" width="120" height="34" fill="url(#${id}b)"/>
       </g>
-      <g class="tg-lines"><rect x="22" y="22" width="34" height="6" rx="3"/><rect x="22" y="34" width="62" height="9" rx="4.5"/><rect x="22" y="49" width="48" height="6" rx="3"/></g>
+      <svg class="tg-mark" x="17" y="15" width="36" height="36" viewBox="4 -2 114 114" overflow="visible">${brandMarkInner()}</svg>
+      <g class="tg-lines"><rect x="58" y="20" width="30" height="6" rx="3"/><rect x="58" y="31" width="40" height="9" rx="4.5"/><rect x="58" y="45" width="26" height="6" rx="3"/></g>
       <path class="tg-tick" d="M37 74l14 14 31-33"/>
       <g clip-path="url(#${id}c)"><rect class="tg-sheen" x="-80" y="-20" width="46" height="200" fill="url(#${id}s)" transform="rotate(18 60 60)"/></g>
     </g>
@@ -342,7 +343,7 @@ function playPurchaseCelebration(ev, n, free, fromPay) {
 // ─── Your ticket (confirmation + wallet view) ─────────────────────────────
 function renderConfirmed() {
   const tickets = bookingDraft.confirmedTickets || [];
-  if (!tickets.length) return '<div class="empty-state">No tickets found.</div>';
+  if (!tickets.length) return brandEmptyHtml("No tickets found.");
   const t0 = tickets[0];
   const ev = EVENTS.find((e) => e.id === t0.eventId);
   if (!ev) return "";
@@ -385,6 +386,7 @@ function renderConfirmed() {
         <div class="tv-art-top">
           <span class="fp-date${st === "live" ? " live" : ""}">${st === "live" ? '<span class="pulse"></span>' : ""}${feedDateLabel(ev)} · ${feedTimeLabel(ev)}</span>
           ${tickets.length > 1 ? `<span class="tv-seat">${t.seatNum || i + 1} of ${t.totalSeats || tickets.length}</span>` : ""}
+          <span class="tk-stamp" aria-hidden="true">${BRAND_MARK}</span>
         </div>
         <div class="tv-art-foot">
           <div class="tv-title">${escapeHtml(ev.title)}</div>
@@ -397,6 +399,7 @@ function renderConfirmed() {
         <div class="tv-code mono">${escapeHtml(t.ticketId)}</div>
         <div class="tv-meta"><span>${escapeHtml(t.typeLabel || "General")}</span><span>Admit one</span>${t.claimCode ? `<span class="tv-open">Seat open to share</span>` : ""}${t.claimedBy ? `<span class="tv-gift">From ${escapeHtml((t.purchaserName || "a friend").split(" ")[0])}</span>` : ""}</div>
         <div class="tv-hint">Show this at the door — turn your screen brightness up.</div>
+        <div class="tv-brand" aria-hidden="true">${BRAND_MARK}<span>Odd Flock</span></div>
       </div>
     </article>`,
     )
